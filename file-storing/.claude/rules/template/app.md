@@ -181,7 +181,7 @@ so `dotnet test` needs no migration step or local database install.
 
 ## Design rationale
 
-Usage and the architecture overview live in the root `README.md`. The hard architectural invariants — the
+Usage and the architecture overview live in this module's `README.md`. The hard architectural invariants — the
 handler pipeline running before storage, per-container blob-name uniqueness, blob/DB consistency, the
 authorization model, and DI-lifetime discipline — live in
 `framework/common/file-storing-invariants.md` (always loaded). Residual known limitations are noted inline in

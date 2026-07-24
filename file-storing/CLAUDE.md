@@ -1,21 +1,27 @@
 # Dignite.Abp.FileStoring
 
+> **This is one module of the `dignite-projects/abp-modules` monorepo.** Repo-wide concerns —
+> the lockstep `<Version>`, central package management, the aggregate solution, CI/release, and the
+> cross-module invariants — live in the [repository root `CLAUDE.md`](../CLAUDE.md); read it first.
+> Below is what's specific to *this* module. "This repo" in the text below means this module tree.
+
 An extensible file-upload framework for **ABP Framework** (LGPL-3.0) layered on **ABP BlobStoring**, plus an
 optional DDD **File Explorer** backend (directory tree + persisted file metadata + REST API) and an **Angular
 UI** library. **The packages this repo distributes are class libraries only** — `core/src/` (the FileStoring
 core + optional `Imaging`) + `file-explorer/src/` + the Angular library under `angular/projects/`. The repo also
 carries **local-dev-only demo apps that are never packed/published** — `host/` (a runnable ABP MVC host
 scaffolded by ABP Studio) and `angular/`'s demo app — that exist solely to run/demo the stack end-to-end. A real
-consuming application brings its own host; `host/` and `angular/` are this repo's own smoke test / live
-documentation, not that host. The code was **extracted from `dignite-abp`** (treated as a frozen source); the
-repo is at `10.0.0-rc.1`; its audit remediation backlog is tracked in the closed `audit`-labeled issues (#2–#35).
+consuming application brings its own host; `host/` and `angular/` are this module's own smoke test / live
+documentation, not that host. The code was **extracted from `dignite-abp`** (treated as a frozen source); its
+audit remediation backlog is tracked in the closed `audit`-labeled issues (#2–#35) of the former
+`dignite-projects/abp-file-storing` repository.
 
 ## Tech stack
 
-- **.NET 10** (SDK pinned in `global.json`), **ABP Framework 10.5.0**.
-- **Central package management** (`Directory.Packages.props`) — every library package version is pinned there;
-  a library `.csproj` only ever has `<PackageReference Include="..." />` with no `Version=`. The demo `host/`
-  opts out (`common.props`) and pins inline.
+- **.NET 10** (SDK pinned in the repo-root `global.json`), **ABP Framework 10.5.0**.
+- **Central package management** (repo-root `Directory.Packages.props`) — every library package version is
+  pinned there; a library `.csproj` only ever has `<PackageReference Include="..." />` with no `Version=`. The
+  demo `host/` opts out (`common.props`) and pins inline.
 - **Single-targeted `net10.0`** across the board — including the contract layers (`Domain.Shared`,
   `Application.Contracts`, `HttpApi.Client`). No `netstandard` multi-targeting.
 - Persistence: EF Core and MongoDB, both implementing the same custom repository interfaces
@@ -89,7 +95,7 @@ dotnet test Dignite.Abp.FileStoring.slnx
 # on Core alone without that, target the core test project directly:
 dotnet test core/test/Dignite.Abp.FileStoring.Tests
 
-# Pack for local testing (version/license come from Directory.Build.props)
+# Pack for local testing (version/license come from the repo-root Directory.Build.props)
 dotnet pack Dignite.Abp.FileStoring.slnx -c Release
 
 # Angular library + demo
@@ -121,12 +127,12 @@ no migration step or local database install.
 - Directory moves may not create cycles; validate the parent; block non-empty deletion — enforced by
   `DirectoryManager`.
 - Object mapping is Mapperly (`FileExplorerApplicationMappers`) — don't reintroduce AutoMapper.
-- New package version pins go in `Directory.Packages.props`, never inline in a library `.csproj`.
+- New package version pins go in the repo-root `Directory.Packages.props`, never inline in a library `.csproj`.
 - Core (`Dignite.Abp.FileStoring`) must keep working **without** `file-explorer` installed.
 
 ## Design rationale
 
-Usage and the architecture overview live in the root `README.md`. The "why" behind the hard invariants lives
+Usage and the architecture overview live in this module's `README.md`. The "why" behind the hard invariants lives
 inline in `.claude/rules/framework/common/file-storing-invariants.md`; the residual known limitations are noted
 inline in the code (the concurrent-dedup and orphan-blob comments in `FileDescriptorManager`), and the audit
 remediation is tracked in the closed `audit`-labeled issues (#2–#35). Many invariants encode bugs the #45–#70

@@ -146,7 +146,7 @@ database install.
 ## Design rationale
 
 The architecture overview (layering, the dependency diagram, the two modes, the
-publish→distribute→notify flow, extension points) and usage live in the root `README.md`. The
+publish→distribute→notify flow, extension points) and usage live in this module's `README.md`. The
 "why" behind these rules — the serialization, DI-lifetime, plugin-boundary, and recipient-privacy
 invariants — lives inline in `framework/common/notifications-invariants.md`.
 

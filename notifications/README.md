@@ -1,5 +1,11 @@
 # Dignite.Abp.Notifications
 
+> Part of [**dignite-projects/abp-modules**](https://github.com/dignite-projects/abp-modules) — see
+> the [repository README](../README.md) for the other modules, and
+> [CONTRIBUTING.md](../CONTRIBUTING.md) for the build, versioning, and release process shared across
+> them. Formerly developed at `dignite-projects/abp-notifications`; **no package ID changed** in the
+> move.
+
 An extensible, event-driven **notification framework for the [ABP Framework](https://abp.io)**, plus
 an optional **Notification Center** (persistent inbox, subscriptions, read/unread state, REST API)
 with **MVC** and **Angular** UI libraries.
@@ -29,7 +35,7 @@ them.
 
 | Dignite release | ABP Framework | Runtime | Angular library | Angular peer range |
 |---|---|---|---|---|
-| `10.0.0-rc.3` | `10.5.x` (built against `10.5.0`) | .NET 10 | `10.0.0-rc.3` | Angular `^21.2.0` |
+| `10.0.0-rc.4` | `10.5.x` (built against `10.5.0`) | .NET 10 | `10.0.0-rc.4` | Angular `^21.2.0` |
 
 The NuGet and npm packages always use the same version. Pre-release npm packages use the `next`
 dist-tag; stable releases use `latest`. npm requires every package to have a `latest` tag, so until
@@ -77,25 +83,25 @@ that layer's module.
 Install Core plus at least one external delivery channel. This example uses SignalR:
 
 ```bash
-dotnet add path/to/MyApp.csproj package Dignite.Abp.Notifications --version 10.0.0-rc.3
-dotnet add path/to/MyApp.csproj package Dignite.Abp.Notifications.SignalR --version 10.0.0-rc.3
+dotnet add path/to/MyApp.csproj package Dignite.Abp.Notifications --version 10.0.0-rc.4
+dotnet add path/to/MyApp.csproj package Dignite.Abp.Notifications.SignalR --version 10.0.0-rc.4
 ```
 
 Email is optional:
 
 ```bash
-dotnet add path/to/MyApp.csproj package Dignite.Abp.Notifications.Emailing --version 10.0.0-rc.3
-dotnet add path/to/MyApp.csproj package Dignite.Abp.Notifications.Emailing.Identity --version 10.0.0-rc.3
+dotnet add path/to/MyApp.csproj package Dignite.Abp.Notifications.Emailing --version 10.0.0-rc.4
+dotnet add path/to/MyApp.csproj package Dignite.Abp.Notifications.Emailing.Identity --version 10.0.0-rc.4
 ```
 
 ### Full Notification Center with EF Core
 
 ```bash
-dotnet add path/to/MyApp.csproj package Dignite.Abp.Notifications.SignalR --version 10.0.0-rc.3
-dotnet add path/to/MyApp.csproj package Dignite.NotificationCenter.Application --version 10.0.0-rc.3
-dotnet add path/to/MyApp.csproj package Dignite.NotificationCenter.HttpApi --version 10.0.0-rc.3
-dotnet add path/to/MyApp.csproj package Dignite.NotificationCenter.EntityFrameworkCore --version 10.0.0-rc.3
-dotnet add path/to/MyApp.csproj package Dignite.NotificationCenter.Web --version 10.0.0-rc.3
+dotnet add path/to/MyApp.csproj package Dignite.Abp.Notifications.SignalR --version 10.0.0-rc.4
+dotnet add path/to/MyApp.csproj package Dignite.NotificationCenter.Application --version 10.0.0-rc.4
+dotnet add path/to/MyApp.csproj package Dignite.NotificationCenter.HttpApi --version 10.0.0-rc.4
+dotnet add path/to/MyApp.csproj package Dignite.NotificationCenter.EntityFrameworkCore --version 10.0.0-rc.4
+dotnet add path/to/MyApp.csproj package Dignite.NotificationCenter.Web --version 10.0.0-rc.4
 ```
 
 `Dignite.NotificationCenter.Web` is optional. For MongoDB, replace
@@ -106,7 +112,7 @@ dotnet add path/to/MyApp.csproj package Dignite.NotificationCenter.Web --version
 For an Angular host, install the version-matched UI library:
 
 ```bash
-npm install @dignite/ng.notification-center@10.0.0-rc.3
+npm install @dignite/ng.notification-center@10.0.0-rc.4
 ```
 
 Then follow [The two operation modes](#the-two-operation-modes) for the module dependencies and
@@ -776,6 +782,9 @@ commit together.
 
 ## Build & test
 
+Run these from this `notifications/` directory. To build both modules in this repository at once,
+use the aggregate `Dignite.Abp.Modules.slnx` at the repository root instead.
+
 ```bash
 # Build / test everything (core + notification-center) from the one solution
 dotnet build Dignite.Abp.Notifications.slnx
@@ -784,7 +793,7 @@ dotnet test  Dignite.Abp.Notifications.slnx     # starts an embedded mongod for 
 # Core only (skips the embedded mongod):
 dotnet test core/test/Dignite.Abp.Notifications.Tests
 
-# Pack for local testing (version / license come from Directory.Build.props)
+# Pack for local testing (version / license come from the repository root Directory.Build.props)
 dotnet pack Dignite.Abp.Notifications.slnx -c Release
 ```
 
@@ -812,4 +821,4 @@ Dignite.Abp.Notifications.slnx   one solution aggregating core/ + notification-c
 
 ## License
 
-Licensed under [LGPL-3.0-only](LICENSE).
+Licensed under [LGPL-3.0-only](../LICENSE).

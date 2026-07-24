@@ -1,8 +1,14 @@
 # Dignite Abp File Storing
 
-This repository contains the extracted file storing and file explorer modules from `dignite-abp`.
+> Part of [**dignite-projects/abp-modules**](https://github.com/dignite-projects/abp-modules) — see
+> the [repository README](../README.md) for the other modules, and
+> [CONTRIBUTING.md](../CONTRIBUTING.md) for the build, versioning, and release process shared across
+> them. Formerly developed at `dignite-projects/abp-file-storing`; **no package ID changed** in the
+> move.
 
-The target layout is:
+The file storing and file explorer modules, extracted from `dignite-abp`.
+
+The layout is:
 
 - `core/src/Dignite.Abp.FileStoring`: file upload infrastructure on top of ABP Blob Storing.
 - `core/src/Dignite.Abp.FileStoring.Imaging`: optional upload-time image processing.

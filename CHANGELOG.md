@@ -1,14 +1,43 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to the packages released from this repository — both the `file-storing/` and
+`notifications/` modules — are documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) — with one
-deviation from the classic scheme: see [CONTRIBUTING.md → Versioning and releases](CONTRIBUTING.md#versioning-and-releases)
-for why `MAJOR` tracks the targeted ABP Framework version rather than this module's own breaking
-changes.
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
+adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) — with two deviations from the
+classic scheme: every package in the repository shares **one lockstep version**, and `MAJOR` tracks
+the targeted **ABP Framework** version rather than this repository's own breaking changes. See
+[CONTRIBUTING.md → Versioning and releases](CONTRIBUTING.md#versioning-and-releases) for both.
+
+Because releases are lockstep, a version may contain changes to only one module — the other module's
+packages are still republished at that version with unchanged content. Entries are grouped by module
+so it stays clear which half of the repository actually moved.
 
 ## [Unreleased]
+
+### Changed
+
+- **Repository merged.** `dignite-projects/abp-file-storing` and `dignite-projects/abp-notifications`
+  are now developed and released together from `dignite-projects/abp-modules`, as `file-storing/`
+  and `notifications/`. **No PackageId, root namespace, or `AssemblyVersion` changed** — this is
+  transparent to NuGet and npm consumers. Both modules' full commit histories are preserved.
+- **Versioning is now lockstep across both modules** (previously each repository versioned
+  independently): one `<Version>` in the root `Directory.Build.props`, one `v*` tag, one release
+  pipeline covering all 25 NuGet packages and both Angular packages.
+- `PackageProjectUrl` / `RepositoryUrl` and both Angular packages' `homepage` / `repository.url` now
+  point at `dignite-projects/abp-modules`.
+
+#### file-storing
+
+- The Angular package `@dignite-ng/expand.file-explorer` jumps from `10.0.0-rc.1` to the lockstep
+  version, catching it up to the .NET packages it ships alongside.
+
+---
+
+> **History before the merge.** The releases below were published from the standalone
+> `dignite-projects/abp-notifications` repository and cover the **`notifications/` module only**.
+> The `file-storing/` module had not published a release at the time of the merge, so it has no
+> entries before this point.
 
 ## [10.0.0-rc.3] - 2026-07-23
 

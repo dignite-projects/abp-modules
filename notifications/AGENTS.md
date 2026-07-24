@@ -1,5 +1,10 @@
 # Dignite.Abp.Notifications
 
+> **This is one module of the `dignite-projects/abp-modules` monorepo.** Repo-wide concerns —
+> the lockstep `<Version>`, central package management, the aggregate solution, CI/release, and the
+> cross-module invariants — live in the [repository root `CLAUDE.md`](../CLAUDE.md); read it first.
+> Below is what's specific to *this* module. "This repo" in the text below means this module tree.
+
 An extensible, event-driven notification framework for **ABP Framework** (LGPL-3.0), plus an
 optional **Notification Center** (inbox / subscriptions / read-unread / REST API), an optional **MVC
 UI** library, and an optional **Angular UI** library. **The packages this repo distributes are class
@@ -13,7 +18,7 @@ solely to run/demo the whole stack end-to-end. A real consuming application stil
 ## Tech stack
 
 - **.NET 10**, **ABP Framework 10.5.0**.
-- **Central package management** (`Directory.Packages.props`) — every package version is pinned
+- **Central package management** (repo-root `Directory.Packages.props`) — every package version is pinned
   there; a `.csproj` only ever has `<PackageReference Include="..." />` with no `Version=`.
 - Contract layers (`*.Abstractions`, `*.Domain.Shared`, `*.Application.Contracts`,
   `*.HttpApi.Client`) multi-target `netstandard2.0;netstandard2.1;net10.0`; implementation layers
@@ -99,7 +104,7 @@ dotnet test Dignite.Abp.Notifications.slnx
 # on Core alone without that, target the core test project directly:
 dotnet test core/test/Dignite.Abp.Notifications.Tests
 
-# Pack for local testing (version/license come from Directory.Build.props)
+# Pack for local testing (version/license come from the repo-root Directory.Build.props)
 dotnet pack Dignite.Abp.Notifications.slnx -c Release
 ```
 
@@ -120,14 +125,14 @@ migration step.
 - Prefer base-class properties (`Clock`, `CurrentUser`, `GuidGenerator`, `L`) over injecting them —
   but note plain (non-ABP-base-class) services in this repo, like `NotificationStore`, correctly
   inject these instead.
-- New package version pins go in `Directory.Packages.props`, never inline in a `.csproj`.
+- New package version pins go in the repo-root `Directory.Packages.props`, never inline in a `.csproj`.
 - Core (`Notifications`) must keep working with `NullNotificationStore` alone — don't assume
   `NotificationCenter` is installed.
 
 ## Design rationale
 
 Usage and the architecture overview (layering, the two operation modes, the
-publish→distribute→notify flow, extension points) live in the root `README.md`. The "why" behind
+publish→distribute→notify flow, extension points) live in this module's `README.md`. The "why" behind
 the hard invariants lives inline in `.claude/rules/framework/common/notifications-invariants.md` —
 this repo is a from-scratch rewrite of a legacy implementation, and those invariants encode the
 exact bugs that rewrite set out to fix.

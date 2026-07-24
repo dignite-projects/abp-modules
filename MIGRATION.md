@@ -84,10 +84,22 @@
 - [ ] **【手动】重配 NuGet.org Trusted Publishing**:两个包的策略从旧仓名 + 旧 `release.yml` 改到 `dignite-projects/abp-modules` + 新工作流,否则发布授权失败
 
 ## Phase 6 — 文档与规则
-- [ ] README/CONTRIBUTING/SECURITY 合并到根
-- [ ] **CONTRIBUTING 版本小节重写**:"MINOR/PATCH 各自独立" → "锁步统一,MAJOR=ABP 大版本"
-- [ ] 合并两套 `.claude`/`.agents`/`AGENTS.md`;**保留 `notifications-invariants.md`**
-- [ ] CHANGELOG 合成根级一份
+- [x] README/CONTRIBUTING/SECURITY 合并到根
+  - **README 这条按"根做门户、模块 README 留下"处理,和字面计划有出入,理由如下**:两个模块的 `Directory.Build.props` 用 `PackageReadmeFile` 把**各自目录下的 README.md** 打进自己每个 NuGet 包。notifications 的 README 是 48KB 完整产品手册(安装/用法/API/架构),file-storing 的是 2KB 说明。真按字面合成一份根 README 再打进所有 25 个包,装 `Dignite.Abp.FileStoring` 的人在 nuget.org 页面上会看到 50KB 的通知模块文档——对消费者是倒退。所以:根 `README.md` 新写成 monorepo 门户(两个模块是什么、布局、构建、锁步版本说明),**两个模块 README 原地保留**继续作为各自包的 `PackageReadmeFile`,顶部各加一句"隶属 abp-modules + 包名未变"的指引。Phase 3 里那两条写着"Phase 6 删掉这个 ItemGroup"的 TODO 注释同步改成解释为什么要保留(否则会误导以后的人删错东西)。
+  - CONTRIBUTING / SECURITY / CHANGELOG / LICENSE 是真正的全仓级别,合并到根并删掉模块下的副本(LICENSE 两份和根内容逐字节相同,只有换行符差异;确认过没有 `PackageLicenseFile`,包用的是 `PackageLicenseExpression`,删掉不影响打包)。
+  - SECURITY 以 notifications 那份(更完整:上报流程、响应时限)为底,合并 file-storing 的内容,漏洞上报地址改到 abp-modules,补了一节说明 CI 的漏洞门禁和白名单在哪看。
+- [x] **CONTRIBUTING 版本小节重写**:"MINOR/PATCH 各自独立" → "锁步统一,MAJOR=ABP 大版本"
+  - 以 notifications 那份(唯一有完整版本论述的)为底重写:新增"一个仓一个版本"小节,写明**空转 bump 是预期行为不是 bug**、以及为什么这个代价比"两个模块各自版本 + 消费者要查兼容矩阵"划算;"MINOR/PATCH 是本模块自己的计数器"改成全仓计数器;版本落点表从 15 个包 + 1 个 Angular 包改成 25 个包 + 2 个 Angular 包;发布流程改成要同步两个 `package.json`;Trusted Publishing 仓名改到 `dignite-projects/abp-modules`,并加了一条从旧仓迁移的显式提醒。
+  - **同一处错误在规则层也修了**:两个模块的 `.claude/rules/framework/common/versioning.md`(无 `paths:`,每次都加载)原文都写着"MINOR 和 PATCH 是**本模块自己独立**的计数器"——锁步后这是事实错误,会主动误导以后改代码的人。两份都按锁步重写(含"看到隔壁模块改动导致本模块空转发版是正常的,别去加模块级 `<Version>` 修它"),并把指向 CONTRIBUTING 的相对路径修到新的根位置(实测 `../../../../../CONTRIBUTING.md` 能解析)。
+- [x] 合并两套 `.claude`/`.agents`/`AGENTS.md`;**保留 `notifications-invariants.md`**
+  - **`.claude/rules/` 按模块保留,不合并**:同名规则文件实测有 30–80% 的行不同(`app.md` 267/343 行不同、`ddd-patterns.md` 238/392、`patterns.md` 200/306),因为两个模块的 DDD 形状、持久化约定、硬不变量本来就不一样。合成一份只会得到一份两边都不准的稀释版。`notifications-invariants.md` 和 `file-storing-invariants.md` 都原地保留。
+  - 新增**根** `CLAUDE.md`(+ 内容相同的 `AGENTS.md`,沿用两仓原有的双文件约定),只讲全仓级别的事:布局、5 条跨模块不变量(PackageId/根命名空间不变、AssemblyVersion 钉死、锁步版本 MAJOR≥10、两模块互不引用、包版本集中管理)、聚合构建命令,并用一张表把"改哪个模块就先读哪几份文档"指清楚。
+  - 两个模块的 `CLAUDE.md`/`AGENTS.md` 顶部各加一句"本模块隶属 monorepo,全仓事项见根 CLAUDE.md",并把文里指向根级 props 的说法改准(`Directory.Packages.props` → repo-root),把原来指"本仓 README"、现在会和根 README 混淆的"root README.md"改成"this module's README.md"(规则里的 `app.md` 也有同样问题,一并改)。
+  - `.agents/`:file-storing 只有一个空的 `.gitkeep`,notifications 那个目录在原仓里根本没有被 git 追踪(所以 subtree 没搬过来)。没有实质内容可合并。
+- [x] CHANGELOG 合成根级一份
+  - notifications 有 5 个版本的真实发布历史(rc.3/rc.2/rc.1/preview.2/preview.1),file-storing 从未发布过、只有一个空的 `[Unreleased]`。根 CHANGELOG 用脚本拼接而不是手抄(避免 15KB 内容抄错),**逐行核对过历史部分 196 行进、196 行出,一字未动**;历史段前面加了一段说明"以下是合仓前、仅属于 notifications 模块的发布记录",`[Unreleased]` 里按模块分组记录了这次合仓本身。
+  - 顺带修了 notifications README 里的过期版本号:兼容性表格和所有 `dotnet add package --version` / `npm install` 示例还写着 `10.0.0-rc.3`,统一改成 `10.0.0-rc.4`(这份 README 会打进每个 notifications 包,发出去就是错的安装命令)。
+- **验证**:聚合方案 `dotnet build -c Release` 0 error;`dotnet pack` 仍产出 25 个包;实际解包核对 `Dignite.Abp.FileStoring` 和 `Dignite.Abp.Notifications` 两个包,确认打进去的 README 是**各自模块的**而不是根门户、`PackageId` 未变、`version=10.0.0-rc.4`、`projectUrl` 已指向 abp-modules、`tags` 仍是各模块自己的;用 `AssemblyName.GetAssemblyName` 读了包内 DLL,**`AssemblyVersion=1.0.0.0` 不变量成立**。所有跨文档相对链接(模块→根、规则→根 CONTRIBUTING、根→模块)逐条验证过能解析到真实文件。
 
 ## Phase 7 — 验证 + 首个统一发布
 - [ ] 聚合方案 build + 两模块全测试跑通

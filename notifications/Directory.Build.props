@@ -12,9 +12,10 @@
     <PackageTags>abp;notifications;notification-center;signalr;real-time;aspnetcore</PackageTags>
   </PropertyGroup>
 
-  <!-- TODO(Phase 6): once README.md/CONTRIBUTING.md/SECURITY.md merge to the repo root, delete this
-       ItemGroup and let the root Directory.Build.props pack the single root README.md/icon.png for
-       every package instead. -->
+  <!-- Each module keeps its OWN README.md as the packed PackageReadmeFile, deliberately: the root
+       README.md is a monorepo landing page, and packing it into every package would put the sibling
+       module's documentation on this module's NuGet page. CONTRIBUTING/SECURITY/CHANGELOG/LICENSE
+       are repo-wide and live only at the root. (MIGRATION.md Phase 6.) -->
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" Visible="false" />
     <None Include="$(MSBuildThisFileDirectory).github\icon.png" Pack="true" PackagePath="\" Visible="false" />
