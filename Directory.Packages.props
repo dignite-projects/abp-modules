@@ -11,7 +11,8 @@
     (via Volo.Abp.EntityFrameworkCore.Sqlite 10.5.0) still bundles SQLitePCLRaw 2.1.11, which
     ships a SQLite older than 3.50.2 (GHSA-2m69-gcr7-jv3q / CVE-2025-6965). 2.1.12 is the first
     build past that advisory; pin the whole family so they stay on one version. Remove once the
-    EF Core SQLite provider rolls its bundle forward on its own.
+    EF Core SQLite provider rolls its bundle forward on its own. (Carried over from
+    abp-file-storing; abp-notifications had no equivalent pin.)
   -->
   <ItemGroup Label="Security-patched transitive dependencies">
     <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" />
@@ -39,10 +40,42 @@
     <PackageVersion Include="Volo.Abp.MongoDB" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.Autofac" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.TestBase" Version="10.5.0" />
+    <!-- notifications-only -->
+    <PackageVersion Include="Volo.Abp.Localization" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.SettingManagement.Domain" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Features" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Timing" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Guids" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.EventBus" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.EventBus.Abstractions" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.BackgroundJobs.Abstractions" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.BackgroundWorkers" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.DistributedLocking.Abstractions" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.SignalR" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Json.SystemTextJson" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI.Bundling" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.SettingManagement.Web" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Identity.Domain" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Emailing" Version="10.5.0" />
   </ItemGroup>
 
+  <!--
+    Microsoft.Extensions.FileProviders.Embedded: file-storing pinned 10.0.9, notifications pinned
+    10.0.7 - merged to the higher 10.0.9 per MIGRATION.md's known-conflicts list. notifications
+    needs this as a direct reference (not just ABP's transitive one) to activate its build-time
+    manifest generation for embedded wwwroot content (ABP's AddEmbedded/ManifestEmbeddedFileProvider).
+  -->
   <ItemGroup Label="Embedded static and localization resources">
     <PackageVersion Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.9" />
+  </ItemGroup>
+
+  <ItemGroup Label="System.Text.Json (only needed for netstandard targets; in-box on net10.0)">
+    <PackageVersion Include="System.Text.Json" Version="10.0.7" />
+  </ItemGroup>
+
+  <ItemGroup Label="Microsoft hosting abstractions">
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.7" />
   </ItemGroup>
 
   <ItemGroup Label="Test stack">
@@ -54,7 +87,7 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Proxies" Version="10.0.9" />
   </ItemGroup>
 
-  <ItemGroup Label="MongoDB integration-test infrastructure">
+  <ItemGroup Label="MongoDB integration-test infrastructure (embedded mongod, ABP v10 pattern)">
     <PackageVersion Include="MongoSandbox.Core" Version="2.0.0" />
     <PackageVersion Include="MongoSandbox8.runtime.win-x64" Version="2.0.0" />
     <PackageVersion Include="MongoSandbox8.runtime.linux-x64" Version="2.0.0" />

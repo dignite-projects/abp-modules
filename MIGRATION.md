@@ -54,10 +54,18 @@
   ```
 
 ## Phase 3 — 统一构建配置(锁步核心)
-- [ ] 根 `Directory.Build.props`:两份合一 → 唯一 `<Version>`(Phase 0 的号)+ `<AssemblyVersion>1.0.0.0</AssemblyVersion>`;URL 改 abp-modules
-- [ ] 每个模块组一个薄 `Directory.Build.props`(显式 import 上层),只覆盖 `Product`/`PackageTags`
-- [ ] `Directory.Packages.props`:并集,冲突取高版本(见"已知调和点"),保留安全 pin
-- [ ] `global.json` / `NuGet.Config` / 两个 host 的 props 覆盖照搬
+- [x] 根 `Directory.Build.props`:两份合一 → 唯一 `<Version>`(Phase 0 的号)+ `<AssemblyVersion>1.0.0.0</AssemblyVersion>`;URL 改 abp-modules
+- [x] 每个模块组一个薄 `Directory.Build.props`(显式 import 上层),只覆盖 `Product`/`PackageTags`
+  - MSBuild 每个项目只自动 import 最近的一份 `Directory.Build.props` 就不再往上找,所以两个模块的薄文件用 `$([MSBuild]::GetPathOfFileAbove(...))` 显式 import 根文件。两个 host(`file-storing/host/.../Web.Host` 靠 `common.props`、`notifications/host/.../Web.Host` 靠自己目录里更近的一份 `Directory.Build.props`)本来就用各自机制短路了这条自动查找链,不受影响,原样保留。
+  - README/icon 打包用的 `<None Include>` 仍留在模块层薄文件里(指向各自现有的 README.md/icon.png),等 Phase 6 根 README 合并完再挪到根、模块层薄文件届时才真正瘦成只剩 Product/PackageTags。
+- [x] `Directory.Packages.props`:并集,冲突取高版本(见"已知调和点"),保留安全 pin
+  - 合并前用脚本比对过两份文件的公共 PackageId,确认真正冲突只有已知的这一个,没有漏网的。
+- [x] `global.json` / `NuGet.Config` / 两个 host 的 props 覆盖照搬
+  - `global.json`/`NuGet.Config` 用 file-storing 那份放到根,删掉 file-storing/ 下现在重复的两份。
+  - **意外发现并修复**:`notifications/host/.../Web.Host.csproj` 内联固定 `Microsoft.Extensions.FileProviders.Embedded` 到 `10.0.7`(这个 host 用自己的 Directory.Packages.props 退出了中心化包管理,不跟中心版本走),合并后中心版本升到 `10.0.9`,restore 报 `NU1605` 包降级错误(`Dignite.NotificationCenter.Web` 需要 >= 10.0.9)。这一行内联版本号跟着中心决议同步改成 `10.0.9`,host 的其余内容原样未动。
+  - 顺带把 Phase 2 用完的本地 `fs`/`nt` remote 清掉了(只是搬代码用的临时 remote,留着会让 SourceLink 在每次 build 里报"远程 URL 无效"的噪音警告)。
+  - 顺带发现 `ScheduleWakeup` 会在 `.claude/` 下留一个 `scheduled_tasks.lock`,和 `settings.local.json` 一样是本机运行时状态、不该进仓库,已经在根 `.gitignore` 里单独排除(两条都用 `**/.claude/...` 写,不影响 `file-storing/.claude/rules/`、`notifications/.claude/rules/` 这些真正要保留追踪的规则内容)。
+  - **验证**:`file-storing/` 和 `notifications/` 各自的 `.slnx` 分别 `dotnet restore` + `dotnet build -c Release`(均 0 error)+ `dotnet test`(file-storing 34/34 通过,notifications 40/40 通过)全部跑绿。聚合根 `.slnx` 要到 Phase 4 才建,这里先用两个模块各自现有的 `.slnx` 当验证入口。
 
 ## Phase 4 — 解决方案 + ABP Studio
 - [ ] 根建聚合 `.slnx`;各模块 `.slnx` 可保留供聚焦开发

@@ -1,57 +1,23 @@
 <Project>
 
+  <!-- MSBuild imports only the NEAREST Directory.Build.props per project and stops walking up, so
+       this file must explicitly import the repo root's to inherit the lockstep <Version> /
+       <AssemblyVersion> / shared metadata. See MIGRATION.md Phase 3.
+       (host/Dignite.NotificationCenter.Web.Host/ has its own nearer Directory.Build.props and is
+       intentionally isolated from this chain - see the comment there.) -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
   <PropertyGroup>
-    <LangVersion>latest</LangVersion>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>disable</ImplicitUsings>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-
-    <!-- MAJOR tracks the ABP Framework major version this release targets (currently pinned at
-         10.5.0 in Directory.Packages.props -> MAJOR = 10). MINOR.PATCH are this module's OWN
-         independent SemVer counters and reset to .0.0 whenever the tracked ABP major changes.
-         See CONTRIBUTING.md "Versioning and releases" for the full rationale. -->
-    <Version>10.0.0-rc.4</Version>
-    <!-- Pinned explicitly and never bumped in lockstep with <Version>: without this the SDK
-         derives AssemblyVersion from <Version>, moving it on every MINOR/PATCH and breaking
-         AssemblyQualifiedName-based lookups. This repo already treats assembly-version stability
-         as load-bearing for NotificationData deserialization - see
-         .claude/rules/framework/common/notifications-invariants.md §1. -->
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-
-    <Authors>Dignite</Authors>
-    <Company>Dignite</Company>
     <Product>Dignite Abp Notifications</Product>
-    <Copyright>© Dignite</Copyright>
-    <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/dignite-projects/abp-notifications</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/dignite-projects/abp-notifications</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
     <PackageTags>abp;notifications;notification-center;signalr;real-time;aspnetcore</PackageTags>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageIcon>icon.png</PackageIcon>
-
-    <!-- SourceLink / reproducible builds -->
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <Deterministic>true</Deterministic>
-    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
-
-    <!-- Symbol packages -->
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
-  <!-- Pack the repository root README.md and the shared Dignite package icon (same asset used by
-       the sibling vault-extract repo) into every packable project. -->
+  <!-- TODO(Phase 6): once README.md/CONTRIBUTING.md/SECURITY.md merge to the repo root, delete this
+       ItemGroup and let the root Directory.Build.props pack the single root README.md/icon.png for
+       every package instead. -->
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" Visible="false" />
     <None Include="$(MSBuildThisFileDirectory).github\icon.png" Pack="true" PackagePath="\" Visible="false" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>

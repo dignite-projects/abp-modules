@@ -1,0 +1,52 @@
+<Project>
+
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+
+    <!-- Lockstep version: one <Version> for every packable project in this repo (file-storing/ and
+         notifications/ alike) - see MIGRATION.md. MAJOR tracks the ABP Framework major version
+         targeted in Directory.Packages.props (currently 10.5.0 -> MAJOR = 10) and must stay >= 10
+         forever, permanently ahead of the legacy Dignite.FileExplorer.* / Dignite.Abp.Notifications*
+         package lines already published on NuGet up to 3.8.2 under these same PackageIds. -->
+    <Version>10.0.0-rc.4</Version>
+    <!-- Pinned explicitly and never bumped in lockstep with <Version>: without this the SDK derives
+         AssemblyVersion from <Version>, moving it on every release and breaking
+         AssemblyQualifiedName-based lookups. notifications/'s NotificationData deserialization
+         depends on this staying 1.0.0.0 - see
+         notifications/.claude/rules/framework/common/notifications-invariants.md §1. -->
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+
+    <Authors>Dignite</Authors>
+    <Company>Dignite</Company>
+    <Copyright>© Dignite</Copyright>
+    <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/dignite-projects/abp-modules</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/dignite-projects/abp-modules</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <!-- Product / PackageTags are module-specific: file-storing/Directory.Build.props and
+       notifications/Directory.Build.props each override them in a thin file that explicitly
+       imports this one (MSBuild imports only the NEAREST Directory.Build.props per project and
+       stops walking up, so each module needs that explicit import to inherit the settings above). -->
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+  </ItemGroup>
+
+</Project>
