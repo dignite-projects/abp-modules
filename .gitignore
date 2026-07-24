@@ -286,6 +286,11 @@ Logs/
 dist/
 .angular/
 
+# ASP.NET Core Data Protection key ring, written at runtime by the demo hosts. Each key-*.xml
+# holds an unencrypted <masterKey>, which protects auth cookies, antiforgery tokens and OpenIddict
+# tokens - local machine state, never repository content.
+**/data-protection-keys/
+
 # Claude Code local runtime state (not project content - keep this repo-portable rather than
 # relying solely on each contributor's global gitignore). Real content under */.claude/rules/ etc.
 # is intentionally tracked - only these specific runtime files are local state.
