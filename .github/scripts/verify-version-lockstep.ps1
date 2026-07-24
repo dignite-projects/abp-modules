@@ -12,11 +12,18 @@ if (-not $versionMatch.Success) {
 }
 
 $dotnetVersion = $versionMatch.Groups[1].Value
-$angularPackage = Get-Content -Raw (Join-Path $repositoryRoot 'angular\projects\notification-center\package.json') |
-    ConvertFrom-Json
 
-if ($angularPackage.version -ne $dotnetVersion) {
-    throw "NuGet version '$dotnetVersion' and Angular package version '$($angularPackage.version)' are not in lockstep."
+$angularPackages = @(
+    'file-storing\angular\projects\file-explorer\package.json',
+    'notifications\angular\projects\notification-center\package.json'
+)
+
+foreach ($relativePath in $angularPackages) {
+    $packagePath = Join-Path $repositoryRoot $relativePath
+    $package = Get-Content -Raw $packagePath | ConvertFrom-Json
+    if ($package.version -ne $dotnetVersion) {
+        throw "NuGet version '$dotnetVersion' and Angular package '$($package.name)' version '$($package.version)' ($relativePath) are not in lockstep."
+    }
 }
 
 if ($Tag) {

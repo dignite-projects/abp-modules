@@ -1,0 +1,345 @@
+# Release workflow. The NuGet version in Directory.Build.props and the npm versions in both
+# Angular library package.json files are kept in lockstep; a pushed v* tag must match all three,
+# but tags do not drive the number.
+#
+# Tagged releases are public: NuGet packages go to NuGet.org through Trusted Publishing (GitHub
+# OIDC -> short-lived API key), and both Angular packages go to npm (`next` for a pre-release,
+# `latest` for a stable release). Pre-release NuGet packages are also mirrored to GitHub Packages.
+# workflow_dispatch remains a private preview build: it packs and smoke-tests everything, then
+# pushes a pre-release to GitHub Packages only.
+#
+# Triggers: push a v* tag (e.g. v10.0.0-rc.4 or v10.0.0) or use workflow_dispatch. For churny
+# pre-release builds prefer workflow_dispatch: no tag, no draft Release - just bump <Version> in
+# Directory.Build.props, run, and the packages land in GitHub Packages.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # Required by softprops/action-gh-release to create a draft Release
+      packages: write # Required to push pre-release NuGet packages to GitHub Packages
+      id-token: write # NuGet Trusted Publishing and npm provenance for tagged public releases
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.302'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+          cache-dependency-path: |
+            file-storing/angular/package-lock.json
+            notifications/angular/package-lock.json
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Verify tag, NuGet, and npm version lockstep
+        id: version
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: |
+          $version = & ./.github/scripts/verify-version-lockstep.ps1 -Tag $env:RELEASE_TAG
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Determine release channel
+        id: channel
+        shell: bash
+        run: |
+          VERSION='${{ steps.version.outputs.version }}'
+          if [[ "$VERSION" == *-* ]]; then
+            echo "channel=prerelease" >> "$GITHUB_OUTPUT"
+            echo "npm-tag=next" >> "$GITHUB_OUTPUT"
+            echo "::notice::Version $VERSION is a pre-release."
+          else
+            echo "channel=stable" >> "$GITHUB_OUTPUT"
+            echo "npm-tag=latest" >> "$GITHUB_OUTPUT"
+            echo "::notice::Version $VERSION is stable."
+          fi
+
+      - name: Restore
+        run: dotnet restore Dignite.Abp.Modules.slnx
+
+      # Mirrors the CI gate; see MIGRATION.md Phase 5 for the currently-known Scriban advisory this
+      # gate blocks on (inherited from notifications/core/src/Dignite.Abp.Notifications.Emailing*,
+      # never gated before this merge). Keep the allowlist in sync with ci.yml.
+      - name: Block vulnerable NuGet dependencies
+        shell: bash
+        run: |
+          set -o pipefail
+          report="$(dotnet list Dignite.Abp.Modules.slnx package --vulnerable --include-transitive)"
+          printf '%s\n' "$report"
+          if printf '%s\n' "$report" | grep -Eiq '^\s*>\s+[^[:space:]]+\s+[^[:space:]]+\s+(high|critical)\b'; then
+            echo "::error::High or critical NuGet vulnerabilities block the release."
+            exit 1
+          fi
+
+      - name: Build
+        run: dotnet build Dignite.Abp.Modules.slnx --no-restore --configuration Release
+
+      # --- file-storing tests ---
+      - name: Run FileStoring (core) tests
+        run: dotnet test file-storing/core/test/Dignite.Abp.FileStoring.Tests/Dignite.Abp.FileStoring.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Run FileStoring Imaging (core) tests
+        run: dotnet test file-storing/core/test/Dignite.Abp.FileStoring.Imaging.Tests/Dignite.Abp.FileStoring.Imaging.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Run FileExplorer (domain) tests
+        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.Domain.Tests/Dignite.FileExplorer.Domain.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Run FileExplorer (EF Core) tests
+        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.EntityFrameworkCore.Tests/Dignite.FileExplorer.EntityFrameworkCore.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Run FileExplorer (MongoDB) tests
+        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.MongoDB.Tests/Dignite.FileExplorer.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Run FileExplorer (application) tests
+        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.Application.Tests/Dignite.FileExplorer.Application.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Run authorization denial tests
+        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.Authorization.Tests/Dignite.FileExplorer.Authorization.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Run directory safety tests
+        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.DirectorySafety.Tests/Dignite.FileExplorer.DirectorySafety.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Run update authorization tests
+        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.Update.Tests/Dignite.FileExplorer.Update.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      # --- notifications tests ---
+      - name: Run Notifications (core) tests
+        run: dotnet test notifications/core/test/Dignite.Abp.Notifications.Tests/Dignite.Abp.Notifications.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Run NotificationCenter (EF Core) tests
+        run: dotnet test notifications/notification-center/test/Dignite.NotificationCenter.EntityFrameworkCore.Tests/Dignite.NotificationCenter.EntityFrameworkCore.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Run NotificationCenter (MongoDB) tests
+        run: dotnet test notifications/notification-center/test/Dignite.NotificationCenter.MongoDB.Tests/Dignite.NotificationCenter.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      # Projects with IsPackable=false (both demo hosts + test projects) are skipped automatically.
+      # Only the 10 file-storing + 15 notifications packable projects are produced.
+      - name: Pack NuGet packages
+        run: dotnet pack Dignite.Abp.Modules.slnx --no-build --configuration Release -o ./artifacts
+
+      - name: Smoke-test file-storing NuGet packages
+        shell: pwsh
+        run: ./file-storing/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts '${{ steps.version.outputs.version }}'
+
+      - name: Smoke-test notifications NuGet packages
+        shell: pwsh
+        run: ./notifications/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts '${{ steps.version.outputs.version }}'
+
+      # --- file-storing Angular ---
+      - name: Install file-storing Angular dependencies
+        working-directory: file-storing/angular
+        run: npm ci --legacy-peer-deps
+
+      - name: Audit file-storing Angular dependencies
+        working-directory: file-storing/angular
+        run: npm audit --audit-level=moderate
+
+      - name: Lint file-storing Angular projects
+        working-directory: file-storing/angular
+        run: npm run lint -- --max-warnings=0
+
+      - name: Run file-storing Angular unit tests
+        working-directory: file-storing/angular
+        run: npm test -- --watch=false
+
+      - name: Build file-storing Angular library
+        working-directory: file-storing/angular
+        run: npm run build:lib
+
+      - name: Build file-storing Angular demo
+        working-directory: file-storing/angular
+        run: npm run build:prod
+
+      - name: Pack file-storing Angular library
+        shell: pwsh
+        working-directory: file-storing/angular
+        run: |
+          New-Item -ItemType Directory -Force ../../artifacts/npm/file-storing | Out-Null
+          npm pack ./dist/file-explorer --pack-destination ../../artifacts/npm/file-storing
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Smoke-test file-storing Angular package
+        shell: pwsh
+        run: |
+          $tarballs = @(Get-ChildItem ./artifacts/npm/file-storing/*.tgz)
+          if ($tarballs.Count -ne 1) {
+            throw "Expected one file-explorer Angular package tarball, found $($tarballs.Count)."
+          }
+          node ./file-storing/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
+
+      # --- notifications Angular ---
+      - name: Install notifications Angular dependencies
+        working-directory: notifications/angular
+        run: npm ci
+
+      - name: Build notifications Angular library
+        working-directory: notifications/angular
+        run: npm run build:lib
+
+      - name: Build notifications Angular demo
+        working-directory: notifications/angular
+        run: npm run build:prod
+
+      - name: Pack notifications Angular library
+        shell: pwsh
+        working-directory: notifications/angular
+        run: |
+          New-Item -ItemType Directory -Force ../../artifacts/npm/notifications | Out-Null
+          npm pack ./dist/notification-center --pack-destination ../../artifacts/npm/notifications
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Smoke-test notifications Angular package
+        shell: pwsh
+        run: |
+          $tarballs = @(Get-ChildItem ./artifacts/npm/notifications/*.tgz)
+          if ($tarballs.Count -ne 1) {
+            throw "Expected one notification-center Angular package tarball, found $($tarballs.Count)."
+          }
+          node ./notifications/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
+
+      # --- file-storing HTTP E2E smoke test (file-explorer's demo host only; notifications has no
+      #     equivalent host-level E2E script) ---
+      - name: Migrate file-storing host database for HTTP E2E smoke test
+        run: dotnet run --project file-storing/host/Dignite.FileExplorer.Web.Host/Dignite.FileExplorer.Web.Host.csproj --no-build --configuration Release -- --migrate-database
+
+      - name: Start file-storing host for HTTP E2E smoke test
+        shell: bash
+        run: |
+          nohup dotnet run --project file-storing/host/Dignite.FileExplorer.Web.Host/Dignite.FileExplorer.Web.Host.csproj --no-build --configuration Release -- --urls http://127.0.0.1:5000 > host-e2e.log 2>&1 &
+          echo $! > host-e2e.pid
+          for attempt in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:5000/health-status > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat host-e2e.log
+          exit 1
+
+      - name: Run file-storing HTTP E2E and proxy smoke test
+        env:
+          FILE_EXPLORER_BASE_URL: http://127.0.0.1:5000
+        run: node ./file-storing/.github/scripts/smoke-test-file-explorer-http.mjs
+
+      - name: Stop file-storing host after HTTP E2E smoke test
+        if: always()
+        shell: bash
+        run: |
+          if [ -f host-e2e.pid ]; then
+            kill "$(cat host-e2e.pid)" || true
+          fi
+
+      - name: Upload release packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-packages
+          path: |
+            artifacts/*.nupkg
+            artifacts/*.snupkg
+            artifacts/npm/**/*.tgz
+          if-no-files-found: error
+
+      # Keep the existing authenticated GitHub Packages preview feed for every pre-release trigger.
+      - name: Push to GitHub Packages (pre-release)
+        if: steps.channel.outputs.channel == 'prerelease'
+        run: |
+          for package in ./artifacts/*.nupkg; do
+            [[ "$package" == *.snupkg ]] && continue
+            dotnet nuget push "$package" \
+              --api-key "${{ secrets.GITHUB_TOKEN }}" \
+              --source https://nuget.pkg.github.com/dignite-projects/index.json \
+              --skip-duplicate
+          done
+
+      - name: Validate NuGet Trusted Publishing identity
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        env:
+          NUGET_USER: ${{ vars.NUGET_USER }}
+        run: |
+          if [ -z "$NUGET_USER" ]; then
+            echo "::error::The NUGET_USER repository variable is required for Trusted Publishing."
+            exit 1
+          fi
+
+      - name: Sign in to NuGet.org with Trusted Publishing
+        if: startsWith(github.ref, 'refs/tags/v')
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+
+      - name: Push tagged release to NuGet.org
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          for package in ./artifacts/*.nupkg; do
+            [[ "$package" == *.snupkg ]] && continue
+            dotnet nuget push "$package" \
+              --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+          done
+
+      - name: Publish tagged Angular packages to npm
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "::error::NPM_TOKEN is required for a tagged public release."
+            exit 1
+          fi
+          npm publish ./artifacts/npm/file-storing/*.tgz \
+            --access public \
+            --tag '${{ steps.channel.outputs.npm-tag }}' \
+            --provenance
+          npm publish ./artifacts/npm/notifications/*.tgz \
+            --access public \
+            --tag '${{ steps.channel.outputs.npm-tag }}' \
+            --provenance
+
+      # Extract this version's section from the root CHANGELOG.md (merged in MIGRATION.md Phase 6)
+      # as the draft release body.
+      - name: Extract release notes from CHANGELOG
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          awk -v ver="$VERSION" '
+            /^## \[/ { if (found) exit; if (index($0, "[" ver "]") > 0) found = 1; next }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "::warning::CHANGELOG.md has no section for $VERSION; the draft release body will be empty - fill it in before publishing."
+          fi
+
+      # Draft only, on tag pushes (workflow_dispatch has no tag context) - review before publishing.
+      - name: Create draft GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          prerelease: ${{ steps.channel.outputs.channel == 'prerelease' }}
+          body_path: release-notes.md
+          files: |
+            artifacts/*.nupkg
+            artifacts/*.snupkg
+            artifacts/npm/**/*.tgz
