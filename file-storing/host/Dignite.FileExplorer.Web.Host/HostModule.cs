@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
+using Dignite.Abp.FileStoring;
 using Dignite.FileExplorer;
 using Dignite.FileExplorer.EntityFrameworkCore;
+using Dignite.FileExplorer.Permissions;
 using Dignite.FileExplorer.Web.Host.Data;
 using Dignite.FileExplorer.Web.Host.Localization;
 using Dignite.FileExplorer.Web.Host.HealthChecks;
@@ -55,6 +57,8 @@ using Volo.Abp.PermissionManagement.EntityFrameworkCore;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.Identity.EntityFrameworkCore;
 using Volo.Abp.FeatureManagement.EntityFrameworkCore;
+using Volo.Abp.BlobStoring;
+using Volo.Abp.BlobStoring.Database;
 using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore.Sqlite;
@@ -207,6 +211,7 @@ public class HostModule : AbpModule
         ConfigureHealthChecks(context);
         ConfigureSwagger(context.Services, configuration);
         ConfigureAutoApiControllers();
+        ConfigureBlobStoring();
         ConfigureLocalization();
         ConfigureCors(context, configuration);
         ConfigureDataProtection(context);
@@ -224,6 +229,29 @@ public class HostModule : AbpModule
     private void ConfigureHealthChecks(ServiceConfigurationContext context)
     {
         context.Services.AddHostHealthChecks();
+    }
+
+    private void ConfigureBlobStoring()
+    {
+        Configure<AbpBlobStoringOptions>(options =>
+        {
+            options.Containers.Configure("SampleContainer", container =>
+            {
+                container.UseDatabase();
+                container.AddFileSizeLimitHandler(config =>
+                {
+                    config.MaxFileSize = 10;
+                });
+                container.SetAuthorizationConfiguration(config =>
+                {
+                    config.CreateDirectoryPermissionName = FileExplorerPermissions.Files.Management;
+                    config.CreateFilePermissionName = FileExplorerPermissions.Files.Management;
+                    config.UpdateFilePermissionName = FileExplorerPermissions.Files.Management;
+                    config.DeleteFilePermissionName = FileExplorerPermissions.Files.Management;
+                    config.GetFilePermissionName = FileExplorerPermissions.Files.Management;
+                });
+            });
+        });
     }
     
     private void ConfigureStudio(IHostEnvironment hostingEnvironment)
@@ -428,9 +456,10 @@ public class HostModule : AbpModule
             });
         });
         
+        context.Services.AddAlwaysDisableUnitOfWorkTransaction();
         Configure<AbpUnitOfWorkDefaultOptions>(options =>
         {
-            options.TransactionBehavior = UnitOfWorkTransactionBehavior.Auto;
+            options.TransactionBehavior = UnitOfWorkTransactionBehavior.Disabled;
         });
     }
 

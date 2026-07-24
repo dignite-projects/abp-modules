@@ -1,7 +1,7 @@
 <div class="image_box"  [style]="{width:width,maxWidth:'100%'}">
   @if (isImage) {
     <div class="img_box" [class]="className">
-      <img [src]="src"  />
+      <img [src]="displaySrc"  />
       @if (preview) {
         <div class="option_box">
           <i class="fa fa-eye " (click.stop)="OpenPreviewImage(content)"></i>
@@ -36,6 +36,6 @@
     </div>
   </div>
   <div class="modal-body d-flex justify-content-center align-items-center ">
-    <img width="400" class="modal-body-preview"  [src]="src" [style.transform]="'scale('+zoom/10+') rotate('+rotate+'deg)'"   >
+    <img width="400" class="modal-body-preview"  [src]="displaySrc" [style.transform]="'scale('+zoom/10+') rotate('+rotate+'deg)'"   >
   </div>
 </ng-template>

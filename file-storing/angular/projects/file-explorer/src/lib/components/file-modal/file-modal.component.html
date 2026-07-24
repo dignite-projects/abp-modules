@@ -46,8 +46,8 @@
               </ngx-datatable-column>
               <ngx-datatable-column [sortable]="false" [flexGrow]="2">
                 <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
-                  <fe-file-preview [width]="'80px'" [src]="row.url" [name]="row.name" [type]="row.mimeType"
-                  [preview]="true"></fe-file-preview>
+                  <fe-file-preview [width]="'80px'" [src]="row.url" [containerName]="row.containerName"
+                  [blobName]="row.blobName" [name]="row.name" [type]="row.mimeType" [preview]="true"></fe-file-preview>
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column [name]="'FileExplorer::FileName' | abpLocalization" prop="name" [sortable]="false"

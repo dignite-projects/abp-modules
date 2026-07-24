@@ -23,8 +23,9 @@
             </div>
           </td>
           <td>
-            <fe-file-preview [width]="'80px'" [src]="item.url||item.Url" [name]="item.name||item.Name"
-            [type]="item.mimeType||item.MimeType" [preview]="true"></fe-file-preview>
+            <fe-file-preview [width]="'80px'" [src]="item.url||item.Url"
+            [containerName]="item.containerName||item.ContainerName" [blobName]="item.blobName||item.BlobName"
+            [name]="item.name||item.Name" [type]="item.mimeType||item.MimeType" [preview]="true"></fe-file-preview>
           </td>
           <th scope="row">
             <div>{{item.name||item.Name}}</div>

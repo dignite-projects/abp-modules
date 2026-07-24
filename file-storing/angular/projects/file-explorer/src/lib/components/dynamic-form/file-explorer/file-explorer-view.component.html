@@ -2,6 +2,7 @@
   @if(showValue.length>=1){
     <div class="d-flex align-items-center ">
       <fe-file-preview [width]="'60px'" [className]="'overflow-hidden me-1'" [src]="showValue[0].url"
+      [containerName]="showValue[0].containerName" [blobName]="showValue[0].blobName"
       [name]="showValue[0].name" [type]="showValue[0].mimeType" [preview]="true"></fe-file-preview>
       @if(showValue.length-1>0){
         +{{showValue.length-1}}

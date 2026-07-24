@@ -1,7 +1,10 @@
-import { AfterContentInit, Component, Input, TemplateRef } from '@angular/core';
+import { Component, Input, OnChanges, OnDestroy, TemplateRef } from '@angular/core';
 import { ImageTypeOption } from './models';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
+import { FileDescriptorService } from '../proxy/dignite/file-explorer/files';
+import { ObjectUrlService } from '../services/object-url.service';
 
 @Component({
   
@@ -11,7 +14,7 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./file-preview.component.scss'],
   imports: [CommonModule],
 })
-export class FilePreviewComponent implements AfterContentInit{
+export class FilePreviewComponent implements OnChanges, OnDestroy {
 
   /**文件宽度 */
   @Input() width: any = '100px'
@@ -24,6 +27,10 @@ export class FilePreviewComponent implements AfterContentInit{
   /**文件名称 */
   @Input() name: any = ''
   @Input() className: any = ''
+  @Input() containerName: any = ''
+  @Input() blobName: any = ''
+  @Input() resizeWidth: any
+  @Input() resizeHeight: any
 
   /**是否是文件 */
   isImage = true
@@ -33,21 +40,125 @@ export class FilePreviewComponent implements AfterContentInit{
   isVideo = false
   /**文件类型及图标 */
   _ImageTypeOption = ImageTypeOption
+  displaySrc = ''
+  private previewObjectUrl = ''
+  private streamSubscription?: Subscription
 
 
   constructor(
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private fileDescriptorService: FileDescriptorService,
+    private objectUrlService: ObjectUrlService,
   ) { }
   
-  ngAfterContentInit(): void {
-    //Called after ngOnInit when the component's or directive's content has been initialized.
-    //Add 'implements AfterContentInit' to the class.
+  ngOnChanges(): void {
+    this.updateFileType();
+    this.updatePreviewSource();
+  }
+
+  ngOnDestroy(): void {
+    this.streamSubscription?.unsubscribe();
+    this.revokePreviewObjectUrl();
+  }
+
+  private updateFileType() {
+    const fileName = this.name || '';
+    const fileType = this.type || '';
     if (!this.type) {
-      this.type = this.name.includes('.7z') ? '7z' : ''
+      this.type = fileName.includes('.7z') ? '7z' : ''
     }
-    this.isImage = this.type.includes('image/')
-    this.isAudio = this.type.includes('audio/')
-    this.isVideo = this.type.includes('video/')
+    this.isImage = fileType.includes('image/')
+    this.isAudio = fileType.includes('audio/')
+    this.isVideo = fileType.includes('video/')
+  }
+
+  private updatePreviewSource() {
+    this.streamSubscription?.unsubscribe();
+    this.revokePreviewObjectUrl();
+    this.displaySrc = this.src;
+
+    if (!this.isImage || this.isBrowserLocalUrl(this.src)) {
+      return;
+    }
+
+    const fileSource = this.getFileSource();
+    if (!fileSource.containerName || !fileSource.blobName) {
+      return;
+    }
+
+    this.streamSubscription = this.fileDescriptorService
+      .getStream(fileSource.containerName, fileSource.blobName, {
+        width: this.resizeWidth,
+        height: this.resizeHeight,
+      })
+      .subscribe({
+        next: blob => {
+          this.revokePreviewObjectUrl();
+          this.previewObjectUrl = this.objectUrlService.get(blob);
+          this.displaySrc = this.previewObjectUrl;
+        },
+        error: () => {
+          this.displaySrc = this.src;
+        },
+      });
+  }
+
+  private getFileSource() {
+    if (this.containerName && this.blobName) {
+      return {
+        containerName: this.containerName,
+        blobName: this.blobName,
+      };
+    }
+
+    return this.parseFileUrl(this.src);
+  }
+
+  private parseFileUrl(src: string) {
+    if (!src) {
+      return {
+        containerName: '',
+        blobName: '',
+      };
+    }
+
+    try {
+      const url = new URL(String(src), window.location.origin);
+      const parts = url.pathname.split('/').filter(Boolean);
+      const filesIndex = parts.findIndex((part, index) =>
+        part === 'files' && parts[index - 1] === 'file-explorer' && parts[index - 2] === 'api'
+      );
+
+      if (filesIndex < 0) {
+        return {
+          containerName: '',
+          blobName: '',
+        };
+      }
+
+      const containerIndex = parts[filesIndex + 1] === 'download' ? filesIndex + 2 : filesIndex + 1;
+      return {
+        containerName: decodeURIComponent(parts[containerIndex] ?? ''),
+        blobName: parts.slice(containerIndex + 1).map(part => decodeURIComponent(part)).join('/'),
+      };
+    } catch {
+      return {
+        containerName: '',
+        blobName: '',
+      };
+    }
+  }
+
+  private isBrowserLocalUrl(src: string) {
+    const value = String(src || '');
+    return value.startsWith('blob:') || value.startsWith('data:');
+  }
+
+  private revokePreviewObjectUrl() {
+    if (this.previewObjectUrl) {
+      URL.revokeObjectURL(this.previewObjectUrl);
+      this.previewObjectUrl = '';
+    }
   }
 
   /**预览图片 */
