@@ -81,17 +81,17 @@ picking up the new mapping (either via `NotificationCenterDbContext` directly, o
 ## 5. Application.Contracts
 
 DTOs + service interface, same conventions as generic ABP (`WidgetDto`, `CreateWidgetDto`, etc. —
-see `framework/common/application-layer.md`).
+see the repo-root `.claude/rules/framework/common/application-layer.md`).
 
 ## 6. Object Mapping
 
 Check which mapper this repo is using for the layer you're touching before adding a new one
-(Mapperly vs AutoMapper) — see `framework/common/application-layer.md`.
+(Mapperly vs AutoMapper) — see the repo-root `.claude/rules/framework/common/application-layer.md`.
 
 ## 7. Application Service
 
 Implement against the generic repository, with `[Authorize(...)]` on mutating methods — see
-`framework/common/authorization.md`.
+the repo-root `.claude/rules/framework/common/authorization.md`.
 
 ## 8. Add Tests
 

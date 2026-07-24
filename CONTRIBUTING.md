@@ -24,11 +24,25 @@ cd notifications/angular && npm install && npm run build:lib
 
 ## Code conventions
 
-Each module's architectural invariants and layer conventions are documented under
-`<module>/.claude/rules/` — loaded automatically for AI-assisted contributions, but equally the
-reference for human contributors. They are **module-specific on purpose**: `file-storing/` and
-`notifications/` have genuinely different DDD shapes, persistence conventions, and hard invariants,
-so each keeps its own rule set rather than sharing a diluted one.
+Architectural invariants and layer conventions are documented under `.claude/rules/` — loaded
+automatically for AI-assisted contributions, but equally the reference for human contributors.
+Following [Claude Code's monorepo guidance](https://code.claude.com/docs/en/large-codebases), which
+puts path-scoped rules in a central root `.claude/` and per-directory conventions in that
+directory's `CLAUDE.md`:
+
+- **Root `.claude/rules/framework/common/`** — every cross-cutting ABP rule, one file per topic
+  (`abp-core`, `application-layer`, `authorization`, `ddd-patterns`, `infrastructure`,
+  `multi-tenancy`, `versioning`). Each leads with generic ABP conventions, then has a
+  **`## In file-storing`** and a **`## In notifications`** section.
+- **`<module>/.claude/rules/`** — only what has no cross-module counterpart: `cli-commands`,
+  `dependency-rules`, `development-flow`, `data/ef-core`, `testing/patterns`, `template/app`, and
+  the module's `*-invariants.md`.
+
+`file-storing/` and `notifications/` have genuinely different DDD shapes, persistence conventions,
+and hard invariants. Where they disagree — repository convention, object mapper, distributed-event
+posture, test naming — the rules **name the disagreement and show both**, rather than averaging them
+into a rule that is wrong for both. `testing/patterns.md` is the clearest case: the two modules use
+deliberately opposite test-naming conventions, which is why it was never merged.
 
 Start with:
 

@@ -67,7 +67,8 @@ dotnet pack Dignite.Abp.Notifications.slnx -c Release
 Bump `<Version>` in `Directory.Build.props` before a real release — it applies to every project in
 the repo (there's no per-project versioning).
 
-See `framework/common/versioning.md` for what this repo's `<Version>` MAJOR/MINOR/PATCH segments
+See the repo-root [`.claude/rules/framework/common/versioning.md`](../../../../../.claude/rules/framework/common/versioning.md)
+(versioning is repo-wide — there is no module-local copy) for what `<Version>`'s MAJOR/MINOR/PATCH segments
 actually mean (MAJOR tracks the ABP major version, not this module's own breaking changes) before
 bumping it.
 

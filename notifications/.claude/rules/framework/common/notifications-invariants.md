@@ -1,7 +1,9 @@
 # Hard Invariants — Read Before Touching Notifications / Notifiers / DI Lifetimes
 
-> This file has **no `paths:` frontmatter, so it always loads**, alongside `abp-core.md` and
-> `template/app.md`. It exists because this repo is a from-scratch rewrite of a legacy
+> This file has **no `paths:` frontmatter, so it always loads**, alongside `template/app.md` and the
+> repo-root `.claude/rules/framework/common/{abp-core,versioning}.md` (generic ABP conventions live at the
+> root now — this module's specifics are in each root file's `## In notifications` section).
+> It exists because this repo is a from-scratch rewrite of a legacy
 > implementation that shipped with the exact bugs described below —
 > these are not style preferences, they're the reasons this repo exists. Do not reintroduce them.
 

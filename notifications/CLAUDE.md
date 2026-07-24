@@ -80,13 +80,21 @@ Source files live at `<Project>/<mirrored namespace path>/File.cs` (every `.cspr
 
 ## Coding rules
 
-Detailed conventions live in `.claude/rules/` and load automatically:
+Conventions are split between the repo root and this module, following
+[Claude Code's monorepo guidance](https://code.claude.com/docs/en/large-codebases) that path-scoped rules
+live in a central root `.claude/`:
 
-- `framework/common/abp-core.md`, `framework/common/notifications-invariants.md`, and
-  `template/app.md` are **always loaded** (core ABP conventions + this repo's hard architectural
-  invariants + the full solution map / "add a feature" flow).
-- Everything else is **path-scoped** via `paths:` frontmatter — e.g. DDD patterns for
-  `*.Domain/**/*.cs`, EF Core for `*DbContext*.cs`, tests for `test/**`.
+- **Repo-root [`.claude/rules/framework/common/`](../.claude/rules/framework/common/)** — every
+  cross-cutting ABP rule: `abp-core`, `application-layer`, `authorization`, `ddd-patterns`,
+  `infrastructure`, `multi-tenancy`, `versioning`. Each leads with generic ABP conventions, then has a
+  **`## In notifications`** section with this module's specifics. `abp-core.md` and `versioning.md` load
+  at launch; the rest are path-scoped.
+- **This module's `.claude/rules/`** — only what has no cross-module counterpart:
+  `framework/common/{cli-commands,dependency-rules,development-flow}.md`, `framework/data/ef-core.md`,
+  `framework/testing/patterns.md`, `template/app.md`, and
+  `framework/common/notifications-invariants.md`. `notifications-invariants.md` and `template/app.md`
+  have no `paths:` frontmatter, so they always load; the rest are path-scoped (EF Core for
+  `*DbContext*.cs`, tests for `test/**`, and so on).
 
 Read `.claude/rules/template/app.md` first for the layer map and the "add a feature" flow, then
 `.claude/rules/framework/common/notifications-invariants.md` before touching `NotificationData`,

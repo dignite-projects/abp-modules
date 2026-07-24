@@ -90,7 +90,7 @@ migration after picking up the new mapping. See `framework/data/ef-core.md`.
 ## 5. Application.Contracts
 
 DTOs + service interface + any new permission (`FileExplorerPermissions`), same conventions as generic ABP —
-see `framework/common/application-layer.md` and `framework/common/authorization.md`.
+see the repo-root `.claude/rules/framework/common/application-layer.md` and the repo-root `.claude/rules/framework/common/authorization.md`.
 
 ## 6. Object Mapping — Mapperly
 
@@ -101,7 +101,7 @@ field you fill in the AppService. Don't reach for AutoMapper — see `applicatio
 ## 7. Application Service
 
 Implement against the custom repository, with `[Authorize(...)]` for coarse permissions and resource-based
-`AuthorizationService` checks for per-resource access — see `framework/common/authorization.md`.
+`AuthorizationService` checks for per-resource access — see the repo-root `.claude/rules/framework/common/authorization.md`.
 
 ## 8. Add Tests
 

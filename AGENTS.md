@@ -6,12 +6,37 @@ lockstep. This file covers what is true for the *repository*; each module carrie
 
 **Read the module-level docs before changing code inside a module.** They are not duplicates of
 each other — the two modules have genuinely different DDD shapes, persistence conventions, and
-invariants, and the rules are written per module on purpose.
+invariants, and the module-specific rules are written per module on purpose.
 
 | Working in | Read first |
 |---|---|
 | `file-storing/**` | [`file-storing/CLAUDE.md`](file-storing/CLAUDE.md), then `file-storing/.claude/rules/template/app.md`, then `file-storing/.claude/rules/framework/common/file-storing-invariants.md` |
 | `notifications/**` | [`notifications/CLAUDE.md`](notifications/CLAUDE.md), then `notifications/.claude/rules/template/app.md`, then `notifications/.claude/rules/framework/common/notifications-invariants.md` |
+
+### Where the rules live
+
+Per [Claude Code's monorepo guidance](https://code.claude.com/docs/en/large-codebases), path-scoped
+rules belong in a **central `.claude/` at the repository root**, while per-directory conventions go
+in that directory's `CLAUDE.md`. This repo follows that:
+
+- **Root `.claude/rules/framework/common/`** — every cross-cutting ABP rule, in one file per topic:
+  `abp-core`, `application-layer`, `authorization`, `ddd-patterns`, `infrastructure`,
+  `multi-tenancy`, `versioning`. Each file leads with the generic ABP conventions, then carries a
+  **`## In file-storing`** and a **`## In notifications`** section for that module's specifics.
+- **`<module>/.claude/rules/`** — only the files with no cross-module counterpart:
+  `cli-commands`, `dependency-rules`, `development-flow`, `data/ef-core`, `testing/patterns`,
+  `template/app`, and the module's `*-invariants.md`. These are module-specific end to end.
+- **`<module>/CLAUDE.md`** — the module's orientation doc, loaded on demand when Claude reads files
+  in that module.
+
+Where the two modules genuinely disagree — repository convention, object mapper, distributed-event
+posture, test naming — the root file **names the disagreement and shows both**, rather than
+averaging them into a rule that is wrong for both.
+
+> Root rules **without** `paths:` (`abp-core.md`, `versioning.md`) load at launch. The rest are
+> path-scoped and load when Claude reads a matching file. Note that `.claude/settings.json` does
+> **not** inherit down the tree — it loads only from the directory you start Claude in, so start at
+> the repo root to pick up the root settings.
 
 ## What lives where
 
@@ -20,13 +45,15 @@ abp-modules/
 ├── Directory.Build.props        # shared metadata + the ONE <Version> every package uses
 ├── Directory.Packages.props     # central package management for all library projects
 ├── Dignite.Abp.Modules.slnx     # aggregate solution (both modules)
+├── .claude/rules/framework/     # all cross-cutting ABP rules (generic + per-module sections)
 ├── .github/workflows/           # one build+test workflow, one lockstep release workflow
 ├── file-storing/                # file upload pipeline on ABP BlobStoring + DDD File Explorer
 └── notifications/               # event-driven notifications + optional Notification Center
 ```
 
 Each module holds `core/`, its feature tree (`file-explorer/` or `notification-center/`), a
-local-dev-only `host/`, an `angular/` workspace, its own focused `.slnx`, and its own `.claude/`.
+local-dev-only `host/`, an `angular/` workspace, its own focused `.slnx`, and its own `.claude/`
+rules for what has no cross-module counterpart (see "Where the rules live" above).
 
 ## Repository-wide invariants
 

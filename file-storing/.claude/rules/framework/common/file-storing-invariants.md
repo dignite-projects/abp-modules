@@ -1,7 +1,9 @@
 # Hard Invariants — Read Before Touching Uploads, Blobs, Directories, Authorization, or DI Lifetimes
 
-> This file has **no `paths:` frontmatter, so it always loads**, alongside `abp-core.md`, `versioning.md`, and
-> `template/app.md`. It encodes the rules the module must uphold: the ones the hardening fixes (issues #45–#70)
+> This file has **no `paths:` frontmatter, so it always loads**, alongside `template/app.md` and the
+> repo-root `.claude/rules/framework/common/{abp-core,versioning}.md` (generic ABP conventions live at the
+> root now — this module's specifics are in each root file's `## In file-storing` section).
+> It encodes the rules the module must uphold: the ones the hardening fixes (issues #45–#70)
 > already established as "don't regress," plus the guarantees the audit remediation
 > (the closed `audit`-labeled issues #2–#35) drove toward. Where an invariant is **not yet fully enforced**, it says so —
 > treat that as "the intended contract; don't make it worse, and close it when you touch that code."
@@ -76,7 +78,7 @@ this by adding an ETO/outbox — that's the wrong scale for an in-request file w
 
 ## 5. Authorization: no bypass via temporary ownership; authorize every resource; the container decides the permission
 
-The authorization model is in `framework/common/authorization.md`; the invariants on top of it:
+The authorization model is in the repo-root `.claude/rules/framework/common/authorization.md`; the invariants on top of it:
 
 - **The create-permission check must run before the caller becomes the resource's owner.** Constructing a
   `FileDescriptor` with `CreatorId = current user` and *then* authorizing lets the "creator can act on their own

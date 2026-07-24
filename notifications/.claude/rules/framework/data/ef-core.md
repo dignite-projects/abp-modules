@@ -82,7 +82,7 @@ filters — is written directly against `IRepository<T, Guid>.GetQueryableAsync(
 `IAsyncQueryableExecuter` inside the `INotificationStore` implementation (`NotificationStore.cs`),
 which is the actual abstraction boundary for this module. If you're adding a query, it almost
 certainly belongs as a method on `INotificationStore`, not a new repository interface. See
-`framework/common/ddd-patterns.md` for when a custom repository interface would still be
+the repo-root `.claude/rules/framework/common/ddd-patterns.md` for when a custom repository interface would still be
 appropriate elsewhere in this repo.
 
 ```csharp

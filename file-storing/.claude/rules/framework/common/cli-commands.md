@@ -95,8 +95,9 @@ dotnet pack Dignite.Abp.FileStoring.slnx -c Release
 
 Bump `<Version>` in `Directory.Build.props` before a real release — it applies to every library project. Keep
 the Angular package version (`angular/projects/file-explorer/package.json`) in step for coordinated releases.
-See `framework/common/versioning.md` for what the MAJOR/MINOR/PATCH segments mean (MAJOR tracks the ABP major
-version) before bumping.
+See the repo-root [`.claude/rules/framework/common/versioning.md`](../../../../../.claude/rules/framework/common/versioning.md)
+for what the MAJOR/MINOR/PATCH segments mean (MAJOR tracks the ABP major version) before bumping. Versioning is
+repo-wide — there is no module-local copy of that rule.
 
 ## Not applicable in this repo
 
