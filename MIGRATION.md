@@ -102,9 +102,14 @@
 - **验证**:聚合方案 `dotnet build -c Release` 0 error;`dotnet pack` 仍产出 25 个包;实际解包核对 `Dignite.Abp.FileStoring` 和 `Dignite.Abp.Notifications` 两个包,确认打进去的 README 是**各自模块的**而不是根门户、`PackageId` 未变、`version=10.0.0-rc.4`、`projectUrl` 已指向 abp-modules、`tags` 仍是各模块自己的;用 `AssemblyName.GetAssemblyName` 读了包内 DLL,**`AssemblyVersion=1.0.0.0` 不变量成立**。所有跨文档相对链接(模块→根、规则→根 CONTRIBUTING、根→模块)逐条验证过能解析到真实文件。
 
 ## Phase 7 — 验证 + 首个统一发布
-- [ ] 聚合方案 build + 两模块全测试跑通
-- [ ] `dotnet pack` 出全部包,核对 PackageId / 版本 / AssemblyVersion 无变化
-- [ ] 打第一个统一 tag,走一遍 release
+- [x] 聚合方案 build + 两模块全测试跑通
+  - `dotnet build Dignite.Abp.Modules.slnx -c Release`:0 error。
+  - `dotnet test Dignite.Abp.Modules.slnx -c Release`:**12 个测试程序集、242 个测试全部通过,0 失败 0 跳过**(file-storing 侧 47:FileStoring 13 + Imaging 4 + FileExplorer Domain 3/EFCore 4/MongoDB 4/Application 2/Authorization 3/DirectorySafety 12/Update 2;notifications 侧 195:core 115 + NotificationCenter EFCore 40 + MongoDB 40)。
+- [x] `dotnet pack` 出全部包,核对 PackageId / 版本 / AssemblyVersion 无变化
+  - 产出 **25 个 nupkg**(+25 个 snupkg),与合仓前两仓可打包项目数(10 + 15)一致,无多无少。
+  - 逐包解包核对(不是抽样),25/25 全部满足:**① `PackageId` 与合仓前逐字相同**(对照两个 smoke-test 脚本里硬编码的包名清单,也就是 Phase 0 在 NuGet 上查到的那批已发布包名);**② 包内 DLL 的 `AssemblyVersion` 全部为 `1.0.0.0`**(用 `AssemblyName.GetAssemblyName` 实际读程序集元数据,不是读 props);**③ 版本全部为 `10.0.0-rc.4`,MAJOR=10 ≥ 10**。另外 `projectUrl` 25/25 已指向 abp-modules、`license` 25/25 为 `LGPL-3.0-only`、README 25/25 打的是各自模块那份。
+  - 两个消费者 smoke-test 脚本各自跑通:一个真实项目能 restore + 编译全部 10 个 / 15 个包。
+- [ ] 打第一个统一 tag,走一遍 release —— **待你操作**,且**必须先做完下面清单里的 NuGet Trusted Publishing 重配**,否则 release 会在推包那步授权失败。
 
 ## Phase 8 — 退役旧仓
 - [ ] `abp-file-storing`、`abp-notifications` 归档(README 顶部指向 abp-modules),不删
@@ -115,7 +120,10 @@
 
 跑到对应 Phase 时不会自己硬来,停下来等你处理:
 
-- [ ] **Phase 1/5**:在 `dignite-projects` 下建 GitHub 仓 `abp-modules`(建成完全空的,别自动初始化 README/.gitignore/license),本地骨架就绪后加 `origin` 再 push。
+- [x] **Phase 1/5**:在 `dignite-projects` 下建 GitHub 仓 `abp-modules`(建成完全空的,别自动初始化 README/.gitignore/license)。已建好:https://github.com/dignite-projects/abp-modules,本地已 `git remote add origin` 指过去。
+- [ ] **首次 push**(未执行,等你点头):本地 `main` 有 319 个 commit(骨架 + 两仓完整历史 + 6 个迁移 commit)。确认后跑 `git push -u origin main`。
 - [ ] **Phase 4**:ABP Studio 聚合解决方案(`.abpmdl`/`.abpsln`/`.abpstudio`)在 ABP Studio 里重建。
+- [ ] **Phase 5**:NuGet.org Trusted Publishing 重配 —— **必须在打第一个 tag 之前做完**。25 个包每个的发布策略都要从旧仓名(`abp-file-storing` / `abp-notifications`)+ 旧 `release.yml` 改到 `dignite-projects/abp-modules` + 新的 `release.yml`;另外确认仓库变量 `NUGET_USER` 已设为 NuGet 用户名(不是邮箱),以及 `NPM_TOKEN` secret 仍然有效(两个 Angular 包现在都从这条流水线发)。
+- [ ] **Phase 7**:上面都就绪后,打第一个统一 tag `v10.0.0-rc.4` 走一遍 release。
 - [ ] **独立后续任务(不卡这次迁移,但别忘)**:notifications 这边被白名单放行的 6 个 High 漏洞(`Scriban` 影响已发布的 `Emailing`/`Emailing.Identity`;`Web.Host` 另有 `MessagePack`/`Microsoft.OpenApi`/`SQLitePCLRaw`,详见 Phase 5)需要真正评估/修复——Scriban 目前上游无修复版,可能需要评估实际可利用性或换库;Host 三个可以先核实有没有已修复版本、加显式 PackageReference 顶上去。
 - [ ] **Phase 5**:NuGet.org Trusted Publishing 策略从两仓旧名 + 旧 `release.yml` 改到 `dignite-projects/abp-modules` + 新工作流,否则统一发布会在签名/授权这步失败。
