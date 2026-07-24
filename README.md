@@ -3,9 +3,6 @@
 Reusable **[ABP Framework](https://abp.io)** modules from [Dignite](https://github.com/dignite-projects),
 developed together in one repository and released in lockstep.
 
-This repository is the vnext home for ABP modules from
-[`dignite-projects/dignite-abp`](https://github.com/dignite-projects/dignite-abp).
-
 > **.NET 10 · ABP 10.5.0 · LGPL-3.0-only**
 
 | Module | What it is | Docs |
