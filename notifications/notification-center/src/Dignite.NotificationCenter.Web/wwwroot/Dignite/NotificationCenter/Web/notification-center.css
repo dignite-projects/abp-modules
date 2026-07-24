@@ -1,0 +1,45 @@
+.dignite-notification-list {
+    min-width: 380px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.dignite-notification-item.dignite-notification-unread {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.dignite-notification-item-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.dignite-notification-item-title {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.dignite-notification-item-time {
+    white-space: nowrap;
+}
+
+.dignite-notification-image {
+    max-width: 100%;
+    border-radius: 4px;
+    margin-top: 4px;
+}
+
+.dignite-notification-message {
+    font-size: 0.9rem;
+}
+
+@keyframes dignite-notification-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.dignite-notification-pulse {
+    animation: dignite-notification-pulse 0.5s ease-in-out 2;
+}

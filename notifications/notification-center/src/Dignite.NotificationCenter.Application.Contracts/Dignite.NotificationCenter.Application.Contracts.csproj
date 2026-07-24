@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net10.0</TargetFrameworks>
+    <RootNamespace />
+    <Description>DTOs and application service interfaces for the Dignite Notification Center's inbox and subscription features.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.Ddd.Application.Contracts" />
+    <PackageReference Include="Volo.Abp.Authorization.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.NotificationCenter.Domain.Shared\Dignite.NotificationCenter.Domain.Shared.csproj" />
+    <ProjectReference Include="..\..\..\core\src\Dignite.Abp.Notifications.Abstractions\Dignite.Abp.Notifications.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

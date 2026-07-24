@@ -1,0 +1,30 @@
+/* To learn more about this file see: https://angular.io/config/tsconfig. */
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist/out-tsc",
+    "sourceMap": true,
+    "declaration": false,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "bundler",
+    "module": "ES2022",
+    "importHelpers": true,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "lib": ["ES2022", "dom", "esnext.disposable"],
+    "paths": {
+      "@dignite/ng.notification-center": [
+        "projects/notification-center/src/public-api.ts"
+      ],
+      "@dignite/ng.notification-center/config": [
+        "projects/notification-center/config/src/public-api.ts"
+      ]
+    },
+    "useDefineForClassFields": false
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false
+  }
+}

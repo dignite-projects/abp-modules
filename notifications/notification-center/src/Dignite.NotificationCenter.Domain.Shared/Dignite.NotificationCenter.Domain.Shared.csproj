@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net10.0</TargetFrameworks>
+    <RootNamespace />
+    <Description>Shared enums and constants (NotificationSeverity, UserNotificationState) for the Dignite Notification Center.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.Localization" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\core\src\Dignite.Abp.Notifications.Abstractions\Dignite.Abp.Notifications.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Dignite\NotificationCenter\Localization\*.json" />
+    <Content Remove="Dignite\NotificationCenter\Localization\*.json" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1220" viewBox="0 0 1800 1220" role="img" aria-labelledby="title desc">
+  <title id="title">Dignite ABP Notifications architecture</title>
+  <desc id="desc">A three-stage flow showing notification publishing and distribution, stateless and persistent operation modes, and delivery through SignalR, email, or custom notifiers.</desc>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+    <style>
+      text { font-family: "Segoe UI", Arial, sans-serif; fill: #172033; }
+      .stage { fill: #ffffff; stroke: #cbd5e1; stroke-width: 2; }
+      .stage-title { font-size: 22px; font-weight: 500; text-anchor: middle; }
+      .node { stroke-width: 2; }
+      .app { fill: #eff6ff; stroke: #60a5fa; }
+      .core { fill: #f5f3ff; stroke: #8b5cf6; }
+      .stateless { fill: #f8fafc; stroke: #94a3b8; }
+      .center { fill: #ecfdf5; stroke: #34d399; }
+      .boundary { fill: #fff7ed; stroke: #fb923c; }
+      .channel { fill: #ecfeff; stroke: #22d3ee; }
+      .client { fill: #f8fafc; stroke: #94a3b8; }
+      .label { font-size: 18px; font-weight: 400; text-anchor: middle; }
+      .label-strong { font-size: 18px; font-weight: 500; text-anchor: middle; }
+      .edge { fill: none; stroke: #64748b; stroke-width: 2.2; marker-end: url(#arrow); }
+      .edge-dashed { stroke-dasharray: 7 6; }
+      .edge-label-bg { fill: #ffffff; }
+      .edge-label { font-size: 16px; font-weight: 400; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1220" fill="#ffffff"/>
+
+  <!-- Stage 1: Publish and distribute -->
+  <rect class="stage" x="24" y="24" width="1752" height="324" rx="16"/>
+  <text class="stage-title" x="900" y="60">1. Publish and distribute</text>
+
+  <rect class="node app" x="62" y="98" width="190" height="72" rx="8"/>
+  <text class="label" x="157" y="141">Business code</text>
+
+  <rect class="node app" x="62" y="210" width="246" height="92" rx="8"/>
+  <text class="label" x="185" y="247">
+    <tspan x="185" dy="0">Notification definition</tspan>
+    <tspan x="185" dy="25">and typed data</tspan>
+  </text>
+
+  <rect class="node core" x="352" y="142" width="246" height="84" rx="8"/>
+  <text class="label-strong" x="475" y="191">INotificationPublisher</text>
+
+  <polygon class="node core" points="710,92 800,184 710,276 620,184"/>
+  <text class="label" x="710" y="174">
+    <tspan x="710" dy="0">Small explicit</tspan>
+    <tspan x="710" dy="25">fan-out?</tspan>
+  </text>
+
+  <rect class="node core" x="808" y="254" width="276" height="68" rx="8"/>
+  <text class="label" x="946" y="295">NotificationDistributionJob</text>
+
+  <rect class="node core" x="1030" y="116" width="278" height="126" rx="8"/>
+  <text class="label-strong" x="1169" y="158">Distributor</text>
+  <text class="label" x="1169" y="188">
+    <tspan x="1169" dy="0">Recipients and</tspan>
+    <tspan x="1169" dy="25">channel routing</tspan>
+  </text>
+
+  <polygon class="node core" points="1470,104 1554,184 1470,264 1386,184"/>
+  <text class="label-strong" x="1470" y="191">INotificationStore</text>
+
+  <path class="edge" d="M 252 134 C 300 134, 308 174, 352 174"/>
+  <path class="edge edge-dashed" d="M 308 256 C 330 256, 330 205, 352 205"/>
+  <path class="edge" d="M 598 184 L 620 184"/>
+  <path class="edge" d="M 800 150 C 870 100, 960 100, 1030 148"/>
+  <rect class="edge-label-bg" x="858" y="91" width="104" height="27" rx="4"/>
+  <text class="edge-label" x="910" y="111">Yes — inline</text>
+  <path class="edge" d="M 710 276 C 734 300, 770 288, 808 288"/>
+  <rect class="edge-label-bg" x="690" y="275" width="132" height="27" rx="4"/>
+  <text class="edge-label" x="756" y="295">No — background</text>
+  <path class="edge" d="M 1084 288 C 1125 288, 1145 264, 1145 242"/>
+  <path class="edge" d="M 1308 184 L 1386 184"/>
+
+  <!-- Stage 2: Operation modes -->
+  <rect class="stage" x="430" y="420" width="1100" height="286" rx="16"/>
+  <text class="stage-title" x="980" y="458">2. Select an operation mode</text>
+
+  <rect class="node stateless" x="500" y="500" width="312" height="130" rx="8"/>
+  <text class="label-strong" x="656" y="538">Stateless Forwarding</text>
+  <text class="label" x="656" y="569">
+    <tspan x="656" dy="0">NullNotificationStore</tspan>
+    <tspan x="656" dy="25">No persistent inbox</tspan>
+  </text>
+
+  <rect class="node center" x="880" y="486" width="324" height="158" rx="8"/>
+  <text class="label-strong" x="1042" y="524">Full Notification Center</text>
+  <text class="label" x="1042" y="555">
+    <tspan x="1042" dy="0">EF Core or MongoDB</tspan>
+    <tspan x="1042" dy="25">Inbox, subscriptions,</tspan>
+    <tspan x="1042" dy="25">and read state</tspan>
+  </text>
+
+  <rect class="node center" x="1270" y="516" width="208" height="98" rx="8"/>
+  <text class="label-strong" x="1374" y="554">REST API</text>
+  <text class="label" x="1374" y="584">/api/notification-center</text>
+
+  <path class="edge" d="M 1437 248 C 1280 356, 790 360, 656 500"/>
+  <rect class="edge-label-bg" x="890" y="363" width="86" height="27" rx="4"/>
+  <text class="edge-label" x="933" y="383">Core only</text>
+  <path class="edge" d="M 1488 248 C 1450 330, 1280 360, 1170 420 C 1150 440, 1140 462, 1140 486"/>
+  <rect class="edge-label-bg" x="1192" y="365" width="152" height="27" rx="4"/>
+  <text class="edge-label" x="1268" y="385">Notification Center</text>
+  <path class="edge" d="M 1204 565 L 1270 565"/>
+
+  <!-- Stage 3: Deliver and consume -->
+  <rect class="stage" x="350" y="778" width="1250" height="410" rx="16"/>
+  <text class="stage-title" x="975" y="816">3. Deliver and consume</text>
+
+  <rect class="node boundary" x="424" y="924" width="286" height="104" rx="8"/>
+  <text class="label-strong" x="567" y="965">NotificationDeliveryEto</text>
+  <text class="label" x="567" y="995">Distributed event boundary</text>
+
+  <rect class="node channel" x="828" y="842" width="238" height="76" rx="8"/>
+  <text class="label-strong" x="947" y="887">SignalR Notifier</text>
+
+  <rect class="node channel" x="828" y="950" width="238" height="76" rx="8"/>
+  <text class="label-strong" x="947" y="995">Email Notifier</text>
+
+  <rect class="node channel" x="828" y="1058" width="238" height="94" rx="8"/>
+  <text class="label-strong" x="947" y="1096">Custom Notifier</text>
+  <text class="label" x="947" y="1126">Web Push, SMS, etc.</text>
+
+  <rect class="node client" x="1240" y="830" width="282" height="100" rx="8"/>
+  <text class="label-strong" x="1381" y="870">MVC UI / Angular UI</text>
+  <text class="label" x="1381" y="901">or a custom client</text>
+
+  <rect class="node client" x="1240" y="950" width="282" height="76" rx="8"/>
+  <text class="label-strong" x="1381" y="995">Recipient Email</text>
+
+  <rect class="node client" x="1240" y="1067" width="282" height="76" rx="8"/>
+  <text class="label-strong" x="1381" y="1112">External Channel</text>
+
+  <path class="edge" d="M 656 630 C 650 720, 560 800, 548 924"/>
+  <rect class="edge-label-bg" x="522" y="724" width="158" height="27" rx="4"/>
+  <text class="edge-label" x="601" y="744">Configured channels</text>
+  <path class="edge" d="M 1042 644 C 1010 740, 720 800, 650 924"/>
+  <rect class="edge-label-bg" x="778" y="746" width="138" height="27" rx="4"/>
+  <text class="edge-label" x="847" y="766">Persist and publish</text>
+  <path class="edge" d="M 1374 614 C 1382 700, 1382 760, 1382 830"/>
+  <rect class="edge-label-bg" x="1288" y="712" width="188" height="27" rx="4"/>
+  <text class="edge-label" x="1382" y="732">Inbox and subscriptions</text>
+
+  <path class="edge" d="M 710 955 C 760 930, 780 880, 828 880"/>
+  <path class="edge" d="M 710 976 L 828 988"/>
+  <path class="edge" d="M 710 1000 C 758 1030, 780 1105, 828 1105"/>
+  <path class="edge" d="M 1066 880 L 1240 880"/>
+  <rect class="edge-label-bg" x="1112" y="863" width="82" height="27" rx="4"/>
+  <text class="edge-label" x="1153" y="883">Real-time</text>
+  <path class="edge" d="M 1066 988 L 1240 988"/>
+  <path class="edge" d="M 1066 1105 L 1240 1105"/>
+</svg>

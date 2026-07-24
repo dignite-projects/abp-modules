@@ -1,0 +1,216 @@
+# Release workflow. The NuGet version in Directory.Build.props and the npm version in the Angular
+# library package.json are kept in lockstep; a pushed v* tag must match both, but tags do not drive
+# the number.
+#
+# Tagged releases are public: NuGet packages go to NuGet.org through Trusted Publishing (GitHub
+# OIDC -> short-lived API key), and the Angular package goes to npm (`next` for a pre-release,
+# `latest` for a stable release). Pre-release NuGet packages are also mirrored to GitHub Packages.
+# workflow_dispatch remains a private preview build: it packs and smoke-tests everything, then
+# pushes a pre-release to GitHub Packages only.
+#
+# Triggers: push a v* tag (e.g. v10.0.0-preview.1 or v10.0.0) or use workflow_dispatch. For churny
+# pre-release builds prefer workflow_dispatch: no tag, no draft Release - just bump <Version> in
+# Directory.Build.props, run, and the packages land in GitHub Packages.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # Required by softprops/action-gh-release to create a draft Release
+      packages: write # Required to push pre-release NuGet packages to GitHub Packages
+      id-token: write # NuGet Trusted Publishing and npm provenance for tagged public releases
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: npm
+          cache-dependency-path: angular/package-lock.json
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Verify tag, NuGet, and npm version lockstep
+        id: version
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: |
+          $version = & ./.github/scripts/verify-version-lockstep.ps1 -Tag $env:RELEASE_TAG
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Determine release channel
+        id: channel
+        shell: bash
+        run: |
+          VERSION='${{ steps.version.outputs.version }}'
+          if [[ "$VERSION" == *-* ]]; then
+            echo "channel=prerelease" >> "$GITHUB_OUTPUT"
+            echo "npm-tag=next" >> "$GITHUB_OUTPUT"
+            echo "::notice::Version $VERSION is a pre-release."
+          else
+            echo "channel=stable" >> "$GITHUB_OUTPUT"
+            echo "npm-tag=latest" >> "$GITHUB_OUTPUT"
+            echo "::notice::Version $VERSION is stable."
+          fi
+
+      - name: Restore
+        run: dotnet restore Dignite.Abp.Notifications.slnx
+
+      - name: Build
+        run: dotnet build Dignite.Abp.Notifications.slnx --no-restore --configuration Release
+
+      - name: Run Notifications (core) tests
+        run: dotnet test core/test/Dignite.Abp.Notifications.Tests/Dignite.Abp.Notifications.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Run NotificationCenter (EF Core) tests
+        run: dotnet test notification-center/test/Dignite.NotificationCenter.EntityFrameworkCore.Tests/Dignite.NotificationCenter.EntityFrameworkCore.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Run NotificationCenter (MongoDB) tests
+        run: dotnet test notification-center/test/Dignite.NotificationCenter.MongoDB.Tests/Dignite.NotificationCenter.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      # Projects with IsPackable=false (host/ and the 4 test projects) are skipped automatically.
+      # Only the 15 packable projects under core/src and notification-center/src are produced.
+      - name: Pack NuGet packages
+        run: dotnet pack Dignite.Abp.Notifications.slnx --no-build --configuration Release -o ./artifacts
+
+      - name: Smoke-test packed NuGet packages
+        shell: pwsh
+        run: ./.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts '${{ steps.version.outputs.version }}'
+
+      - name: Install Angular dependencies
+        working-directory: angular
+        run: npm ci
+
+      - name: Build Angular library
+        working-directory: angular
+        run: npm run build:lib
+
+      - name: Build Angular demo
+        working-directory: angular
+        run: npm run build:prod
+
+      - name: Pack Angular library
+        shell: pwsh
+        working-directory: angular
+        run: |
+          New-Item -ItemType Directory -Force ../artifacts/npm | Out-Null
+          npm pack ./dist/notification-center --pack-destination ../artifacts/npm
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Smoke-test packed Angular library
+        shell: pwsh
+        run: |
+          $tarballs = @(Get-ChildItem ./artifacts/npm/*.tgz)
+          if ($tarballs.Count -ne 1) {
+            throw "Expected one Angular package tarball, found $($tarballs.Count)."
+          }
+          node ./.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
+
+      - name: Upload release packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-packages
+          path: |
+            artifacts/*.nupkg
+            artifacts/*.snupkg
+            artifacts/npm/*.tgz
+          if-no-files-found: error
+
+      # Keep the existing authenticated GitHub Packages preview feed for every pre-release trigger.
+      - name: Push to GitHub Packages (pre-release)
+        if: steps.channel.outputs.channel == 'prerelease'
+        run: |
+          for package in ./artifacts/*.nupkg; do
+            [[ "$package" == *.snupkg ]] && continue
+            dotnet nuget push "$package" \
+              --api-key "${{ secrets.GITHUB_TOKEN }}" \
+              --source https://nuget.pkg.github.com/dignite-projects/index.json \
+              --skip-duplicate
+          done
+
+      - name: Validate NuGet Trusted Publishing identity
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        env:
+          NUGET_USER: ${{ vars.NUGET_USER }}
+        run: |
+          if [ -z "$NUGET_USER" ]; then
+            echo "::error::The NUGET_USER repository variable is required for Trusted Publishing."
+            exit 1
+          fi
+
+      - name: Sign in to NuGet.org with Trusted Publishing
+        if: startsWith(github.ref, 'refs/tags/v')
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+
+      - name: Push tagged release to NuGet.org
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          for package in ./artifacts/*.nupkg; do
+            [[ "$package" == *.snupkg ]] && continue
+            dotnet nuget push "$package" \
+              --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+          done
+
+      - name: Publish tagged Angular package to npm
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "::error::NPM_TOKEN is required for a tagged public release."
+            exit 1
+          fi
+          npm publish ./artifacts/npm/*.tgz \
+            --access public \
+            --tag '${{ steps.channel.outputs.npm-tag }}' \
+            --provenance
+
+      # Extract this version's section from CHANGELOG.md as the draft release body.
+      - name: Extract release notes from CHANGELOG
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          awk -v ver="$VERSION" '
+            /^## \[/ { if (found) exit; if (index($0, "[" ver "]") > 0) found = 1; next }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "::warning::CHANGELOG.md has no section for $VERSION; the draft release body will be empty - fill it in before publishing."
+          fi
+
+      # Draft only, on tag pushes (workflow_dispatch has no tag context) - review before publishing.
+      - name: Create draft GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          prerelease: ${{ steps.channel.outputs.channel == 'prerelease' }}
+          body_path: release-notes.md
+          files: |
+            artifacts/*.nupkg
+            artifacts/*.snupkg
+            artifacts/npm/*.tgz

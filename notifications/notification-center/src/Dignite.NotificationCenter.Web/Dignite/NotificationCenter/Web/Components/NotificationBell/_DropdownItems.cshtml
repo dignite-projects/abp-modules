@@ -1,0 +1,51 @@
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@using Dignite.Abp.Notifications
+@using Dignite.NotificationCenter
+@using Dignite.NotificationCenter.Localization
+@using Dignite.NotificationCenter.Web
+@using Dignite.NotificationCenter.Web.Components.NotificationBell
+@model NotificationBellViewModel
+@inject IOptions<NotificationCenterWebOptions> WebOptionsAccessor
+@inject IStringLocalizer<NotificationCenterResource> L
+@{
+    var options = WebOptionsAccessor.Value;
+}
+<div class="dignite-notification-list-content" data-unread-count="@Model.UnreadCount">
+    <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+        <strong>@L["Notifications"]</strong>
+        @if (Model.UnreadCount > 0)
+        {
+            <a href="#" class="dignite-notification-mark-all-read small">@L["MarkAllAsRead"]</a>
+        }
+    </div>
+    @if (!Model.Items.Any())
+    {
+        <div class="p-3 text-muted">@L["NoUnreadNotifications"]</div>
+    }
+    else
+    {
+        foreach (var item in Model.Items)
+        {
+            <a href="@(item.Url ?? "#")"
+               class="dignite-notification-item d-block p-2 border-bottom text-decoration-none text-body @(item.Notification.State == UserNotificationState.Unread ? "dignite-notification-unread" : "")"
+               data-notification-id="@item.Notification.NotificationId"
+               data-has-link="@(item.Url != null ? "true" : "false")">
+                <div class="dignite-notification-item-header">
+                    <small class="dignite-notification-item-title @item.Notification.Severity.ToTextColorCssClass()">
+                        @(string.IsNullOrEmpty(item.Notification.NotificationDisplayName) ? item.Notification.NotificationName : item.Notification.NotificationDisplayName)
+                    </small>
+                    <small class="dignite-notification-item-time text-muted">@item.Notification.CreationTime.ToString("g")</small>
+                </div>
+                @if (item.Discriminator != null && options.DataViewComponents.TryGetValue(item.Discriminator, out var dataViewComponentType))
+                {
+                    @await Component.InvokeAsync(dataViewComponentType, new { data = item.Notification.Data })
+                }
+                else if (item.Notification.Data is IHasNotificationImageUrl { ImageUrl.Length: > 0 } withImage)
+                {
+                    <img src="@withImage.ImageUrl" class="dignite-notification-image" alt="" />
+                }
+            </a>
+        }
+    }
+</div>

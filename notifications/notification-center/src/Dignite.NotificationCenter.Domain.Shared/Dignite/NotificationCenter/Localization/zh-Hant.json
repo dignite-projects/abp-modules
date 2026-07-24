@@ -1,0 +1,17 @@
+{
+  "culture": "zh-Hant",
+  "texts": {
+    "Menu:NotificationCenter": "通知中心",
+    "Notifications": "通知",
+    "MarkAllAsRead": "全部標記為已讀",
+    "NoNotifications": "暫無通知",
+    "NoUnreadNotifications": "暫無未讀通知",
+    "Subscriptions": "通知訂閱",
+    "NotificationType": "通知類型",
+    "Description": "描述",
+    "Subscribed": "已訂閱",
+    "SubscriptionScope": "範圍",
+    "AllEntities": "所有實體",
+    "UnsupportedNotification": "目前版本無法顯示此通知。"
+  }
+}

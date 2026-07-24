@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>The core notification framework for ABP: definitions, the publish/distribute pipeline, and the INotificationStore abstraction with a built-in no-op NullNotificationStore.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="Volo.Abp.Features" />
+    <PackageReference Include="Volo.Abp.Timing" />
+    <PackageReference Include="Volo.Abp.BackgroundJobs.Abstractions" />
+    <PackageReference Include="Volo.Abp.BackgroundWorkers" />
+    <PackageReference Include="Volo.Abp.DistributedLocking.Abstractions" />
+    <PackageReference Include="Volo.Abp.Guids" />
+    <PackageReference Include="Volo.Abp.EventBus" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.Abp.Notifications.Abstractions\Dignite.Abp.Notifications.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Dignite.Abp.Notifications.Tests" />
+  </ItemGroup>
+
+</Project>

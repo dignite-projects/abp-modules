@@ -1,0 +1,55 @@
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="row">
+    <div class="col-12">
+        <h2>Notifications</h2>
+        <p class="text-muted">
+            The toolbar bell above shows your unread count and recent notifications, updated in real time over
+            SignalR. Click below to publish an order notification to yourself and watch the toolbar bell render
+            its custom notification template instantly.
+        </p>
+        <button type="button" class="btn btn-primary" id="publish-order-shipped">
+            Send order shipped notification
+        </button>
+
+        <hr />
+
+        <h4>Subscriptions</h4>
+        <p class="text-muted">
+            Subscriptions let a notification be published without naming recipients up front &mdash; only users
+            subscribed to that notification type receive it. Toggle "Announcement" on the
+            <a href="~/SettingManagement">Settings</a> page's Subscriptions tab, click "Publish to subscribers"
+            below, and confirm it only arrives while you're subscribed.
+        </p>
+        <button type="button" class="btn btn-outline-primary" id="publish-to-subscribers">
+            Publish to subscribers
+        </button>
+        <span class="ms-2 text-muted" id="publish-to-subscribers-result"></span>
+    </div>
+</div>
+
+<script>
+    // Plain DOM APIs, not jQuery: this view's own <script> executes at parse time, before the layout's
+    // bottom-of-body bundle (jQuery + abp.ajax) has loaded, so a $(...) call here would throw ReferenceError.
+    // abp.ajax itself is only referenced inside the click handlers, which run long after page load.
+    document.getElementById('publish-order-shipped').addEventListener('click', function () {
+        abp.ajax({
+            url: '/api/app/demo-notification/publish-order-shipped',
+            method: 'POST'
+        });
+    });
+
+    document.getElementById('publish-to-subscribers').addEventListener('click', function () {
+        var result = document.getElementById('publish-to-subscribers-result');
+        result.textContent = '';
+        abp.ajax({
+            url: '/api/app/demo-notification/publish-announcement-to-subscribers',
+            method: 'POST'
+        }).then(function () {
+            result.textContent =
+                'Published — check the bell. It only arrives if you were subscribed to "Announcement" above.';
+        });
+    });
+</script>

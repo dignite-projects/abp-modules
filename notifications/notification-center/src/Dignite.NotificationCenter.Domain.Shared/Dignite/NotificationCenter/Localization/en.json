@@ -1,0 +1,24 @@
+{
+  "culture": "en",
+  "texts": {
+    "Menu:NotificationCenter": "Notification Center",
+    "Notifications": "Notifications",
+    "MarkAllAsRead": "Mark all as read",
+    "NoNotifications": "No notifications",
+    "NoUnreadNotifications": "No unread notifications",
+    "Subscriptions": "Notification subscriptions",
+    "NotificationType": "Notification type",
+    "Description": "Description",
+    "Subscribed": "Subscribed",
+    "SubscriptionScope": "Scope",
+    "AllEntities": "All entities",
+    "UnsupportedNotification": "This notification cannot be displayed by this version.",
+    "Permission:NotificationCenter": "Notification Center",
+    "Permission:Deliveries": "View delivery operations",
+    "Permission:Deliveries.Retry": "Retry failed notification deliveries",
+    "Permission:Deliveries.ForceDeliver": "Force delivery of suppressed notifications",
+    "NotificationCenter:DeliveryCannotBeRetried": "This notification delivery cannot be retried in its current state.",
+    "NotificationCenter:SuppressedDeliveryCannotBeRetried": "A suppressed notification cannot be retried. Use the separately authorized force-delivery operation to override the preference.",
+    "NotificationCenter:DeliveryCannotBeForceDelivered": "Only a suppressed notification delivery can be force-delivered."
+  }
+}

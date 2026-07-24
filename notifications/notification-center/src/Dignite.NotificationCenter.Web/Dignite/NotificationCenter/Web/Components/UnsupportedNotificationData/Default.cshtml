@@ -1,0 +1,8 @@
+@using Microsoft.Extensions.Localization
+@using Dignite.NotificationCenter.Localization
+@using Dignite.Abp.Notifications
+@model UnsupportedNotificationData
+@inject IStringLocalizer<NotificationCenterResource> L
+<p class="dignite-notification-message dignite-notification-unsupported text-muted mb-0">
+    @L["UnsupportedNotification"]
+</p>

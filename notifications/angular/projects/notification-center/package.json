@@ -1,0 +1,25 @@
+{
+  "name": "@dignite/ng.notification-center",
+  "version": "10.0.0-rc.4",
+  "description": "Angular UI library for the Dignite Notification Center — notification bell, subscriptions management, and ABP-generated API proxies over /api/notifications.",
+  "author": "Dignite",
+  "license": "LGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dignite-projects/abp-notifications.git"
+  },
+  "peerDependencies": {
+    "@abp/ng.core": "~10.5.0",
+    "@abp/ng.theme.shared": "~10.5.0",
+    "@abp/ng.setting-management": "~10.5.0",
+    "@angular/common": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/router": "^21.2.0",
+    "@microsoft/signalr": "^10.0.0",
+    "@ng-bootstrap/ng-bootstrap": "~20.0.0"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "sideEffects": false
+}

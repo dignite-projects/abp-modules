@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>Aggregates for the Dignite Notification Center: Notification, UserNotification, and NotificationSubscription.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.Ddd.Domain" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.NotificationCenter.Domain.Shared\Dignite.NotificationCenter.Domain.Shared.csproj" />
+    <ProjectReference Include="..\..\..\core\src\Dignite.Abp.Notifications\Dignite.Abp.Notifications.csproj" />
+  </ItemGroup>
+
+</Project>

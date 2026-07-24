@@ -1,0 +1,70 @@
+<Project>
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup Label="ABP 10.5.0">
+    <PackageVersion Include="Volo.Abp.Core" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Localization" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.SettingManagement.Domain" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Features" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Timing" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Guids" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.EventBus" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.EventBus.Abstractions" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.BackgroundJobs.Abstractions" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.BackgroundWorkers" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.DistributedLocking.Abstractions" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.SignalR" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Json.SystemTextJson" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Ddd.Domain" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Ddd.Application" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Ddd.Application.Contracts" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Authorization.Abstractions" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI.Bundling" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.SettingManagement.Web" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Http.Client" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Identity.Domain" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Emailing" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.EntityFrameworkCore" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.EntityFrameworkCore.Sqlite" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.MongoDB" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Autofac" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.TestBase" Version="10.5.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="System.Text.Json (only needed for netstandard targets; in-box on net10.0)">
+    <PackageVersion Include="System.Text.Json" Version="10.0.7" />
+  </ItemGroup>
+
+  <ItemGroup Label="Microsoft hosting abstractions">
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.7" />
+  </ItemGroup>
+
+  <ItemGroup Label="Embedded static wwwroot content (ABP's AddEmbedded/ManifestEmbeddedFileProvider) -- direct reference needed to activate its build-time manifest generation, ABP's own dependency doesn't flow it transitively">
+    <PackageVersion Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.7" />
+  </ItemGroup>
+
+  <ItemGroup Label="Test stack">
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageVersion Include="xunit" Version="2.9.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageVersion Include="Shouldly" Version="4.2.1" />
+    <PackageVersion Include="NSubstitute" Version="5.1.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="MongoDB integration-test infrastructure (embedded mongod, ABP v10 pattern)">
+    <PackageVersion Include="MongoSandbox.Core" Version="2.0.0" />
+    <PackageVersion Include="MongoSandbox8.runtime.win-x64" Version="2.0.0" />
+    <PackageVersion Include="MongoSandbox8.runtime.linux-x64" Version="2.0.0" />
+    <PackageVersion Include="MongoSandbox8.runtime.osx-arm64" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="SourceLink">
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.300" />
+  </ItemGroup>
+
+</Project>

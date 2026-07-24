@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>Application service implementations for the Dignite Notification Center's inbox and subscription features.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.Ddd.Application" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.NotificationCenter.Application.Contracts\Dignite.NotificationCenter.Application.Contracts.csproj" />
+    <ProjectReference Include="..\Dignite.NotificationCenter.Domain\Dignite.NotificationCenter.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

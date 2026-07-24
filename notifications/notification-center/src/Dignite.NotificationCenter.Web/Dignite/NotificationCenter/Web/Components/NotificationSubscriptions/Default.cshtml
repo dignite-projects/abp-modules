@@ -1,0 +1,41 @@
+@using Dignite.NotificationCenter.Localization
+@using Microsoft.Extensions.Localization
+@model System.Collections.Generic.List<Dignite.NotificationCenter.NotificationSubscriptionDto>
+@inject IStringLocalizer<NotificationCenterResource> L
+<table class="table dignite-subscriptions-table">
+    <thead>
+        <tr>
+            <th>@L["NotificationType"]</th>
+            <th>@L["SubscriptionScope"]</th>
+            <th>@L["Description"]</th>
+            <th>@L["Subscribed"]</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var subscription in Model)
+        {
+            <tr>
+                <td>@(subscription.DisplayName ?? subscription.NotificationName)</td>
+                <td>
+                    @if (subscription.EntityTypeName == null)
+                    {
+                        @L["AllEntities"]
+                    }
+                    else
+                    {
+                        <code>@subscription.EntityTypeName / @subscription.EntityId</code>
+                    }
+                </td>
+                <td>@subscription.Description</td>
+                <td>
+                    <input type="checkbox"
+                           class="dignite-subscription-toggle form-check-input"
+                           data-notification-name="@subscription.NotificationName"
+                           data-entity-type-name="@subscription.EntityTypeName"
+                           data-entity-id="@subscription.EntityId"
+                           checked="@subscription.IsSubscribed" />
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

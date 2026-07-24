@@ -1,0 +1,21 @@
+{
+  "production": true,
+  "application": {
+    "baseUrl":"https://host-web",
+    "name": "Host",
+    "logoUrl": ""
+  },
+  "oAuthConfig": {
+    "issuer": "https://host-api/",
+    "redirectUri": "https://host",
+    "clientId": "Host_App",
+    "responseType": "code",
+    "scope": "offline_access openid profile email phone"
+  },
+  "apis": {
+    "default": {
+      "url": "https://host-api",
+      "rootNamespace": "Host"
+    }
+  }
+}

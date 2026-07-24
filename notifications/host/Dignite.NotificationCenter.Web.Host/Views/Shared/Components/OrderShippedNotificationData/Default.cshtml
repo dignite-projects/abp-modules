@@ -1,0 +1,10 @@
+@using Dignite.NotificationCenter.Web.Host.Notifications
+@model OrderShippedNotificationData
+<div class="dignite-demo-order-shipped">
+    <div class="fw-semibold">@Model.OrderNumber</div>
+    <div class="small text-muted">@Model.ItemCount item(s) shipped</div>
+    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+    {
+        <img src="@Model.ImageUrl" class="dignite-notification-image" alt="" />
+    }
+</div>

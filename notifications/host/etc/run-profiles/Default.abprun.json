@@ -1,0 +1,104 @@
+{
+  "applications": {
+    "Dignite.NotificationCenter.Web.Host.Angular": {
+      "type": "cli",
+      "workingDirectory": "../../angular",
+      "startCommand": "./start.ps1",
+      "launchUrl": "http://localhost:4200",
+      "execution": {
+        "order": 0
+      }
+    },
+    "Dignite.NotificationCenter.Web.Host": {
+      "type": "dotnet-project",
+      "launchUrl": "https://localhost:44380",
+      "healthCheckEndpoint": "/health-status",
+      "healthUiEndpoint": "/health-ui",
+      "path": "../../Dignite.NotificationCenter.Web.Host/Dignite.NotificationCenter.Web.Host.csproj",
+      "execution": {
+        "order": 1
+      }
+    }
+  },
+  "tasks": {
+    "Initialize Solution": {
+      "behaviour": 2,
+      "startCommand": "./initialize-solution.ps1",
+      "workingDirectory": "../scripts",
+      "shortDescription": "Prepares the solution for development."
+    },
+    "Migrate Database": {
+      "behaviour": 0,
+      "startCommand": "./migrate-database.ps1",
+      "workingDirectory": "../scripts",
+      "shortDescription": "Migrates the database to the latest version."
+    }
+  },
+  "workflows": {
+    "41bbe71f-8dbc-495e-9c0d-453e689176e0": {
+      "Id": "41bbe71f-8dbc-495e-9c0d-453e689176e0",
+      "Name": "Default",
+      "Description": "Stops applications, builds, migrates, and starts applications",
+      "IsShared": true,
+      "BeforeTasks": [],
+      "AfterTasks": [
+        {
+          "ActionType": "Build",
+          "Targets": [],
+          "AllTargets": true,
+          "ModuleTargets": [],
+          "PackageTargets": [],
+          "FolderTargets": [],
+          "ApplicationTargets": [],
+          "ContainerTargets": []
+        },
+        {
+          "ActionType": "AddMigration",
+          "Targets": [],
+          "AllTargets": false,
+          "ModuleTargets": [],
+          "PackageTargets": [],
+          "FolderTargets": [],
+          "ApplicationTargets": [],
+          "ContainerTargets": []
+        },
+        {
+          "ActionType": "RunTask",
+          "Targets": [
+            "Migrate Database"
+          ],
+          "AllTargets": false,
+          "ModuleTargets": [],
+          "PackageTargets": [],
+          "FolderTargets": [],
+          "ApplicationTargets": [],
+          "ContainerTargets": []
+        },
+        {
+          "ActionType": "StartApplication",
+          "Targets": [],
+          "AllTargets": true,
+          "ModuleTargets": [],
+          "PackageTargets": [],
+          "FolderTargets": [],
+          "ApplicationTargets": [],
+          "ContainerTargets": []
+        },
+        {
+          "ActionType": "GenerateAngularProxies",
+          "Targets": [],
+          "AllTargets": false,
+          "ModuleTargets": [],
+          "PackageTargets": [],
+          "FolderTargets": [],
+          "ApplicationTargets": [],
+          "ContainerTargets": [],
+          "ProxyUrl": "https://localhost:44380",
+          "ProxyModule": "app",
+          "ProxyServiceType": "application",
+          "ProxyWorkingDirectory": "../../angular"
+        }
+      ]
+    }
+  }
+}

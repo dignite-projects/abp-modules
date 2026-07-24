@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <IsPackable>true</IsPackable>
+    <OutputType>Library</OutputType>
+    <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+    <Description>Real-time push notifier for Dignite.Abp.Notifications via an ABP SignalR hub at /signalr-hubs/notifications.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.AspNetCore.SignalR" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.Abp.Notifications.Abstractions\Dignite.Abp.Notifications.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

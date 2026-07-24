@@ -1,0 +1,22 @@
+@using Microsoft.Extensions.Localization
+@using Dignite.NotificationCenter.Localization
+@using Dignite.NotificationCenter.Web.Components.NotificationBell
+@model NotificationBellViewModel
+@inject IStringLocalizer<NotificationCenterResource> L
+<div class="dignite-notification-bell dropdown"
+     data-signalr-hub-url="@Model.SignalRHubUrl"
+     data-dropdown-url="@Url.Content("~/notification-center/notification-bell/dropdown")">
+    <button class="btn btn-link position-relative p-0 dignite-notification-toggle"
+            type="button"
+            data-bs-toggle="dropdown"
+            data-bs-auto-close="outside"
+            aria-expanded="false"
+            aria-label="@L["Notifications"]">
+        <i class="fa fa-bell"></i>
+        <span class="dignite-notification-badge badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle"
+              data-count="@Model.UnreadCount" @(Model.UnreadCount > 0 ? "" : "hidden")>@Model.UnreadCount</span>
+    </button>
+    <div class="dropdown-menu dropdown-menu-end dignite-notification-list p-0">
+        @await Html.PartialAsync("~/Dignite/NotificationCenter/Web/Components/NotificationBell/_DropdownItems.cshtml", Model)
+    </div>
+</div>
