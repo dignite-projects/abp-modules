@@ -46,7 +46,7 @@
   ```
 
 ## Phase 2 — 带历史搬代码
-- [ ] ```bash
+- [x] ```bash
   git remote add fs ../abp-file-storing
   git remote add nt ../abp-notifications
   git subtree add --prefix=file-storing  fs main
