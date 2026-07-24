@@ -3,6 +3,9 @@
 Reusable **[ABP Framework](https://abp.io)** modules from [Dignite](https://github.com/dignite-projects),
 developed together in one repository and released in lockstep.
 
+This repository is the vnext home for ABP modules from
+[`dignite-projects/dignite-abp`](https://github.com/dignite-projects/dignite-abp).
+
 > **.NET 10 · ABP 10.5.0 · LGPL-3.0-only**
 
 | Module | What it is | Docs |
@@ -13,19 +16,6 @@ developed together in one repository and released in lockstep.
 Each module is **independently installable** — nothing in `file-storing/` references `notifications/`
 or vice versa. They share this repository for development and release, not at runtime. Every package
 keeps the PackageId it has always had; moving into a subdirectory changed nothing for consumers.
-
-## Repository migration
-
-The former standalone repositories are archived. Active development, issues, pull requests, and
-releases now live in this monorepo:
-
-| Former repository | New location |
-|---|---|
-| [`dignite-projects/abp-file-storing`](https://github.com/dignite-projects/abp-file-storing) | [`file-storing/`](file-storing/) |
-| [`dignite-projects/abp-notifications`](https://github.com/dignite-projects/abp-notifications) | [`notifications/`](notifications/) |
-
-Consumers do not need to rename packages or namespaces. Existing NuGet and npm package IDs are
-unchanged; only the source repository and contribution target changed.
 
 ## Repository layout
 
