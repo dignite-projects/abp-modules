@@ -1,0 +1,21 @@
+{
+  "production": true,
+  "application": {
+    "baseUrl":"http://localhost:4200",
+    "name": "Host",
+    "logoUrl": ""
+  },
+  "oAuthConfig": {
+    "issuer": "https://localhost:44390",
+    "redirectUri": "https://localhost:44390",
+    "clientId": "Host_App",
+    "responseType": "code",
+    "scope": "offline_access openid profile email phone Host"
+  },
+  "apis": {
+    "default": {
+      "url": "https://localhost:44390",
+      "rootNamespace": "Host"
+    }
+  }
+}

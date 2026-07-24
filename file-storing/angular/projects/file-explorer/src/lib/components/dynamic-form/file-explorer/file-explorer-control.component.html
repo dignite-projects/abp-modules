@@ -1,0 +1,15 @@
+<form [formGroup]="_entity">
+  <div formGroupName="extraProperties">
+    <div class="mb-3">
+      @if (_fields.displayName) {
+        <label class="form-label">{{ _fields.displayName }}</label>
+      }
+      <fe-file-picker [selectFormFile]="selectedFileGroup" [multiple]="formConfiguration['FileExplorer.UploadFileMultiple']"
+      (selectedFileChange)="_selectedFileChange($event)" [fileContainerName]="FileContainerName"></fe-file-picker>
+      @if (_fields.field.description) {
+        <small class="form-text text-muted d-block">{{_fields.field.description}}</small>
+      }
+    </div>
+  </div>
+  <button type="submit" style="display: none;" #submitclick></button>
+</form>

@@ -1,0 +1,47 @@
+{
+  "name": "file-explorer",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "projects/file-explorer/src",
+  "prefix": "fe",
+  "targets": {
+    "build": {
+      "executor": "@angular/build:ng-packagr",
+      "outputs": [
+        "{workspaceRoot}/dist/file-explorer"
+      ],
+      "options": {
+        "project": "projects/file-explorer/ng-package.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "projects/file-explorer/tsconfig.lib.prod.json"
+        },
+        "development": {
+          "tsConfig": "projects/file-explorer/tsconfig.lib.json"
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "test": {
+      "executor": "@angular/build:unit-test",
+      "options": {
+        "tsConfig": "projects/file-explorer/tsconfig.spec.json",
+        "runner": "vitest"
+      }
+    },
+    "lint": {
+      "executor": "@angular-eslint/builder:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "projects/file-explorer/**/*.ts",
+          "projects/file-explorer/**/*.html"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

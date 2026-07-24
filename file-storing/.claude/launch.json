@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web-host",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "host/Dignite.FileExplorer.Web.Host"],
+      "port": 44390
+    },
+    {
+      "name": "angular-host",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "angular", "run", "start"],
+      "port": 4200
+    }
+  ]
+}

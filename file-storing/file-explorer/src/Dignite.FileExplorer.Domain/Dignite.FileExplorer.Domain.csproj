@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>Dignite.FileExplorer.Domain</AssemblyName>
+    <PackageId>Dignite.FileExplorer.Domain</PackageId>
+    <RootNamespace />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.Ddd.Domain" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\core\src\Dignite.Abp.FileStoring\Dignite.Abp.FileStoring.csproj" />
+    <ProjectReference Include="..\Dignite.FileExplorer.Domain.Shared\Dignite.FileExplorer.Domain.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

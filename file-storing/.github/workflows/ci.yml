@@ -1,0 +1,145 @@
+name: CI
+
+# `build-and-test` is a required status check on main (with enforce_admins), so the pull_request
+# trigger must not filter by path: a docs-only PR would never start this workflow, the check would
+# never report, and the PR could never be merged by anyone. The push trigger is informational and
+# keeps its filter.
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - '.claude/**'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.302'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+          cache-dependency-path: angular/package-lock.json
+
+      - name: Verify NuGet and npm version lockstep
+        id: version
+        shell: pwsh
+        run: |
+          $version = & ./.github/scripts/verify-version-lockstep.ps1
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Restore
+        run: dotnet restore Dignite.Abp.FileStoring.slnx
+
+      # Mirrors the release gate so new high/critical vulnerabilities surface on the PR that
+      # introduces them instead of only at release time. Keep the allowlist in sync with
+      # release.yml.
+      - name: Block vulnerable NuGet dependencies
+        shell: bash
+        run: |
+          set -o pipefail
+          report="$(dotnet list Dignite.Abp.FileStoring.slnx package --vulnerable --include-transitive)"
+          printf '%s\n' "$report"
+          # Mirrors the release gate; see release.yml for the remediation rationale. No advisories are
+          # allowlisted - if an unavoidable one reappears, filter it with a documented `grep -Ev`.
+          if printf '%s\n' "$report" | grep -Eiq '^\s*>\s+[^[:space:]]+\s+[^[:space:]]+\s+(high|critical)\b'; then
+            echo "::error::High or critical NuGet vulnerabilities block CI."
+            exit 1
+          fi
+
+      # Includes host/Dignite.FileExplorer.Web.Host (the local dev/demo host) - it opts out of
+      # central package management in common.props since it pins its own inline package versions.
+      - name: Build
+        run: dotnet build Dignite.Abp.FileStoring.slnx --no-restore --configuration Release
+
+      - name: Run FileStoring (core) tests
+        run: dotnet test core/test/Dignite.Abp.FileStoring.Tests/Dignite.Abp.FileStoring.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Run FileStoring Imaging (core) tests
+        run: dotnet test core/test/Dignite.Abp.FileStoring.Imaging.Tests/Dignite.Abp.FileStoring.Imaging.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      # Dignite.FileExplorer.TestBase is shared test infrastructure (no runner) - it is exercised
+      # indirectly via the projects below, never run directly.
+      - name: Run FileExplorer (domain) tests
+        run: dotnet test file-explorer/test/Dignite.FileExplorer.Domain.Tests/Dignite.FileExplorer.Domain.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Run FileExplorer (EF Core) tests
+        run: dotnet test file-explorer/test/Dignite.FileExplorer.EntityFrameworkCore.Tests/Dignite.FileExplorer.EntityFrameworkCore.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      # MongoDB provider - starts an embedded mongod via MongoSandbox (MongoSandbox8.runtime.linux-x64
+      # is pinned in Directory.Packages.props and resolves fine on this runner); no external
+      # MongoDB install needed.
+      - name: Run FileExplorer (MongoDB) tests
+        run: dotnet test file-explorer/test/Dignite.FileExplorer.MongoDB.Tests/Dignite.FileExplorer.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Run FileExplorer (application) tests
+        run: dotnet test file-explorer/test/Dignite.FileExplorer.Application.Tests/Dignite.FileExplorer.Application.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Run authorization denial tests
+        run: dotnet test file-explorer/test/Dignite.FileExplorer.Authorization.Tests/Dignite.FileExplorer.Authorization.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Run directory safety tests
+        run: dotnet test file-explorer/test/Dignite.FileExplorer.DirectorySafety.Tests/Dignite.FileExplorer.DirectorySafety.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Run update authorization tests
+        run: dotnet test file-explorer/test/Dignite.FileExplorer.Update.Tests/Dignite.FileExplorer.Update.Tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Pack NuGet packages
+        run: dotnet pack Dignite.Abp.FileStoring.slnx --no-build --configuration Release --output ./artifacts-ci/nuget
+
+      - name: Smoke-test packed NuGet packages
+        shell: pwsh
+        run: ./.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}'
+
+      - name: Install Angular dependencies
+        working-directory: angular
+        run: npm ci --legacy-peer-deps
+
+      - name: Audit Angular dependencies
+        working-directory: angular
+        run: npm audit --audit-level=high
+
+      - name: Lint Angular projects
+        working-directory: angular
+        run: npm run lint -- --max-warnings=0
+
+      - name: Run Angular unit tests
+        working-directory: angular
+        run: npm test -- --watch=false
+
+      - name: Build Angular library
+        working-directory: angular
+        run: npm run build:lib
+
+      - name: Build Angular demo
+        working-directory: angular
+        run: npm run build:prod
+
+      - name: Pack Angular library
+        shell: pwsh
+        working-directory: angular
+        run: |
+          New-Item -ItemType Directory -Force ../artifacts-ci/npm | Out-Null
+          npm pack ./dist/file-explorer --pack-destination ../artifacts-ci/npm
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Smoke-test packed Angular library
+        shell: pwsh
+        run: |
+          $tarballs = @(Get-ChildItem ./artifacts-ci/npm/*.tgz)
+          if ($tarballs.Count -ne 1) {
+            throw "Expected one Angular package tarball, found $($tarballs.Count)."
+          }
+          node ./.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'

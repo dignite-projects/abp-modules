@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>Dignite.FileExplorer.Application.Contracts</AssemblyName>
+    <PackageId>Dignite.FileExplorer.Application.Contracts</PackageId>
+    <RootNamespace />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.Authorization" />
+    <PackageReference Include="Volo.Abp.Ddd.Application.Contracts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.FileExplorer.Domain.Shared\Dignite.FileExplorer.Domain.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

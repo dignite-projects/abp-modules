@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>Optional upload-time image processing for Dignite.Abp.FileStoring.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.Imaging.Abstractions" />
+    <PackageReference Include="Volo.Abp.Imaging.ImageSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.Abp.FileStoring\Dignite.Abp.FileStoring.csproj" />
+  </ItemGroup>
+
+</Project>

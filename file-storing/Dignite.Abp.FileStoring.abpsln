@@ -1,0 +1,51 @@
+{
+  "id": "aaba23e7-7591-4480-a818-457fa7a71b3d",
+  "template": "app-nolayers",
+  "versions": {
+    "AbpFramework": "10.5.0",
+    "AbpStudio": "3.0.7",
+    "TargetDotnetFramework": "net10.0"
+  },
+  "modules": {
+    "Dignite.Abp.FileStoring": {
+      "path": "Dignite.Abp.FileStoring.abpmdl"
+    }
+  },
+  "runProfiles": {
+    "Default": {
+      "path": "host/etc/run-profiles/Default.abprun.json"
+    }
+  },
+  "options": {
+    "httpRequests": {
+      "ignoredUrls": [
+      
+      ]
+    }
+  },
+  "creatingStudioConfiguration": {
+    "template": "app-nolayers",
+    "createdAbpStudioVersion": "3.0.7",
+    "creationTool": "ABP Studio UI",
+    "multiTenancy": "true",
+    "runInstallLibs": "",
+    "useLocalReferences": "false",
+    "uiFramework": "angular",
+    "databaseProvider": "ef",
+    "runDbMigrator": "",
+    "includeTests": "false",
+    "databaseManagementSystem": "sqlite",
+    "createInitialMigration": "",
+    "theme": "leptonx-lite",
+    "themeStyle": "",
+    "themeMenuPlacement": "",
+    "progressiveWebApp": "",
+    "runProgressiveWebAppSupport": "",
+    "publicWebsite": "",
+    "socialLogin": "false",
+    "sampleCrudPage": "false",
+    "selectedLanguages": ["English", "Arabic", "Chinese (Simplified)", "Chinese (Traditional)", "Czech", "English (UK)", "Finnish", "French", "German (Germany)", "Hindi ", "Hungarian", "Icelandic", "Italian", "Portuguese (Brazil)", "Romanian (Romania)", "Russian", "Slovak", "Spanish", "Swedish", "Turkish", "日本語", ],
+    "defaultLanguage": "English",
+    "createCommand": "abp new Dignite.FileExplorer.Web.Host -t app-nolayers --ui-framework angular --mobile  --database-provider ef --database-management-system sqlite --theme leptonx-lite --skip-migration  --skip-migrator  --no-tests --without-cms-kit --dont-run-install-libs --dont-run-bundling --no-social-logins -no-gdpr -no-openiddict-admin-ui -no-audit-logging -no-file-management -no-language-management -no-text-template-management"
+  }
+}
