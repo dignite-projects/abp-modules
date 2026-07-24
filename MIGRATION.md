@@ -1,0 +1,83 @@
+# abp-modules 迁移方案 / 执行清单
+
+把 `abp-file-storing`、`abp-notifications`(以及日后的 `flex-fields`)合并进本仓库 `dignite-projects/abp-modules`,做成 ABP 式 mini-monorepo。
+
+## 背景与决定
+
+- **库合一仓,app 分仓**:可复用库(file-storing / notifications / flex-fields)并进 `abp-modules` 单仓;可运行应用(如 `sites`)各自独立仓。规则一句话:**是库就并进来,是 app 就分出去。**
+- **锁步统一版本**:全仓一个 `<Version>`、一个 `v*` tag、一条发布流水线。MAJOR = 所targeting的 ABP 大版本(≥10)。接受"空转 bump"(改一个模块,另一个也跟着发一个内容无变化的新版本号)。
+- 每个模块本身已是 `core/` + 功能组 + `host/` + `angular/` 的结构,与 ABP 的 `framework/`+`modules/<name>/` 同构,整体平移即可。
+
+## 三条全程不能碰的不变量
+
+1. **PackageId 与根命名空间不变** —— 所有包名(`Dignite.Abp.FileStoring`、`Dignite.Abp.Notifications` …)原样保留。搬进子目录**不改 PackageId**(它跟 AssemblyName 走,不跟文件夹走),对 NuGet 消费者完全透明。
+2. **`AssemblyVersion` 死钉 `1.0.0.0`** —— 两仓现在都是这个值,合并后进根 props 保持不变。notifications 的 `NotificationData` 反序列化依赖 AssemblyQualifiedName 的稳定,详见其 `.claude/rules/framework/common/notifications-invariants.md` §1。
+3. **统一版本 MAJOR ≥ 10** —— 继续压制 legacy 老包(`Dignite.Abp.Notifications*` 已发到 3.8.2),从 10.x 起步永久高于它。
+
+## 已知需要调和的点(迁移中具体处理)
+
+- **中央包版本冲突**:`Microsoft.Extensions.FileProviders.Embedded` —— file-storing 用 `10.0.9`,notifications 用 `10.0.7` → 取 **10.0.9**。
+- **保留 file-storing 的安全 pin**:`SQLitePCLRaw.*` 全家 `2.1.12` + `CentralPackageTransitivePinningEnabled`(notifications 那份没有)。
+- **按包不同的元数据**:`Product` / `PackageTags` / `PackageProjectUrl` / `RepositoryUrl` 两仓不同 → URL 全改成 `.../abp-modules`;Product/Tags 用每个模块组一个薄 `Directory.Build.props` 覆盖保留。
+- **根级配置**:`global.json` / `NuGet.Config` 用 file-storing 那份(notifications 没有)。
+
+---
+
+## Phase 0 — 动手前定两个小数
+- [x] **统一版本基线**:查两个包在 NuGet 上各自已发布的最高版本,合并首发取一个明确更高的号(否则 NuGet 拒收)。当前都在 `10.0.0-rc.x` 预发布。 → 基线 = `10.0.0-rc.4`
+  - 查证(NuGet flat-container index.json,两仓全部 25 个可打包项目逐个查):`Dignite.Abp.FileStoring*` 从未发布;`Dignite.FileExplorer.*` legacy 族最高 `3.8.2`;`Dignite.Abp.Notifications*`/`Dignite.NotificationCenter.*` 已发布最高 `10.0.0-rc.3`(notifications 本地 `Directory.Build.props` 虽已改到 `10.0.0-rc.4`,但从未打 tag、从未推送到 NuGet,CHANGELOG 也还没有 `[10.0.0-rc.4]` 小节)。确认 `10.0.0-rc.4` 未被任何一方占用,可安全作为合仓首发基线。
+- [x] **历史保留方式**:`git subtree`(保留两仓提交历史)。
+
+## Phase 1 — 建骨架
+- [x] 本地 `git init`,并提交一个初始 commit(先把 MIGRATION.md + 骨架提交;`git subtree add` 需要仓库已有 HEAD 才能合并,空仓会失败)
+  - 骨架提交内容:`LICENSE`/`.editorconfig`/`.gitattributes`(两仓字节级相同,直接取用)、`global.json`/`NuGet.Config`(取 file-storing 那份)、`.gitignore`(file-storing 版本为底,补 notifications 独有的 `dist/`、`.angular/`)。`Directory.Build.props`/`Directory.Packages.props`/`.slnx` 留给 Phase 3/4,避免这里先写一遍、Phase 3/4 再重写。
+- [ ] (可后置,Phase 5 前建好即可)在 `dignite-projects` 下建 GitHub 仓 `abp-modules` —— **建成完全空的,别勾 README/.gitignore/license 自动初始化**(否则会生成初始 commit,和本地历史成两条 unrelated 分支,push 要额外处理);本地骨架就绪后加 origin 再 push
+- [ ] 目标布局:
+  ```
+  abp-modules/
+    Directory.Build.props      # 共享:语言/Nullable/包元数据/SourceLink/符号包/唯一 <Version> + <AssemblyVersion>
+    Directory.Packages.props   # 合并后的中央包版本
+    global.json  NuGet.Config
+    Dignite.Abp.Modules.slnx   # 聚合解决方案
+    .github/workflows/         # 一条 build+test,一条锁步 release.yml
+    file-storing/    { core/  file-explorer/  host/  angular/ }
+    notifications/   { core/  notification-center/  host/  angular/ }
+    # flex-fields/  日后同法并入
+  ```
+
+## Phase 2 — 带历史搬代码
+- [ ] ```bash
+  git remote add fs ../abp-file-storing
+  git remote add nt ../abp-notifications
+  git subtree add --prefix=file-storing  fs main
+  git subtree add --prefix=notifications nt main
+  ```
+
+## Phase 3 — 统一构建配置(锁步核心)
+- [ ] 根 `Directory.Build.props`:两份合一 → 唯一 `<Version>`(Phase 0 的号)+ `<AssemblyVersion>1.0.0.0</AssemblyVersion>`;URL 改 abp-modules
+- [ ] 每个模块组一个薄 `Directory.Build.props`(显式 import 上层),只覆盖 `Product`/`PackageTags`
+- [ ] `Directory.Packages.props`:并集,冲突取高版本(见"已知调和点"),保留安全 pin
+- [ ] `global.json` / `NuGet.Config` / 两个 host 的 props 覆盖照搬
+
+## Phase 4 — 解决方案 + ABP Studio
+- [ ] 根建聚合 `.slnx`;各模块 `.slnx` 可保留供聚焦开发
+- [ ] ABP Studio 文件(`.abpmdl`/`.abpsln`/`.abpstudio`)在 ABP Studio 里重建,别手改
+
+## Phase 5 — CI/CD
+- [ ] 一条 build+test 工作流(构建聚合方案)
+- [ ] 一条 `release.yml`:`v*` tag → pack 全部可发布项目 → NuGet + 两个 angular 库发 npm,版本来自唯一 `<Version>`
+- [ ] **【手动】重配 NuGet.org Trusted Publishing**:两个包的策略从旧仓名 + 旧 `release.yml` 改到 `dignite-projects/abp-modules` + 新工作流,否则发布授权失败
+
+## Phase 6 — 文档与规则
+- [ ] README/CONTRIBUTING/SECURITY 合并到根
+- [ ] **CONTRIBUTING 版本小节重写**:"MINOR/PATCH 各自独立" → "锁步统一,MAJOR=ABP 大版本"
+- [ ] 合并两套 `.claude`/`.agents`/`AGENTS.md`;**保留 `notifications-invariants.md`**
+- [ ] CHANGELOG 合成根级一份
+
+## Phase 7 — 验证 + 首个统一发布
+- [ ] 聚合方案 build + 两模块全测试跑通
+- [ ] `dotnet pack` 出全部包,核对 PackageId / 版本 / AssemblyVersion 无变化
+- [ ] 打第一个统一 tag,走一遍 release
+
+## Phase 8 — 退役旧仓
+- [ ] `abp-file-storing`、`abp-notifications` 归档(README 顶部指向 abp-modules),不删
