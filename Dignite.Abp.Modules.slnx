@@ -1,0 +1,72 @@
+<Solution>
+  <Folder Name="/file-storing/" />
+  <Folder Name="/file-storing/core/" />
+  <Folder Name="/file-storing/core/src/">
+    <Project Path="file-storing/core/src/Dignite.Abp.FileStoring.Imaging/Dignite.Abp.FileStoring.Imaging.csproj" />
+    <Project Path="file-storing/core/src/Dignite.Abp.FileStoring/Dignite.Abp.FileStoring.csproj" />
+  </Folder>
+  <Folder Name="/file-storing/core/test/">
+    <Project Path="file-storing/core/test/Dignite.Abp.FileStoring.Imaging.Tests/Dignite.Abp.FileStoring.Imaging.Tests.csproj" />
+    <Project Path="file-storing/core/test/Dignite.Abp.FileStoring.Tests/Dignite.Abp.FileStoring.Tests.csproj" />
+  </Folder>
+  <Folder Name="/file-storing/file-explorer/" />
+  <Folder Name="/file-storing/file-explorer/src/">
+    <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.Application.Contracts/Dignite.FileExplorer.Application.Contracts.csproj" />
+    <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.Application/Dignite.FileExplorer.Application.csproj" />
+    <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.Domain.Shared/Dignite.FileExplorer.Domain.Shared.csproj" />
+    <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.Domain/Dignite.FileExplorer.Domain.csproj" />
+    <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.EntityFrameworkCore/Dignite.FileExplorer.EntityFrameworkCore.csproj" />
+    <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.HttpApi.Client/Dignite.FileExplorer.HttpApi.Client.csproj" />
+    <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.HttpApi/Dignite.FileExplorer.HttpApi.csproj" />
+    <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.MongoDB/Dignite.FileExplorer.MongoDB.csproj" />
+  </Folder>
+  <Folder Name="/file-storing/file-explorer/test/">
+    <Project Path="file-storing/file-explorer/test/Dignite.FileExplorer.Update.Tests/Dignite.FileExplorer.Update.Tests.csproj" />
+    <Project Path="file-storing/file-explorer/test/Dignite.FileExplorer.Authorization.Tests/Dignite.FileExplorer.Authorization.Tests.csproj" />
+    <Project Path="file-storing/file-explorer/test/Dignite.FileExplorer.DirectorySafety.Tests/Dignite.FileExplorer.DirectorySafety.Tests.csproj" />
+    <Project Path="file-storing/file-explorer/test/Dignite.FileExplorer.Application.Tests/Dignite.FileExplorer.Application.Tests.csproj" />
+    <Project Path="file-storing/file-explorer/test/Dignite.FileExplorer.Domain.Tests/Dignite.FileExplorer.Domain.Tests.csproj" />
+    <Project Path="file-storing/file-explorer/test/Dignite.FileExplorer.EntityFrameworkCore.Tests/Dignite.FileExplorer.EntityFrameworkCore.Tests.csproj" />
+    <Project Path="file-storing/file-explorer/test/Dignite.FileExplorer.MongoDB.Tests/Dignite.FileExplorer.MongoDB.Tests.csproj" />
+    <Project Path="file-storing/file-explorer/test/Dignite.FileExplorer.TestBase/Dignite.FileExplorer.TestBase.csproj" />
+  </Folder>
+  <Folder Name="/file-storing/host/">
+    <Project Path="file-storing/host/Dignite.FileExplorer.Web.Host/Dignite.FileExplorer.Web.Host.csproj" />
+  </Folder>
+
+  <Folder Name="/notifications/" />
+  <Folder Name="/notifications/core/" />
+  <Folder Name="/notifications/core/src/">
+    <Project Path="notifications/core/src/Dignite.Abp.Notifications.Abstractions/Dignite.Abp.Notifications.Abstractions.csproj" />
+    <Project Path="notifications/core/src/Dignite.Abp.Notifications.Emailing/Dignite.Abp.Notifications.Emailing.csproj" />
+    <Project Path="notifications/core/src/Dignite.Abp.Notifications.Emailing.Identity/Dignite.Abp.Notifications.Emailing.Identity.csproj" />
+    <Project Path="notifications/core/src/Dignite.Abp.Notifications.Identity/Dignite.Abp.Notifications.Identity.csproj" />
+    <Project Path="notifications/core/src/Dignite.Abp.Notifications.SignalR/Dignite.Abp.Notifications.SignalR.csproj" />
+    <Project Path="notifications/core/src/Dignite.Abp.Notifications/Dignite.Abp.Notifications.csproj" />
+  </Folder>
+  <Folder Name="/notifications/core/test/">
+    <Project Path="notifications/core/test/Dignite.Abp.Notifications.TestProviderA/Dignite.Abp.Notifications.TestProviderA.csproj" />
+    <Project Path="notifications/core/test/Dignite.Abp.Notifications.TestProviderB/Dignite.Abp.Notifications.TestProviderB.csproj" />
+    <Project Path="notifications/core/test/Dignite.Abp.Notifications.Tests/Dignite.Abp.Notifications.Tests.csproj" />
+  </Folder>
+  <Folder Name="/notifications/host/">
+    <Project Path="notifications/host/Dignite.NotificationCenter.Web.Host/Dignite.NotificationCenter.Web.Host.csproj" />
+  </Folder>
+  <Folder Name="/notifications/notification-center/" />
+  <Folder Name="/notifications/notification-center/src/">
+    <Project Path="notifications/notification-center/src/Dignite.NotificationCenter.Application.Contracts/Dignite.NotificationCenter.Application.Contracts.csproj" />
+    <Project Path="notifications/notification-center/src/Dignite.NotificationCenter.Application/Dignite.NotificationCenter.Application.csproj" />
+    <Project Path="notifications/notification-center/src/Dignite.NotificationCenter.Domain.Shared/Dignite.NotificationCenter.Domain.Shared.csproj" />
+    <Project Path="notifications/notification-center/src/Dignite.NotificationCenter.Domain/Dignite.NotificationCenter.Domain.csproj" />
+    <Project Path="notifications/notification-center/src/Dignite.NotificationCenter.EntityFrameworkCore/Dignite.NotificationCenter.EntityFrameworkCore.csproj" />
+    <Project Path="notifications/notification-center/src/Dignite.NotificationCenter.HttpApi.Client/Dignite.NotificationCenter.HttpApi.Client.csproj" />
+    <Project Path="notifications/notification-center/src/Dignite.NotificationCenter.HttpApi/Dignite.NotificationCenter.HttpApi.csproj" />
+    <Project Path="notifications/notification-center/src/Dignite.NotificationCenter.MongoDB/Dignite.NotificationCenter.MongoDB.csproj" />
+    <Project Path="notifications/notification-center/src/Dignite.NotificationCenter.Web/Dignite.NotificationCenter.Web.csproj" />
+  </Folder>
+  <Folder Name="/notifications/notification-center/test/">
+    <Project Path="notifications/notification-center/test/Dignite.NotificationCenter.TestBase/Dignite.NotificationCenter.TestBase.csproj" />
+    <Project Path="notifications/notification-center/test/Dignite.NotificationCenter.EntityFrameworkCore.Tests/Dignite.NotificationCenter.EntityFrameworkCore.Tests.csproj" />
+    <Project Path="notifications/notification-center/test/Dignite.NotificationCenter.MongoDB.Tests/Dignite.NotificationCenter.MongoDB.Tests.csproj" />
+  </Folder>
+</Solution>

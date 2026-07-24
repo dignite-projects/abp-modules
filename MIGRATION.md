@@ -68,8 +68,10 @@
   - **验证**:`file-storing/` 和 `notifications/` 各自的 `.slnx` 分别 `dotnet restore` + `dotnet build -c Release`(均 0 error)+ `dotnet test`(file-storing 34/34 通过,notifications 40/40 通过)全部跑绿。聚合根 `.slnx` 要到 Phase 4 才建,这里先用两个模块各自现有的 `.slnx` 当验证入口。
 
 ## Phase 4 — 解决方案 + ABP Studio
-- [ ] 根建聚合 `.slnx`;各模块 `.slnx` 可保留供聚焦开发
-- [ ] ABP Studio 文件(`.abpmdl`/`.abpsln`/`.abpstudio`)在 ABP Studio 里重建,别手改
+- [x] 根建聚合 `.slnx`;各模块 `.slnx` 可保留供聚焦开发
+  - 根 `Dignite.Abp.Modules.slnx` = file-storing 和 notifications 两份 `.slnx` 的并集,每个 `Project Path`/`Folder Name` 加上各自模块前缀(`file-storing/…`、`notifications/…`),两个模块自己的 `.slnx` 原样保留未动。
+  - 验证:根 `.slnx` `dotnet restore` + `dotnet build -c Release`(0 error)+ `dotnet test`(全部子项目通过,0 失败)跑绿。
+- [ ] ABP Studio 文件(`.abpmdl`/`.abpsln`/`.abpstudio`)在 ABP Studio 里重建,别手改 —— **待你操作**,汇总在下面的"需要你操作"清单里,未触碰 `file-storing/Dignite.Abp.FileStoring.abpmdl`/`.abpsln`/`.abpstudio/`(notifications 那边本来就没有这些文件)。
 
 ## Phase 5 — CI/CD
 - [ ] 一条 build+test 工作流(构建聚合方案)
@@ -89,3 +91,13 @@
 
 ## Phase 8 — 退役旧仓
 - [ ] `abp-file-storing`、`abp-notifications` 归档(README 顶部指向 abp-modules),不删
+
+---
+
+## 需要你操作的事项(汇总)
+
+跑到对应 Phase 时不会自己硬来,停下来等你处理:
+
+- [ ] **Phase 1/5**:在 `dignite-projects` 下建 GitHub 仓 `abp-modules`(建成完全空的,别自动初始化 README/.gitignore/license),本地骨架就绪后加 `origin` 再 push。
+- [ ] **Phase 4**:ABP Studio 聚合解决方案(`.abpmdl`/`.abpsln`/`.abpstudio`)在 ABP Studio 里重建。
+- [ ] **Phase 5**:NuGet.org Trusted Publishing 策略从两仓旧名 + 旧 `release.yml` 改到 `dignite-projects/abp-modules` + 新工作流,否则统一发布会在签名/授权这步失败。
