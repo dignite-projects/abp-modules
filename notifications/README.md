@@ -809,6 +809,21 @@ dotnet run --project host/Dignite.NotificationCenter.Web.Host
 
 The `angular/` workspace consumes the same API for the Angular demo.
 
+### Host secrets
+
+`host/Dignite.NotificationCenter.Web.Host/appsettings.json` deliberately contains **no** certificate or
+encryption passphrases. In Development the host uses ABP's development signing certificate and needs
+nothing configured. Outside Development it requires these values and fails fast at startup if they are
+missing — supply them with .NET user-secrets, environment variables, or a secret store:
+
+```text
+AuthServer:CertificatePassPhrase
+StringEncryption:DefaultPassPhrase
+```
+
+For Docker or other deployments, use the corresponding double-underscore environment variable names
+(for example, `AuthServer__CertificatePassPhrase`).
+
 ## Repository layout
 
 ```

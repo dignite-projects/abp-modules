@@ -154,6 +154,12 @@ public class HostModule : AbpModule
 
         if (!hostingEnvironment.IsDevelopment())
         {
+            if (string.IsNullOrWhiteSpace(configuration["StringEncryption:DefaultPassPhrase"]))
+            {
+                throw new InvalidOperationException(
+                    "StringEncryption:DefaultPassPhrase must be configured outside the Development environment.");
+            }
+
             PreConfigure<AbpOpenIddictAspNetCoreOptions>(options =>
             {
                 options.AddDevelopmentEncryptionAndSigningCertificate = false;
@@ -161,7 +167,14 @@ public class HostModule : AbpModule
 
             PreConfigure<OpenIddictServerBuilder>(serverBuilder =>
             {
-                serverBuilder.AddProductionEncryptionAndSigningCertificate("openiddict.pfx", configuration["AuthServer:CertificatePassPhrase"]!);
+                var certificatePassPhrase = configuration["AuthServer:CertificatePassPhrase"];
+                if (string.IsNullOrWhiteSpace(certificatePassPhrase))
+                {
+                    throw new InvalidOperationException(
+                        "AuthServer:CertificatePassPhrase must be configured outside the Development environment.");
+                }
+
+                serverBuilder.AddProductionEncryptionAndSigningCertificate("openiddict.pfx", certificatePassPhrase);
             });
         }
 
