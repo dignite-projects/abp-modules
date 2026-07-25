@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 Question about the ABP Framework itself
+    url: https://github.com/abpframework/abp/issues
+    about: These modules build on top of ABP. For bugs or questions about the framework, please use the ABP repository or the abp.io community.
+  - name: 🔒 Report a security vulnerability
+    url: https://github.com/dignite-projects/abp-modules/security/advisories/new
+    about: Please report security issues privately through GitHub's advisory form, never as a public issue.

@@ -1,0 +1,19 @@
+# Configuration for the "Lock Threads" GitHub App (https://github.com/apps/lock).
+#
+# INERT until the Lock Threads app is installed on this repository. It only ever acts on already
+# CLOSED issues and pull requests, and never on open ones.
+
+# Number of days of inactivity before a closed issue or pull request is locked
+daysUntilLock: 60
+# Skip issues and pull requests created before a given timestamp (ISO 8601). `false` to disable
+skipCreatedBefore: false
+# Issues and pull requests with these labels will be ignored. `[]` to disable
+exemptLabels: []
+# Label to add before locking, such as `outdated`. `false` to disable
+lockLabel: false
+# Comment to post before locking. `false` to disable
+lockComment: >
+  This thread has been automatically locked since there has not been any recent activity after it
+  was closed. Please open a new issue for related bugs.
+# Assign `resolved` as the reason for locking. `false` to disable
+setLockReason: true

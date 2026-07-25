@@ -1,0 +1,97 @@
+name: 🐞 Bug report
+description: Report a defect in one of the Dignite ABP modules
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. Please fill in as much as you can —
+        a minimal reproduction is by far the most useful thing you can give us.
+
+        For a **security** vulnerability, do **not** open a public issue — follow
+        [SECURITY.md](../blob/main/SECURITY.md) instead.
+  - type: dropdown
+    id: module
+    attributes:
+      label: Which module?
+      description: The two module trees are independent and never reference each other.
+      options:
+        - "file-storing (Dignite.Abp.FileStoring / Dignite.FileExplorer)"
+        - "notifications (Dignite.Abp.Notifications / Dignite.NotificationCenter)"
+        - "Not sure / repo-wide"
+    validations:
+      required: true
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Persistence provider (if relevant)
+      options:
+        - "Not applicable"
+        - "Entity Framework Core"
+        - "MongoDB"
+    validations:
+      required: false
+  - type: input
+    id: package-version
+    attributes:
+      label: Package version
+      description: e.g. the NuGet version of the affected package, or the Angular library version.
+      placeholder: "10.0.0-rc.4"
+    validations:
+      required: true
+  - type: input
+    id: abp-version
+    attributes:
+      label: ABP Framework version
+      placeholder: "10.5.0"
+    validations:
+      required: true
+  - type: input
+    id: dotnet-version
+    attributes:
+      label: .NET SDK version
+      description: Output of `dotnet --version`.
+      placeholder: "10.0.302"
+    validations:
+      required: false
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Ideally a link to a minimal repository or the smallest set of steps that reproduces it.
+      placeholder: |
+        1. Configure container '...'
+        2. Upload '...'
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: false
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior / exception
+      description: Include the full exception and stack trace if there is one. This will be rendered as code, so no backticks needed.
+      render: shell
+    validations:
+      required: false
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I searched existing issues and this has not been reported yet.
+          required: true
+        - label: This is a bug in these modules, not in the ABP Framework itself.
+          required: false

@@ -1,0 +1,25 @@
+# Configuration for the "Stale" GitHub App (https://github.com/apps/stale).
+#
+# INERT until the Stale app is installed on this repository. Nothing here runs on its own — no issue
+# is ever touched unless a maintainer installs the app. (If you'd rather not add a third-party app,
+# the same behavior can be had from an actions/stale workflow instead.)
+
+# Number of days of inactivity before an issue becomes stale
+daysUntilStale: 60
+# Number of days of inactivity before a stale issue is closed
+daysUntilClose: 14
+# Issues with these labels will never be considered stale
+exemptLabels:
+  - pinned
+  - security
+  - "help wanted"
+# Set to true to ignore issues in a milestone
+exemptMilestones: true
+# Label to use when marking an issue as stale
+staleLabel: stale
+# Comment to post when marking an issue as stale. Set to `false` to disable
+markComment: >
+  This issue has been automatically marked as stale because it has not had recent activity. It will
+  be closed if no further activity occurs. Thank you for your contributions.
+# Comment to post when closing a stale issue. Set to `false` to disable
+closeComment: false
