@@ -61,14 +61,7 @@ jobs:
           #     published packages): mass-assignment / access-modifier bypass in
           #     TypedObjectAccessor. No patched version exists upstream as of this writing
           #     (checked 7.2.1 through the latest 7.2.5).
-          #   - GHSA-hv8m-jj95-wg3x / GHSA-382j-8mxh-c7x2 / GHSA-vh6j-jc39-fggf (MessagePack),
-          #     GHSA-v5pm-xwqc-g5wc (Microsoft.OpenApi), GHSA-2m69-gcr7-jv3q
-          #     (SQLitePCLRaw.lib.e_sqlite3 - the same advisory Directory.Packages.props already
-          #     pins file-storing past): all confined to
-          #     notifications/host/Dignite.NotificationCenter.Web.Host, a local-dev-only demo app
-          #     that is never packed/published (IsPackable=false) and opted out of central package
-          #     management, so it never picked up that pin.
-          filtered="$(printf '%s\n' "$report" | grep -Ev 'GHSA-7jvp-hj45-2f2m|GHSA-hv8m-jj95-wg3x|GHSA-382j-8mxh-c7x2|GHSA-vh6j-jc39-fggf|GHSA-v5pm-xwqc-g5wc|GHSA-2m69-gcr7-jv3q')"
+          filtered="$(printf '%s\n' "$report" | grep -Ev 'GHSA-7jvp-hj45-2f2m')"
           if printf '%s\n' "$filtered" | grep -Eiq '^\s*>\s+[^[:space:]]+\s+[^[:space:]]+\s+(high|critical)\b'; then
             echo "::error::High or critical NuGet vulnerabilities block CI."
             exit 1
