@@ -292,7 +292,7 @@ dist/
 **/data-protection-keys/
 
 # Claude Code local runtime state (not project content - keep this repo-portable rather than
-# relying solely on each contributor's global gitignore). Real content under */.claude/rules/ etc.
+# relying solely on each contributor's global gitignore). Real content under */.claude/skills/ etc.
 # is intentionally tracked - only these specific runtime files are local state.
 **/.claude/settings.local.json
 **/.claude/scheduled_tasks.lock

@@ -226,7 +226,7 @@ public class HostModule : AbpModule
     private void ConfigureNotificationCenterUi()
     {
         // Register the demo NotificationData subclass so it (de)serializes via its stable "Demo.OrderShipped"
-        // discriminator — required before it can be published/persisted (notifications-invariants.md §1).
+        // discriminator — required before it can be published/persisted (notifications-invariants §1).
         Configure<NotificationDataOptions>(options =>
         {
             options.Add<OrderShippedNotificationData>();

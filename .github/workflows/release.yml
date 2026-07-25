@@ -83,7 +83,7 @@ jobs:
           printf '%s\n' "$report"
           # Known-accepted advisories, allowlisted with a reason (keep in sync with ci.yml).
           # Re-run `dotnet list ... --vulnerable --include-transitive` periodically and drop an
-          # entry once its package is genuinely fixed or remediated - see MIGRATION.md Phase 5.
+          # entry once its package is genuinely fixed or remediated (see SECURITY.md).
           #   - GHSA-7jvp-hj45-2f2m (Scriban, via notifications' Emailing/Emailing.Identity - both
           #     published packages): mass-assignment / access-modifier bypass in
           #     TypedObjectAccessor. No patched version exists upstream as of this writing
@@ -329,7 +329,7 @@ jobs:
             --tag '${{ steps.channel.outputs.npm-tag }}' \
             --provenance
 
-      # Extract this version's section from the root CHANGELOG.md (merged in MIGRATION.md Phase 6)
+      # Extract this version's section from the root CHANGELOG.md
       # as the draft release body.
       - name: Extract release notes from CHANGELOG
         if: startsWith(github.ref, 'refs/tags/v')

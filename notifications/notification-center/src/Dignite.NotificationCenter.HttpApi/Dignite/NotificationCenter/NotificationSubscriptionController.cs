@@ -9,7 +9,7 @@ namespace Dignite.NotificationCenter;
 /// REST endpoints for the current user's notification subscriptions. A thin controller that delegates to
 /// <see cref="INotificationSubscriptionAppService"/> — the AppService owns all authorization (its class-level
 /// [Authorize]) and per-user scoping. A subscription's identity includes its optional entity scope
-/// (notifications-invariants.md §6), so subscribe/unsubscribe take the full
+/// (notifications-invariants §6), so subscribe/unsubscribe take the full
 /// <see cref="NotificationSubscriptionScopeDto"/>: a definition-wide subscription leaves both entity fields
 /// null, an entity-scoped one supplies both. Exposed under <c>/api/notification-center/subscriptions</c>.
 /// Derives from <see cref="NotificationCenterController"/> for the module's localization resource.

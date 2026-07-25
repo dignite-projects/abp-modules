@@ -1,152 +1,100 @@
 # Dignite.Abp.FileStoring
 
-> **This is one module of the `dignite-projects/abp-modules` monorepo.** Repo-wide concerns —
-> the lockstep `<Version>`, central package management, the aggregate solution, CI/release, and the
-> cross-module invariants — live in the [repository root `CLAUDE.md`](../CLAUDE.md); read it first.
-> Below is what's specific to *this* module. "This repo" in the text below means this module tree.
+File-upload framework for ABP Framework (LGPL-3.0-only) on ABP BlobStoring, plus an optional DDD File
+Explorer backend (directories + file metadata + REST API) and an Angular UI library. Published:
+`core/src/` (FileStoring + Imaging), `file-explorer/src/`, `angular/projects/file-explorer`. `host/`
+and the Angular demo app are local-dev-only, never packed.
 
-An extensible file-upload framework for **ABP Framework** (LGPL-3.0) layered on **ABP BlobStoring**, plus an
-optional DDD **File Explorer** backend (directory tree + persisted file metadata + REST API) and an **Angular
-UI** library. **The packages this repo distributes are class libraries only** — `core/src/` (the FileStoring
-core + optional `Imaging`) + `file-explorer/src/` + the Angular library under `angular/projects/`. The repo also
-carries **local-dev-only demo apps that are never packed/published** — `host/` (a runnable ABP MVC host
-scaffolded by ABP Studio) and `angular/`'s demo app — that exist solely to run/demo the stack end-to-end. A real
-consuming application brings its own host; `host/` and `angular/` are this module's own smoke test / live
-documentation, not that host. The code was **extracted from `dignite-abp`** (treated as a frozen source); its
-audit remediation backlog is tracked in the closed `audit`-labeled issues (#2–#35) of the former
-`dignite-projects/abp-file-storing` repository.
+## Structure
 
-## Tech stack
+One `.slnx` — `Dignite.Abp.FileStoring.slnx`:
 
-- **.NET 10** (SDK pinned in the repo-root `global.json`), **ABP Framework 10.5.0**.
-- **Central package management** (repo-root `Directory.Packages.props`) — every library package version is
-  pinned there; a library `.csproj` only ever has `<PackageReference Include="..." />` with no `Version=`. The
-  demo `host/` opts out (`common.props`) and pins inline.
-- **Single-targeted `net10.0`** across the board — including the contract layers (`Domain.Shared`,
-  `Application.Contracts`, `HttpApi.Client`). No `netstandard` multi-targeting.
-- Persistence: EF Core and MongoDB, both implementing the same custom repository interfaces
-  (`IFileDescriptorRepository`, `IDirectoryDescriptorRepository`).
-- Object mapping: **Mapperly** (compile-time; moved off AutoMapper deliberately).
-- Tests: xUnit + Shouldly + NSubstitute + `Volo.Abp.TestBase` (Autofac); EF Core tests run against in-memory
-  Sqlite, MongoDB tests against an embedded mongod (MongoSandbox). The repository scenarios are written once as
-  abstract classes in a shared `TestBase` project and run against both providers — see
-  `.claude/rules/framework/testing/patterns.md`.
-- License: LGPL-3.0-only.
+- **`core/`** — `Dignite.Abp.FileStoring` (+ `.Imaging`). No DDD layers. Adds the `IFileHandler`
+  upload pipeline to blob containers.
+- **`file-explorer/`** — DDD app on core: `Domain.Shared, Domain, Application.Contracts,
+  Application, HttpApi, HttpApi.Client, EntityFrameworkCore, MongoDB`. `FileDescriptor` /
+  `DirectoryDescriptor` aggregates, conventional (auto) API controllers under `/api/file-explorer`.
+- **`host/`** — demo ABP MVC host, in the `.slnx` but never packed:
+  `dotnet run --project host/Dignite.FileExplorer.Web.Host` → `https://localhost:44390`.
+- **`angular/`** — publishable `file-explorer` lib + demo app, npm-only, not in the `.slnx`,
+  `http://localhost:4200`.
 
-## Solution layout
+`core/` never references `file-explorer/` — enforced by project references, not the solution file.
 
-One `.slnx` solution — **`Dignite.Abp.FileStoring.slnx`** — aggregates both module trees + the demo host:
+Namespace-mirrored files: `<Project>/<namespace path>/File.cs`, `<RootNamespace/>` empty. Put a new
+file at the folder path matching its namespace (test projects that flatten to the project root are
+the exception).
 
-- **`core/`** — extends ABP BlobStoring, no DDD layers:
-  `core/src/{Dignite.Abp.FileStoring, Dignite.Abp.FileStoring.Imaging}` + `core/test`. The core adds an
-  **`IFileHandler` upload pipeline** to blob containers (`FileSizeLimitHandler`, `FileTypeCheckHandler`, and —
-  in `Imaging` — `ImageResizeHandler`), configured per container via `BlobContainerConfigurationExtensions`.
-- **`file-explorer/`** — a DDD application built on the core:
-  `file-explorer/src/{Domain.Shared, Domain, Application.Contracts, Application, HttpApi, HttpApi.Client,
-  EntityFrameworkCore, MongoDB}` + `file-explorer/test`. Aggregates `FileDescriptor` / `DirectoryDescriptor`,
-  domain services `FileDescriptorManager` / `DirectoryManager`, custom repositories, resource-based
-  authorization, and ABP **conventional (auto) API controllers** under `/api/file-explorer`.
+| Project | Responsibility | Depends on |
+|---|---|---|
+| `Abp.FileStoring` (Core) | `IFileHandler` pipeline, container config, blob naming | ABP BlobStoring |
+| `Abp.FileStoring.Imaging` | `ImageResizeHandler` | Core, ImageSharp |
+| `FileExplorer.Domain.Shared` | Constants, error codes, localization, settings | — |
+| `FileExplorer.Domain` | Aggregates, managers, repository interfaces | Domain.Shared, FileStoring Core |
+| `FileExplorer.Application.Contracts` | DTOs, service interfaces, permissions | Domain.Shared |
+| `FileExplorer.Application` | AppServices, Mapperly mapping, authorization | Application.Contracts, Domain, Imaging |
+| `FileExplorer.HttpApi` / `.HttpApi.Client` | Auto API controllers / client proxies | Application.Contracts |
+| `FileExplorer.EntityFrameworkCore` / `.MongoDB` | Repository implementations | Domain |
 
-The `core/` FileStoring packages are **independently usable** without `file-explorer` (mode 1 below); that
-boundary is enforced by project references (the core never references `file-explorer`), not by the solution
-file. The single solution is a build/dev convenience.
+Tests by project: `Dignite.Abp.FileStoring[.Imaging].Tests` (core pipeline) · `FileExplorer.TestBase`
+(abstract repository scenarios) · `.EntityFrameworkCore.Tests` / `.MongoDB.Tests` (those scenarios per
+provider) · `.Domain.Tests` · `.Application.Tests` · `.Authorization.Tests` · `.DirectorySafety.Tests`
+· `.Update.Tests`.
 
-Two **local-dev-only** sibling folders run/demo the stack, **never packed/published**. `host/` **is** in the
-`.slnx` (ABP module-template convention; a Web SDK project so `dotnet pack` skips it, and it keeps its own
-isolated non-central package management inside the project folder). `angular/` is npm-only and stays out of the
-`.slnx`:
+## The `IFileHandler` pipeline
 
-- **`host/`** — `Dignite.FileExplorer.Web.Host` (app-nolayers + MVC + OpenIddict + LeptonXLite). Run it with
-  `dotnet run --project host/Dignite.FileExplorer.Web.Host` (→ `https://localhost:44390`). Has its own
-  `Migrations/`. (End-to-end host wiring is part of the outstanding audit backlog.)
-- **`angular/`** — an Angular workspace with the publishable `angular/projects/file-explorer` library (an
-  **ABP-generated** proxy via `abp generate-proxy -t ng`, plus components) and a demo app that consumes it
-  against `host/`'s API. npm, not MSBuild — not in the `.slnx`; demo app on `http://localhost:4200`.
+```csharp
+public interface IFileHandler
+{
+    Task ExecuteAsync(FileHandlerContext context); // FileName, MimeType, mutable BlobStream, container config
+}
+```
 
-`host/` and `angular/` sit above both module trees purely for local running/demoing and must never be referenced
-from `core/` or `file-explorer/src/`.
+Attached via `BlobContainerConfigurationExtensions`, stored as an ordered `TypeList<IFileHandler>`:
 
-Source files live at `<Project>/<mirrored namespace path>/File.cs` (every `.csproj` sets `<RootNamespace />`
-empty) — not a generic `Entities/`/`Services/` split.
+```csharp
+options.Containers.Configure<MyPicturesContainer>(c =>
+{
+    c.AddFileSizeLimitHandler(h => h.SetMaximumFileSize(2 * 1024 * 1024));
+    c.AddFileTypeCheckHandler(h => h.SetAllowableFileTypeNames(".png", ".jpg"));
+    c.AddImageResizeHandler(h => /* preset */);
+});
+```
 
-## Coding rules
+`FileDescriptorManager` runs each handler's `ExecuteAsync` over the stream **before** the blob is
+stored. Validators inspect (`FileSizeLimitHandler`, `FileTypeCheckHandler`); transforms replace
+`context.BlobStream` (`ImageResizeHandler`). New upload rules = new handlers.
 
-Conventions are split between the repo root and this module, following
-[Claude Code's monorepo guidance](https://code.claude.com/docs/en/large-codebases) that path-scoped rules live
-in a central root `.claude/`:
+## Two operation modes
 
-- **Repo-root [`.claude/rules/framework/common/`](../.claude/rules/framework/common/)** — every cross-cutting
-  ABP rule: `abp-core`, `application-layer`, `authorization`, `ddd-patterns`, `infrastructure`,
-  `multi-tenancy`, `versioning`. Each leads with generic ABP conventions, then has a **`## In file-storing`**
-  section with this module's specifics. `abp-core.md` and `versioning.md` load at launch; the rest are
-  path-scoped.
-- **This module's `.claude/rules/`** — only what has no cross-module counterpart:
-  `framework/common/{cli-commands,dependency-rules,development-flow}.md`, `framework/data/ef-core.md`,
-  `framework/testing/patterns.md`, `template/app.md`, and `framework/common/file-storing-invariants.md`.
-  `file-storing-invariants.md` and `template/app.md` have no `paths:` frontmatter, so they always load;
-  the rest are path-scoped (EF Core for `*DbContext*.cs`, tests for `test/**`, and so on).
+1. **Core only** — `Dignite.Abp.FileStoring` (+ `.Imaging`): blob containers with the handler
+   pipeline, no directories, no persistence, no REST API.
+2. **Full FileExplorer** — + `file-explorer` (+ EF Core or MongoDB): `DirectoryDescriptor` trees,
+   persisted `FileDescriptor` metadata, authorization, REST API, Angular UI.
 
-Read `.claude/rules/template/app.md` first for the layer map, the `IFileHandler` pipeline, and the "add a
-feature" flow, then `.claude/rules/framework/common/file-storing-invariants.md` before touching the upload
-pipeline, blob/DB writes, directory moves, authorization, or a service's DI lifetime — those invariants encode
-the exact bugs the #45–#70 hardening pass fixed (and the ones the audit is still driving toward).
+Core must keep working standalone.
+
+## Adding a feature
+
+**New upload rule/transform** (no entity, no DDD layer):
+1. `IFileHandler` impl in `core/src/Dignite.Abp.FileStoring` (or `.Imaging`), `ITransientDependency`.
+   Flow cancellation to any I/O.
+2. `*Configuration` + `*ConfigurationNames`, and an `Add…Handler(...)` extension that `TryAdd<>`s it
+   under `BlobContainerConfigurationNames.FileHandlers`.
 
 ## Commands
 
 ```bash
-# Build / test everything (core + file-explorer) from the one solution
 dotnet build Dignite.Abp.FileStoring.slnx
 dotnet test Dignite.Abp.FileStoring.slnx
 
-# `dotnet test` on the solution starts an embedded mongod for the MongoDB provider tests. To iterate
-# on Core alone without that, target the core test project directly:
+# Core only, skips embedded-mongod tests:
 dotnet test core/test/Dignite.Abp.FileStoring.Tests
 
-# Pack for local testing (version/license come from the repo-root Directory.Build.props)
 dotnet pack Dignite.Abp.FileStoring.slnx -c Release
 
-# Angular library + demo
-cd angular && npm install --legacy-peer-deps && npm run build:lib && npm start   # http://localhost:4200
-
-# Run the demo host
-dotnet run --project host/Dignite.FileExplorer.Web.Host                          # https://localhost:44390
+cd angular && npm install --legacy-peer-deps && npm run build:lib && npm start   # :4200
+dotnet run --project host/Dignite.FileExplorer.Web.Host                          # :44390
 ```
 
-The library projects ship **no migrations** — a consuming host owns its own DbContext/migrations (the demo
-`host/` has its own `Migrations/`). Tests run against in-memory Sqlite + embedded mongod, so `dotnet test` needs
-no migration step or local database install.
-
-## Core conventions (see rules for the full picture)
-
-- Respect ABP DDD layer boundaries: no `DbContext` in Application, DTOs at boundaries.
-- Aggregates: `FileDescriptor` (`AggregateRoot<Guid>` + audit interfaces) and `DirectoryDescriptor`
-  (`AuditedAggregateRoot<Guid>`), both `IMultiTenant`, with protected setters + behavior methods. Queries go
-  through **custom** repositories (`IFileDescriptorRepository`, `IDirectoryDescriptorRepository`) implemented in
-  **both** EF Core and MongoDB — add a query to the interface and to both providers.
-- The `IFileHandler` pipeline runs on the upload stream **before** the blob is stored; size/image limits must
-  bind before the stream is fully buffered, and never trust the client MIME type — see `file-storing-invariants.md`.
-- Blob names are unique per `(TenantId, ContainerName)`; MD5/content dedup is race-safe via the DB unique
-  constraint; a referenced blob (`ReferBlobName`) can't be deleted out from under its referrers.
-- Blob and DB must not drift — order writes and compensate on failure (there is no outbox here by design).
-- Authorization is two-layered: `FileExplorerPermissions` + resource-based handlers with per-container permission
-  config and a pluggable `IFileDescriptorEntityAuthorizationHandler`. No bypass via temp-entity ownership;
-  authorize every resource in a batch.
-- Directory moves may not create cycles; validate the parent; block non-empty deletion — enforced by
-  `DirectoryManager`.
-- Object mapping is Mapperly (`FileExplorerApplicationMappers`) — don't reintroduce AutoMapper.
-- New package version pins go in the repo-root `Directory.Packages.props`, never inline in a library `.csproj`.
-- Core (`Dignite.Abp.FileStoring`) must keep working **without** `file-explorer` installed.
-
-## Design rationale
-
-Usage and the architecture overview live in this module's `README.md`. The "why" behind the hard invariants lives
-inline in `.claude/rules/framework/common/file-storing-invariants.md`; the residual known limitations are noted
-inline in the code (the concurrent-dedup and orphan-blob comments in `FileDescriptorManager`), and the audit
-remediation is tracked in the closed `audit`-labeled issues (#2–#35). Many invariants encode bugs the #45–#70
-fix pass already resolved — don't reintroduce them.
-
-<!-- .claude/rules/ adapted from ../abp-notifications — that repo's notification/notifier/distributed-event
-     rules were rewritten for this repo's BlobStoring + IFileHandler + file-explorer architecture, and its
-     "removed over-engineering" invariants were replaced with this repo's own (upload pipeline, blob/DB
-     consistency, authorization, directory-tree integrity) derived from the code, the #45–#70 fixes, and
-     the `audit`-labeled issues #2–#35. -->
+No migrations ship in the library projects — a consuming host owns its own DbContext/migrations.

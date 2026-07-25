@@ -31,7 +31,7 @@ public class NotificationCenterHttpApiModule : AbpModule
         // response JSON formatter reads Microsoft.AspNetCore.Mvc.JsonOptions instead — a separate, unsynced
         // JsonSerializerOptions. Without this, UserNotificationDto.Data serializes over HTTP via System.Text.Json's
         // default reflection-based output for its declared type (NotificationData), silently dropping the
-        // discriminator and every derived-type field — exactly what notifications-invariants.md §1 requires the
+        // discriminator and every derived-type field — exactly what notifications-invariants §1 requires the
         // HTTP API to avoid.
         context.Services
             .AddOptions<JsonOptions>()

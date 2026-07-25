@@ -6,7 +6,7 @@ namespace Dignite.NotificationCenter.Web.Host.Notifications;
 
 /// <summary>
 /// Registers the demo notification types so they appear on the subscriptions page and can be published.
-/// A real app defines these in whichever business module raises them (see template/app.md "Adding a feature").
+/// A real app defines these in whichever business module raises them (see notifications/CLAUDE.md "Adding a feature").
 /// </summary>
 public class DemoNotificationDefinitionProvider : NotificationDefinitionProvider
 {

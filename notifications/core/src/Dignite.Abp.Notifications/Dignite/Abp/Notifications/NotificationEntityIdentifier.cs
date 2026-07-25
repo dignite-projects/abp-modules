@@ -10,7 +10,7 @@ namespace Dignite.Abp.Notifications;
 /// <c>Notification</c> and <c>NotificationSubscription</c>, matched by string equality when resolving subscribers,
 /// returned over REST, and used as the key of the UI's entity-link resolvers. A CLR name would silently orphan
 /// every stored subscription the day a namespace is renamed. Same rule <c>[NotificationDataType]</c> enforces for
-/// payloads — see <c>notifications-invariants.md</c> §1.
+/// payloads — see <c>notifications-invariants</c> §1.
 /// </remarks>
 public class NotificationEntityIdentifier
 {

@@ -6,7 +6,7 @@ namespace Dignite.NotificationCenter;
 
 /// <summary>
 /// Headless subscription API for the current user. A subscription's identity includes its optional entity
-/// scope (see notifications-invariants.md §6), so subscribe/unsubscribe take the full
+/// scope (see notifications-invariants §6), so subscribe/unsubscribe take the full
 /// <see cref="NotificationSubscriptionScopeDto"/> — a definition-wide subscription leaves both entity fields null,
 /// an entity-scoped one supplies both.
 /// </summary>

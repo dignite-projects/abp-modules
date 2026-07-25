@@ -27,12 +27,12 @@ abp-modules/
 │   ├── Dignite.Abp.FileStoring.slnx      # focused solution for this module alone
 │   ├── core/  file-explorer/             # the published class libraries
 │   ├── host/  angular/                   # local-dev demo app + Angular workspace
-│   └── .claude/rules/                    # module-specific conventions & invariants
+│   └── .claude/skills/                   # module-specific conventions & invariants
 └── notifications/
     ├── Dignite.Abp.Notifications.slnx    # focused solution for this module alone
     ├── core/  notification-center/       # the published class libraries
     ├── host/  angular/                   # local-dev demo app + Angular workspace
-    └── .claude/rules/                    # module-specific conventions & invariants
+    └── .claude/skills/                   # module-specific conventions & invariants
 ```
 
 `host/` and `angular/` under each module are **local-dev demos only** — they run and exercise the
@@ -84,11 +84,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow, the version
 release procedure. Security reports go through [SECURITY.md](SECURITY.md) — please don't open a
 public issue for a vulnerability.
 
-Each module documents its own architectural invariants under `<module>/.claude/rules/` (written for
+Each module documents its own architectural invariants under `<module>/.claude/skills/` (written for
 AI-assisted contributions, but equally the reference for human contributors). Start with
-`<module>/.claude/rules/template/app.md` for the layer map, then the module's `*-invariants.md` —
-those encode the specific bugs each module was built or rewritten to fix, so they are the first
-thing to read before changing load-bearing code.
+`<module>/CLAUDE.md` for the layer map, then the module's `*-invariants` skill — those encode the
+specific bugs each module was built or rewritten to fix, so they are the first thing to read before
+changing load-bearing code.
 
 ## License
 

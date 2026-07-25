@@ -24,35 +24,34 @@ cd notifications/angular && npm install && npm run build:lib
 
 ## Code conventions
 
-Architectural invariants and layer conventions are documented under `.claude/rules/` — loaded
-automatically for AI-assisted contributions, but equally the reference for human contributors.
-Following [Claude Code's monorepo guidance](https://code.claude.com/docs/en/large-codebases), which
-puts path-scoped rules in a central root `.claude/` and per-directory conventions in that
-directory's `CLAUDE.md`:
+Architectural invariants and layer conventions are documented in `CLAUDE.md` files and Claude Code
+**skills** — loaded automatically for AI-assisted contributions, but equally the reference for human
+contributors. They're split by how the content loads:
 
-- **Root `.claude/rules/framework/common/`** — every cross-cutting ABP rule, one file per topic
-  (`abp-core`, `application-layer`, `authorization`, `ddd-patterns`, `infrastructure`,
-  `multi-tenancy`, `versioning`). Each leads with generic ABP conventions, then has a
-  **`## In file-storing`** and a **`## In notifications`** section.
-- **`<module>/.claude/rules/`** — only what has no cross-module counterpart: `cli-commands`,
-  `dependency-rules`, `development-flow`, `data/ef-core`, `testing/patterns`, `template/app`, and
-  the module's `*-invariants.md`.
+- **`<module>/CLAUDE.md`** — the module's orientation doc: structure, layer map, the "add a feature"
+  flow, and a list of tripwires that mean "go read the invariants."
+- **Root `.claude/skills/`** — 16 generic `abp-*` skills covering ABP itself (`abp-core`, `abp-ddd`,
+  `abp-application-layer`, `abp-authorization`, `abp-ef-core`, `abp-mongodb`, `abp-testing`, …).
+  These carry no module-specific content.
+- **`<module>/.claude/skills/`** — two per module: a **`*-conventions`** skill ("how *this* module
+  applies ABP") and a **`*-invariants`** skill ("what a change must not break").
 
 `file-storing/` and `notifications/` have genuinely different DDD shapes, persistence conventions,
 and hard invariants. Where they disagree — repository convention, object mapper, distributed-event
-posture, test naming — the rules **name the disagreement and show both**, rather than averaging them
-into a rule that is wrong for both. `testing/patterns.md` is the clearest case: the two modules use
-deliberately opposite test-naming conventions, which is why it was never merged.
+posture, test naming — **each module states its own** rather than sharing an averaged rule that would
+be wrong for both. Test naming is the clearest case: the two modules use deliberately opposite
+conventions. Where a module's `*-conventions` skill disagrees with a generic `abp-*` skill, the
+module skill wins for code in that module.
 
 Start with:
 
-- `<module>/.claude/rules/template/app.md` — the layer map and the "add a feature" flow.
-- `file-storing/.claude/rules/framework/common/file-storing-invariants.md` — before touching the
-  upload pipeline, blob/DB writes, directory moves, authorization, or a DI lifetime.
-- `notifications/.claude/rules/framework/common/notifications-invariants.md` — before touching
-  `NotificationData`, any Notifier, or a DI lifetime.
+- `<module>/CLAUDE.md` — the layer map and the "add a feature" flow.
+- `file-storing/.claude/skills/file-storing-invariants/` — before touching the upload pipeline,
+  blob/DB writes, directory moves, authorization, or a DI lifetime.
+- `notifications/.claude/skills/notifications-invariants/` — before touching `NotificationData`,
+  any Notifier, the distributor, or a DI lifetime.
 
-Those invariant files encode the exact bugs each module was built or rewritten to fix. They are not
+Those invariant skills encode the exact bugs each module was built or rewritten to fix. They are not
 style preferences — don't reintroduce what they rule out.
 
 ### Central package management
@@ -133,7 +132,7 @@ safe to upgrade, which is the opposite of what this project's positioning needs.
 | `<Version>` in [`Directory.Build.props`](./Directory.Build.props) | 3-segment SemVer (+ optional pre-release suffix) | The NuGet package version for **all 25 packable projects across both modules**, and the value a `v*` tag must match. **This is the release version.** |
 | `version` in [`file-storing/angular/projects/file-explorer/package.json`](./file-storing/angular/projects/file-explorer/package.json) | Same value as `<Version>` | npm version for `@dignite-ng/expand.file-explorer`. |
 | `version` in [`notifications/angular/projects/notification-center/package.json`](./notifications/angular/projects/notification-center/package.json) | Same value as `<Version>` | npm version for `@dignite/ng.notification-center`. |
-| `<AssemblyVersion>` | 4-segment | Pinned at `1.0.0.0` and **never** bumped with `<Version>`, avoiding assembly-binding churn. Load-bearing for notifications specifically — see [`notifications-invariants.md`](./notifications/.claude/rules/framework/common/notifications-invariants.md) §1. Don't "fix" this to match `<Version>`. |
+| `<AssemblyVersion>` | 4-segment | Pinned at `1.0.0.0` and **never** bumped with `<Version>`, avoiding assembly-binding churn. Load-bearing for notifications specifically — see [`notifications-invariants`](./notifications/.claude/skills/notifications-invariants/SKILL.md) §1. Don't "fix" this to match `<Version>`. |
 | Git tag | `vX.Y.Z[-suffix]` | Created on the release commit; the release workflow reads `<Version>` and fails if the tag doesn't match — tags do not drive the version number. |
 | `## [x.y.z]` heading in [`CHANGELOG.md`](./CHANGELOG.md) | 3-segment SemVer (+ optional pre-release suffix) | Human-facing release notes, extracted verbatim into the GitHub Release body. |
 

@@ -9,16 +9,16 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 
     <!-- Lockstep version: one <Version> for every packable project in this repo (file-storing/ and
-         notifications/ alike) - see MIGRATION.md. MAJOR tracks the ABP Framework major version
-         targeted in Directory.Packages.props (currently 10.5.0 -> MAJOR = 10) and must stay >= 10
-         forever, permanently ahead of the legacy Dignite.FileExplorer.* / Dignite.Abp.Notifications*
+         notifications/ alike) - see CONTRIBUTING.md#versioning-and-releases. MAJOR tracks the ABP
+         Framework major version targeted in Directory.Packages.props (currently 10.5.0 -> MAJOR =
+         10) and must stay >= 10 forever, permanently ahead of the legacy Dignite.FileExplorer.* / Dignite.Abp.Notifications*
          package lines already published on NuGet up to 3.8.2 under these same PackageIds. -->
     <Version>10.0.0-rc.4</Version>
     <!-- Pinned explicitly and never bumped in lockstep with <Version>: without this the SDK derives
          AssemblyVersion from <Version>, moving it on every release and breaking
          AssemblyQualifiedName-based lookups. notifications/'s NotificationData deserialization
          depends on this staying 1.0.0.0 - see
-         notifications/.claude/rules/framework/common/notifications-invariants.md §1. -->
+         notifications/.claude/skills/notifications-invariants/SKILL.md §1. -->
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
 
     <Authors>Dignite</Authors>

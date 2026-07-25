@@ -62,7 +62,7 @@
 
   <!--
     Microsoft.Extensions.FileProviders.Embedded: file-storing pinned 10.0.9, notifications pinned
-    10.0.7 - merged to the higher 10.0.9 per MIGRATION.md's known-conflicts list. notifications
+    10.0.7 - merged to the higher 10.0.9 when the two modules' pins were unified. notifications
     needs this as a direct reference (not just ABP's transitive one) to activate its build-time
     manifest generation for embedded wwwroot content (ABP's AddEmbedded/ManifestEmbeddedFileProvider).
   -->

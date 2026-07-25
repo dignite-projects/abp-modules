@@ -163,7 +163,7 @@ public class DefaultNotificationPublisherTests
 
         // EntityTypeName is persisted, matched by string equality against stored subscriptions, returned over REST
         // and used as the EntityLinkResolvers key. It must be the caller's stable string, never a CLR type name —
-        // notifications-invariants.md §1.
+        // notifications-invariants §1.
         await _distributor.Received(1).DistributeAsync(
             Arg.Is<NotificationInfo>(n => n.EntityTypeName == "Demo.Order" && n.EntityId == "1001"),
             Arg.Any<Guid[]?>(),
