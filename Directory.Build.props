@@ -49,4 +49,38 @@
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
 
+  <!-- Test-project detection (name + path based, so it is available this early - the SDK's own
+       IsTestProject isn't set until much later). *.Tests run xunit; *.TestBase is shared scenario
+       infrastructure with no runner. The two demo hosts have their OWN nested Directory.Build.props
+       that does not import this file, so nothing below ever reaches them. -->
+  <PropertyGroup>
+    <IsTestProject Condition="$(MSBuildProjectFullPath.Contains('test')) and ($(MSBuildProjectName.EndsWith('.Tests')) or $(MSBuildProjectName.EndsWith('.TestBase')))">true</IsTestProject>
+  </PropertyGroup>
+
+  <!-- Code-coverage collector for test projects only. Enables the "XPlat Code Coverage" data
+       collector for `dotnet test` locally and in CI; see codecov.yml. -->
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <PackageReference Include="coverlet.collector" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+  </ItemGroup>
+
+  <!-- ConfigureAwait.Fody: rewrites every `await` in the packable libraries to
+       `.ConfigureAwait(false)` at the IL level, so a consumer that hosts this code on a
+       SynchronizationContext (WPF / WinForms / Blazor Server / classic ASP.NET) can't deadlock on
+       these modules' async calls. This mirrors the ABP Framework's own libraries.
+       Scope: Release only (keeps Debug builds fast) and never test projects. The weaver config is
+       supplied inline via the WeaverConfiguration property (Fody's documented alternative to a
+       per-project FodyWeavers.xml), so there is exactly one copy of it, right here, and no stray
+       FodyWeavers.xml/.xsd files are scattered across the projects. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(IsTestProject)' != 'true'">
+    <WeaverConfiguration>
+      <Weavers>
+        <ConfigureAwait ContinueOnCapturedContext="false" />
+      </Weavers>
+    </WeaverConfiguration>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(Configuration)' == 'Release' and '$(IsTestProject)' != 'true'">
+    <PackageReference Include="ConfigureAwait.Fody" PrivateAssets="all" />
+    <PackageReference Include="Fody" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+  </ItemGroup>
+
 </Project>

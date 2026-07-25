@@ -98,4 +98,18 @@
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.300" />
   </ItemGroup>
 
+  <!--
+    Build-time-only tooling (all PrivateAssets="all" at the reference site, so none of it flows to
+    consumers of the packages):
+      - coverlet.collector    : code-coverage collector, added to test projects only
+      - Fody / ConfigureAwait.Fody : IL weaver that appends .ConfigureAwait(false) to every await in
+        the packable libraries (Release only) - see the repo-root FodyWeavers.xml and
+        Directory.Build.props. Versions match what the ABP Framework itself ships.
+  -->
+  <ItemGroup Label="Build-time tooling">
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="Fody" Version="6.9.3" />
+    <PackageVersion Include="ConfigureAwait.Fody" Version="3.3.2" />
+  </ItemGroup>
+
 </Project>
