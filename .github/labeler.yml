@@ -1,0 +1,33 @@
+# Path-based auto-labeling rules, in the actions/labeler@v5 format, applied by
+# .github/workflows/labeler.yml on every pull request.
+#
+# The label names below must already exist in the repository (Settings -> Labels) or a labeler run
+# will error. "documentation" usually exists by default; create the "module: *" and "area: *" ones
+# once. The two module trees are independent, so most PRs match exactly one "module:" label.
+
+"module: file-storing":
+  - changed-files:
+      - any-glob-to-any-file: 'file-storing/**'
+
+"module: notifications":
+  - changed-files:
+      - any-glob-to-any-file: 'notifications/**'
+
+"area: angular":
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'file-storing/angular/**'
+          - 'notifications/angular/**'
+
+"area: build/ci":
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/**'
+          - 'build/**'
+          - 'Directory.*.props'
+          - 'global.json'
+          - 'NuGet.Config'
+
+"documentation":
+  - changed-files:
+      - any-glob-to-any-file: '**/*.md'

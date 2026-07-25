@@ -1,0 +1,46 @@
+# Codecov configuration. This file only takes effect once the repository is connected to
+# https://codecov.io AND the CI workflow uploads a coverage report. The coverlet.collector package
+# is already wired into every test project (see Directory.Build.props), so coverage can be produced
+# locally or in CI with:
+#
+#     dotnet test Dignite.Abp.Modules.slnx --collect:"XPlat Code Coverage"
+#
+# .github/workflows/ci.yml uploads coverage twice per run, once per module, under the "file-storing"
+# and "notifications" flags declared below - the two module trees are otherwise-unrelated (see
+# CLAUDE.md), so a single blended number would hide which one actually regressed. Until the repo is
+# connected to Codecov (and a CODECOV_TOKEN secret is set) this whole file is inert and harmless.
+codecov:
+  # Default/target branch of this repository (ABP upstream uses "dev"; this repo uses "main").
+  branch: main
+  require_ci_to_pass: yes
+  allow_coverage_offsets: true
+
+flag_management:
+  default_rules:
+    statuses:
+      - type: project
+        target: auto
+        threshold: 1%
+  individual_flags:
+    - name: file-storing
+      paths:
+        - file-storing/
+    - name: notifications
+      paths:
+        - notifications/
+
+coverage:
+  status:
+    project:
+      default:
+        # Overall/blended check, kept alongside the per-flag ones above for a single at-a-glance
+        # status. Allow a small drop before it is marked as failing.
+        threshold: 1%
+    patch:
+      default:
+        # Don't hard-fail PRs on patch coverage while the suite's baseline is still being built out.
+        informational: true
+
+comment:
+  layout: "reach, diff, flags, files"
+  require_changes: true
