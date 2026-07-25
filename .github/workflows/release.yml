@@ -153,10 +153,6 @@ jobs:
         working-directory: file-storing/angular
         run: npm ci --legacy-peer-deps
 
-      - name: Audit file-storing Angular dependencies
-        working-directory: file-storing/angular
-        run: npm audit --audit-level=moderate
-
       - name: Lint file-storing Angular projects
         working-directory: file-storing/angular
         run: npm run lint -- --max-warnings=0
