@@ -48,6 +48,66 @@
     }
   },
   "packages": {
+    "Dignite.Abp.FileStoring.Imaging": {
+      "path": "core/src/Dignite.Abp.FileStoring.Imaging/Dignite.Abp.FileStoring.Imaging.abppkg"
+    },
+    "Dignite.Abp.FileStoring": {
+      "path": "core/src/Dignite.Abp.FileStoring/Dignite.Abp.FileStoring.abppkg"
+    },
+    "Dignite.Abp.FileStoring.Imaging.Tests": {
+      "path": "core/test/Dignite.Abp.FileStoring.Imaging.Tests/Dignite.Abp.FileStoring.Imaging.Tests.abppkg"
+    },
+    "Dignite.Abp.FileStoring.Tests": {
+      "path": "core/test/Dignite.Abp.FileStoring.Tests/Dignite.Abp.FileStoring.Tests.abppkg"
+    },
+    "Dignite.FileExplorer.Application.Contracts": {
+      "path": "file-explorer/src/Dignite.FileExplorer.Application.Contracts/Dignite.FileExplorer.Application.Contracts.abppkg"
+    },
+    "Dignite.FileExplorer.Application": {
+      "path": "file-explorer/src/Dignite.FileExplorer.Application/Dignite.FileExplorer.Application.abppkg"
+    },
+    "Dignite.FileExplorer.Domain.Shared": {
+      "path": "file-explorer/src/Dignite.FileExplorer.Domain.Shared/Dignite.FileExplorer.Domain.Shared.abppkg"
+    },
+    "Dignite.FileExplorer.Domain": {
+      "path": "file-explorer/src/Dignite.FileExplorer.Domain/Dignite.FileExplorer.Domain.abppkg"
+    },
+    "Dignite.FileExplorer.EntityFrameworkCore": {
+      "path": "file-explorer/src/Dignite.FileExplorer.EntityFrameworkCore/Dignite.FileExplorer.EntityFrameworkCore.abppkg"
+    },
+    "Dignite.FileExplorer.HttpApi.Client": {
+      "path": "file-explorer/src/Dignite.FileExplorer.HttpApi.Client/Dignite.FileExplorer.HttpApi.Client.abppkg"
+    },
+    "Dignite.FileExplorer.HttpApi": {
+      "path": "file-explorer/src/Dignite.FileExplorer.HttpApi/Dignite.FileExplorer.HttpApi.abppkg"
+    },
+    "Dignite.FileExplorer.MongoDB": {
+      "path": "file-explorer/src/Dignite.FileExplorer.MongoDB/Dignite.FileExplorer.MongoDB.abppkg"
+    },
+    "Dignite.FileExplorer.Update.Tests": {
+      "path": "file-explorer/test/Dignite.FileExplorer.Update.Tests/Dignite.FileExplorer.Update.Tests.abppkg"
+    },
+    "Dignite.FileExplorer.Authorization.Tests": {
+      "path": "file-explorer/test/Dignite.FileExplorer.Authorization.Tests/Dignite.FileExplorer.Authorization.Tests.abppkg"
+    },
+    "Dignite.FileExplorer.DirectorySafety.Tests": {
+      "path": "file-explorer/test/Dignite.FileExplorer.DirectorySafety.Tests/Dignite.FileExplorer.DirectorySafety.Tests.abppkg"
+    },
+    "Dignite.FileExplorer.Application.Tests": {
+      "path": "file-explorer/test/Dignite.FileExplorer.Application.Tests/Dignite.FileExplorer.Application.Tests.abppkg"
+    },
+    "Dignite.FileExplorer.Domain.Tests": {
+      "path": "file-explorer/test/Dignite.FileExplorer.Domain.Tests/Dignite.FileExplorer.Domain.Tests.abppkg"
+    },
+    "Dignite.FileExplorer.EntityFrameworkCore.Tests": {
+      "path": "file-explorer/test/Dignite.FileExplorer.EntityFrameworkCore.Tests/Dignite.FileExplorer.EntityFrameworkCore.Tests.abppkg"
+    },
+    "Dignite.FileExplorer.MongoDB.Tests": {
+      "path": "file-explorer/test/Dignite.FileExplorer.MongoDB.Tests/Dignite.FileExplorer.MongoDB.Tests.abppkg"
+    },
+    "Dignite.FileExplorer.TestBase": {
+      "path": "file-explorer/test/Dignite.FileExplorer.TestBase/Dignite.FileExplorer.TestBase.abppkg"
+    },
     "Dignite.FileExplorer.Web.Host": {
       "path": "host/Dignite.FileExplorer.Web.Host/Dignite.FileExplorer.Web.Host.abppkg"
     }

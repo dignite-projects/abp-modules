@@ -1,0 +1,26 @@
+{
+  "id": "0500b612-15c8-4809-9b9b-f0571b4d38be",
+  "template": "app-nolayers",
+  "versions": {
+    "AbpFramework": "10.5.0",
+    "AbpStudio": "3.0.7",
+    "TargetDotnetFramework": "net10.0"
+  },
+  "modules": {
+    "Dignite.Abp.Notifications": {
+      "path": "Dignite.Abp.Notifications.abpmdl"
+    }
+  },
+  "runProfiles": {
+    "Default": {
+      "path": "host/etc/run-profiles/Default.abprun.json"
+    }
+  },
+  "options": {
+    "httpRequests": {
+      "ignoredUrls": [
+
+      ]
+    }
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "packages": {
+    "Dignite.Abp.Notifications.Abstractions": {
+      "path": "core/src/Dignite.Abp.Notifications.Abstractions/Dignite.Abp.Notifications.Abstractions.abppkg"
+    },
+    "Dignite.Abp.Notifications.Emailing": {
+      "path": "core/src/Dignite.Abp.Notifications.Emailing/Dignite.Abp.Notifications.Emailing.abppkg"
+    },
+    "Dignite.Abp.Notifications.Emailing.Identity": {
+      "path": "core/src/Dignite.Abp.Notifications.Emailing.Identity/Dignite.Abp.Notifications.Emailing.Identity.abppkg"
+    },
+    "Dignite.Abp.Notifications.Identity": {
+      "path": "core/src/Dignite.Abp.Notifications.Identity/Dignite.Abp.Notifications.Identity.abppkg"
+    },
+    "Dignite.Abp.Notifications.SignalR": {
+      "path": "core/src/Dignite.Abp.Notifications.SignalR/Dignite.Abp.Notifications.SignalR.abppkg"
+    },
+    "Dignite.Abp.Notifications": {
+      "path": "core/src/Dignite.Abp.Notifications/Dignite.Abp.Notifications.abppkg"
+    },
+    "Dignite.Abp.Notifications.TestProviderA": {
+      "path": "core/test/Dignite.Abp.Notifications.TestProviderA/Dignite.Abp.Notifications.TestProviderA.abppkg"
+    },
+    "Dignite.Abp.Notifications.TestProviderB": {
+      "path": "core/test/Dignite.Abp.Notifications.TestProviderB/Dignite.Abp.Notifications.TestProviderB.abppkg"
+    },
+    "Dignite.Abp.Notifications.Tests": {
+      "path": "core/test/Dignite.Abp.Notifications.Tests/Dignite.Abp.Notifications.Tests.abppkg"
+    },
+    "Dignite.NotificationCenter.Web.Host": {
+      "path": "host/Dignite.NotificationCenter.Web.Host/Dignite.NotificationCenter.Web.Host.abppkg"
+    },
+    "Dignite.NotificationCenter.Application.Contracts": {
+      "path": "notification-center/src/Dignite.NotificationCenter.Application.Contracts/Dignite.NotificationCenter.Application.Contracts.abppkg"
+    },
+    "Dignite.NotificationCenter.Application": {
+      "path": "notification-center/src/Dignite.NotificationCenter.Application/Dignite.NotificationCenter.Application.abppkg"
+    },
+    "Dignite.NotificationCenter.Domain.Shared": {
+      "path": "notification-center/src/Dignite.NotificationCenter.Domain.Shared/Dignite.NotificationCenter.Domain.Shared.abppkg"
+    },
+    "Dignite.NotificationCenter.Domain": {
+      "path": "notification-center/src/Dignite.NotificationCenter.Domain/Dignite.NotificationCenter.Domain.abppkg"
+    },
+    "Dignite.NotificationCenter.EntityFrameworkCore": {
+      "path": "notification-center/src/Dignite.NotificationCenter.EntityFrameworkCore/Dignite.NotificationCenter.EntityFrameworkCore.abppkg"
+    },
+    "Dignite.NotificationCenter.HttpApi.Client": {
+      "path": "notification-center/src/Dignite.NotificationCenter.HttpApi.Client/Dignite.NotificationCenter.HttpApi.Client.abppkg"
+    },
+    "Dignite.NotificationCenter.HttpApi": {
+      "path": "notification-center/src/Dignite.NotificationCenter.HttpApi/Dignite.NotificationCenter.HttpApi.abppkg"
+    },
+    "Dignite.NotificationCenter.MongoDB": {
+      "path": "notification-center/src/Dignite.NotificationCenter.MongoDB/Dignite.NotificationCenter.MongoDB.abppkg"
+    },
+    "Dignite.NotificationCenter.Web": {
+      "path": "notification-center/src/Dignite.NotificationCenter.Web/Dignite.NotificationCenter.Web.abppkg"
+    },
+    "Dignite.NotificationCenter.TestBase": {
+      "path": "notification-center/test/Dignite.NotificationCenter.TestBase/Dignite.NotificationCenter.TestBase.abppkg"
+    },
+    "Dignite.NotificationCenter.EntityFrameworkCore.Tests": {
+      "path": "notification-center/test/Dignite.NotificationCenter.EntityFrameworkCore.Tests/Dignite.NotificationCenter.EntityFrameworkCore.Tests.abppkg"
+    },
+    "Dignite.NotificationCenter.MongoDB.Tests": {
+      "path": "notification-center/test/Dignite.NotificationCenter.MongoDB.Tests/Dignite.NotificationCenter.MongoDB.Tests.abppkg"
+    }
+  }
+}
