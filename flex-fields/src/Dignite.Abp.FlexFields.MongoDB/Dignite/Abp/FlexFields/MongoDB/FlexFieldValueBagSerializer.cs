@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text.Json;
 using MongoDB.Bson;
+using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Serializers;
@@ -57,6 +59,13 @@ public class FlexFieldValueBagSerializer<TDictionary>
 /// <item><description><b>sequences</b> as BSON arrays, so a multi-valued field (Select, Tree) is matched
 /// element-wise by the same equality filter a single-valued field uses - the document-store equivalent of
 /// the relational provider fanning one value out into several index rows.</description></item>
+/// <item><description><b><see cref="JsonElement"/></b> unwrapped into the BSON its own <c>ValueKind</c>
+/// names, recursively for an array or object. A bag value most commonly arrives this way -
+/// <see cref="FlexibleEntityDto"/> exists specifically to carry the bag across a service boundary, and
+/// System.Text.Json request-body binding into a <c>Dictionary&lt;string, object&gt;</c>-shaped property
+/// leaves every value as a <see cref="JsonElement"/>. A <see cref="JsonElement"/> has no settable members
+/// for a class-map-based serializer to find, so falling through to the driver's own serializer for it does
+/// not throw - it silently writes only a discriminator and no content at all.</description></item>
 /// </list>
 /// <para>
 /// Everything else - string, the integral and floating types, DateTime, bool, Guid - already has a native
@@ -67,9 +76,24 @@ public class FlexFieldValueBagSerializer<TDictionary>
 /// </summary>
 public class FlexFieldBagValueSerializer : SerializerBase<object>
 {
+    /// <summary>
+    /// Reached only for a CLR object graph built by in-process code - a field type's own configuration
+    /// (<see cref="Select.SelectConfiguration.Options"/> is a <c>List&lt;SelectListItem&gt;</c>, a list of a
+    /// plain class) is the concrete case this exists for. Every shape that could instead have arrived from
+    /// outside the process - a <see cref="JsonElement"/> off a request body, most visibly - is intercepted
+    /// above and never reaches this serializer at all, so <see cref="ObjectSerializer.AllAllowedTypes"/> is
+    /// widening what first-party code may construct, not what a caller may cause to be reconstructed from
+    /// stored BSON. The driver's own default <see cref="ObjectSerializer.DefaultAllowedTypes"/> hardening
+    /// against a caller-chosen discriminator remains meaningful for a <c>Dictionary&lt;string, object&gt;</c>
+    /// value nested inside one of those graphs (see <see cref="FlexFieldBagValueSerializer_Tests"/>): a
+    /// dictionary is written as its own discriminated <c>{_t, _v}</c> wrapper, so a caller-supplied key
+    /// named <c>"_t"</c> lands inside the wrapper's <c>_v</c> as inert data, never as the wrapper's own
+    /// discriminator.
+    /// </summary>
     private readonly IBsonSerializer<object> _fallback = new ObjectSerializer(
         BsonSerializer.LookupDiscriminatorConvention(typeof(object)),
-        GuidRepresentation.Standard);
+        GuidRepresentation.Standard,
+        ObjectSerializer.AllAllowedTypes);
 
     public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, object value)
     {
@@ -85,6 +109,10 @@ public class FlexFieldBagValueSerializer : SerializerBase<object>
 
             case DateTime dateTime:
                 context.Writer.WriteDateTime(BsonUtils.ToMillisecondsSinceEpoch(ToUtc(dateTime)));
+                return;
+
+            case JsonElement element:
+                SerializeJsonElement(context.Writer, element);
                 return;
 
             // Before IEnumerable: a string is a sequence of chars, and a dictionary is a sequence of pairs -
@@ -106,6 +134,76 @@ public class FlexFieldBagValueSerializer : SerializerBase<object>
             default:
                 _fallback.Serialize(context, args, value);
                 return;
+        }
+    }
+
+    /// <summary>
+    /// Writes a <see cref="JsonElement"/> as the BSON its own <see cref="JsonValueKind"/> names, recursively
+    /// for <see cref="JsonValueKind.Array"/> and <see cref="JsonValueKind.Object"/> - not by handing it to
+    /// this type's own <see cref="Serialize"/>, because a nested number/string/bool inside the element is
+    /// still a <see cref="JsonElement"/> at that point, not yet a CLR <c>decimal</c>/<c>string</c>/<c>bool</c>
+    /// that a recursive <see cref="Serialize"/> call could dispatch on.
+    /// </summary>
+    private static void SerializeJsonElement(IBsonWriter writer, JsonElement element)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.Null:
+            case JsonValueKind.Undefined:
+                writer.WriteNull();
+                return;
+
+            case JsonValueKind.String:
+                writer.WriteString(element.GetString());
+                return;
+
+            case JsonValueKind.True:
+                writer.WriteBoolean(true);
+                return;
+
+            case JsonValueKind.False:
+                writer.WriteBoolean(false);
+                return;
+
+            case JsonValueKind.Number:
+                // A whole number keeps its integral BSON type rather than always widening to Decimal128 -
+                // matching FlexFieldValueConverter.Unwrap, which reads the same JsonElement shape the other
+                // direction for the same reason.
+                if (element.TryGetInt64(out var integer))
+                {
+                    writer.WriteInt64(integer);
+                }
+                else
+                {
+                    writer.WriteDecimal128(element.GetDecimal());
+                }
+                return;
+
+            case JsonValueKind.Array:
+                writer.WriteStartArray();
+                foreach (var item in element.EnumerateArray())
+                {
+                    SerializeJsonElement(writer, item);
+                }
+                writer.WriteEndArray();
+                return;
+
+            case JsonValueKind.Object:
+                // Not routed through the dictionary-wrapping _fallback path: unlike a real
+                // Dictionary<string, object>, a JSON object's own shape is exactly a set of named BSON
+                // members, with no ambiguity a discriminator would need to resolve.
+                writer.WriteStartDocument();
+                foreach (var property in element.EnumerateObject())
+                {
+                    writer.WriteName(property.Name);
+                    SerializeJsonElement(writer, property.Value);
+                }
+                writer.WriteEndDocument();
+                return;
+
+            default:
+                throw new ArgumentOutOfRangeException(
+                    nameof(element), element.ValueKind, "Unknown JsonValueKind.");
         }
     }
 

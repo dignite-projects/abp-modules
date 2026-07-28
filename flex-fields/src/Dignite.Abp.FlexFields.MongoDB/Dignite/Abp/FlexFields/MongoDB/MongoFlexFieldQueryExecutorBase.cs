@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities;
@@ -80,8 +81,12 @@ public abstract class MongoFlexFieldQueryExecutorBase<TMongoDbContext, TEntity> 
         var ids = await dbContext.Collection<TEntity>()
             .Find(filter)
             .Project(e => e.Id)
-            // One more than the cap, so exceeding it is detectable without reading the whole result.
-            .Limit(MaxMatchedIdCount + 1)
+            // One more than the cap, so exceeding it is detectable without reading the whole result - except
+            // when the cap is already int.MaxValue (MaxMatchedIdCount + 1 would overflow to int.MinValue,
+            // and MongoDB reads a negative Limit as "return one batch and stop", silently truncating instead
+            // of throwing). There is no larger int to ask for at that point anyway, so fetching exactly
+            // MaxMatchedIdCount is already the most this can request.
+            .Limit(MaxMatchedIdCount < int.MaxValue ? MaxMatchedIdCount + 1 : MaxMatchedIdCount)
             .ToListAsync(cancellationToken);
 
         if (ids.Count > MaxMatchedIdCount)
@@ -114,21 +119,23 @@ public abstract class MongoFlexFieldQueryExecutorBase<TMongoDbContext, TEntity> 
 
     /// <summary>
     /// The path a condition addresses. Unlike the relational provider, which finds its rows by
-    /// <see cref="FlexFieldQueryCondition.FieldId"/>, this provider has only the bag to address - and a bag
-    /// holds no field ids - so <see cref="FlexFieldQueryCondition.FieldName"/> is required rather than
-    /// optional here.
+    /// <see cref="FlexFieldQueryCondition.FieldId"/> and never reads <see cref="FlexFieldQueryCondition.FieldName"/>
+    /// at all, this provider has only the bag to address - and a bag holds no field ids - so this is the one
+    /// thing that actually makes a condition usable here.
     /// </summary>
     protected virtual string GetFieldPath(FlexFieldQueryCondition condition)
     {
         var name = condition.FieldName;
 
+        // FieldName is a required constructor parameter, so this guards against a blank one slipping
+        // through - not a missing one, which the type no longer allows at all.
         if (string.IsNullOrWhiteSpace(name))
         {
             throw new AbpException(
-                $"{nameof(FlexFieldQueryCondition)}.{nameof(FlexFieldQueryCondition.FieldName)} is required " +
-                $"by the MongoDB provider but was not set on the condition for field ({condition.FieldId}). " +
-                "A value bag is keyed by field name, so there is nothing else to build a path from - supply " +
-                "the field's current name alongside its id.");
+                $"{nameof(FlexFieldQueryCondition)}.{nameof(FlexFieldQueryCondition.FieldName)} is blank on " +
+                $"the condition for field ({condition.FieldId}), and the MongoDB provider needs it: a value " +
+                "bag is keyed by field name, so there is nothing else to build a path from. Supply the " +
+                "field's current, non-empty name.");
         }
 
         // A field name goes straight into a BSON path, so one that contains a path separator or starts a
@@ -143,6 +150,20 @@ public abstract class MongoFlexFieldQueryExecutorBase<TMongoDbContext, TEntity> 
         return $"{FlexFieldsElementName}.{name}";
     }
 
+    /// <summary>
+    /// Whether <see cref="FlexFieldQueryOperator.Contains"/> ignores case. Left <c>false</c> by default -
+    /// changing it changes what a caller's existing conditions match, so that is this executor's decision to
+    /// make, not the kernel's to impose.
+    /// <para>
+    /// There is no single relational answer to match here either way: the EF Core provider's
+    /// <c>StringValue.Contains(...)</c> takes whatever case sensitivity the downstream's own database
+    /// collation gives it - case-sensitive on SQLite (translated to <c>instr()</c>), case-insensitive on SQL
+    /// Server's usual default collation, and so on. A downstream that knows its own EF deployment's collation
+    /// overrides this to match it.
+    /// </para>
+    /// </summary>
+    protected virtual bool ContainsIsCaseInsensitive => false;
+
     protected virtual FilterDefinition<TEntity> BuildStringFilter(string path, FlexFieldQueryCondition condition)
     {
         var builder = Builders<TEntity>.Filter;
@@ -151,11 +172,14 @@ public abstract class MongoFlexFieldQueryExecutorBase<TMongoDbContext, TEntity> 
         {
             FlexFieldQueryOperator.Equals => builder.Eq(path, condition.Value),
             FlexFieldQueryOperator.NotEquals => NotEquals(path, condition.Value),
-            // Unanchored, so it is a collection scan exactly as the relational provider's LIKE '%x%' is.
+            // Unanchored, so this is a full scan of the wildcard index - not a bounded seek - exactly as the
+            // relational provider's non-sargable LIKE '%x%' never seeks a B-tree index either; both read
+            // everything and test each value, just over a smaller structure than the raw documents.
             // Escaped because the value is data, not a pattern the caller is offering.
             FlexFieldQueryOperator.Contains => builder.And(
                 builder.Exists(path),
-                builder.Regex(path, new BsonRegularExpression(Regex.Escape(condition.Value)))),
+                builder.Regex(path, new BsonRegularExpression(
+                    Regex.Escape(condition.Value), ContainsIsCaseInsensitive ? "i" : ""))),
             FlexFieldQueryOperator.In => builder.In(path, FlexFieldValueConverter.SplitValues(condition.Value)),
             _ => throw FlexFieldQueryConditions.UnsupportedOperator(condition)
         };
@@ -204,15 +228,57 @@ public abstract class MongoFlexFieldQueryExecutorBase<TMongoDbContext, TEntity> 
     }
 
     /// <summary>
-    /// <c>$ne</c> on its own also matches documents that have no such key at all, which the relational
-    /// provider never does - its index has no row to match. Pairing it with <c>$exists</c> makes "not equal
-    /// to" mean the same thing under both providers: the host has a value for this field, and it is not
-    /// that one.
+    /// Matches what the EF Core provider's <c>x.StringValue != condition.Value</c> (etc.) actually returns
+    /// for a host whose field is multi-valued, not MongoDB's own reading of <c>$ne</c> against an array.
+    /// <para>
+    /// The relational provider fans a multi-valued field out into one pivot row per selected value, so its
+    /// <c>!=</c> is existential per row: a host is included the moment <i>any</i> of its rows differs from
+    /// <paramref name="value"/> - the same row-at-a-time mechanism that makes <c>Equals</c> existential on
+    /// both providers already ("does any row/element match"). MongoDB's own <c>$ne</c> on an array field is
+    /// the opposite: it matches only when <i>no</i> element equals the value - the universal reading, not the
+    /// existential one. Left as plain <c>$ne</c>, a multi-valued field would return the logically opposite
+    /// answer from the relational provider for the same condition and the same data.
+    /// </para>
+    /// <para>
+    /// So a multi-valued field is matched with <c>$elemMatch: {$ne: value}</c> - "at least one element
+    /// differs" - instead, in an <c>$or</c> alongside the scalar reading, since <c>$elemMatch</c> never
+    /// matches a non-array value at all. The scalar branch excludes arrays explicitly (<c>$not $type
+    /// array</c>) so an array is judged only by <c>$elemMatch</c>, never additionally by a plain <c>$ne</c>
+    /// that would otherwise also (vacuously) match an empty array with no elements to differ from anything.
+    /// </para>
+    /// <para>
+    /// <c>$ne</c> on its own, either way, also matches documents that have no such key at all, which the
+    /// relational provider never does - its index has no row to match. Pairing the scalar branch with
+    /// <c>$exists</c>, and relying on <c>$elemMatch</c>'s own requirement that a matching element actually
+    /// exist, keeps that true here too.
+    /// </para>
     /// </summary>
     protected virtual FilterDefinition<TEntity> NotEquals<TValue>(string path, TValue value)
     {
         var builder = Builders<TEntity>.Filter;
-        return builder.And(builder.Exists(path), builder.Ne(path, value));
+        var neFilter = builder.Ne(path, value);
+
+        var scalarBranch = builder.And(builder.Exists(path), builder.Not(builder.Type(path, BsonType.Array)), neFilter);
+        var arrayBranch = new BsonDocument(path, new BsonDocument("$elemMatch", RenderOperator(path, neFilter)));
+
+        return builder.Or(scalarBranch, arrayBranch);
+    }
+
+    /// <summary>
+    /// Renders <paramref name="filter"/> - built against <paramref name="path"/> for the whole document -
+    /// down to just its own operator sub-document (<c>{$ne: &lt;value&gt;}</c>), so it can be nested inside
+    /// <c>$elemMatch</c> instead. Rendering rather than hand-building the equivalent BSON is what reuses the
+    /// serializer registered for the bag's value type (<see cref="FlexFieldBagValueSerializer"/>) - the
+    /// filter builder's typed <c>Ne&lt;TValue&gt;</c> overload resolves it the same way a top-level
+    /// comparison against this path already does, so a hand-written value here could not silently drift from
+    /// it.
+    /// </summary>
+    private static BsonDocument RenderOperator(string path, FilterDefinition<TEntity> filter)
+    {
+        var rendered = filter.Render(new RenderArgs<TEntity>(
+            BsonSerializer.SerializerRegistry.GetSerializer<TEntity>(), BsonSerializer.SerializerRegistry));
+
+        return rendered[path].AsBsonDocument;
     }
 
     protected static TValue Parse<TValue>(FlexFieldQueryCondition condition)

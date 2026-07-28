@@ -34,7 +34,7 @@ public class FlexFieldQueryExecutor_Tests : FlexFieldsEntityFrameworkCoreTestBas
         await IndexedArticleAsync(a => a.SetField("Title", "Beta"));
 
         var ids = await QueryAsync(new FlexFieldQueryCondition(
-            title.Field.Id, FlexFieldQueryOperator.Equals, "Alpha", FlexFieldValueType.String));
+            title.Field.Id, title.Field.Name, FlexFieldQueryOperator.Equals, "Alpha", FlexFieldValueType.String));
 
         ids.ShouldBe(new[] { alpha });
     }
@@ -47,7 +47,7 @@ public class FlexFieldQueryExecutor_Tests : FlexFieldsEntityFrameworkCoreTestBas
         await IndexedArticleAsync(a => a.SetField("Title", "Goodbye"));
 
         var ids = await QueryAsync(new FlexFieldQueryCondition(
-            title.Field.Id, FlexFieldQueryOperator.Contains, "lo wo", FlexFieldValueType.String));
+            title.Field.Id, title.Field.Name, FlexFieldQueryOperator.Contains, "lo wo", FlexFieldValueType.String));
 
         ids.ShouldBe(new[] { matching });
     }
@@ -75,8 +75,8 @@ public class FlexFieldQueryExecutor_Tests : FlexFieldsEntityFrameworkCoreTestBas
         });
 
         var ids = await QueryAsync(
-            new FlexFieldQueryCondition(title.Field.Id, FlexFieldQueryOperator.Equals, "Alpha", FlexFieldValueType.String),
-            new FlexFieldQueryCondition(viewCount.Field.Id, FlexFieldQueryOperator.GreaterThanOrEqual, "15", FlexFieldValueType.Number));
+            new FlexFieldQueryCondition(title.Field.Id, title.Field.Name, FlexFieldQueryOperator.Equals, "Alpha", FlexFieldValueType.String),
+            new FlexFieldQueryCondition(viewCount.Field.Id, viewCount.Field.Name, FlexFieldQueryOperator.GreaterThanOrEqual, "15", FlexFieldValueType.Number));
 
         ids.ShouldBe(new[] { matching });
     }
@@ -90,11 +90,11 @@ public class FlexFieldQueryExecutor_Tests : FlexFieldsEntityFrameworkCoreTestBas
         var large = await IndexedArticleAsync(a => a.SetField("ViewCount", 100));
 
         (await QueryAsync(new FlexFieldQueryCondition(
-                viewCount.Field.Id, FlexFieldQueryOperator.GreaterThan, "50", FlexFieldValueType.Number)))
+                viewCount.Field.Id, viewCount.Field.Name, FlexFieldQueryOperator.GreaterThan, "50", FlexFieldValueType.Number)))
             .ShouldBe(new[] { large });
 
         (await QueryAsync(new FlexFieldQueryCondition(
-                viewCount.Field.Id, FlexFieldQueryOperator.LessThan, "50", FlexFieldValueType.Number)))
+                viewCount.Field.Id, viewCount.Field.Name, FlexFieldQueryOperator.LessThan, "50", FlexFieldValueType.Number)))
             .ShouldBe(new[] { small });
     }
 
@@ -106,7 +106,7 @@ public class FlexFieldQueryExecutor_Tests : FlexFieldsEntityFrameworkCoreTestBas
         var late = await IndexedArticleAsync(a => a.SetField("PublishedAt", new DateTime(2025, 1, 1)));
 
         var ids = await QueryAsync(new FlexFieldQueryCondition(
-            publishedAt.Field.Id, FlexFieldQueryOperator.GreaterThan, "2024-01-01", FlexFieldValueType.DateTime));
+            publishedAt.Field.Id, publishedAt.Field.Name, FlexFieldQueryOperator.GreaterThan, "2024-01-01", FlexFieldValueType.DateTime));
 
         ids.ShouldBe(new[] { late });
     }
@@ -119,7 +119,7 @@ public class FlexFieldQueryExecutor_Tests : FlexFieldsEntityFrameworkCoreTestBas
         await IndexedArticleAsync(a => a.SetField("IsFeatured", false));
 
         var ids = await QueryAsync(new FlexFieldQueryCondition(
-            isFeatured.Field.Id, FlexFieldQueryOperator.Equals, "true", FlexFieldValueType.Boolean));
+            isFeatured.Field.Id, isFeatured.Field.Name, FlexFieldQueryOperator.Equals, "true", FlexFieldValueType.Boolean));
 
         ids.ShouldBe(new[] { featured });
     }
@@ -132,7 +132,7 @@ public class FlexFieldQueryExecutor_Tests : FlexFieldsEntityFrameworkCoreTestBas
         await IndexedArticleAsync(a => a.SetField("Tags", new List<string> { "green" }));
 
         var ids = await QueryAsync(new FlexFieldQueryCondition(
-            tags.Field.Id, FlexFieldQueryOperator.In, "red,purple", FlexFieldValueType.String));
+            tags.Field.Id, tags.Field.Name, FlexFieldQueryOperator.In, "red,purple", FlexFieldValueType.String));
 
         // One entity, even though it has two rows for this field.
         ids.ShouldBe(new[] { tagged });
@@ -145,7 +145,7 @@ public class FlexFieldQueryExecutor_Tests : FlexFieldsEntityFrameworkCoreTestBas
         await IndexedArticleAsync(a => a.SetField("Title", "Alpha"));
 
         var ids = await QueryAsync(new FlexFieldQueryCondition(
-            title.Field.Id, FlexFieldQueryOperator.Equals, "Nonexistent", FlexFieldValueType.String));
+            title.Field.Id, title.Field.Name, FlexFieldQueryOperator.Equals, "Nonexistent", FlexFieldValueType.String));
 
         ids.ShouldBeEmpty();
     }
@@ -162,8 +162,8 @@ public class FlexFieldQueryExecutor_Tests : FlexFieldsEntityFrameworkCoreTestBas
         });
 
         var ids = await QueryAsync(
-            new FlexFieldQueryCondition(title.Field.Id, FlexFieldQueryOperator.Equals, "Nope", FlexFieldValueType.String),
-            new FlexFieldQueryCondition(viewCount.Field.Id, FlexFieldQueryOperator.Equals, "20", FlexFieldValueType.Number));
+            new FlexFieldQueryCondition(title.Field.Id, title.Field.Name, FlexFieldQueryOperator.Equals, "Nope", FlexFieldValueType.String),
+            new FlexFieldQueryCondition(viewCount.Field.Id, viewCount.Field.Name, FlexFieldQueryOperator.Equals, "20", FlexFieldValueType.Number));
 
         ids.ShouldBeEmpty();
     }
@@ -176,7 +176,7 @@ public class FlexFieldQueryExecutor_Tests : FlexFieldsEntityFrameworkCoreTestBas
 
         // "42.5" must mean forty-two-and-a-half regardless of the ambient culture's decimal separator.
         var ids = await QueryAsync(new FlexFieldQueryCondition(
-            viewCount.Field.Id, FlexFieldQueryOperator.Equals, "42.5", FlexFieldValueType.Number));
+            viewCount.Field.Id, viewCount.Field.Name, FlexFieldQueryOperator.Equals, "42.5", FlexFieldValueType.Number));
 
         ids.ShouldBe(new[] { matching });
     }

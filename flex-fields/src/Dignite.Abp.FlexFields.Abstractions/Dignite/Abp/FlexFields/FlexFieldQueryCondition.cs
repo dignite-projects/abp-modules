@@ -13,60 +13,50 @@ namespace Dignite.Abp.FlexFields;
 /// no field ids. Neither can stand in for the other, and the kernel owns no field table to derive one from.
 /// </para>
 /// <para>
-/// Supplying both costs a caller nothing: whoever builds a condition is already holding the field definition
-/// - that is where <see cref="ValueType"/> comes from - so the name is right there too.
+/// Both are required unconditionally - not just when the installed provider happens to need one of them -
+/// because a condition is provider-neutral by design and has no way to know which provider will execute it.
+/// A caller building one is already holding the field definition (that is where <see cref="ValueType"/>
+/// comes from too), so both are on hand regardless.
 /// </para>
 /// </summary>
 public class FlexFieldQueryCondition
 {
     /// <summary>
-    /// The <see cref="IFlexFieldData.Id"/> being filtered on.
+    /// The <see cref="IFlexFieldData.Id"/> being filtered on. What a relational provider's derived index
+    /// rows key on.
     /// </summary>
     public Guid FieldId { get; set; }
 
     /// <summary>
-    /// The <see cref="IFlexFieldData.Name"/> being filtered on - the field's key in the value bag.
-    /// <para>
-    /// Optional: a provider whose derived index keys by field id never reads it. A provider that queries the
-    /// bag in place requires it and rejects a condition without one, because there is nothing else to build a
-    /// path out of.
-    /// </para>
+    /// The <see cref="IFlexFieldData.Name"/> being filtered on - the field's key in the value bag, and what
+    /// a provider that queries the bag in place addresses by, since a bag holds no field ids.
     /// <para>
     /// Pass the field's <i>current</i> name. A field's name is its bag key, so a rename moves the values;
     /// a name that has since been renamed away addresses nothing, whereas <see cref="FieldId"/> survives.
     /// </para>
     /// </summary>
-    public string? FieldName { get; set; }
+    public string FieldName { get; set; }
 
     public FlexFieldQueryOperator Operator { get; set; }
 
     /// <summary>
     /// Raw comparison value. For <see cref="FlexFieldQueryOperator.In"/>, a comma-separated list.
     /// </summary>
-    public string Value { get; set; } = default!;
+    public string Value { get; set; }
 
     public FlexFieldValueType ValueType { get; set; }
 
-    public FlexFieldQueryCondition()
-    {
-    }
-
-    public FlexFieldQueryCondition(Guid fieldId, FlexFieldQueryOperator @operator, string value, FlexFieldValueType valueType)
-    {
-        FieldId = fieldId;
-        Operator = @operator;
-        Value = value;
-        ValueType = valueType;
-    }
-
     public FlexFieldQueryCondition(
         Guid fieldId,
-        string? fieldName,
+        string fieldName,
         FlexFieldQueryOperator @operator,
         string value,
         FlexFieldValueType valueType)
-        : this(fieldId, @operator, value, valueType)
     {
+        FieldId = fieldId;
         FieldName = fieldName;
+        Operator = @operator;
+        Value = value;
+        ValueType = valueType;
     }
 }

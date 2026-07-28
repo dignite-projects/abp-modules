@@ -70,7 +70,7 @@ public class FlexFieldIndexCulture_Tests : FlexFieldsEntityFrameworkCoreTestBase
             var articleId = await IndexedArticleAsync(a => a.SetField("Price", "42.5"));
 
             var ids = await QueryAsync(new FlexFieldQueryCondition(
-                price.Field.Id, FlexFieldQueryOperator.Equals, "42.5", FlexFieldValueType.Number));
+                price.Field.Id, price.Field.Name, FlexFieldQueryOperator.Equals, "42.5", FlexFieldValueType.Number));
 
             ids.ShouldBe(new[] { articleId });
         }

@@ -10,6 +10,7 @@ using Dignite.Abp.FlexFields.Text;
 using Shouldly;
 using Volo.Abp;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.MongoDB;
 using Xunit;
 
 namespace Dignite.Abp.FlexFields.MongoDB;
@@ -48,6 +49,49 @@ public class FlexFieldQueryExecutor_Tests : FlexFieldsMongoDbTestBase
         var ids = await QueryAsync(Condition(title, FlexFieldQueryOperator.Contains, "lo wo", FlexFieldValueType.String));
 
         ids.ShouldBe(new[] { matching });
+    }
+
+    [Fact]
+    public async Task Contains_is_case_sensitive_by_default()
+    {
+        var title = Provider.AddDefinition("Title", TextFieldType.ControlName);
+        await IndexedArticleAsync(a => a.SetField("Title", "Hello world"));
+
+        var ids = await QueryAsync(Condition(title, FlexFieldQueryOperator.Contains, "hello", FlexFieldValueType.String));
+
+        ids.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ContainsIsCaseInsensitive_can_be_overridden_to_match_a_case_insensitive_ef_deployment()
+    {
+        var title = Provider.AddDefinition("Title", TextFieldType.ControlName);
+        var matching = await IndexedArticleAsync(a => a.SetField("Title", "Hello world"));
+
+        IReadOnlyList<Guid> ids = Array.Empty<Guid>();
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var executor = new CaseInsensitiveContainsQueryExecutor(
+                GetRequiredService<IMongoDbContextProvider<ITestFlexFieldsMongoDbContext>>());
+            var queryable = await GetRequiredService<IRepository<TestArticle, Guid>>().GetQueryableAsync();
+            var filtered = await executor.ApplyFilterAsync(queryable, new[]
+            {
+                Condition(title, FlexFieldQueryOperator.Contains, "hello", FlexFieldValueType.String)
+            });
+            ids = filtered.Select(a => a.Id).ToList();
+        });
+
+        ids.ShouldBe(new[] { matching });
+    }
+
+    private class CaseInsensitiveContainsQueryExecutor : MongoFlexFieldQueryExecutorBase<ITestFlexFieldsMongoDbContext, TestArticle>
+    {
+        protected override bool ContainsIsCaseInsensitive => true;
+
+        public CaseInsensitiveContainsQueryExecutor(IMongoDbContextProvider<ITestFlexFieldsMongoDbContext> dbContextProvider)
+            : base(dbContextProvider)
+        {
+        }
     }
 
     [Fact]
@@ -220,9 +264,65 @@ public class FlexFieldQueryExecutor_Tests : FlexFieldsMongoDbTestBase
     }
 
     [Fact]
+    public async Task NotEquals_matches_a_multi_valued_field_with_at_least_one_differing_element()
+    {
+        // The relational provider fans a multi-valued field out into one pivot row per element, so its
+        // NotEquals is existential ("some row differs") - the same per-row mechanism that already makes
+        // Equals existential on both providers. MongoDB's own $ne on an array is the opposite (universal:
+        // "no element equals"), so this field type needs its own reading rather than plain $ne to agree
+        // with EF Core on the same data.
+        var tags = Provider.AddDefinition("Tags", SelectFieldType.ControlName);
+        var mixed = await IndexedArticleAsync(a => a.SetField("Tags", new List<string> { "red", "blue" }));
+        var onlyBlue = await IndexedArticleAsync(a => a.SetField("Tags", new List<string> { "blue" }));
+        await IndexedArticleAsync(a => a.SetField("Tags", new List<string>()));
+
+        var ids = await QueryAsync(Condition(tags, FlexFieldQueryOperator.NotEquals, "blue", FlexFieldValueType.String));
+
+        // mixed has "red", which differs from "blue" - included, matching EF's per-row semantics.
+        // onlyBlue's single value equals "blue" - excluded, same as a scalar field would be.
+        // An empty selection has no value to differ from anything - excluded, same as EF's 0 pivot rows.
+        ids.ShouldBe(new[] { mixed });
+    }
+
+    [Fact]
     public async Task An_empty_condition_list_is_rejected()
     {
         await Should.ThrowAsync<ArgumentException>(() => QueryAsync());
+    }
+
+    [Fact]
+    public async Task Raising_MaxMatchedIdCount_to_int_MaxValue_does_not_overflow_the_fetch_limit()
+    {
+        // MaxMatchedIdCount + 1 overflows to int.MinValue at this boundary, and MongoDB.Driver's own Limit()
+        // throws trying to negate that (OverflowException) rather than degrading gracefully - exactly the
+        // "raise it if the host really does match that many" escape hatch the property's own doc invites.
+        var title = Provider.AddDefinition("Title", TextFieldType.ControlName);
+        var matching = await IndexedArticleAsync(a => a.SetField("Title", "Alpha"));
+
+        IReadOnlyList<Guid> ids = Array.Empty<Guid>();
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var executor = new UnboundedMaxCountQueryExecutor(
+                GetRequiredService<IMongoDbContextProvider<ITestFlexFieldsMongoDbContext>>());
+            var queryable = await GetRequiredService<IRepository<TestArticle, Guid>>().GetQueryableAsync();
+            var filtered = await executor.ApplyFilterAsync(queryable, new[]
+            {
+                Condition(title, FlexFieldQueryOperator.Equals, "Alpha", FlexFieldValueType.String)
+            });
+            ids = filtered.Select(a => a.Id).ToList();
+        });
+
+        ids.ShouldBe(new[] { matching });
+    }
+
+    private class UnboundedMaxCountQueryExecutor : MongoFlexFieldQueryExecutorBase<ITestFlexFieldsMongoDbContext, TestArticle>
+    {
+        protected override int MaxMatchedIdCount => int.MaxValue;
+
+        public UnboundedMaxCountQueryExecutor(IMongoDbContextProvider<ITestFlexFieldsMongoDbContext> dbContextProvider)
+            : base(dbContextProvider)
+        {
+        }
     }
 
     [Fact]
@@ -234,14 +334,18 @@ public class FlexFieldQueryExecutor_Tests : FlexFieldsMongoDbTestBase
             Condition(isFeatured, FlexFieldQueryOperator.In, "true,false", FlexFieldValueType.Boolean)));
     }
 
-    [Fact]
-    public async Task A_condition_without_a_field_name_is_rejected()
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task A_condition_with_a_blank_field_name_is_rejected(string blankName)
     {
-        // The one thing this provider needs that the relational one does not: a bag holds no field ids.
+        // FieldName is a required constructor parameter, so a condition can no longer be built without one
+        // at all - this is the one way a caller can still hand this provider a name it cannot address, since
+        // a bag holds no field ids and this provider needs the name to build a path.
         var title = Provider.AddDefinition("Title", TextFieldType.ControlName);
 
         var exception = await Should.ThrowAsync<AbpException>(() => QueryAsync(
-            new FlexFieldQueryCondition(title.Field.Id, FlexFieldQueryOperator.Equals, "Alpha", FlexFieldValueType.String)));
+            new FlexFieldQueryCondition(title.Field.Id, blankName, FlexFieldQueryOperator.Equals, "Alpha", FlexFieldValueType.String)));
 
         exception.Message.ShouldContain(nameof(FlexFieldQueryCondition.FieldName));
         exception.Message.ShouldContain(title.Field.Id.ToString());

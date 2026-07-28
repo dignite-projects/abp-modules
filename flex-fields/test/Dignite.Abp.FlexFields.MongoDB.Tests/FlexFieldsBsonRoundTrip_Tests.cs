@@ -70,6 +70,20 @@ public class FlexFieldsBsonRoundTrip_Tests : FlexFieldsMongoDbTestBase
     }
 
     [Fact]
+    public async Task A_typed_GetField_read_of_a_list_survives_the_mongo_round_trip()
+    {
+        // GetField<TField> is application-facing API, not just a field type's own concern - the raw bag value
+        // here is List<object> (the driver's shape for a BSON array), not List<string>, and not a JsonElement
+        // either, so this exercises a third shape beyond the two FlexFieldDictionaryExtensions already knew
+        // about (an exact-type match, and a JSON round trip's JsonElement).
+        var articleId = await InsertArticleAsync(a => a.SetField("Tags", new List<string> { "red", "blue" }));
+
+        var article = await GetArticleAsync(articleId);
+
+        article.GetField<List<string>>("Tags").ShouldBe(new[] { "red", "blue" });
+    }
+
+    [Fact]
     public async Task Scalars_come_back_as_the_clr_types_they_went_in_as()
     {
         var guid = Guid.NewGuid();

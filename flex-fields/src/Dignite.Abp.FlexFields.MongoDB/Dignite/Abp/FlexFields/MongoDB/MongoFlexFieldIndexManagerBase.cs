@@ -88,6 +88,17 @@ public abstract class MongoFlexFieldIndexManagerBase<TMongoDbContext, TEntity> :
     /// <summary>
     /// Rewrites this entity's eligible bag values into their indexable form, and reports whether it had to.
     /// <para>
+    /// Two separate questions, deliberately asked of two different sources. <i>Whether</i> a field is
+    /// touched at all is the bag's own call - <see cref="IHasFlexFields.FlexFields"/> is authoritative
+    /// storage, and this method keeps derived state in step with it, not the other way round; a provider
+    /// that reported a value for a key the bag never had would otherwise have that value materialized into
+    /// authoritative storage by an index manager, which is not this method's mandate to do. <i>What</i> the
+    /// current value actually is, once a field is in scope, is read through <see cref="FlexFieldValue.Value"/>
+    /// - what <see cref="IFlexFieldProvider{TEntity}"/> reported - rather than a second, independent bag
+    /// lookup, so a provider that does more than relay the bag's own value verbatim (unwrapping a JsonElement
+    /// the way <c>GetField&lt;TField&gt;</c> does, say) is not silently second-guessed by re-reading around it.
+    /// </para>
+    /// <para>
     /// Goes through <c>UpdateAsync</c> rather than relying on change tracking, for the same reason
     /// <see cref="FlexFieldValueMigrator{TEntity}"/> does: a document provider has none, so mutating the
     /// in-memory bag would otherwise never reach the collection.
@@ -100,14 +111,19 @@ public abstract class MongoFlexFieldIndexManagerBase<TMongoDbContext, TEntity> :
         foreach (var indexable in await GetIndexableFieldsAsync(entity, cancellationToken))
         {
             var name = indexable.Value.Name;
-
-            if (!entity.FlexFields.TryGetValue(name, out var rawValue) || rawValue == null)
+            if (!entity.FlexFields.ContainsKey(name))
             {
                 continue;
             }
 
-            var indexableValue = ToIndexableValue(indexable.IndexValueType, rawValue);
-            if (AreEquivalent(rawValue, indexableValue))
+            var value = indexable.Value.Value;
+            if (value == null)
+            {
+                continue;
+            }
+
+            var indexableValue = ToIndexableValue(indexable.IndexValueType, value);
+            if (AreEquivalent(value, indexableValue))
             {
                 continue;
             }

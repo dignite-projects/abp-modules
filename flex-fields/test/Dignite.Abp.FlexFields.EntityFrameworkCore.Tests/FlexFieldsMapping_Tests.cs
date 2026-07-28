@@ -122,6 +122,47 @@ public class FlexFieldsMapping_Tests : FlexFieldsEntityFrameworkCoreTestBase
     }
 
     [Fact]
+    public async Task A_list_valued_configuration_round_trips_through_its_json_column()
+    {
+        // SelectConfiguration.Options is a List<SelectListItem> - a list of a plain class, not of a scalar.
+        // After the JSON round trip an EF-mapped configuration column takes, GetConfiguration<T> is asked to
+        // read that back into a List<SelectListItem> from whatever shape the value now has, which is not
+        // necessarily the exact CLR type it started as (see FieldConfigurationDictionaryExtensions).
+        var fieldId = Guid.NewGuid();
+
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var field = new TestField(fieldId, "Tags", SelectFieldType.ControlName);
+            _ = new SelectConfiguration(field.Configuration)
+            {
+                NullText = "None",
+                Multiple = true,
+                Options = new List<SelectListItem>
+                {
+                    new("Red", "red", selected: false),
+                    new("Blue", "blue", selected: true)
+                }
+            };
+
+            var dbContext = await GetDbContextAsync();
+            await dbContext.Fields.AddAsync(field);
+            await dbContext.SaveChangesAsync();
+        });
+
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var dbContext = await GetDbContextAsync();
+            var field = await dbContext.Fields.SingleAsync(x => x.Id == fieldId);
+
+            var configuration = new SelectConfiguration(field.Configuration);
+            configuration.NullText.ShouldBe("None");
+            configuration.Multiple.ShouldBeTrue();
+            configuration.Options.Select(o => (o.Text, o.Value, o.Selected))
+                .ShouldBe(new[] { ("Red", "red", false), ("Blue", "blue", true) });
+        });
+    }
+
+    [Fact]
     public async Task Null_description_round_trips_as_null()
     {
         var fieldId = Guid.NewGuid();

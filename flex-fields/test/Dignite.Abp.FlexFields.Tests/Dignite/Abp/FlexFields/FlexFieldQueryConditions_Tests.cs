@@ -70,7 +70,7 @@ public class FlexFieldQueryConditions_Tests
     {
         FlexFieldQueryConditions.IsOperatorSupported(valueType, @operator).ShouldBeTrue();
         Should.NotThrow(() => FlexFieldQueryConditions.EnsureOperatorSupported(
-            new FlexFieldQueryCondition(Guid.NewGuid(), @operator, "irrelevant", valueType)));
+            new FlexFieldQueryCondition(Guid.NewGuid(), "Field", @operator, "irrelevant", valueType)));
     }
 
     [Theory]
@@ -79,7 +79,7 @@ public class FlexFieldQueryConditions_Tests
     {
         FlexFieldQueryConditions.IsOperatorSupported(valueType, @operator).ShouldBeFalse();
         Should.Throw<AbpException>(() => FlexFieldQueryConditions.EnsureOperatorSupported(
-            new FlexFieldQueryCondition(Guid.NewGuid(), @operator, "irrelevant", valueType)));
+            new FlexFieldQueryCondition(Guid.NewGuid(), "Field", @operator, "irrelevant", valueType)));
     }
 
     [Fact]
@@ -96,7 +96,7 @@ public class FlexFieldQueryConditions_Tests
         var fieldId = Guid.NewGuid();
 
         var exception = Should.Throw<AbpException>(() => FlexFieldQueryConditions.EnsureOperatorSupported(
-            new FlexFieldQueryCondition(fieldId, FlexFieldQueryOperator.In, "true,false", FlexFieldValueType.Boolean)));
+            new FlexFieldQueryCondition(fieldId, "Field", FlexFieldQueryOperator.In, "true,false", FlexFieldValueType.Boolean)));
 
         exception.Message.ShouldContain(nameof(FlexFieldQueryOperator.In));
         exception.Message.ShouldContain(nameof(FlexFieldValueType.Boolean));
@@ -115,7 +115,7 @@ public class FlexFieldQueryConditions_Tests
     {
         Should.NotThrow(() => FlexFieldQueryConditions.EnsureNotEmpty(new[]
         {
-            new FlexFieldQueryCondition(Guid.NewGuid(), FlexFieldQueryOperator.Equals, "x", FlexFieldValueType.String)
+            new FlexFieldQueryCondition(Guid.NewGuid(), "Field", FlexFieldQueryOperator.Equals, "x", FlexFieldValueType.String)
         }));
     }
 }

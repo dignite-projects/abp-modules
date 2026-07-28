@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Dignite.Abp.FlexFields.Date;
 using Dignite.Abp.FlexFields.Numeric;
@@ -9,6 +10,9 @@ using Dignite.Abp.FlexFields.Text;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Shouldly;
+using Volo.Abp.Domain.Repositories;
+using Volo.Abp.MongoDB;
+using Volo.Abp.Uow;
 using Xunit;
 
 namespace Dignite.Abp.FlexFields.MongoDB;
@@ -119,6 +123,66 @@ public class FlexFieldIndexManager_Tests : FlexFieldsMongoDbTestBase
         var articleId = await IndexedArticleAsync(a => a.SetField("Title", "no price here"));
 
         (await GetArticleAsync(articleId)).HasField("Price").ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Synchronize_never_introduces_a_key_the_bag_never_had()
+    {
+        // A provider is free to report a value for a field the bag itself has no entry for - a computed
+        // default, say. Reading through the provider (rather than the bag) is what makes any transformation
+        // it applies to an *existing* value visible to synchronization; it is not licence for an index
+        // manager - whose own contract is keeping derived state in step with authoritative storage - to
+        // write a brand-new entry into that authoritative storage on the provider's say-so.
+        var usage = Provider.AddDefinition("Price", NumberFieldType.ControlName);
+        var articleId = await InsertArticleAsync(a => a.SetField("Title", "no price here"));
+
+        var manager = new TestArticleFlexFieldIndexManager(
+            GetRequiredService<IMongoDbContextProvider<ITestFlexFieldsMongoDbContext>>(),
+            new DefaultingFlexFieldProvider(Provider, usage.Field.Id, "42.5"),
+            GetRequiredService<IBasicRepository<TestArticle>>(),
+            GetRequiredService<IFieldTypeResolver>(),
+            GetRequiredService<IUnitOfWorkManager>());
+
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var dbContext = await GetDbContextAsync();
+            var article = await dbContext.Articles.Find(a => a.Id == articleId).SingleAsync();
+            await manager.SynchronizeAsync(article);
+        });
+
+        (await GetArticleAsync(articleId)).HasField("Price").ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Wraps a real provider, substituting a fixed value for one field whenever the host has no value of its
+    /// own - standing in for a provider that computes a default rather than only relaying the bag verbatim.
+    /// </summary>
+    private class DefaultingFlexFieldProvider : IFlexFieldProvider<TestArticle>
+    {
+        private readonly IFlexFieldProvider<TestArticle> _inner;
+        private readonly Guid _fieldId;
+        private readonly object _defaultValue;
+
+        public DefaultingFlexFieldProvider(IFlexFieldProvider<TestArticle> inner, Guid fieldId, object defaultValue)
+        {
+            _inner = inner;
+            _fieldId = fieldId;
+            _defaultValue = defaultValue;
+        }
+
+        public async Task<IReadOnlyList<FlexFieldValue>> GetFlexFieldsAsync(
+            TestArticle entity, CancellationToken cancellationToken = default)
+        {
+            var fields = await _inner.GetFlexFieldsAsync(entity, cancellationToken);
+
+            return fields.Select(f => f.FieldId == _fieldId && f.Value == null
+                ? new FlexFieldValue(f.Field, f.Required, f.Searchable, _defaultValue)
+                : f).ToList();
+        }
+
+        public Task<IReadOnlyList<TestArticle>> GetPagedEntitiesAsync(
+            int skipCount, int maxResultCount, CancellationToken cancellationToken = default)
+            => _inner.GetPagedEntitiesAsync(skipCount, maxResultCount, cancellationToken);
     }
 
     [Fact]

@@ -57,8 +57,18 @@ public class FlexFieldQueryPushdown_Tests : FlexFieldsMongoDbTestBase
         var filter = Executor.Render(new FlexFieldQueryCondition(
             Guid.NewGuid(), "Title", FlexFieldQueryOperator.NotEquals, "Alpha", FlexFieldValueType.String));
 
-        // $ne on its own would also match a host that has no Title at all.
-        filter.ShouldBe(BsonDocument.Parse("{ 'FlexFields.Title': { '$exists': true, '$ne': 'Alpha' } }"));
+        // The scalar branch: $ne alone would also match a host that has no Title at all, and (if Title were
+        // ever an array) an empty one - $exists plus excluding arrays keeps this branch scoped to a genuine
+        // scalar value that differs. See FlexFieldQueryExecutor_Tests for the behavioural (not just
+        // rendering) proof, on both a scalar and a multi-valued field.
+        filter.ShouldBe(BsonDocument.Parse("""
+            {
+                '$or': [
+                    { 'FlexFields.Title': { '$exists': true, '$not': { '$type': 4 }, '$ne': 'Alpha' } },
+                    { 'FlexFields.Title': { '$elemMatch': { '$ne': 'Alpha' } } }
+                ]
+            }
+            """));
     }
 
     [Fact]
