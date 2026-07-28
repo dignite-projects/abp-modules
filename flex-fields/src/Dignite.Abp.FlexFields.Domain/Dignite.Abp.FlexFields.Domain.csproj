@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>Domain-layer seams for Dignite.Abp.FlexFields: IFlexField (the Entity contract a downstream's field-definition entity implements, e.g. a CMS's Field) and IFlexFieldRepository&lt;TField&gt;, plus IFlexFieldProvider&lt;TEntity&gt; (the contract a downstream host implements to resolve its entity's flex fields), IFlexFieldValidator&lt;TEntity&gt;, IFlexFieldIndexManager&lt;TEntity&gt; and IFlexFieldQueryExecutor&lt;TEntity&gt;. FlexFieldExtensions.ToFlexFieldData() bridges a downstream's IFlexField to the DDD-free FlexFieldData from Dignite.Abp.FlexFields.Abstractions. The kernel owns no field or host model of its own.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.Ddd.Domain" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.Abp.FlexFields.Domain.Shared\Dignite.Abp.FlexFields.Domain.Shared.csproj" />
+    <ProjectReference Include="..\Dignite.Abp.FlexFields.Abstractions\Dignite.Abp.FlexFields.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

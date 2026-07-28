@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>EF Core support (not ownership) for Dignite.Abp.FlexFields: EntityTypeBuilder extensions that map the value bag, a field definition and a query-index row onto a downstream's own entities, FlexFieldIndexBase&lt;TEntity&gt; and FlexFieldIndexValue (the typed pivot-table row shape - relational-only, with no MongoDb equivalent) for the downstream's per-host index table, EfCoreFlexFieldIndexManagerBase&lt;TDbContext, TEntity, TIndex&gt; to keep that table in sync, EfCoreFlexFieldQueryExecutorBase&lt;TDbContext, TEntity, TIndex&gt; to query it as a pushed-down SQL predicate, and EfCoreFlexFieldRepositoryBase&lt;TDbContext, TField&gt; for the downstream's field-definition entity. Ships no DbContext and no DbSet; every base class is abstract over the downstream's own DbContext interface and entity types, so the kernel still owns no concrete table. The downstream owns its DbContext, tables and migrations.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.EntityFrameworkCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.Abp.FlexFields.Domain\Dignite.Abp.FlexFields.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

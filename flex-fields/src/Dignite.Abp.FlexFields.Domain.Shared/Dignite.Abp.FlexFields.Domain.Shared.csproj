@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>Column-length constants shared by Dignite.Abp.FlexFields' domain and every persistence provider (FlexFieldConsts). Deliberately dependency-free - field contracts, configuration and localization live in Dignite.Abp.FlexFields.Abstractions, which does not reference this package.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.Core" />
+  </ItemGroup>
+
+</Project>

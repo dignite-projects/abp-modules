@@ -1,0 +1,35 @@
+using System.Collections.Generic;
+
+namespace Dignite.Abp.FlexFields.Select;
+
+public class SelectConfiguration : FieldConfigurationBase
+{
+    public string? NullText {
+        get => ConfigurationDictionary.GetConfiguration<string?>(SelectConfigurationNames.NullText, null);
+        set => ConfigurationDictionary.SetConfiguration(SelectConfigurationNames.NullText, value);
+    }
+
+    public List<SelectListItem> Options {
+        get => ConfigurationDictionary.GetConfiguration(SelectConfigurationNames.Options, new List<SelectListItem>());
+        set => ConfigurationDictionary.SetConfiguration(SelectConfigurationNames.Options, value);
+    }
+
+    public bool Multiple {
+        get => ConfigurationDictionary.GetConfiguration(SelectConfigurationNames.Multiple, false);
+        set => ConfigurationDictionary.SetConfiguration(SelectConfigurationNames.Multiple, value);
+    }
+
+    public int? Size {
+        get => ConfigurationDictionary.GetConfiguration<int?>(SelectConfigurationNames.Size);
+        set => ConfigurationDictionary.SetConfiguration(SelectConfigurationNames.Size, value);
+    }
+
+    public SelectConfiguration(FieldConfigurationDictionary fieldConfiguration)
+        : base(fieldConfiguration)
+    {
+    }
+
+    public SelectConfiguration() : base()
+    {
+    }
+}

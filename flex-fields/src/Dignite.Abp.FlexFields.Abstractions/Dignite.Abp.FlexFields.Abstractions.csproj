@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+    <Description>Constraint-kernel contracts and built-in field types for Dignite.Abp.FlexFields: IFlexFieldData/FlexFieldData (the DDD-free field definition carrier, mirroring ABP's IUserData/UserData), the FlexFieldValue runtime carrier, IHasFlexFields/FlexFieldDictionary (the value bag), FieldConfigurationDictionary, the FlexFieldQueryCondition query vocabulary, and IFieldType/FieldTypeBase plus the Text/Number/DateTime/Select/Boolean/Tree field types and their configuration. Self-contained: referencing this package alone is enough to implement a custom field type or to type a downstream's DTOs. Contains no Entity contract and no persistence shape - those start at Dignite.Abp.FlexFields.Domain and Dignite.Abp.FlexFields.EntityFrameworkCore respectively.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Dignite\Abp\FlexFields\Localization\Resources\*.json" />
+    <Content Remove="Dignite\Abp\FlexFields\Localization\Resources\*.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" />
+    <PackageReference Include="Volo.Abp.Core" />
+    <PackageReference Include="Volo.Abp.Localization" />
+  </ItemGroup>
+
+</Project>
