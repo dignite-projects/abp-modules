@@ -27,6 +27,12 @@ public interface IFlexField : IAggregateRoot<Guid>
     /// <summary>
     /// Unique name of the field. This is the key used to read/write the field's value in the host's
     /// value bag (<see cref="IHasFlexFields.FlexFields"/>).
+    /// <para>
+    /// Because it is the key rather than a label, changing it is a data migration, not an edit: every host
+    /// entity keeps its value under the old key, where nothing can reach it. A downstream that renames a
+    /// field must follow through with <see cref="IFlexFieldValueMigrator{TEntity}"/> for each host type the
+    /// field is attached to - see that interface for the required ordering.
+    /// </para>
     /// </summary>
     string Name { get; }
 

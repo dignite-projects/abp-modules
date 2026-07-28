@@ -215,8 +215,8 @@ public class FlexFieldIndexManager_Tests : FlexFieldsEntityFrameworkCoreTestBase
     public async Task Rebuild_moves_a_value_to_a_different_slot_when_the_fields_type_changes()
     {
         // Reindex trigger #2: the control's type changes, so the value projects into another slot.
-        // Project converts from the raw bag value on every run, which is why re-projecting is a
-        // complete migration and no separate value migrator is needed.
+        // Project converts from the raw bag value on every run, which is why re-projecting is a complete
+        // migration here. It is not one when the bag *key* changes - see FlexFieldValueMigrator_Tests.
         var usage = Provider.AddDefinition("Price", TextFieldType.ControlName);
         var articleId = await InsertArticleAsync(a => a.SetField("Price", "42.5"));
 

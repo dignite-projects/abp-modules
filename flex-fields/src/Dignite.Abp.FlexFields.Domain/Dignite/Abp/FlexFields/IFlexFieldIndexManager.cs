@@ -27,8 +27,15 @@ public interface IFlexFieldIndexManager<in TEntity>
     /// <para>
     /// This is the answer to both reindex triggers: a field's Searchable flag being switched on, and a
     /// field's type changing so its values belong in a different slot -
-    /// <see cref="IFieldType.GetSearchableValues"/> converts from the raw bag value on every run, so
-    /// re-deriving is a complete migration.
+    /// <see cref="IFieldType.GetSearchableValues"/> converts from the raw bag value on every run, so for
+    /// those two, re-deriving is a complete migration.
+    /// </para>
+    /// <para>
+    /// It is <b>not</b> an answer to a field being renamed. Both triggers above re-read the bag under the
+    /// same key; a rename changes the key itself, so re-deriving faithfully finds nothing and deletes the
+    /// rows that were there. Rewrite the bags first with
+    /// <see cref="IFlexFieldValueMigrator{TEntity}.RenameFieldAsync"/> - after which the index needs no
+    /// rebuild at all, since its rows key on field id and value.
     /// </para>
     /// </summary>
     Task RebuildAsync(CancellationToken cancellationToken = default);
