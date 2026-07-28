@@ -33,7 +33,9 @@
 - **权威存储** = 宿主上一个"便宜读的值袋子"：自建 `IHasFlexFields` + 专属 `FlexFields` 字典/列，**不用 ABP `ExtraProperties`**。理由 = 与公共 ExtraProperties 大袋子**隔离**（防撞名）+ **平台自持**；`IHasExtraProperties`/`ExtraPropertyDictionary` 属 `Volo.Abp.Data`（非 ObjectExtending），故这是隔离/管道取舍非血缘。代价：自补 EF JSON 转换器 / Mongo 内嵌 / 自己的 `FlexibleEntityDto` / AutoMapper（照抄 ABP）。
 - **派生查询索引** = 类型化 `FlexFieldIndex` 表（Salesforce `MT_Data` + `MT_Indexes` 思路）。已定：①同库多宿主**共表**（`EntityType` 判别键）+ ②写时**同 UoW** 同步。整条读走袋子；按字段查走索引 → EntityId → 过滤宿主。
 - **provider 可换**：EF = 类型化 pivot 表；Mongo = 内嵌值 + 原生路径索引（写时近乎零同步）。别把关系型表焊进抽象层。
-- **两类回填**：`Searchable` 翻开（值类型不变）→ 仅 `RebuildAsync`（Mongo ≈ createIndex 近免费；EF 真回填）；控件改类型（值类型变）→ `IFlexFieldValueMigrator` 真迁移，**两 provider 都躲不掉**。回填 job 编排放 `.Domain`（provider 无关），调 provider 实现。
+- **两类回填**：`Searchable` 翻开（值类型不变）→ 仅 `RebuildAsync`（Mongo ≈ createIndex 近免费；EF 真回填）；控件改类型（值类型变）→ 也是 `RebuildAsync`，因为 `GetSearchableValues` 每次都从袋子里的原始值重新解释，落码后发现不需要单独的值迁移器。
+- **但袋子 key 变了是第三类，`RebuildAsync` 治不了**（落码后补）：字段定义改名 / 删除时，key 本身变了，重推导只会忠实地推导出"什么都没有"，还会把原有索引行删掉。这一类走 `IFlexFieldValueMigrator<TEntity>`，只重写袋子、不碰索引 —— 纯改名对索引无害（索引行以 `FieldId` + 值为键）。内核不感知改名（`IFlexField.Name` 只读、实体归下游），由下游改完名后自己调，每个宿主类型调一次。
+- **注意这一类与索引不同，`provider 可换` 不适用**：`IFlexFieldIndexManager` 要两套实现，是因为派生状态的**种类**就不同（EF 透视表 vs Mongo 原生路径索引）；而"把 key 在袋子里挪个位置"跟谁存无关，分页走 `IFlexFieldProvider`、落盘走 ABP 仓储，两头都已经是 provider 中立的。所以 `FlexFieldValueMigrator<TEntity>` 是 `.Domain` 里的**唯一一套实现**（开放泛型注册，对照 `FlexFieldValidator<TEntity>`），`.EntityFrameworkCore` / `.MongoDB` 都不出对应类型，下游也不需要写子类。
 
 ## 5. 总接口清单（按层，落码后校准 —— 与代码一致）
 
@@ -42,6 +44,7 @@
 - **`.Domain.Shared`**：仅 `FlexFieldConsts`（列长度等）。刻意不含 `FlexFieldValueType`/`FlexFieldDictionary`——那些是 Abstractions 自足所需的类型词汇，`.Abstractions` 与 `.Domain.Shared` 互不引用，只由 `.Domain` 同时依赖两者。
 - **`.Abstractions`**（无 DDD 依赖，**不含任何 Entity 契约、不含任何持久化形状**）：
   - 数据载体：`IFlexFieldData` / `FlexFieldData`（对照 `IUserData`/`UserData`）
+  - 字段生命周期 Eto：`FlexFieldRenamedEto` / `FlexFieldDeletedEto`（带 `[EventName]` + `IMultiTenant`，对照 `UserEto`；依据即硬规则 1）。**内核既不发布也不订阅**——发布方必须是下游（`IFlexField.Name` 只读、实体归下游），订阅方也只能是下游（迁移器按宿主类型泛型，内核无宿主类型注册表）。只为"字段定义与宿主分属不同模块"这一种场景存在；同一下游内直接调 `IFlexFieldValueMigrator` 更简单也更安全（见下条）
   - 值袋：`IHasFlexFields`、`FlexFieldDictionary`
   - 运行期载体：`FlexFieldValue`（`Field` 属性类型是 `IFlexFieldData`，不是任何 Entity 接口）
   - 字段类型：`IFieldType`（`GetSearchableValues` 返回 `IEnumerable<object>`，provider 中立）、`FieldTypeBase`、内置类型（`TextFieldType`…）、`FieldTypeResolver`
@@ -51,7 +54,8 @@
   - Entity 契约：`IFlexField : IAggregateRoot<Guid>`——下游的字段定义实体（如 CMS 的 `Field`）实现它
   - 桥接：`FlexFieldExtensions.ToFlexFieldData()`，`IFlexField -> FlexFieldData` 单向
   - 仓储：`IFlexFieldRepository<TField>`（字段定义轴，内核自己从不调用，纯为下游便利）
-  - 宿主实体轴的缝：`IFlexFieldProvider<TEntity>`（内核唯一的信息入口）、`IFlexFieldValidator<TEntity>`、`IFlexFieldIndexManager<TEntity>`、`IFlexFieldQueryExecutor<TEntity>`
+  - 宿主实体轴的缝：`IFlexFieldProvider<TEntity>`（内核唯一的信息入口）、`IFlexFieldValidator<TEntity>`、`IFlexFieldIndexManager<TEntity>`、`IFlexFieldQueryExecutor<TEntity>`、`IFlexFieldValueMigrator<TEntity>`（改名/删字段时重写袋子 key）
+  - **provider 中立的默认实现**（开放泛型注册在 `FlexFieldsDomainModule`，下游零代码）：`FlexFieldValidator<TEntity>`、`FlexFieldValueMigrator<TEntity>`。其余几个缝按 provider 分实现或由下游实现
   - **内核无具体 `FlexField` 实体**（下游类型实现 `IFlexField`）
 - **`.EntityFrameworkCore`**（支持不拥有；依赖 `.Domain`）：
   - `FlexFieldIndexValue`——**relational-only**，五个类型化槽位（String/Number/DateTime/Boolean/Guid）+ `Create(FlexFieldValueType, object)` 工厂。只属于这一层：它是关系型透视表的行值形状，`.MongoDb` 不会有对应类型
@@ -59,6 +63,7 @@
   - `FlexFieldsDbContextModelCreatingExtensions`：`ConfigureFlexFieldsProperty<TEntity>()` / `ConfigureFlexField<TField>()` / `ConfigureFlexFieldIndex<TIndex>()`
   - `EfCoreFlexFieldIndexManagerBase<TDbContext,TEntity,TIndex>`：类型化在这一层发生——从 `IFieldType.GetSearchableValues` 拿到原始值后，配上 `IndexValueType` 转成 `FlexFieldIndexValue`
   - `EfCoreFlexFieldRepositoryBase<TDbContext,TField>`：`IFlexFieldRepository<TField>` 的 EF 实现
+  - **无** `IFlexFieldValueMigrator` 的 EF 实现——它 provider 中立，唯一实现在 `.Domain`
   - 无具体 DbContext、无 DbSet
 - **`.MongoDB`**（留待后续 session）：同构但**没有 `FlexFieldIndexValue` 或任何透视表实体**——直接在 `FlexFieldDictionary` 上查询、建索引，写时近乎零同步。
 - **下游（CMS）**：`Field`/`FieldGroup`/`EntryType`/`FieldTabs` 留下游；`Field : IFlexField`；`Entry : IHasFlexFields`；实现 `IFlexFieldProvider<Entry>`（内部把 `Field` 经 `ToFlexFieldData()` 转成载体）；DbContext 调三个 `ConfigureFlexField*()` 扩展，拥有物理表 + 迁移。
@@ -149,6 +154,10 @@ public interface IFlexFieldRepository<TField> : IBasicRepository<TField, Guid> w
 ## 7. 待定 / 落码后校准
 - 用户对本设计仍存个别疑问，**约定落码后按实际代码回调**。
 - 未细化：多宿主的 provider 分派；唯一约束（对应 `MT_Unique_Indexes`）；富页签布局（完全归下游 UI）。
+  - 改名的**唯一性校验**仍只有 `IFlexFieldRepository.NameExistsAsync` 这一个建议性方法，内核不强制、不建索引（`ConfigureFlexField<TField>()` 刻意不加唯一索引），归下游。袋子侧的**改完之后**已由 `IFlexFieldValueMigrator<TEntity>` 兜住。
+  - 多宿主分派的具体体现：`IFlexFieldValueMigrator<TEntity>` 和 `IFlexFieldIndexManager<TEntity>` 一样是每宿主类型一个，一次改名下游要按挂载列表逐个调用 —— 那份列表内核不掌握。**这也正是内核不出事件 handler 的原因**：`FlexFieldRenamedEto` 的 handler 拿不到该 resolve 哪个 `IFlexFieldValueMigrator<TEntity>`。真要让"一次改名自动覆盖所有宿主"，缺的是**宿主类型注册表**（`FlexFieldsOptions.HostEntityTypes` 之类）而不是 ETO；有了它一个非泛型的扇出入口就够，连事件总线都不需要。
+  - 走事件总线的两个代价（已写进 Eto 的 XML 注释）：① `PublishAsync` 默认 `onUnitOfWorkComplete: true`，改名提交到 handler 执行之间有窗口，期间任何 `SynchronizeAsync` 都会删掉该字段的索引行 —— 把确定的时序退化成竞态；② handler 的异常被事件总线收集、不回到发布方，`RenameField` 那个"目标 key 已占用就抛"的护栏降级成一行日志。
+  - 若将来要做在线安全的改名，正确姿势是**三步幂等**：先把值复制到新 key → 再翻 `Name` → 最后删旧 key。全过程总有一个 key 与当前 `Name` 匹配，`SynchronizeAsync` 任何时刻插进来都不丢数据。
 - 离"成熟 FlexFields"仍缺：联动/依赖字段、跨字段校验（`FieldValidationArgs` 已留 siblings 口）、关系/引用字段（索引表 `GuidValue` 已预留）、字段级权限。
 
 ## 8. 实施顺序

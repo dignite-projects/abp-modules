@@ -19,8 +19,12 @@ public class FlexFieldsDomainModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
-        // Registered explicitly as an open generic rather than by convention: the type parameters map
+        // Registered explicitly as open generics rather than by convention: the type parameters map
         // 1:1, so one registration covers every host entity type, and a host can Replace it.
         context.Services.AddTransient(typeof(IFlexFieldValidator<>), typeof(FlexFieldValidator<>));
+
+        // Unlike IFlexFieldIndexManager, this needs no provider-specific implementation - moving a key
+        // inside the value bag is the same operation whatever stores it.
+        context.Services.AddTransient(typeof(IFlexFieldValueMigrator<>), typeof(FlexFieldValueMigrator<>));
     }
 }

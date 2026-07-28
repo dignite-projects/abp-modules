@@ -16,6 +16,15 @@
     <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" />
     <PackageReference Include="Volo.Abp.Core" />
     <PackageReference Include="Volo.Abp.Localization" />
+    <!--
+      For the field-lifecycle ETOs only. The Abstractions variants are deliberate: EventNameAttribute and
+      the handler interfaces live in Volo.Abp.EventBus.Abstractions, and IMultiTenant in
+      Volo.Abp.MultiTenancy.Abstractions (whose own dependencies are already here via Volo.Abp.Localization).
+      ABP's own Volo.Abp.Users.Abstractions takes the whole Volo.Abp.EventBus for UserEto; this project's
+      "referencing it alone is enough" promise is worth the narrower pair.
+    -->
+    <PackageReference Include="Volo.Abp.EventBus.Abstractions" />
+    <PackageReference Include="Volo.Abp.MultiTenancy.Abstractions" />
   </ItemGroup>
 
 </Project>

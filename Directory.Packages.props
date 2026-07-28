@@ -48,6 +48,7 @@
     <PackageVersion Include="Volo.Abp.Guids" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.EventBus" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.EventBus.Abstractions" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.MultiTenancy.Abstractions" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.BackgroundJobs.Abstractions" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.BackgroundWorkers" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.DistributedLocking.Abstractions" Version="10.5.0" />

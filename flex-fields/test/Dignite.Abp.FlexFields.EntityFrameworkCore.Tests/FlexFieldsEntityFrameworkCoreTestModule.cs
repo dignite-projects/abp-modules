@@ -38,6 +38,10 @@ public class FlexFieldsEntityFrameworkCoreTestModule : AbpModule
         // IFlexFieldRepository<TestField> needs this explicit line; a real downstream hits the same thing
         // unless its own class name happens to match.
         context.Services.AddTransient<IFlexFieldRepository<TestField>, TestFieldRepository>();
+
+        // Exposed as itself only, so IFlexFieldValueMigrator<TestArticle> keeps resolving to the kernel's
+        // open-generic registration - see SmallPageFlexFieldValueMigrator.
+        context.Services.AddTransient<SmallPageFlexFieldValueMigrator>();
     }
 
     private void ConfigureInMemorySqlite(IServiceCollection services)
