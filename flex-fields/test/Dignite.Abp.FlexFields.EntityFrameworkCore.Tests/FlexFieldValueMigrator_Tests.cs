@@ -205,12 +205,12 @@ public class FlexFieldValueMigrator_Tests : FlexFieldsEntityFrameworkCoreTestBas
         var articleId = await InsertArticleAsync(a => a.SetField("AuthorName", "Ada"));
         await SynchronizeAsync(articleId);
 
-        (await QueryAsync(usage.Field.Id, "Ada")).ShouldBe(new[] { articleId });
+        (await QueryAsync(usage.Field.Id, usage.Field.Name, "Ada")).ShouldBe(new[] { articleId });
 
         usage.Field.Name = "Author";
         await SynchronizeAsync(articleId);
 
-        (await QueryAsync(usage.Field.Id, "Ada")).ShouldBeEmpty();
+        (await QueryAsync(usage.Field.Id, usage.Field.Name, "Ada")).ShouldBeEmpty();
     }
 
     /// <summary>
@@ -229,7 +229,7 @@ public class FlexFieldValueMigrator_Tests : FlexFieldsEntityFrameworkCoreTestBas
         await MigrateAsync(() => Migrator.RenameFieldAsync("AuthorName", "Author"));
         await SynchronizeAsync(articleId);
 
-        (await QueryAsync(usage.Field.Id, "Ada")).ShouldBe(new[] { articleId });
+        (await QueryAsync(usage.Field.Id, usage.Field.Name, "Ada")).ShouldBe(new[] { articleId });
     }
 
     /// <summary>
@@ -297,7 +297,7 @@ public class FlexFieldValueMigrator_Tests : FlexFieldsEntityFrameworkCoreTestBas
         return article!;
     }
 
-    private async Task<IReadOnlyList<Guid>> QueryAsync(Guid fieldId, string value)
+    private async Task<IReadOnlyList<Guid>> QueryAsync(Guid fieldId, string fieldName, string value)
     {
         IReadOnlyList<Guid> ids = Array.Empty<Guid>();
         await WithUnitOfWorkAsync(async () =>
@@ -308,7 +308,7 @@ public class FlexFieldValueMigrator_Tests : FlexFieldsEntityFrameworkCoreTestBas
                 new[]
                 {
                     new FlexFieldQueryCondition(
-                        fieldId, FlexFieldQueryOperator.Equals, value, FlexFieldValueType.String)
+                        fieldId, fieldName, FlexFieldQueryOperator.Equals, value, FlexFieldValueType.String)
                 });
             ids = await filtered.Select(a => a.Id).ToListAsync();
         });

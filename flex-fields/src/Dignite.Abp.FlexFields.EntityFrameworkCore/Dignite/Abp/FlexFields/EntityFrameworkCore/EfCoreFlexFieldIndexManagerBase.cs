@@ -16,6 +16,12 @@ namespace Dignite.Abp.FlexFields.EntityFrameworkCore;
 /// <c>EfCoreUserRepositoryBase&lt;TDbContext, TUser&gt;</c>, so the kernel never names a concrete
 /// DbContext or table.
 /// <para>
+/// Paging, termination and which field values are eligible to be indexed all come from
+/// <see cref="FlexFieldIndexManagerBase{TEntity}"/> - none of that is relational. What is relational, and so
+/// lives here, is the pivot table: a row per decomposed value, in a typed column chosen by the field type's
+/// <see cref="IFieldType.IndexValueType"/>.
+/// </para>
+/// <para>
 /// A downstream subclass supplies only the two things the kernel cannot know: the name of its own
 /// foreign-key property, and how to construct one of its own index rows.
 /// </para>
@@ -23,22 +29,12 @@ namespace Dignite.Abp.FlexFields.EntityFrameworkCore;
 /// <typeparam name="TDbContext">The downstream's own DbContext interface.</typeparam>
 /// <typeparam name="TEntity">The host entity type.</typeparam>
 /// <typeparam name="TIndex">The downstream's <see cref="FlexFieldIndexBase{TEntity}"/> subclass.</typeparam>
-public abstract class EfCoreFlexFieldIndexManagerBase<TDbContext, TEntity, TIndex> : IFlexFieldIndexManager<TEntity>
+public abstract class EfCoreFlexFieldIndexManagerBase<TDbContext, TEntity, TIndex> : FlexFieldIndexManagerBase<TEntity>
     where TDbContext : IEfCoreDbContext
     where TEntity : class, IHasFlexFields, IEntity<Guid>
     where TIndex : class, IFlexFieldIndex
 {
     protected IDbContextProvider<TDbContext> DbContextProvider { get; }
-
-    protected IFlexFieldProvider<TEntity> FlexFieldProvider { get; }
-
-    protected IFieldTypeResolver FieldTypeResolver { get; }
-
-    /// <summary>
-    /// How many host entities <see cref="RebuildAsync"/> processes per flush. Bounds memory on a full
-    /// rebuild; override to trade round trips against change-tracker size.
-    /// </summary>
-    protected virtual int RebuildPageSize => 100;
 
     /// <summary>
     /// Name of the downstream's own foreign-key property on <typeparamref name="TIndex"/> - the kernel
@@ -56,54 +52,26 @@ public abstract class EfCoreFlexFieldIndexManagerBase<TDbContext, TEntity, TInde
         IDbContextProvider<TDbContext> dbContextProvider,
         IFlexFieldProvider<TEntity> flexFieldProvider,
         IFieldTypeResolver fieldTypeResolver)
+        : base(flexFieldProvider, fieldTypeResolver)
     {
         DbContextProvider = dbContextProvider;
-        FlexFieldProvider = flexFieldProvider;
-        FieldTypeResolver = fieldTypeResolver;
     }
 
     /// <summary>
-    /// Deliberately does not call <c>SaveChanges</c>: the derived rows must commit with the value bag
-    /// they came from, so they ride the caller's ambient unit of work.
+    /// Always reports a write: this provider replaces an entity's rows outright rather than diffing, so
+    /// there is no cheaper "nothing changed" path to take.
     /// </summary>
-    public virtual async Task SynchronizeAsync(TEntity entity, CancellationToken cancellationToken = default)
+    protected override async Task<bool> SynchronizeCoreAsync(TEntity entity, CancellationToken cancellationToken)
     {
         var dbContext = await DbContextProvider.GetDbContextAsync();
         await ReplaceRowsAsync(dbContext, entity, cancellationToken);
+        return true;
     }
 
-    /// <summary>
-    /// Unlike <see cref="SynchronizeAsync"/> this does flush per page - the point of paging is to keep a
-    /// full rebuild's memory bounded, which accumulating every change until the outer unit of work
-    /// completes would defeat.
-    /// </summary>
-    public virtual async Task RebuildAsync(CancellationToken cancellationToken = default)
+    protected override async Task FlushAsync(CancellationToken cancellationToken)
     {
-        var skipCount = 0;
-
-        while (true)
-        {
-            var page = await FlexFieldProvider.GetPagedEntitiesAsync(skipCount, RebuildPageSize, cancellationToken);
-            if (page.Count == 0)
-            {
-                break;
-            }
-
-            var dbContext = await DbContextProvider.GetDbContextAsync();
-            foreach (var entity in page)
-            {
-                await ReplaceRowsAsync(dbContext, entity, cancellationToken);
-            }
-
-            await dbContext.SaveChangesAsync(cancellationToken);
-
-            if (page.Count < RebuildPageSize)
-            {
-                break;
-            }
-
-            skipCount += RebuildPageSize;
-        }
+        var dbContext = await DbContextProvider.GetDbContextAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     /// <summary>
@@ -129,30 +97,24 @@ public abstract class EfCoreFlexFieldIndexManagerBase<TDbContext, TEntity, TInde
         }
     }
 
+    /// <summary>
+    /// Decomposes each eligible value with <see cref="IFieldType.GetSearchableValues"/> - one row per value,
+    /// so a multi-select becomes several - and types each one into a slot. The decomposition is what a
+    /// pivot table needs and a document store does not, which is why it happens here rather than in the
+    /// shared base.
+    /// </summary>
     protected virtual async Task<List<TIndex>> ProjectAsync(TEntity entity, CancellationToken cancellationToken)
     {
         var rows = new List<TIndex>();
-        var fields = await FlexFieldProvider.GetFlexFieldsAsync(entity, cancellationToken);
 
-        // Filtered here rather than trusting every IFieldType to honour it - only searchable fields are
-        // ever indexed, and that is this manager's policy, not a field type's.
-        foreach (var field in fields.Where(f => f.Searchable))
+        foreach (var indexable in await GetIndexableFieldsAsync(entity, cancellationToken))
         {
-            var fieldType = FieldTypeResolver.Get(field.FieldTypeName);
-            if (fieldType.IndexValueType == null)
-            {
-                // Not indexable (e.g. RichText, Matrix) - GetSearchableValues would yield nothing anyway,
-                // but there is no typed slot to pair its values with, so this manager's policy is to skip
-                // it explicitly rather than let a field type's own emptiness decide.
-                continue;
-            }
-
-            foreach (var value in fieldType.GetSearchableValues(field))
+            foreach (var value in indexable.FieldType.GetSearchableValues(indexable.Value))
             {
                 rows.Add(CreateIndexRow(
                     entity.Id,
-                    field.FieldId,
-                    FlexFieldIndexValue.Create(fieldType.IndexValueType.Value, value)));
+                    indexable.Value.FieldId,
+                    FlexFieldIndexValue.Create(indexable.IndexValueType, value)));
             }
         }
 

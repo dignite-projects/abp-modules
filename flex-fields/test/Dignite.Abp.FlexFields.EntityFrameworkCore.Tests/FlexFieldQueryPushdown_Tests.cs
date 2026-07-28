@@ -22,7 +22,7 @@ public class FlexFieldQueryPushdown_Tests : FlexFieldsEntityFrameworkCoreTestBas
     public async Task String_condition_becomes_sql_against_the_string_column()
     {
         var sql = await SqlForAsync(new FlexFieldQueryCondition(
-            Guid.NewGuid(), FlexFieldQueryOperator.Equals, "Alpha", FlexFieldValueType.String));
+            Guid.NewGuid(), "Title", FlexFieldQueryOperator.Equals, "Alpha", FlexFieldValueType.String));
 
         sql.ShouldContain("SELECT");
         sql.ShouldContain("WHERE");
@@ -37,7 +37,7 @@ public class FlexFieldQueryPushdown_Tests : FlexFieldsEntityFrameworkCoreTestBas
     public async Task Number_range_condition_becomes_sql_against_the_number_column()
     {
         var sql = await SqlForAsync(new FlexFieldQueryCondition(
-            Guid.NewGuid(), FlexFieldQueryOperator.GreaterThanOrEqual, "15", FlexFieldValueType.Number));
+            Guid.NewGuid(), "Price", FlexFieldQueryOperator.GreaterThanOrEqual, "15", FlexFieldValueType.Number));
 
         sql.ShouldContain(nameof(IFlexFieldIndex.NumberValue));
         sql.ShouldContain(">=");
@@ -49,7 +49,7 @@ public class FlexFieldQueryPushdown_Tests : FlexFieldsEntityFrameworkCoreTestBas
     public async Task In_condition_becomes_a_sql_set_membership_test()
     {
         var sql = await SqlForAsync(new FlexFieldQueryCondition(
-            Guid.NewGuid(), FlexFieldQueryOperator.In, "red,blue", FlexFieldValueType.String));
+            Guid.NewGuid(), "Tags", FlexFieldQueryOperator.In, "red,blue", FlexFieldValueType.String));
 
         sql.ShouldContain(nameof(IFlexFieldIndex.StringValue));
         sql.ShouldContain("IN");
@@ -59,7 +59,7 @@ public class FlexFieldQueryPushdown_Tests : FlexFieldsEntityFrameworkCoreTestBas
     public async Task Condition_is_scoped_to_its_field_and_value_type()
     {
         var sql = await SqlForAsync(new FlexFieldQueryCondition(
-            Guid.NewGuid(), FlexFieldQueryOperator.Equals, "Alpha", FlexFieldValueType.String));
+            Guid.NewGuid(), "Title", FlexFieldQueryOperator.Equals, "Alpha", FlexFieldValueType.String));
 
         // Both discriminators are in the predicate, so one field's rows can never satisfy another's
         // condition and a stale row from a previous value type is excluded.

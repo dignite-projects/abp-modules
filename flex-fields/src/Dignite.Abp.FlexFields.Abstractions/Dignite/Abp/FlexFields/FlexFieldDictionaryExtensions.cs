@@ -16,9 +16,11 @@ public static class FlexFieldDictionaryExtensions
     }
 
     /// <summary>
-    /// Typed read of a field's value. After a JSON round trip (EF value-bag column, Mongo driver, ...)
-    /// non-primitive values commonly come back as <see cref="JsonElement"/> rather than their original
-    /// CLR type - this unwraps that case instead of throwing an invalid-cast exception.
+    /// Typed read of a field's value. After a round trip through storage, a non-primitive value commonly
+    /// comes back in a different CLR shape than it went in as: an EF value-bag column (JSON) leaves a
+    /// composite value as <see cref="JsonElement"/>, and the MongoDB driver leaves a BSON array as
+    /// <c>List&lt;object&gt;</c> rather than the original element type - this unwraps both cases instead of
+    /// throwing an invalid-cast exception.
     /// </summary>
     public static TField GetField<TField>(this IHasFlexFields source, string name, TField defaultValue = default!)
     {
@@ -31,8 +33,16 @@ public static class FlexFieldDictionaryExtensions
                 return typed;
             case JsonElement element:
                 return element.Deserialize<TField>(new JsonSerializerOptions(JsonSerializerDefaults.Web)) ?? defaultValue;
-            default:
+            // Convert.ChangeType only bridges IConvertible-to-IConvertible (numeric widening, string <-> bool,
+            // ...); anything else - a MongoDB-driver List<object>, most visibly - has to go through a JSON
+            // round trip using the value's own runtime shape instead, the same technique
+            // FieldConfigurationDictionaryExtensions.GetConfiguration{TConfiguration} uses for the same reason.
+            case IConvertible:
                 return (TField)Convert.ChangeType(value, typeof(TField));
+            default:
+                return JsonSerializer.Deserialize<TField>(
+                    JsonSerializer.Serialize(value), new JsonSerializerOptions(JsonSerializerDefaults.Web))
+                    ?? defaultValue;
         }
     }
 

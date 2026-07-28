@@ -52,16 +52,23 @@ public static class FieldConfigurationDictionaryExtensions
 
             return (TConfiguration)TypeDescriptor.GetConverter(conversionType).ConvertFromInvariantString(value.ToString()!)!;
         }
-        catch(Exception exc)
+        catch (Exception)
         {
-            if (value.GetType() == typeof(JsonElement))
+            // TypeDescriptor has no string conversion for a collection/object-shaped TConfiguration (e.g.
+            // SelectConfiguration.Options is a List<SelectListItem>). If value is already assignable - the
+            // in-memory case, where nothing has round-tripped through storage yet - use it directly rather
+            // than paying for a JSON round trip. Otherwise value is whatever shape a round trip left behind:
+            // a JsonElement after an EF/JSON round trip, or a List<object>/Dictionary<string, object> after a
+            // document-driver round trip - neither of which casts to TConfiguration (List<object> is not
+            // List<SelectListItem>, even though every element is one). Re-serializing with value's own
+            // runtime shape and deserializing into TConfiguration reconstructs it correctly either way.
+            if (value is TConfiguration typed)
             {
-                return JsonSerializer.Deserialize<TConfiguration>(value.ToString(), new JsonSerializerOptions(JsonSerializerDefaults.Web));
+                return typed;
             }
-            else
-            {
-                return (TConfiguration)value;
-            }
+
+            return JsonSerializer.Deserialize<TConfiguration>(
+                JsonSerializer.Serialize(value), new JsonSerializerOptions(JsonSerializerDefaults.Web));
         }
 
     }
