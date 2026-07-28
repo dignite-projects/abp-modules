@@ -1,0 +1,22 @@
+<Project>
+
+  <!-- MSBuild imports only the NEAREST Directory.Build.props per project and stops walking up, so
+       this file must explicitly import the repo root's to inherit the lockstep <Version> /
+       <AssemblyVersion> / shared metadata. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <Product>Dignite Abp FlexFields</Product>
+    <PackageTags>abp;flex-fields;eav;custom-fields;dynamic-fields</PackageTags>
+  </PropertyGroup>
+
+  <!-- Each module keeps its OWN README.md as the packed PackageReadmeFile, deliberately: the root
+       README.md is a monorepo landing page, and packing it into every package would put the sibling
+       module's documentation on this module's NuGet page. CONTRIBUTING/SECURITY/CHANGELOG/LICENSE
+       are repo-wide and live only at the root. -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory).github\icon.png" Pack="true" PackagePath="\" Visible="false" />
+  </ItemGroup>
+
+</Project>
