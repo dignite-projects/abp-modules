@@ -7,9 +7,19 @@ namespace Dignite.Abp.FlexFields;
 
 /// <summary>
 /// Keeps whatever derived, queryable state a persistence provider maintains for a host entity type in
-/// step with the authoritative value bags. Provider-agnostic on purpose: a relational provider rebuilds
-/// a typed pivot table here, while a document store that indexes the embedded bag in place has nothing
-/// to do and implements this as a no-op.
+/// step with the authoritative value bags. Provider-agnostic on purpose, because the derived state differs
+/// in kind: a relational provider rebuilds a typed pivot table, while a document store that indexes the
+/// embedded bag in place has no separate table to maintain.
+/// <para>
+/// That second case is <i>not</i> a no-op, which is worth saying because it looks like one. A pivot table is
+/// where a relational provider gets its types from - a value lands in a column of a known type or not at all.
+/// A document store indexing the bag in place has no such moment, so the same guarantee has to be met by
+/// putting the value into the bag in its indexable form. Same obligation, different place to discharge it.
+/// </para>
+/// <para>
+/// <see cref="FlexFieldIndexManagerBase{TEntity}"/> implements everything about this that is not about a
+/// particular store, including which of a host's values are eligible to be indexed at all.
+/// </para>
 /// </summary>
 /// <typeparam name="TEntity">The host entity type, e.g. a CMS's <c>Entry</c>.</typeparam>
 public interface IFlexFieldIndexManager<in TEntity>

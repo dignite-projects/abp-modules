@@ -83,57 +83,36 @@ public class FlexFieldValueMigrator<TEntity> : IFlexFieldValueMigrator<TEntity>
     /// becoming one flush per entity - the page boundary is where the unit of work is told to save.
     /// </para>
     /// <para>
-    /// Every host entity is visited, including the ones that never held the key - the kernel has no way to
-    /// push a bag-key predicate down through the provider's own query. This is the same cost model as
-    /// <see cref="IFlexFieldIndexManager{TEntity}.RebuildAsync"/>.
+    /// The walk itself - paging, termination, per-page flushing - is <see cref="FlexFieldEntityPager"/>,
+    /// shared with <see cref="IFlexFieldIndexManager{TEntity}.RebuildAsync"/>, which is the same walk with a
+    /// different body and the same cost model: every host entity is visited, including the ones that never
+    /// held the key, because the kernel has no way to push a bag-key predicate down through the provider's
+    /// own query.
     /// </para>
     /// <para>
     /// Flushing per page also means this is not atomic: a failure part way through leaves the earlier pages
     /// migrated. Both operations are idempotent, so re-running after fixing the cause converges.
     /// </para>
     /// </summary>
-    protected virtual async Task<int> MigrateAsync(
+    protected virtual Task<int> MigrateAsync(
         Func<TEntity, bool> mutate,
         CancellationToken cancellationToken)
     {
-        var skipCount = 0;
-        var changedCount = 0;
-
-        while (true)
-        {
-            var page = await FlexFieldProvider.GetPagedEntitiesAsync(skipCount, MigrationPageSize, cancellationToken);
-            if (page.Count == 0)
-            {
-                break;
-            }
-
-            var pageChangedCount = 0;
-            foreach (var entity in page)
+        return FlexFieldEntityPager.ForEachPageAsync(
+            FlexFieldProvider,
+            MigrationPageSize,
+            async (entity, ct) =>
             {
                 if (!mutate(entity))
                 {
-                    continue;
+                    return false;
                 }
 
-                await Repository.UpdateAsync(entity, autoSave: false, cancellationToken: cancellationToken);
-                pageChangedCount++;
-            }
-
-            if (pageChangedCount > 0)
-            {
-                await SaveChangesAsync(cancellationToken);
-                changedCount += pageChangedCount;
-            }
-
-            if (page.Count < MigrationPageSize)
-            {
-                break;
-            }
-
-            skipCount += MigrationPageSize;
-        }
-
-        return changedCount;
+                await Repository.UpdateAsync(entity, autoSave: false, cancellationToken: ct);
+                return true;
+            },
+            SaveChangesAsync,
+            cancellationToken);
     }
 
     /// <summary>

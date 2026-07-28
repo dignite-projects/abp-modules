@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -53,12 +52,7 @@ public abstract class EfCoreFlexFieldQueryExecutorBase<TDbContext, TEntity, TInd
         IReadOnlyList<FlexFieldQueryCondition> conditions,
         CancellationToken cancellationToken = default)
     {
-        if (conditions == null || conditions.Count == 0)
-        {
-            throw new ArgumentException(
-                "At least one condition is required - an unfiltered query is the host's own, not a flex field query.",
-                nameof(conditions));
-        }
+        FlexFieldQueryConditions.EnsureNotEmpty(conditions);
 
         var dbContext = await DbContextProvider.GetDbContextAsync();
         var indexSet = dbContext.Set<TIndex>();
@@ -84,6 +78,11 @@ public abstract class EfCoreFlexFieldQueryExecutorBase<TDbContext, TEntity, TInd
 
     protected virtual IQueryable<TIndex> ApplyCondition(IQueryable<TIndex> query, FlexFieldQueryCondition condition)
     {
+        // Which comparisons a value type admits is the module's answer, not this provider's - see
+        // FlexFieldQueryConditions. Checked up front so the per-type branches below never have to be the
+        // place a caller finds out.
+        FlexFieldQueryConditions.EnsureOperatorSupported(condition);
+
         query = query.Where(x => x.FieldId == condition.FieldId && x.ValueType == condition.ValueType);
 
         return condition.ValueType switch
@@ -160,7 +159,7 @@ public abstract class EfCoreFlexFieldQueryExecutorBase<TDbContext, TEntity, TInd
 
     protected virtual IQueryable<TIndex> ApplyBooleanCondition(IQueryable<TIndex> query, FlexFieldQueryCondition condition)
     {
-        var value = bool.Parse(condition.Value);
+        var value = (bool)FlexFieldValueConverter.Parse(FlexFieldValueType.Boolean, condition.Value);
 
         return condition.Operator switch
         {
@@ -174,11 +173,12 @@ public abstract class EfCoreFlexFieldQueryExecutorBase<TDbContext, TEntity, TInd
     {
         if (condition.Operator == FlexFieldQueryOperator.In)
         {
-            var values = SplitValues(condition.Value).Select(Guid.Parse).ToList();
+            var values = FlexFieldValueConverter.ParseList(FlexFieldValueType.Guid, condition.Value)
+                .Cast<Guid>().ToList();
             return query.Where(x => x.GuidValue.HasValue && values.Contains(x.GuidValue.Value));
         }
 
-        var value = Guid.Parse(condition.Value);
+        var value = (Guid)FlexFieldValueConverter.Parse(FlexFieldValueType.Guid, condition.Value);
 
         return condition.Operator switch
         {
@@ -191,27 +191,34 @@ public abstract class EfCoreFlexFieldQueryExecutorBase<TDbContext, TEntity, TInd
     /// <summary>
     /// Invariant culture throughout: a condition's <see cref="FlexFieldQueryCondition.Value"/> is transport data,
     /// so it must not be parsed against whatever culture the request happens to run under.
+    /// <para>
+    /// These delegate to <see cref="FlexFieldValueConverter"/>, which is also what wrote the indexed value
+    /// (<see cref="FlexFieldIndexValue.Create"/>). Sharing one implementation is what keeps the two sides
+    /// from reading the same text differently; they are kept here as named entry points because a
+    /// downstream subclass overriding an <c>Apply*Condition</c> needs them.
+    /// </para>
     /// </summary>
     protected static decimal ParseNumber(string value)
     {
-        return decimal.Parse(value, NumberStyles.Number, CultureInfo.InvariantCulture);
+        return (decimal)FlexFieldValueConverter.Parse(FlexFieldValueType.Number, value);
     }
 
     protected static DateTime ParseDateTime(string value)
     {
-        return DateTime.Parse(value, CultureInfo.InvariantCulture, DateTimeStyles.None);
+        return (DateTime)FlexFieldValueConverter.Parse(FlexFieldValueType.DateTime, value);
     }
 
     protected static List<string> SplitValues(string value)
     {
-        return value
-            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .ToList();
+        return FlexFieldValueConverter.SplitValues(value);
     }
 
+    /// <summary>
+    /// Defensive: <see cref="ApplyCondition"/> has already rejected an unsupported operator, so these are
+    /// the unreachable arms a switch expression still has to have. The wording is the shared one either way.
+    /// </summary>
     private static AbpException UnsupportedOperator(FlexFieldQueryCondition condition)
     {
-        return new AbpException(
-            $"The operator ({condition.Operator}) is not supported for value type ({condition.ValueType}) on field ({condition.FieldId}).");
+        return FlexFieldQueryConditions.UnsupportedOperator(condition);
     }
 }

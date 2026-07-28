@@ -10,7 +10,7 @@ namespace Dignite.Abp.FlexFields.EntityFrameworkCore;
 /// This type is EF Core-specific on purpose: it is the shape of one row of a typed pivot table
 /// (<see cref="FlexFieldIndexBase{TEntity}"/>), which is how a relational provider makes "find hosts
 /// where field X matches Y" run as SQL instead of in memory. A document-store provider
-/// (<c>Dignite.Abp.FlexFields.MongoDb</c>) has no equivalent type - it indexes and queries the value bag
+/// (<c>Dignite.Abp.FlexFields.MongoDB</c>) has no equivalent type - it indexes and queries the value bag
 /// (<see cref="FlexFieldDictionary"/>) in place, with no separate pivot representation. This is the design
 /// boundary that keeps the two providers apart: nothing relational is welded into
 /// <c>Dignite.Abp.FlexFields.Abstractions</c> or <c>Dignite.Abp.FlexFields.Domain</c>.
@@ -49,16 +49,24 @@ public class FlexFieldIndexValue
     /// <summary>
     /// Converts a raw searchable value into the slot named by <paramref name="valueType"/>. Keeps type
     /// fidelity on purpose - a number lands in <see cref="NumberValue"/>, never stringified.
+    /// <para>
+    /// The conversion itself is <see cref="FlexFieldValueConverter.Coerce"/>, shared with the query side so
+    /// a value cannot be written under one reading and searched for under another. Only the choice of slot
+    /// is this type's own - that part is what makes it relational.
+    /// </para>
     /// </summary>
     public static FlexFieldIndexValue Create(FlexFieldValueType valueType, object rawValue)
     {
+        var value = FlexFieldValueConverter.Coerce(valueType, rawValue);
+
         return valueType switch
         {
-            FlexFieldValueType.String => new FlexFieldIndexValue(valueType, stringValue: rawValue.ToString()),
-            FlexFieldValueType.Number => new FlexFieldIndexValue(valueType, numberValue: Convert.ToDecimal(rawValue)),
-            FlexFieldValueType.DateTime => new FlexFieldIndexValue(valueType, dateTimeValue: Convert.ToDateTime(rawValue)),
-            FlexFieldValueType.Boolean => new FlexFieldIndexValue(valueType, booleanValue: Convert.ToBoolean(rawValue)),
-            FlexFieldValueType.Guid => new FlexFieldIndexValue(valueType, guidValue: rawValue as Guid? ?? Guid.Parse(rawValue.ToString()!)),
+            FlexFieldValueType.String => new FlexFieldIndexValue(valueType, stringValue: (string)value),
+            FlexFieldValueType.Number => new FlexFieldIndexValue(valueType, numberValue: (decimal)value),
+            FlexFieldValueType.DateTime => new FlexFieldIndexValue(valueType, dateTimeValue: (DateTime)value),
+            FlexFieldValueType.Boolean => new FlexFieldIndexValue(valueType, booleanValue: (bool)value),
+            FlexFieldValueType.Guid => new FlexFieldIndexValue(valueType, guidValue: (Guid)value),
+            // Unreachable: Coerce rejects an unknown value type before we get here.
             _ => throw new ArgumentOutOfRangeException(nameof(valueType), valueType, null)
         };
     }
