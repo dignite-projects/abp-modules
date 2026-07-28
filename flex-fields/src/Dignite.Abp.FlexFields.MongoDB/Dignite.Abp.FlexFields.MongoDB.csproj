@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>MongoDB support (not ownership) for Dignite.Abp.FlexFields: MongoFlexFieldIndexManagerBase&lt;TMongoDbContext, TEntity&gt; to keep a host's value bag in its indexable form, MongoFlexFieldQueryExecutorBase&lt;TMongoDbContext, TEntity&gt; to query that bag through native path filters, MongoFlexFieldRepositoryBase&lt;TMongoDbContext, TField&gt; for the downstream's field-definition entity, and a wildcard-index helper for the downstream's own collection configuration. There is deliberately no pivot-table entity and no FlexFieldIndexValue equivalent - a document store queries and indexes the FlexFieldDictionary in place, which is the premise the two providers are separated on. Ships no MongoDbContext and no collection; every base class is abstract over the downstream's own context interface and entity types.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.MongoDB" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.Abp.FlexFields.Domain\Dignite.Abp.FlexFields.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
