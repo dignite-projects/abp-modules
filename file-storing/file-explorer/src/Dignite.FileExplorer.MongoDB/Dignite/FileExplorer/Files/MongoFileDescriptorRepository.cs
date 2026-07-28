@@ -22,21 +22,21 @@ public class MongoFileDescriptorRepository : MongoDbRepository<IFileExplorerMong
     public async Task<bool> BlobNameExistsAsync(string containerName, string blobName, CancellationToken cancellationToken = default)
     {
         var token = GetCancellationToken(cancellationToken);
-        return await (await GetMongoQueryableAsync(token))
+        return await (await GetQueryableAsync(token))
             .AnyAsync(x => x.ContainerName == containerName && x.BlobName == blobName, token);
     }
 
     public async Task<bool> Md5ExistsAsync(string containerName, string md5, CancellationToken cancellationToken = default)
     {
         var token = GetCancellationToken(cancellationToken);
-        return await (await GetMongoQueryableAsync(token))
+        return await (await GetQueryableAsync(token))
                    .AnyAsync(b => b.ContainerName == containerName && b.Md5 != null && b.Md5 == md5, token);
     }
 
     public async Task<bool> ReferencingAnyAsync(string containerName, string blobName, CancellationToken cancellationToken = default)
     {
         var token = GetCancellationToken(cancellationToken);
-        return await (await GetMongoQueryableAsync(token))
+        return await (await GetQueryableAsync(token))
                    .AnyAsync(b => b.ContainerName == containerName && b.ReferBlobName != null && b.ReferBlobName == blobName, token);
     }
 
@@ -97,7 +97,7 @@ public class MongoFileDescriptorRepository : MongoDbRepository<IFileExplorerMong
         string entityId = null,
         CancellationToken cancellationToken = default)
     {
-        return (await GetMongoQueryableAsync(cancellationToken))
+        return (await GetQueryableAsync(cancellationToken))
             .Where(fd => fd.ContainerName == containerName)
             .WhereIf(directoryId.HasValue, fd => fd.DirectoryId == directoryId.Value)
             .WhereIf(creatorId.HasValue, fd => fd.CreatorId == creatorId.Value)

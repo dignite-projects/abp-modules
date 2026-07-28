@@ -34,7 +34,7 @@ public class MongoDirectoryDescriptorRepository : MongoDbRepository<IFileExplore
     public async Task<bool> NameExistsAsync(Guid creatorId, string containerName, string name, Guid? parentId, CancellationToken cancellationToken = default)
     {
         var token = GetCancellationToken(cancellationToken);
-        return await (await GetMongoQueryableAsync(token))
+        return await (await GetQueryableAsync(token))
             .AnyAsync(x => x.ContainerName == containerName && x.CreatorId == creatorId && x.ParentId == parentId && x.Name == name);
     }
 
@@ -55,7 +55,7 @@ public class MongoDirectoryDescriptorRepository : MongoDbRepository<IFileExplore
     public async Task<List<DirectoryDescriptor>> GetAllByUserAsync(Guid creatorId, string containerName, CancellationToken cancellationToken = default(CancellationToken))
     {
         var token = GetCancellationToken(cancellationToken);
-        return await (await GetMongoQueryableAsync(token))
+        return await (await GetQueryableAsync(token))
             .Where(dd => dd.ContainerName == containerName && dd.CreatorId == creatorId)
             .OrderBy(dd=>dd.ParentId)
             .ThenBy(dd => dd.Order)
@@ -68,7 +68,7 @@ public class MongoDirectoryDescriptorRepository : MongoDbRepository<IFileExplore
         Guid? parentId,
         CancellationToken cancellationToken = default)
     {
-        return (await GetMongoQueryableAsync(cancellationToken))
+        return (await GetQueryableAsync(cancellationToken))
             .Where(dd => dd.ContainerName == containerName && dd.CreatorId == creatorId && dd.ParentId == parentId);
     }
 }

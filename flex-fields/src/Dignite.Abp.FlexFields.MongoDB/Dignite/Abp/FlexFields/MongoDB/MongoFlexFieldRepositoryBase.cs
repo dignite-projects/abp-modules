@@ -43,14 +43,14 @@ public abstract class MongoFlexFieldRepositoryBase<TMongoDbContext, TField>
     public virtual async Task<TField?> FindByNameAsync(string name, CancellationToken cancellationToken = default)
     {
         var token = GetCancellationToken(cancellationToken);
-        return await (await GetMongoQueryableAsync(token))
+        return await (await GetQueryableAsync(token))
             .FirstOrDefaultAsync(f => f.Name == name, token);
     }
 
     public virtual async Task<List<TField>> GetListAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
     {
         var token = GetCancellationToken(cancellationToken);
-        return await (await GetMongoQueryableAsync(token))
+        return await (await GetQueryableAsync(token))
             .Where(f => ids.Contains(f.Id))
             .ToListAsync(token);
     }
@@ -58,7 +58,7 @@ public abstract class MongoFlexFieldRepositoryBase<TMongoDbContext, TField>
     public virtual async Task<bool> NameExistsAsync(string name, Guid? excludedId = null, CancellationToken cancellationToken = default)
     {
         var token = GetCancellationToken(cancellationToken);
-        return await (await GetMongoQueryableAsync(token))
+        return await (await GetQueryableAsync(token))
             .AnyAsync(f => f.Name == name && (excludedId == null || f.Id != excludedId), token);
     }
 }
