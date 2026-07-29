@@ -40,13 +40,13 @@ public class MongoFileDescriptorRepository : MongoDbRepository<IFileExplorerMong
                    .AnyAsync(b => b.ContainerName == containerName && b.ReferBlobName != null && b.ReferBlobName == blobName, token);
     }
 
-    public async Task<FileDescriptor> FindByBlobNameAsync(string containerName, string blobName, CancellationToken cancellationToken = default)
+    public async Task<FileDescriptor?> FindByBlobNameAsync(string containerName, string blobName, CancellationToken cancellationToken = default)
     {
         var token = GetCancellationToken(cancellationToken);
         return await FindAsync(x => x.ContainerName == containerName && x.BlobName == blobName, false, token);
     }
 
-    public async Task<FileDescriptor> FindByMd5Async(string containerName, string md5, CancellationToken cancellationToken = default)
+    public async Task<FileDescriptor?> FindByMd5Async(string containerName, string md5, CancellationToken cancellationToken = default)
     {
         var token = GetCancellationToken(cancellationToken);
         return await FindAsync(b => b.ContainerName == containerName && b.Md5 != null && b.Md5 == md5, false, token);

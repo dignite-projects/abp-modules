@@ -38,13 +38,13 @@ public class EfCoreFileDescriptorRepository : EfCoreRepository<IFileExplorerDbCo
                    .AnyAsync(b => b.ContainerName == containerName && b.ReferBlobName != null && b.ReferBlobName == blobName, GetCancellationToken(cancellationToken));
     }
 
-    public async Task<FileDescriptor> FindByBlobNameAsync(string containerName, string blobName, CancellationToken cancellationToken = default)
+    public async Task<FileDescriptor?> FindByBlobNameAsync(string containerName, string blobName, CancellationToken cancellationToken = default)
     {
         return await (await GetDbSetAsync())
                    .FirstOrDefaultAsync(b => b.ContainerName == containerName && b.BlobName == blobName, GetCancellationToken(cancellationToken));
     }
 
-    public async Task<FileDescriptor> FindByMd5Async(string containerName, string md5, CancellationToken cancellationToken = default)
+    public async Task<FileDescriptor?> FindByMd5Async(string containerName, string md5, CancellationToken cancellationToken = default)
     {
         return await (await GetDbSetAsync())
                    .FirstOrDefaultAsync(b => b.ContainerName == containerName && b.Md5 != null && b.Md5 == md5, GetCancellationToken(cancellationToken));

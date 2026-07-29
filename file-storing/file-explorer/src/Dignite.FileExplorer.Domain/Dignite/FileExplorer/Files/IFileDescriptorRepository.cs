@@ -14,9 +14,9 @@ public interface IFileDescriptorRepository : IBasicRepository<FileDescriptor, Gu
 
     Task<bool> ReferencingAnyAsync(string containerName, string blobName, CancellationToken cancellationToken = default);
 
-    Task<FileDescriptor> FindByBlobNameAsync(string containerName, string blobName, CancellationToken cancellationToken = default);
+    Task<FileDescriptor?> FindByBlobNameAsync(string containerName, string blobName, CancellationToken cancellationToken = default);
 
-    Task<FileDescriptor> FindByMd5Async(string containerName, string md5, CancellationToken cancellationToken = default);
+    Task<FileDescriptor?> FindByMd5Async(string containerName, string md5, CancellationToken cancellationToken = default);
 
     Task<List<FileDescriptor>> GetListAsync(
         string containerName,
