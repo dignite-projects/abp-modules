@@ -25,6 +25,7 @@
     <Project Path="notification-center/src/Dignite.NotificationCenter.EntityFrameworkCore/Dignite.NotificationCenter.EntityFrameworkCore.csproj" />
     <Project Path="notification-center/src/Dignite.NotificationCenter.HttpApi.Client/Dignite.NotificationCenter.HttpApi.Client.csproj" />
     <Project Path="notification-center/src/Dignite.NotificationCenter.HttpApi/Dignite.NotificationCenter.HttpApi.csproj" />
+    <Project Path="notification-center/src/Dignite.NotificationCenter.Installer/Dignite.NotificationCenter.Installer.csproj" />
     <Project Path="notification-center/src/Dignite.NotificationCenter.MongoDB/Dignite.NotificationCenter.MongoDB.csproj" />
     <Project Path="notification-center/src/Dignite.NotificationCenter.Web/Dignite.NotificationCenter.Web.csproj" />
   </Folder>

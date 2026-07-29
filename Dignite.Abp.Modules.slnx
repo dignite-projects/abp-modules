@@ -17,6 +17,7 @@
     <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.Domain/Dignite.FileExplorer.Domain.csproj" />
     <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.EntityFrameworkCore/Dignite.FileExplorer.EntityFrameworkCore.csproj" />
     <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.HttpApi.Client/Dignite.FileExplorer.HttpApi.Client.csproj" />
+    <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.Installer/Dignite.FileExplorer.Installer.csproj" />
     <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.HttpApi/Dignite.FileExplorer.HttpApi.csproj" />
     <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.MongoDB/Dignite.FileExplorer.MongoDB.csproj" />
   </Folder>
@@ -61,6 +62,7 @@
     <Project Path="notifications/notification-center/src/Dignite.NotificationCenter.EntityFrameworkCore/Dignite.NotificationCenter.EntityFrameworkCore.csproj" />
     <Project Path="notifications/notification-center/src/Dignite.NotificationCenter.HttpApi.Client/Dignite.NotificationCenter.HttpApi.Client.csproj" />
     <Project Path="notifications/notification-center/src/Dignite.NotificationCenter.HttpApi/Dignite.NotificationCenter.HttpApi.csproj" />
+    <Project Path="notifications/notification-center/src/Dignite.NotificationCenter.Installer/Dignite.NotificationCenter.Installer.csproj" />
     <Project Path="notifications/notification-center/src/Dignite.NotificationCenter.MongoDB/Dignite.NotificationCenter.MongoDB.csproj" />
     <Project Path="notifications/notification-center/src/Dignite.NotificationCenter.Web/Dignite.NotificationCenter.Web.csproj" />
   </Folder>

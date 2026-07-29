@@ -7,8 +7,8 @@
     "TargetDotnetFramework": "net10.0"
   },
   "modules": {
-    "Dignite.Abp.Notifications": {
-      "path": "Dignite.Abp.Notifications.abpmdl"
+    "Dignite.NotificationCenter": {
+      "path": "Dignite.NotificationCenter.abpmdl"
     }
   },
   "runProfiles": {

@@ -24,12 +24,12 @@ abp-modules/
 ├── Dignite.Abp.Modules.slnx     # aggregate solution (both modules)
 ├── .github/workflows/           # one build+test workflow, one lockstep release workflow
 ├── file-storing/
-│   ├── Dignite.Abp.FileStoring.slnx      # focused solution for this module alone
+│   ├── Dignite.FileExplorer.slnx         # focused solution for this module alone
 │   ├── core/  file-explorer/             # the published class libraries
 │   ├── host/  angular/                   # local-dev demo app + Angular workspace
 │   └── .claude/skills/                   # module-specific conventions & invariants
 └── notifications/
-    ├── Dignite.Abp.Notifications.slnx    # focused solution for this module alone
+    ├── Dignite.NotificationCenter.slnx   # focused solution for this module alone
     ├── core/  notification-center/       # the published class libraries
     ├── host/  angular/                   # local-dev demo app + Angular workspace
     └── .claude/skills/                   # module-specific conventions & invariants
@@ -51,8 +51,8 @@ dotnet test Dignite.Abp.Modules.slnx
 To work on one module in isolation, use its own solution — same projects, smaller graph:
 
 ```bash
-dotnet build file-storing/Dignite.Abp.FileStoring.slnx
-dotnet build notifications/Dignite.Abp.Notifications.slnx
+dotnet build file-storing/Dignite.FileExplorer.slnx
+dotnet build notifications/Dignite.NotificationCenter.slnx
 ```
 
 `dotnet test` starts an embedded mongod (MongoSandbox) for the MongoDB provider tests and uses

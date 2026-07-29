@@ -787,14 +787,14 @@ use the aggregate `Dignite.Abp.Modules.slnx` at the repository root instead.
 
 ```bash
 # Build / test everything (core + notification-center) from the one solution
-dotnet build Dignite.Abp.Notifications.slnx
-dotnet test  Dignite.Abp.Notifications.slnx     # starts an embedded mongod for the MongoDB provider tests
+dotnet build Dignite.NotificationCenter.slnx
+dotnet test  Dignite.NotificationCenter.slnx     # starts an embedded mongod for the MongoDB provider tests
 
 # Core only (skips the embedded mongod):
 dotnet test core/test/Dignite.Abp.Notifications.Tests
 
 # Pack for local testing (version / license come from the repository root Directory.Build.props)
-dotnet pack Dignite.Abp.Notifications.slnx -c Release
+dotnet pack Dignite.NotificationCenter.slnx -c Release
 ```
 
 EF Core integration tests run on in-memory Sqlite and MongoDB tests on an embedded mongod, so
@@ -831,7 +831,7 @@ core/                 core framework (Abstractions, Notifications, Identity, Ema
 notification-center/  optional persistence + REST API + MVC UI + tests (EF Core & MongoDB)
 angular/              Angular UI library (projects/notification-center) + demo app   ── local dev only
 host/                 runnable ABP MVC demo host                                     ── local dev only
-Dignite.Abp.Notifications.slnx   one solution aggregating core/ + notification-center/
+Dignite.NotificationCenter.slnx   one solution aggregating core/ + notification-center/
 ```
 
 ## License

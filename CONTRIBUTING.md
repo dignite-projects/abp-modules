@@ -11,8 +11,8 @@ dotnet build Dignite.Abp.Modules.slnx
 dotnet test Dignite.Abp.Modules.slnx
 
 # One module in isolation (same projects, smaller graph)
-dotnet build file-storing/Dignite.Abp.FileStoring.slnx
-dotnet build notifications/Dignite.Abp.Notifications.slnx
+dotnet build file-storing/Dignite.FileExplorer.slnx
+dotnet build notifications/Dignite.NotificationCenter.slnx
 ```
 
 The Angular libraries are npm workspaces, built separately from MSBuild:

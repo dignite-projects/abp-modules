@@ -1,14 +1,16 @@
-# Dignite.Abp.Notifications
+# Dignite.NotificationCenter
 
 Event-driven notification framework for ABP Framework (LGPL-3.0-only), plus an optional Notification
-Center (inbox/subscriptions/read-unread/REST API), an MVC UI library, and an Angular UI library.
-Published: `core/` (`Notifications*`, incl. `Abstractions`), `notification-center/src/` (incl.
-`Dignite.NotificationCenter.Web`), `angular/projects/notification-center`. `host/` and the Angular
-demo app are local-dev-only, never packed.
+Center (inbox/subscriptions/read-unread/REST API), an MVC UI library, and an Angular UI library. The
+module's ABP Studio identity is `Dignite.NotificationCenter` (the app is the install entry point —
+`core/` is an internal dependency of it, not a separately installed thing). Published: `core/`
+(`Notifications*`, incl. `Abstractions`), `notification-center/src/` (incl.
+`Dignite.NotificationCenter.Web` and `.Installer`), `angular/projects/notification-center`. `host/`
+and the Angular demo app are local-dev-only, never packed.
 
 ## Structure
 
-One `.slnx` — `Dignite.Abp.Notifications.slnx`:
+One `.slnx` — `Dignite.NotificationCenter.slnx`:
 
 - **`core/`** — `Abstractions, Notifications, Notifications.Identity,
   Notifications.Emailing[.Identity], Notifications.SignalR`. Core never references
@@ -41,6 +43,7 @@ projects that flatten to the project root are the exception).
 | `NotificationCenter.Application` | AppServices | Application.Contracts, Domain |
 | `NotificationCenter.HttpApi` / `.HttpApi.Client` | Explicit controllers / client proxies | Application.Contracts |
 | `NotificationCenter.EntityFrameworkCore` / `.MongoDB` | `INotificationStore` impls | Domain |
+| `NotificationCenter.Installer` | ABP Studio/Suite install entry point, embeds the module's `.abpmdl` | `Volo.Abp.VirtualFileSystem` |
 
 Notifiers depend on **only** `Abstractions` + their channel SDK — that's what lets a channel be added
 without touching Core.
@@ -76,13 +79,13 @@ Core logic must work with `NullNotificationStore` alone.
 ## Commands
 
 ```bash
-dotnet build Dignite.Abp.Notifications.slnx
-dotnet test Dignite.Abp.Notifications.slnx
+dotnet build Dignite.NotificationCenter.slnx
+dotnet test Dignite.NotificationCenter.slnx
 
 # Core only, skips embedded-mongod tests:
 dotnet test core/test/Dignite.Abp.Notifications.Tests
 
-dotnet pack Dignite.Abp.Notifications.slnx -c Release
+dotnet pack Dignite.NotificationCenter.slnx -c Release
 ```
 
 No `DbMigrator` — a consuming host owns its own DbContext/migrations via

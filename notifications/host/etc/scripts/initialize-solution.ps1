@@ -22,7 +22,7 @@ function Run-Step {
 
 Run-Step "Build" {
     Set-Location (Join-Path $scriptRoot "..\..\..\")
-    dotnet build Dignite.Abp.Notifications.slnx
+    dotnet build Dignite.NotificationCenter.slnx
 }
 
 Run-Step "InstallLibs" {

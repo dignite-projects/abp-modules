@@ -1,13 +1,15 @@
-# Dignite.Abp.FileStoring
+# Dignite.FileExplorer
 
 File-upload framework for ABP Framework (LGPL-3.0-only) on ABP BlobStoring, plus an optional DDD File
-Explorer backend (directories + file metadata + REST API) and an Angular UI library. Published:
-`core/src/` (FileStoring + Imaging), `file-explorer/src/`, `angular/projects/file-explorer`. `host/`
+Explorer backend (directories + file metadata + REST API) and an Angular UI library. The module's
+ABP Studio identity is `Dignite.FileExplorer` (the app is the install entry point — `core/` is an
+internal dependency of it, not a separately installed thing). Published: `core/src/` (FileStoring +
+Imaging), `file-explorer/src/` (the DDD app + Installer), `angular/projects/file-explorer`. `host/`
 and the Angular demo app are local-dev-only, never packed.
 
 ## Structure
 
-One `.slnx` — `Dignite.Abp.FileStoring.slnx`:
+One `.slnx` — `Dignite.FileExplorer.slnx`:
 
 - **`core/`** — `Dignite.Abp.FileStoring` (+ `.Imaging`). No DDD layers. Adds the `IFileHandler`
   upload pipeline to blob containers.
@@ -35,6 +37,7 @@ the exception).
 | `FileExplorer.Application` | AppServices, Mapperly mapping, authorization | Application.Contracts, Domain, Imaging |
 | `FileExplorer.HttpApi` / `.HttpApi.Client` | Auto API controllers / client proxies | Application.Contracts |
 | `FileExplorer.EntityFrameworkCore` / `.MongoDB` | Repository implementations | Domain |
+| `FileExplorer.Installer` | ABP Studio/Suite install entry point, embeds the module's `.abpmdl` | `Volo.Abp.VirtualFileSystem` |
 
 Tests by project: `Dignite.Abp.FileStoring[.Imaging].Tests` (core pipeline) · `FileExplorer.TestBase`
 (abstract repository scenarios) · `.EntityFrameworkCore.Tests` / `.MongoDB.Tests` (those scenarios per
@@ -85,13 +88,13 @@ Core must keep working standalone.
 ## Commands
 
 ```bash
-dotnet build Dignite.Abp.FileStoring.slnx
-dotnet test Dignite.Abp.FileStoring.slnx
+dotnet build Dignite.FileExplorer.slnx
+dotnet test Dignite.FileExplorer.slnx
 
 # Core only, skips embedded-mongod tests:
 dotnet test core/test/Dignite.Abp.FileStoring.Tests
 
-dotnet pack Dignite.Abp.FileStoring.slnx -c Release
+dotnet pack Dignite.FileExplorer.slnx -c Release
 
 cd angular && npm install --legacy-peer-deps && npm run build:lib && npm start   # :4200
 dotnet run --project host/Dignite.FileExplorer.Web.Host                          # :44390
