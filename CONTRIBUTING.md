@@ -61,10 +61,11 @@ All library package versions live in the root [`Directory.Packages.props`](./Dir
 `<PackageReference Include="..." />` with **no** `Version=`. To add or bump a dependency, edit
 `Directory.Packages.props`, grouped under the matching `<ItemGroup Label="...">`.
 
-The two demo hosts are the deliberate exception: each opts out of central package management and
+The demo hosts are the deliberate exception: each opts out of central package management and
 pins its own versions inline, via its own `Directory.Build.props` + `Directory.Packages.props`
-inside the project folder (`file-storing/host/.../`, `notifications/host/.../`). They are never
-published, so their dependency graph is allowed to drift from the libraries'.
+inside the project folder (`file-storing/host/.../`, `notifications/host/.../`,
+`flex-fields/demo/.../`). They are never published, so their dependency graph is allowed to drift
+from the libraries'.
 
 ## Versioning and releases
 

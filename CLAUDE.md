@@ -16,5 +16,6 @@ These are the things most likely to be broken by an otherwise reasonable-looking
    nothing catches it: the aggregate `.slnx` contains both, so it compiles fine.
 
 3. **Library package versions live in the root `Directory.Packages.props`**, never inline in a
-   library `.csproj`. The two demo hosts are the deliberate exception — each opts out of central
-   package management and pins inline.
+   library `.csproj`. The demo hosts (`file-storing/host/`, `notifications/host/`,
+   `flex-fields/demo/`) are the deliberate exception — each opts out of central package management
+   and pins inline.

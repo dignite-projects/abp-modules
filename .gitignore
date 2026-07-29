@@ -279,7 +279,7 @@ FodyWeavers.xsd
 .DS_Store
 Thumbs.db
 
-# Host logs (file-storing/host, notifications/host demo apps)
+# Host logs (file-storing/host, notifications/host, flex-fields/demo demo apps)
 Logs/
 
 *.db

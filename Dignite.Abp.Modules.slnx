@@ -85,4 +85,7 @@
     <Project Path="flex-fields/test/Dignite.Abp.FlexFields.EntityFrameworkCore.Tests/Dignite.Abp.FlexFields.EntityFrameworkCore.Tests.csproj" />
     <Project Path="flex-fields/test/Dignite.Abp.FlexFields.MongoDB.Tests/Dignite.Abp.FlexFields.MongoDB.Tests.csproj" />
   </Folder>
+  <Folder Name="/flex-fields/demo/">
+    <Project Path="flex-fields/demo/Dignite.Abp.FlexFields.Demo/Dignite.Abp.FlexFields.Demo.csproj" />
+  </Folder>
 </Solution>
