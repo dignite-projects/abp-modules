@@ -15,7 +15,8 @@ $dotnetVersion = $versionMatch.Groups[1].Value
 
 $angularPackages = @(
     'file-storing\angular\projects\file-explorer\package.json',
-    'notifications\angular\projects\notification-center\package.json'
+    'notifications\angular\projects\notification-center\package.json',
+    'flex-fields\angular\projects\flex-fields\package.json'
 )
 
 foreach ($relativePath in $angularPackages) {

@@ -1,0 +1,37 @@
+<form [formGroup]="formEntity">
+  <div formGroupName="configuration">
+    <div class="mb-3">
+      <label class="form-label">{{ 'FlexFields::Placeholder' | abpLocalization }}</label>
+      <input type="text" class="form-control" formControlName="NumericEditField.Placeholder" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">{{ 'FlexFields::Min' | abpLocalization }}</label>
+      <input type="text" class="form-control" formControlName="NumericEditField.Min" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">{{ 'FlexFields::Max' | abpLocalization }}</label>
+      <input type="text" class="form-control" formControlName="NumericEditField.Max" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">{{ 'FlexFields::NumericDecimals' | abpLocalization }}</label>
+      <input type="text" class="form-control" formControlName="NumericEditField.Decimals" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">{{ 'FlexFields::NumericStep' | abpLocalization }}</label>
+      <input type="text" class="form-control" formControlName="NumericEditField.Step" />
+      <small class="form-text text-muted d-block">
+        {{ 'FlexFields::NumericStepHelp' | abpLocalization }}
+      </small>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">{{ 'FlexFields::FormatSpecifier' | abpLocalization }}</label>
+      <input type="text" class="form-control" formControlName="FormatSpecifier" />
+      <small class="form-text text-muted d-block">
+        <a [href]="formatSpecifierDocsUrl" target="_blank" rel="noopener">
+          {{ formatSpecifierDocsUrl }}
+        </a>
+      </small>
+    </div>
+    <button type="submit" style="display: none" #submitclick></button>
+  </div>
+</form>

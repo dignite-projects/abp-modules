@@ -37,6 +37,8 @@
     "AddSubNode": "Add Sub-node",
     "PleaseAddNode": "Please add a node",
     "NodeItemText": "Node Text",
+    "Validate:InvalidNodeValue": "Only letters, digits, underscores and hyphens are allowed.",
+    "Validate:NodeValueAlreadyExists": "This value is already used by another node.",
     "Validate:Required": "{0} Field Required!",
     "Validate:NotDateType": "{0} value is not a date type!",
     "Validate:CannotBeGreaterThan": "{0} value cannot be greater than {1}!",

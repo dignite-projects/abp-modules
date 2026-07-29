@@ -34,6 +34,7 @@ jobs:
           cache-dependency-path: |
             file-storing/angular/package-lock.json
             notifications/angular/package-lock.json
+            flex-fields/angular/package-lock.json
 
       - name: Verify NuGet and npm version lockstep
         id: version
@@ -227,3 +228,44 @@ jobs:
             throw "Expected one notification-center Angular package tarball, found $($tarballs.Count)."
           }
           node ./notifications/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
+
+      # --- flex-fields Angular (angular/projects/flex-fields) ---
+      # --legacy-peer-deps for the same reason as file-storing: @abp/ng.theme.shared depends on
+      # @swimlane/ngx-datatable, whose Angular peer range stops at 20, so npm will not hoist it beside
+      # Angular 21 without this - and the demo app's global styles import it by top-level path.
+      - name: Install flex-fields Angular dependencies
+        working-directory: flex-fields/angular
+        run: npm ci --legacy-peer-deps
+
+      - name: Lint flex-fields Angular projects
+        working-directory: flex-fields/angular
+        run: npm run lint -- --max-warnings=0
+
+      - name: Run flex-fields Angular unit tests
+        working-directory: flex-fields/angular
+        run: npm test -- --watch=false
+
+      - name: Build flex-fields Angular library
+        working-directory: flex-fields/angular
+        run: npm run build:lib
+
+      - name: Build flex-fields Angular demo
+        working-directory: flex-fields/angular
+        run: npm run build:prod
+
+      - name: Pack flex-fields Angular library
+        shell: pwsh
+        working-directory: flex-fields/angular
+        run: |
+          New-Item -ItemType Directory -Force ../../artifacts-ci/npm/flex-fields | Out-Null
+          npm pack ./dist/flex-fields --pack-destination ../../artifacts-ci/npm/flex-fields
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Smoke-test flex-fields Angular package
+        shell: pwsh
+        run: |
+          $tarballs = @(Get-ChildItem ./artifacts-ci/npm/flex-fields/*.tgz)
+          if ($tarballs.Count -ne 1) {
+            throw "Expected one flex-fields Angular package tarball, found $($tarballs.Count)."
+          }
+          node ./flex-fields/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'

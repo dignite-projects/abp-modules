@@ -1,0 +1,36 @@
+<form [formGroup]="entityForm">
+  <div [formGroupName]="parentField">
+    <div class="mb-3">
+      <label class="form-label" *ngIf="fieldValue.field.displayName">
+        {{ fieldValue.field.displayName }}
+      </label>
+      @if (multiple) {
+        <nz-select
+          class="form-select dignite-form-select"
+          [nzMaxTagCount]="1"
+          nzShowSearch
+          nzMode="multiple"
+          [nzPlaceHolder]="nullText"
+          [formControlName]="fieldValue.field.name"
+          [nzDropdownMatchSelectWidth]="true"
+          nzDropdownClassName="dignite-form-select-dropdown"
+        >
+          <nz-option
+            *ngFor="let item of options"
+            [nzLabel]="item.Text"
+            [nzValue]="item.Value"
+          ></nz-option>
+        </nz-select>
+      } @else {
+        <select class="form-select" [formControlName]="fieldValue.field.name">
+          <option value="">{{ nullText }}</option>
+          <option *ngFor="let item of options" [value]="item.Value">{{ item.Text }}</option>
+        </select>
+      }
+      <small class="form-text text-muted d-block" *ngIf="fieldValue.field.description">
+        {{ fieldValue.field.description }}
+      </small>
+    </div>
+  </div>
+  <button type="submit" style="display: none" #submitclick></button>
+</form>

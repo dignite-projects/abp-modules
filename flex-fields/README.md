@@ -19,9 +19,9 @@ defines "the concrete one."
   (`IFlexFieldValidator<TEntity>`), a query pushdown (`IFlexFieldQueryExecutor<TEntity>`), derived-index
   maintenance (`IFlexFieldIndexManager<TEntity>`), and value-bag key migration for renamed or deleted
   field definitions (`IFlexFieldValueMigrator<TEntity>`).
-- **EF Core today; provider-agnostic by design.** The relational pivot-table shape
-  (`FlexFieldIndexValue`, `EfCoreFlexFieldIndexManagerBase`, …) lives only in
-  `Dignite.Abp.FlexFields.EntityFrameworkCore`. A MongoDB provider is planned but not yet shipped.
+- **Provider-agnostic by design.** The relational pivot-table shape (`FlexFieldIndexValue`,
+  `EfCoreFlexFieldIndexManagerBase`, …) lives only in `Dignite.Abp.FlexFields.EntityFrameworkCore`;
+  the MongoDB provider has no equivalent type and queries the value bag directly.
 
 > **.NET 10 · ABP 10.5.0 · LGPL-3.0-only**
 
@@ -33,6 +33,8 @@ defines "the concrete one."
 | `Dignite.Abp.FlexFields.Abstractions` | DDD-free contracts and vocabulary: `IFlexFieldData`/`FlexFieldData`, `IHasFlexFields`/`FlexFieldDictionary`, `FlexFieldValue`, `IFieldType` + the built-in field types (Text/Number/DateTime/Select/Boolean/Tree), the query vocabulary, and the field-lifecycle Etos (`FlexFieldRenamedEto`, `FlexFieldDeletedEto`). Referencing this package alone is enough to implement a custom field type or type a downstream's DTOs. |
 | `Dignite.Abp.FlexFields.Domain` | The Entity contract (`IFlexField : IAggregateRoot<Guid>`) and the DDD-aware seams: `IFlexFieldProvider<TEntity>`, `IFlexFieldValidator<TEntity>` (+ default impl), `IFlexFieldIndexManager<TEntity>`, `IFlexFieldQueryExecutor<TEntity>`, `IFlexFieldValueMigrator<TEntity>` (+ its one provider-agnostic default impl), `IFlexFieldRepository<TField>`. |
 | `Dignite.Abp.FlexFields.EntityFrameworkCore` | EF Core support (not ownership): `ConfigureFlexFieldsProperty`/`ConfigureFlexField`/`ConfigureFlexFieldIndex` model-builder extensions, the typed pivot-row shape (`FlexFieldIndexValue`), and abstract base classes for the index manager, query executor, and field repository. Ships no `DbContext` and no table of its own. |
+| `Dignite.Abp.FlexFields.MongoDB` | MongoDB support: queries and indexes the `FlexFieldDictionary` in place, so writes need almost no index synchronization. Deliberately has **no** counterpart to `FlexFieldIndexValue` — that shape is a relational pivot row. |
+| `@dignite/ng.flex-fields` (npm) | Angular UI: config / control / view / search components for all six field types, the `FieldTypeResolver` registry, and `provideFlexFields()`. See [`angular/projects/flex-fields`](./angular/projects/flex-fields/README.md). |
 
 ## Install
 
@@ -103,16 +105,32 @@ them. See the XML docs on `IFlexFieldValueMigrator<TEntity>` for the required or
 
 ## Build & test
 
-This module has no dedicated `.slnx` yet; build and test it through the repository's aggregate
-solution:
+The library projects build through the repository's aggregate solution
+(`Dignite.Abp.FlexFields.slnx` covers the demo host only):
 
 ```bash
 dotnet build Dignite.Abp.Modules.slnx
 dotnet test  flex-fields/test/Dignite.Abp.FlexFields.Tests
 dotnet test  flex-fields/test/Dignite.Abp.FlexFields.EntityFrameworkCore.Tests
+dotnet test  flex-fields/test/Dignite.Abp.FlexFields.MongoDB.Tests
 
 # Pack for local testing (version / license come from the repository root Directory.Build.props)
 dotnet pack Dignite.Abp.Modules.slnx -c Release
+```
+
+The Angular library is an npm workspace, outside MSBuild:
+
+```bash
+cd flex-fields/angular && npm install --legacy-peer-deps && npm run build:lib
+```
+
+`--legacy-peer-deps` is required: `@abp/ng.theme.shared` depends on `@swimlane/ngx-datatable`, whose
+Angular peer range stops at 20, so npm will not hoist it beside Angular 21 without it.
+
+Run the demo stack — the host on `https://localhost:44330`, the Angular app on `http://localhost:4200`:
+
+```bash
+dotnet run --project flex-fields/demo/Dignite.Abp.FlexFields.Demo
 ```
 
 ## Repository layout
@@ -122,7 +140,11 @@ src/Dignite.Abp.FlexFields.Domain.Shared        shared constants
 src/Dignite.Abp.FlexFields.Abstractions         DDD-free contracts, field types, Etos
 src/Dignite.Abp.FlexFields.Domain               Entity contract + DDD-aware seams
 src/Dignite.Abp.FlexFields.EntityFrameworkCore  EF Core support (no DbContext, no table)
+src/Dignite.Abp.FlexFields.MongoDB              MongoDB support (no pivot table)
 test/                                           per-layer test projects
+angular/projects/flex-fields                    publishable Angular library (@dignite/ng.flex-fields)
+angular/src                                     Angular demo app - local dev only, never published
+demo/                                           demo ABP host - local dev only, never packed
 docs/flexfields-design.md                       design rationale
 ```
 

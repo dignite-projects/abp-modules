@@ -1,0 +1,33 @@
+<form [formGroup]="entityForm">
+  <div [formGroupName]="parentField">
+    <div class="mb-3">
+      <label class="form-label" *ngIf="fieldValue.field.displayName">
+        {{ fieldValue.field.displayName }}
+      </label>
+      <ng-container
+        *ngIf="fieldValue.field.configuration['TextEdit.Mode'] === TextMode.SingleLine"
+      >
+        <input
+          type="text"
+          class="form-control"
+          [formControlName]="fieldValue.field.name"
+          [placeholder]="fieldValue.field.configuration['TextEdit.Placeholder']"
+        />
+      </ng-container>
+      <ng-container
+        *ngIf="fieldValue.field.configuration['TextEdit.Mode'] === TextMode.MultipleLine"
+      >
+        <textarea
+          class="form-control"
+          [formControlName]="fieldValue.field.name"
+          [placeholder]="fieldValue.field.configuration['TextEdit.Placeholder']"
+          rows="3"
+        ></textarea>
+      </ng-container>
+      <small class="form-text text-muted d-block" *ngIf="fieldValue.field.description">
+        {{ fieldValue.field.description }}
+      </small>
+    </div>
+  </div>
+  <button type="submit" style="display: none" #submitclick></button>
+</form>

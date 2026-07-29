@@ -37,6 +37,8 @@
     "AddSubNode": "新增子節點",
     "PleaseAddNode": "請新增節點",
     "NodeItemText": "節點文字",
+    "Validate:InvalidNodeValue": "只允許使用字母、數字、底線和連字號。",
+    "Validate:NodeValueAlreadyExists": "該值已被其它節點使用。",
     "Validate:Required": "{0} 字段要求必填！",
     "Validate:NotDateType": "{0} 值非日期類型！",
     "Validate:CannotBeGreaterThan": "{0} 值不能大於 {1}！",

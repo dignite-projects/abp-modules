@@ -1,0 +1,36 @@
+{
+  "name": "@dignite/ng.flex-fields",
+  "version": "10.0.0-rc.4",
+  "homepage": "https://github.com/dignite-projects/abp-modules",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dignite-projects/abp-modules.git"
+  },
+  "dependencies": {
+    "tslib": "^2.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "LGPL-3.0-only",
+  "keywords": [
+    "abp",
+    "flex-fields",
+    "eav",
+    "custom-fields",
+    "dynamic-fields",
+    "angular"
+  ],
+  "peerDependencies": {
+    "@abp/ng.components": "~10.5.0",
+    "@abp/ng.core": "~10.5.0",
+    "@abp/ng.theme.shared": "~10.5.0",
+    "@angular/cdk": "~21.2.0",
+    "@angular/common": "~21.2.0",
+    "@angular/core": "~21.2.0",
+    "@angular/forms": "~21.2.0",
+    "@ng-bootstrap/ng-bootstrap": "~20.0.0",
+    "ng-zorro-antd": "^21.3.3",
+    "rxjs": "~7.8.0"
+  }
+}

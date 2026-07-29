@@ -1,7 +1,7 @@
 # Changelog
 
-All notable changes to the packages released from this repository — both the `file-storing/` and
-`notifications/` modules — are documented in this file.
+All notable changes to the packages released from this repository — the `file-storing/`,
+`notifications/` and `flex-fields/` modules — are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) — with two deviations from the
@@ -9,11 +9,33 @@ classic scheme: every package in the repository shares **one lockstep version**,
 the targeted **ABP Framework** version rather than this repository's own breaking changes. See
 [CONTRIBUTING.md → Versioning and releases](CONTRIBUTING.md#versioning-and-releases) for both.
 
-Because releases are lockstep, a version may contain changes to only one module — the other module's
+Because releases are lockstep, a version may contain changes to only one module — the other modules'
 packages are still republished at that version with unchanged content. Entries are grouped by module
-so it stays clear which half of the repository actually moved.
+so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
+
+### Added
+
+#### flex-fields
+
+- **New Angular package `@dignite/ng.flex-fields`.** The Angular half of FlexFields, migrated from
+  `Dignite.Abp.DynamicForms`' `@dignite-ng/expand.dynamic-form` in the `dignite-abp` repository and
+  renamed in step with the C# naming map. Ships config / control / view / search components for all
+  six field types, the `FieldTypeResolver` registry, and `provideFlexFields()`.
+  - The six **registration keys** (`TextEdit`, `NumericEdit`, `DateEdit`, `Select`, `Switch`,
+    `TreeView`) and every configuration key are unchanged — they are stored values, not class names,
+    and match the server byte-for-byte. A test asserts each one.
+  - Registering a field type is now a typed `InjectionToken` multi-provider instead of a bare
+    `'MERGED_FORM_CONFIG'` string token that the library never provided and a `forRoot()` that
+    silently discarded its argument. Several packages can register independently, and a later
+    registration overrides a built-in of the same name.
+  - Components are standalone; the `dynamic-form` NgModule is gone.
+  - The stale embedded copy of the FileExplorer API proxy was dropped — it was dead code, and it
+    coupled two modules that are meant to be independently installable.
+  - The tree designer's value suggestion is now an optional `FLEX_FIELD_SLUG_GENERATOR` token with a
+    plain slug default, rather than a hard-wired `pinyin-pro` dependency in a general-purpose module.
+  - `DateEdit` still has no search component, as before. Known gap, not a regression.
 
 ### Changed
 

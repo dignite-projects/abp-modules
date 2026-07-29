@@ -1,0 +1,10 @@
+@if (showInList) {
+  {{ displayValue }}
+} @else {
+  <div class="mb-3">
+    <label class="form-label" *ngIf="fields?.field?.displayName">
+      {{ fields.field.displayName }}
+    </label>
+    <div>{{ displayValue }}</div>
+  </div>
+}

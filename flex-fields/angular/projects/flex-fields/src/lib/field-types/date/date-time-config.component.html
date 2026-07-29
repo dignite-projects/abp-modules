@@ -1,0 +1,57 @@
+<form [formGroup]="formEntity">
+  <div formGroupName="configuration">
+    <div class="mb-3">
+      <label class="form-label">{{ 'FlexFields::DateEditMode' | abpLocalization }}</label>
+      <div>
+        <div class="form-check form-check-inline">
+          <input
+            class="form-check-input"
+            type="radio"
+            [value]="DateInputMode.Date"
+            formControlName="DateEdit.InputMode"
+            [id]="radioIds[DateInputMode.Date]"
+            (change)="onInputModeChange()"
+          />
+          <label class="form-check-label" [for]="radioIds[DateInputMode.Date]">
+            {{ 'FlexFields::Date' | abpLocalization }}
+          </label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input
+            class="form-check-input"
+            type="radio"
+            [value]="DateInputMode.DateTime"
+            formControlName="DateEdit.InputMode"
+            [id]="radioIds[DateInputMode.DateTime]"
+            (change)="onInputModeChange()"
+          />
+          <label class="form-check-label" [for]="radioIds[DateInputMode.DateTime]">
+            {{ 'FlexFields::DateTime' | abpLocalization }}
+          </label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input
+            class="form-check-input"
+            type="radio"
+            [value]="DateInputMode.Month"
+            formControlName="DateEdit.InputMode"
+            [id]="radioIds[DateInputMode.Month]"
+            (change)="onInputModeChange()"
+          />
+          <label class="form-check-label" [for]="radioIds[DateInputMode.Month]">
+            {{ 'FlexFields::Month' | abpLocalization }}
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">{{ 'FlexFields::Min' | abpLocalization }}</label>
+      <input [type]="dateTimeType" class="form-control" step="1" formControlName="DateEdit.Min" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">{{ 'FlexFields::Max' | abpLocalization }}</label>
+      <input [type]="dateTimeType" class="form-control" step="1" formControlName="DateEdit.Max" />
+    </div>
+    <button type="submit" style="display: none" #submitclick></button>
+  </div>
+</form>

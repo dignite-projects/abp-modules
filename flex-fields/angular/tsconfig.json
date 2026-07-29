@@ -14,7 +14,9 @@
     "skipLibCheck": true,
     "target": "ES2022",
     "lib": ["ES2022", "dom", "esnext.disposable"],
-    "paths": {},
+    "paths": {
+      "@dignite/ng.flex-fields": ["projects/flex-fields/src/public-api.ts"]
+    },
     "useDefineForClassFields": false
   },
   "angularCompilerOptions": {

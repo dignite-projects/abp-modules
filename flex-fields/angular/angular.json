@@ -146,7 +146,7 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
+                  "maximumWarning": "4kb",
                   "maximumError": "100kb"
                 }
               ],
@@ -197,6 +197,45 @@
           "builder": "@angular-eslint/builder:lint",
           "options": {
             "lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]
+          }
+        }
+      }
+    },
+    "flex-fields": {
+      "projectType": "library",
+      "root": "projects/flex-fields",
+      "sourceRoot": "projects/flex-fields/src",
+      "prefix": "ff",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "options": {
+            "project": "projects/flex-fields/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/flex-fields/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/flex-fields/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/flex-fields/tsconfig.spec.json",
+            "runner": "vitest"
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "projects/flex-fields/**/*.ts",
+              "projects/flex-fields/**/*.html"
+            ]
           }
         }
       }

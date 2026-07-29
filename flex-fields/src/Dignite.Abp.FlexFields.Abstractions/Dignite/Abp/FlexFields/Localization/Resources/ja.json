@@ -37,6 +37,8 @@
     "AddSubNode": "サブノードを追加",
     "PleaseAddNode": "ノードを追加してください",
     "NodeItemText": "ノードテキスト",
+    "Validate:InvalidNodeValue": "英数字、アンダースコア、ハイフンのみ使用できます。",
+    "Validate:NodeValueAlreadyExists": "この値は他のノードで既に使用されています。",
     "Validate:Required": "{0} フィールド必須！",
     "Validate:NotDateType": "{0} の値は日付型ではありません！",
     "Validate:CannotBeGreaterThan": "{0} の値は {1} より大きくできません！",

@@ -1,0 +1,21 @@
+<form [formGroup]="entityForm">
+  <div [formGroupName]="parentField">
+    <div class="mb-3">
+      <label class="form-label" *ngIf="fieldValue.field.displayName">
+        {{ fieldValue.field.displayName }}
+      </label>
+      <nz-tree-select
+        class="form-select dignite-form-tree-select"
+        [nzMaxTagCount]="1"
+        nzShowSearch
+        nzDefaultExpandAll
+        [nzMultiple]="multiple"
+        [nzNodes]="nodes"
+        [nzDropdownMatchSelectWidth]="true"
+        nzDropdownClassName="dignite-form-tree-select-dropdown"
+        [formControlName]="fieldValue.field.name"
+      ></nz-tree-select>
+    </div>
+  </div>
+  <button type="submit" style="display: none" #submitclick></button>
+</form>

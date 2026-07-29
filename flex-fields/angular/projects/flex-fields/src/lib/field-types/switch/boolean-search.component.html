@@ -1,0 +1,15 @@
+<form [formGroup]="entityForm">
+  <div [formGroupName]="parentField">
+    <div class="mb-3">
+      <label class="form-label" *ngIf="fieldValue.field.displayName">
+        {{ fieldValue.field.displayName }}
+      </label>
+      <select class="form-select form-control" [formControlName]="fieldValue.field.name">
+        <option value=""></option>
+        <option [value]="true">{{ 'AbpUi::Yes' | abpLocalization }}</option>
+        <option [value]="false">{{ 'AbpUi::No' | abpLocalization }}</option>
+      </select>
+    </div>
+  </div>
+  <button type="submit" style="display: none" #submitclick></button>
+</form>

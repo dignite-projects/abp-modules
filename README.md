@@ -9,10 +9,11 @@ developed together in one repository and released in lockstep.
 |---|---|---|
 | [`file-storing/`](file-storing/) | An extensible **file-upload framework** layered on ABP BlobStoring (per-container `IFileHandler` pipeline: size limits, type checking, image resizing), plus an optional DDD **File Explorer** backend (directory tree, persisted file metadata, REST API) and an Angular UI library. | [README](file-storing/README.md) |
 | [`notifications/`](notifications/) | An extensible, event-driven **notification framework** with pluggable channel notifiers (SignalR, email), plus an optional **Notification Center** (persistent inbox, subscriptions, read/unread state, REST API) with MVC and Angular UI libraries. | [README](notifications/README.md) |
+| [`flex-fields/`](flex-fields/) | Runtime-defined (**"flex"**) fields — a constraint kernel supplying field types, configuration, validation, a per-entity value bag and a derived query index, with EF Core and MongoDB providers, plus an Angular UI library. It owns no domain model: each consuming application defines its own fields. | [README](flex-fields/README.md) |
 
-Each module is **independently installable** — nothing in `file-storing/` references `notifications/`
-or vice versa. They share this repository for development and release, not at runtime. Every package
-keeps the PackageId it has always had; moving into a subdirectory changed nothing for consumers.
+Each module is **independently installable** — no module references another. They share this
+repository for development and release, not at runtime. Every package keeps the PackageId it has
+always had; moving into a subdirectory changed nothing for consumers.
 
 ## History
 
@@ -41,27 +42,32 @@ abp-modules/
 ├── Directory.Build.props        # shared metadata + the single <Version> all packages use
 ├── Directory.Packages.props     # central package management for every library project
 ├── global.json  NuGet.Config  .nvmrc
-├── Dignite.Abp.Modules.slnx     # aggregate solution (both modules)
+├── Dignite.Abp.Modules.slnx     # aggregate solution (every module)
 ├── .github/workflows/           # one build+test workflow, one lockstep release workflow
 ├── file-storing/
 │   ├── Dignite.FileExplorer.slnx         # focused solution for this module alone
 │   ├── core/  file-explorer/             # the published class libraries
 │   ├── host/  angular/                   # local-dev demo app + Angular workspace
 │   └── .claude/skills/                   # module-specific conventions & invariants
-└── notifications/
-    ├── Dignite.NotificationCenter.slnx   # focused solution for this module alone
-    ├── core/  notification-center/       # the published class libraries
-    ├── host/  angular/                   # local-dev demo app + Angular workspace
-    └── .claude/skills/                   # module-specific conventions & invariants
+├── notifications/
+│   ├── Dignite.NotificationCenter.slnx   # focused solution for this module alone
+│   ├── core/  notification-center/       # the published class libraries
+│   ├── host/  angular/                   # local-dev demo app + Angular workspace
+│   └── .claude/skills/                   # module-specific conventions & invariants
+└── flex-fields/
+    ├── Dignite.Abp.FlexFields.slnx       # the demo host (the libraries build via the aggregate)
+    ├── src/                              # the published class libraries
+    ├── demo/  angular/                   # local-dev demo app + Angular workspace
+    └── docs/flexfields-design.md         # design rationale
 ```
 
-`host/` and `angular/` under each module are **local-dev demos only** — they run and exercise the
-stack end to end, and are never packed or published (`IsPackable=false`). A real consuming
-application brings its own host.
+`host/` (or `demo/`) and `angular/` under each module are **local-dev demos only** — they run and
+exercise the stack end to end, and are never packed or published (`IsPackable=false`). A real
+consuming application brings its own host.
 
 ## Build & test
 
-The aggregate solution builds and tests both modules:
+The aggregate solution builds and tests every module:
 
 ```bash
 dotnet build Dignite.Abp.Modules.slnx
@@ -75,6 +81,9 @@ dotnet build file-storing/Dignite.FileExplorer.slnx
 dotnet build notifications/Dignite.NotificationCenter.slnx
 ```
 
+`flex-fields` has no such focused solution for its libraries — `Dignite.Abp.FlexFields.slnx` holds
+only the demo host, so build its libraries through the aggregate solution.
+
 `dotnet test` starts an embedded mongod (MongoSandbox) for the MongoDB provider tests and uses
 in-memory SQLite for the EF Core ones, so no local database install is needed.
 
@@ -83,15 +92,16 @@ The Angular libraries are npm workspaces, outside MSBuild:
 ```bash
 cd file-storing/angular  && npm install --legacy-peer-deps && npm run build:lib
 cd notifications/angular && npm install && npm run build:lib
+cd flex-fields/angular   && npm install --legacy-peer-deps && npm run build:lib
 ```
 
 ## Versioning
 
 **One version for the whole repository.** Every package in every module — NuGet and npm alike —
 ships the same version, from the single `<Version>` in the root `Directory.Build.props`, on one
-`v*` tag and one release pipeline. A change to one module bumps the version for both; the other
-module gets a release whose content is unchanged. That trade is deliberate: one number to reason
-about instead of a per-module compatibility matrix.
+`v*` tag and one release pipeline. A change to one module bumps the version for all; the others get a
+release whose content is unchanged. That trade is deliberate: one number to reason about instead of a
+per-module compatibility matrix.
 
 `MAJOR` tracks the **ABP Framework major version** this release targets, not this repository's own
 breaking changes. See [CONTRIBUTING.md → Versioning and releases](CONTRIBUTING.md#versioning-and-releases)

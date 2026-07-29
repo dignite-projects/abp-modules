@@ -1,0 +1,43 @@
+<form [formGroup]="entityForm">
+  <div [formGroupName]="parentField">
+    <div class="mb-3">
+      <label class="form-label" *ngIf="fieldValue.field.displayName">
+        {{ fieldValue.field.displayName }}
+      </label>
+      <ng-container *ngIf="configuration['DateEdit.InputMode'] === DateInputMode.Date">
+        <input
+          type="date"
+          class="form-control"
+          step="1"
+          [formControlName]="fieldValue.field.name"
+          [min]="configuration['DateEdit.Min']"
+          [max]="configuration['DateEdit.Max']"
+        />
+      </ng-container>
+      <ng-container *ngIf="configuration['DateEdit.InputMode'] === DateInputMode.DateTime">
+        <input
+          type="datetime-local"
+          class="form-control"
+          step="1"
+          [formControlName]="fieldValue.field.name"
+          [min]="configuration['DateEdit.Min']"
+          [max]="configuration['DateEdit.Max']"
+        />
+      </ng-container>
+      <ng-container *ngIf="configuration['DateEdit.InputMode'] === DateInputMode.Month">
+        <input
+          type="month"
+          class="form-control"
+          step="1"
+          [formControlName]="fieldValue.field.name"
+          [min]="configuration['DateEdit.Min']"
+          [max]="configuration['DateEdit.Max']"
+        />
+      </ng-container>
+      <small class="form-text text-muted d-block" *ngIf="fieldValue.field.description">
+        {{ fieldValue.field.description }}
+      </small>
+    </div>
+  </div>
+  <button type="submit" style="display: none" #submitclick></button>
+</form>

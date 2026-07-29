@@ -1,0 +1,75 @@
+<form [formGroup]="formEntity">
+  <div formGroupName="configuration">
+    <div class="mb-3">
+      <label class="form-label">{{ 'FlexFields::SelectListItem' | abpLocalization }}</label>
+      <table class="table drag-table" cdkDropList (cdkDropListDropped)="drop($event)">
+        <thead>
+          <tr>
+            <th scope="col"></th>
+            <th scope="col">{{ 'FlexFields::SelectListItemText' | abpLocalization }}</th>
+            <th scope="col">{{ 'FlexFields::SelectListItemValue' | abpLocalization }}</th>
+            <th scope="col">{{ 'FlexFields::Selected' | abpLocalization }}</th>
+            <th scope="col" style="width: 1%">
+              <button class="btn btn-light btn-sm" type="button" (click)="addOption()">
+                <i class="fas fa-plus-circle"></i>
+              </button>
+            </th>
+          </tr>
+        </thead>
+        <tbody formArrayName="Select.Options">
+          <tr
+            *ngFor="let item of options.controls; let i = index"
+            [formGroupName]="i"
+            cdkDrag
+            cdkDragLockAxis="y"
+            [cdkDragData]="item"
+          >
+            <td>
+              <div class="drag-handle" cdkDragHandle>
+                <span class="bi bi-arrows-move fs-5"></span>
+              </div>
+            </td>
+            <td>
+              <input
+                type="text"
+                class="form-control"
+                formControlName="Text"
+                required
+                (change)="onTextChange($event, i)"
+              />
+            </td>
+            <td><input type="text" class="form-control" required formControlName="Value" /></td>
+            <td>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" formControlName="Selected" />
+              </div>
+            </td>
+            <td scope="row" style="width: 1%">
+              <button class="btn btn-light btn-sm" type="button" (click)="deleteOption(i)">
+                <i class="fas fa-minus"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">{{ 'FlexFields::NullText' | abpLocalization }}</label>
+      <input type="text" class="form-control" formControlName="Select.NullText" />
+    </div>
+    <div class="mb-3">
+      <div class="form-check form-check-inline">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          formControlName="Select.Multiple"
+          [id]="multipleId"
+        />
+        <label class="form-check-label" [for]="multipleId">
+          {{ 'FlexFields::Multiple' | abpLocalization }}
+        </label>
+      </div>
+    </div>
+    <button type="submit" style="display: none" #submitclick></button>
+  </div>
+</form>

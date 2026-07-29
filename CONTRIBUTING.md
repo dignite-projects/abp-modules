@@ -133,13 +133,14 @@ safe to upgrade, which is the opposite of what this project's positioning needs.
 | `<Version>` in [`Directory.Build.props`](./Directory.Build.props) | 3-segment SemVer (+ optional pre-release suffix) | The NuGet package version for **all 25 packable projects across both modules**, and the value a `v*` tag must match. **This is the release version.** |
 | `version` in [`file-storing/angular/projects/file-explorer/package.json`](./file-storing/angular/projects/file-explorer/package.json) | Same value as `<Version>` | npm version for `@dignite-ng/expand.file-explorer`. |
 | `version` in [`notifications/angular/projects/notification-center/package.json`](./notifications/angular/projects/notification-center/package.json) | Same value as `<Version>` | npm version for `@dignite/ng.notification-center`. |
+| `version` in [`flex-fields/angular/projects/flex-fields/package.json`](./flex-fields/angular/projects/flex-fields/package.json) | Same value as `<Version>` | npm version for `@dignite/ng.flex-fields`. |
 | `<AssemblyVersion>` | 4-segment | Pinned at `1.0.0.0` and **never** bumped with `<Version>`, avoiding assembly-binding churn. Load-bearing for notifications specifically — see [`notifications-invariants`](./notifications/.claude/skills/notifications-invariants/SKILL.md) §1. Don't "fix" this to match `<Version>`. |
 | Git tag | `vX.Y.Z[-suffix]` | Created on the release commit; the release workflow reads `<Version>` and fails if the tag doesn't match — tags do not drive the version number. |
 | `## [x.y.z]` heading in [`CHANGELOG.md`](./CHANGELOG.md) | 3-segment SemVer (+ optional pre-release suffix) | Human-facing release notes, extracted verbatim into the GitHub Release body. |
 
 CI and the release workflow both run
 [`.github/scripts/verify-version-lockstep.ps1`](./.github/scripts/verify-version-lockstep.ps1),
-which fails the build if `<Version>` and **either** Angular package version drift apart.
+which fails the build if `<Version>` and **any** Angular package version drift apart.
 
 ### Cutting a release
 
