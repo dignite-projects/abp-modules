@@ -14,6 +14,26 @@ Each module is **independently installable** — nothing in `file-storing/` refe
 or vice versa. They share this repository for development and release, not at runtime. Every package
 keeps the PackageId it has always had; moving into a subdirectory changed nothing for consumers.
 
+## History
+
+These modules grew out of [`dignite-projects/dignite-abp`](https://github.com/dignite-projects/dignite-abp),
+a broader, no-longer-maintained collection of ABP add-ons (notifications, dynamic forms, a file
+manager, a theme, and more).
+
+- [`file-storing/`](file-storing/) and [`notifications/`](notifications/) were each split out of
+  `dignite-abp` into their own standalone repositories —
+  [`abp-file-storing`](https://github.com/dignite-projects/abp-file-storing) and
+  [`abp-notifications`](https://github.com/dignite-projects/abp-notifications) — and later merged
+  into this monorepo with their full commit history preserved. No PackageId or root namespace
+  changed in either move.
+- [`flex-fields/`](flex-fields/) was extracted directly from `dignite-abp` (as
+  `Dignite.Abp.DynamicForms`, renamed on the way out) straight into this repository, skipping the
+  standalone-repo stage.
+
+Because of that lineage, older commits and CHANGELOG entries reference issues and pull requests filed
+against those earlier repositories, not this one — that history predates `abp-modules` itself and
+isn't tracked in this repo's issue tracker.
+
 ## Repository layout
 
 ```
