@@ -13,7 +13,7 @@ import { FooterLinksService } from '@volo/ngx-lepton-x.core';
 import { ApplicationConfig, inject, provideAppInitializer } from '@angular/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
-import { provideFileExplorerConfig } from '@dignite-ng/expand.file-explorer/config';
+import { provideFileExplorerConfig } from '@dignite/ng.file-explorer/config';
 import { environment } from '../environments/environment';
 import { APP_ROUTES } from './app.routes';
 import { APP_ROUTE_PROVIDER } from './route.provider';

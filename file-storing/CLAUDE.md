@@ -18,8 +18,8 @@ One `.slnx` — `Dignite.FileExplorer.slnx`:
   `DirectoryDescriptor` aggregates, conventional (auto) API controllers under `/api/file-explorer`.
 - **`host/`** — demo ABP MVC host, in the `.slnx` but never packed:
   `dotnet run --project host/Dignite.FileExplorer.Web.Host` → `https://localhost:44390`.
-- **`angular/`** — publishable `file-explorer` lib + demo app, npm-only, not in the `.slnx`,
-  `http://localhost:4200`.
+- **`angular/`** — publishable `file-explorer` lib (`@dignite/ng.file-explorer` on npm, with a
+  `/config` secondary entry point) + demo app, npm-only, not in the `.slnx`, `http://localhost:4200`.
 
 `core/` never references `file-explorer/` — enforced by project references, not the solution file.
 

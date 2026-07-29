@@ -53,6 +53,13 @@ so it stays clear which part of the repository actually moved.
 
 - The Angular package `@dignite-ng/expand.file-explorer` jumps from `10.0.0-rc.1` to the lockstep
   version, catching it up to the .NET packages it ships alongside.
+- **Breaking: the Angular package is renamed `@dignite-ng/expand.file-explorer` →
+  `@dignite/ng.file-explorer`**, matching `@dignite/ng.notification-center` and
+  `@dignite/ng.flex-fields` so all three npm packages share one convention. Both entry points move
+  (`@dignite/ng.file-explorer` and `@dignite/ng.file-explorer/config`); nothing else about the
+  package changed. Update your imports and `package.json`. The old name is not deprecated-with-a-
+  shim, it simply stops receiving updates — acceptable because the only versions ever published
+  under it are `10.0.0-rc.*` pre-releases.
 
 ---
 

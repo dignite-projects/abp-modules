@@ -19,6 +19,6 @@ export const APP_ROUTES: Routes = [
   },
   {
     path: 'file',
-    loadChildren: () => import('@dignite-ng/expand.file-explorer').then(m => m.fileExplorerRoutes),
+    loadChildren: () => import('@dignite/ng.file-explorer').then(m => m.fileExplorerRoutes),
   },
 ];

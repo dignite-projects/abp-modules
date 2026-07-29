@@ -18,10 +18,10 @@
       "esnext.disposable"
     ],
     "paths": {
-      "@dignite-ng/expand.file-explorer": [
+      "@dignite/ng.file-explorer": [
         "projects/file-explorer/src/public-api.ts"
       ],
-      "@dignite-ng/expand.file-explorer/config": [
+      "@dignite/ng.file-explorer/config": [
         "projects/file-explorer/config/src/public-api.ts"
       ]
     },

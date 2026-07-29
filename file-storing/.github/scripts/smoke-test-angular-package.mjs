@@ -47,7 +47,7 @@ try {
         version: '0.0.0',
         dependencies: {
           ...workspacePackage.dependencies,
-          '@dignite-ng/expand.file-explorer': pathToFileURL(tarballPath).href,
+          '@dignite/ng.file-explorer': pathToFileURL(tarballPath).href,
         },
         devDependencies: {
           typescript: workspacePackage.devDependencies.typescript,
@@ -81,11 +81,11 @@ try {
     join(tempRoot, 'smoke.ts'),
     `import {
   fileExplorerRoutes,
-} from '@dignite-ng/expand.file-explorer';
+} from '@dignite/ng.file-explorer';
 import {
   eFileRouteNames,
   provideFileExplorerConfig,
-} from '@dignite-ng/expand.file-explorer/config';
+} from '@dignite/ng.file-explorer/config';
 
 export const packageSurface = {
   fileExplorerRoutes,
@@ -106,8 +106,8 @@ export const packageSurface = {
   const installedPackageJsonPath = join(
     tempRoot,
     'node_modules',
-    '@dignite-ng',
-    'expand.file-explorer',
+    '@dignite',
+    'ng.file-explorer',
     'package.json',
   );
   const installedPackage = JSON.parse(readFileSync(installedPackageJsonPath, 'utf8'));
