@@ -1,0 +1,7 @@
+<Solution>
+    <Configurations>
+        <Platform Name="Any CPU" />
+    </Configurations>
+
+    <Project Path="demo/Dignite.Abp.FlexFields.Demo/Dignite.Abp.FlexFields.Demo.csproj" />
+</Solution>

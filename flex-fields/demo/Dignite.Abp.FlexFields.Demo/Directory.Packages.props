@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <!-- This generated host pins package versions directly in its .csproj (not centrally), so it must opt
+         out of the repo-root central package management (Directory.Packages.props / NU1008). -->
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,21 @@
+{
+  "production": true,
+  "application": {
+    "baseUrl":"https://demo-web",
+    "name": "Demo",
+    "logoUrl": ""
+  },
+  "oAuthConfig": {
+    "issuer": "https://demo-api/",
+    "redirectUri": "https://demo",
+    "clientId": "Demo_App",
+    "responseType": "code",
+    "scope": "offline_access openid profile email phone"
+  },
+  "apis": {
+    "default": {
+      "url": "https://demo-api",
+      "rootNamespace": "Demo"
+    }
+  }
+}
