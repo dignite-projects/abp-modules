@@ -1,12 +1,4 @@
-import {
-  ChangeDetectorRef,
-  Directive,
-  ElementRef,
-  Input,
-  OnDestroy,
-  ViewChild,
-  inject,
-} from '@angular/core';
+import { Directive, Input, OnDestroy, inject } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup } from '@angular/forms';
 import { FieldConfigurationDictionary, FlexFieldValue } from '../models';
 
@@ -23,7 +15,6 @@ import { FieldConfigurationDictionary, FlexFieldValue } from '../models';
 @Directive()
 export abstract class FieldTypeControlBase implements OnDestroy {
   protected readonly fb = inject(FormBuilder);
-  private readonly cdr = inject(ChangeDetectorRef);
 
   /** The whole host form. */
   protected entityForm?: FormGroup;
@@ -60,6 +51,12 @@ export abstract class FieldTypeControlBase implements OnDestroy {
   /** The group inside the host form that holds flex field values. */
   protected valuesGroup?: FormGroup;
 
+  private hasBuiltControl = false;
+  private builtField?: FlexFieldValue;
+  private builtEntity?: FormGroup;
+  private builtParentField?: string;
+  private builtSelected: unknown;
+
   /**
    * This field's control inside {@link valuesGroup}.
    *
@@ -70,10 +67,6 @@ export abstract class FieldTypeControlBase implements OnDestroy {
   protected get fieldControl(): AbstractControl | null {
     return this.fieldValue ? (this.valuesGroup?.get([this.fieldValue.field.name]) ?? null) : null;
   }
-
-  // Clicked once the control exists, so the host form runs its validators and any error the field
-  // already has is shown rather than waiting for the user to touch it.
-  @ViewChild('submitclick', { static: true }) submitClick?: ElementRef<HTMLButtonElement>;
 
   /** Seed values for this field type's configuration keys, as a `FormBuilder.group()` shape. */
   protected abstract configurationDefaults(): object;
@@ -86,12 +79,25 @@ export abstract class FieldTypeControlBase implements OnDestroy {
       return;
     }
 
+    if (
+      this.hasBuiltControl &&
+      this.builtField === this.fieldValue &&
+      this.builtEntity === this.entityForm &&
+      this.builtParentField === this.parentField &&
+      this.builtSelected === this.selectedValue
+    ) {
+      return;
+    }
+
     this.valuesGroup = this.entityForm.get(this.parentField) as FormGroup;
     this.applyConfigurationDefaults();
     this.valuesGroup?.setControl(this.fieldValue.field.name, this.createControl());
 
-    this.cdr.detectChanges();
-    this.submitClick?.nativeElement?.click();
+    this.hasBuiltControl = true;
+    this.builtField = this.fieldValue;
+    this.builtEntity = this.entityForm;
+    this.builtParentField = this.parentField;
+    this.builtSelected = this.selectedValue;
   }
 
   /**

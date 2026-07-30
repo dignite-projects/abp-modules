@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "flex-fields-angular",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "flex-fields/angular", "start"],
+      "port": 4200
+    }
+  ]
+}

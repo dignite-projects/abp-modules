@@ -1,0 +1,128 @@
+<div class="card">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0">{{ 'Demo::Menu:ProductFields' | abpLocalization }}</h5>
+      <button
+        *abpPermission="'Demo.ProductFields.Create'"
+        type="button"
+        class="btn btn-primary"
+        (click)="openCreate()"
+      >
+        <i class="fa fa-plus me-1"></i>{{ 'AbpUi::AddNew' | abpLocalization }}
+      </button>
+    </div>
+
+    <ngx-datatable
+      class="material"
+      [rows]="data.items"
+      [list]="list"
+      [count]="data.totalCount"
+      [externalPaging]="true"
+      columnMode="flex"
+      [headerHeight]="42"
+      [footerHeight]="42"
+      rowHeight="auto"
+    >
+      <ngx-datatable-column prop="name" [flexGrow]="2" [name]="'Demo::FieldName' | abpLocalization"></ngx-datatable-column>
+      <ngx-datatable-column
+        prop="displayName"
+        [flexGrow]="2"
+        [name]="'Demo::FieldDisplayName' | abpLocalization"
+      ></ngx-datatable-column>
+      <ngx-datatable-column [flexGrow]="2" [name]="'Demo::FieldType' | abpLocalization" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ displayNameKeyOf(row.fieldTypeName) | abpLocalization }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [flexGrow]="1" [name]="'Demo::Required' | abpLocalization" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <i class="fa" [ngClass]="row.required ? 'fa-check text-success' : 'fa-times text-muted'"></i>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [flexGrow]="1" [name]="'Demo::Searchable' | abpLocalization" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <i class="fa" [ngClass]="row.searchable ? 'fa-check text-success' : 'fa-times text-muted'"></i>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button
+            *abpPermission="'Demo.ProductFields.Update'"
+            type="button"
+            class="btn btn-sm btn-light"
+            (click)="openEdit(row)"
+          >
+            <i class="fa fa-pencil"></i>
+          </button>
+          <button
+            *abpPermission="'Demo.ProductFields.Delete'"
+            type="button"
+            class="btn btn-sm btn-light"
+            (click)="delete(row)"
+          >
+            <i class="fa fa-trash text-danger"></i>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen" [busy]="isModalBusy" (disappear)="closeModal()">
+  <ng-template #abpHeader>
+    <h3>{{ (editingField ? 'AbpUi::Edit' : 'Demo::NewField') | abpLocalization }}</h3>
+  </ng-template>
+  <ng-template #abpBody>
+    @if (form) {
+      <form [formGroup]="form" (submit)="save()">
+        <button type="submit" #submitButton style="display: none"></button>
+
+        <div class="mb-3">
+          <label class="form-label">{{ 'Demo::FieldName' | abpLocalization }}</label>
+          <input type="text" class="form-control" formControlName="name" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">{{ 'Demo::FieldDisplayName' | abpLocalization }}</label>
+          <input type="text" class="form-control" formControlName="displayName" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">{{ 'Demo::FieldDescription' | abpLocalization }}</label>
+          <textarea class="form-control" formControlName="description" rows="2"></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">{{ 'Demo::FieldType' | abpLocalization }}</label>
+          <select class="form-select" formControlName="fieldTypeName">
+            @for (fieldType of fieldTypes; track fieldType.name) {
+              <option [value]="fieldType.name">{{ fieldType.displayNameKey | abpLocalization }}</option>
+            }
+          </select>
+        </div>
+        <div class="mb-3 form-check">
+          <input type="checkbox" class="form-check-input" id="ff-field-required" formControlName="required" />
+          <label class="form-check-label" for="ff-field-required">{{ 'Demo::Required' | abpLocalization }}</label>
+        </div>
+        <div class="mb-3 form-check">
+          <input type="checkbox" class="form-check-input" id="ff-field-searchable" formControlName="searchable" />
+          <label class="form-check-label" for="ff-field-searchable">{{ 'Demo::Searchable' | abpLocalization }}</label>
+        </div>
+
+        <hr />
+
+        <!-- The demonstration site for the config role component: swaps in the right editor for
+             whichever field type is selected above, and writes its settings into form's 'configuration'
+             group. -->
+        <ff-flex-field-config
+          [type]="form.get('fieldTypeName')?.value"
+          [selected]="editingField"
+          [form]="form"
+        ></ff-flex-field-config>
+      </form>
+    }
+  </ng-template>
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+    <abp-button iconClass="fa fa-check" [disabled]="!form?.valid" [loading]="isModalBusy" (click)="submitButton?.nativeElement?.click()">
+      {{ 'AbpUi::Save' | abpLocalization }}
+    </abp-button>
+  </ng-template>
+</abp-modal>

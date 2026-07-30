@@ -1,11 +1,4 @@
-import {
-  ChangeDetectorRef,
-  Directive,
-  ElementRef,
-  Input,
-  ViewChild,
-  inject,
-} from '@angular/core';
+import { Directive, Input, inject } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { FlexFieldData } from '../models';
 
@@ -19,7 +12,6 @@ import { FlexFieldData } from '../models';
 @Directive()
 export abstract class FieldTypeConfigBase {
   protected readonly fb = inject(FormBuilder);
-  private readonly cdr = inject(ChangeDetectorRef);
 
   /** Which field type this editor configures — the registration key, e.g. `TextEdit`. */
   protected fieldTypeName?: string;
@@ -44,8 +36,6 @@ export abstract class FieldTypeConfigBase {
     this.selectedField = value;
     this.rebuild();
   }
-
-  @ViewChild('submitclick', { static: true }) submitClick?: ElementRef<HTMLButtonElement>;
 
   get configuration(): FormGroup {
     return this.formEntity?.get('configuration') as FormGroup;
@@ -77,8 +67,6 @@ export abstract class FieldTypeConfigBase {
     }
 
     this.formEntity.setControl('configuration', this.fb.group(this.configurationDefaults()));
-    this.cdr.detectChanges();
-    this.submitClick?.nativeElement?.click();
 
     // Only when the selected field is actually of this type: the designer keeps every type's config
     // editor around and swaps which one is shown, so a stale selection of a different type would

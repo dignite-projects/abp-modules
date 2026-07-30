@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CoreModule } from '@abp/ng.core';
+import { CommonModule } from '@angular/common';
 import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { FieldTypeControlBase } from '../field-type-control-base';
 import { NumericConfiguration } from './numeric-configuration';
@@ -14,7 +14,7 @@ import { NumericConfiguration } from './numeric-configuration';
 @Component({
   selector: 'ff-number-search',
   templateUrl: './number-search.component.html',
-  imports: [CoreModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
 })
 export class NumberSearchComponent extends FieldTypeControlBase {
   readonly numberForm = new FormGroup({

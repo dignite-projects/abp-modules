@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, ViewChild, ViewContainerRef, inject } from '@angular/core';
+import { Component, Input, OnChanges, Type, ViewChild, ViewContainerRef, inject } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { FieldTypeResolver } from '../field-types';
 import { FlexFieldValue } from '../models';
@@ -31,24 +31,44 @@ export class FlexFieldControlComponent implements OnChanges {
   @ViewChild('fieldRef', { read: ViewContainerRef, static: true })
   fieldRef?: ViewContainerRef;
 
+  private renderedType?: Type<unknown>;
+  private renderedFields?: FlexFieldValue;
+  private renderedEntity?: FormGroup;
+  private renderedParentFieldName?: string;
+  private renderedSelected: unknown;
+
   ngOnChanges(): void {
-    this.render();
-  }
-
-  private render(): void {
-    this.fieldRef?.clear();
-
     if (!this.fields || !this.entity || !this.parentFieldName) {
+      this.fieldRef?.clear();
+      this.resetRenderedState();
       return;
     }
 
     const fieldType = this.fieldTypes.find(this.fields.field.fieldTypeName);
 
     if (!fieldType?.controlComponent) {
+      this.fieldRef?.clear();
+      this.resetRenderedState();
       return;
     }
 
-    const componentRef = this.fieldRef!.createComponent(fieldType.controlComponent);
+    if (
+      this.renderedType === fieldType.controlComponent &&
+      this.renderedFields === this.fields &&
+      this.renderedEntity === this.entity &&
+      this.renderedParentFieldName === this.parentFieldName &&
+      this.renderedSelected === this.selected
+    ) {
+      return;
+    }
+
+    this.render(fieldType.controlComponent);
+  }
+
+  private render(componentType: Type<unknown>): void {
+    this.fieldRef?.clear();
+
+    const componentRef = this.fieldRef!.createComponent(componentType);
 
     // setInput rather than assigning to the instance: it marks the created component for check, which
     // assignment does not, so a field rendered inside an OnPush host would otherwise never update.
@@ -56,5 +76,19 @@ export class FlexFieldControlComponent implements OnChanges {
     componentRef.setInput('parentFieldName', this.parentFieldName);
     componentRef.setInput('selected', this.selected);
     componentRef.setInput('entity', this.entity);
+
+    this.renderedType = componentType;
+    this.renderedFields = this.fields;
+    this.renderedEntity = this.entity;
+    this.renderedParentFieldName = this.parentFieldName;
+    this.renderedSelected = this.selected;
+  }
+
+  private resetRenderedState(): void {
+    this.renderedType = undefined;
+    this.renderedFields = undefined;
+    this.renderedEntity = undefined;
+    this.renderedParentFieldName = undefined;
+    this.renderedSelected = undefined;
   }
 }

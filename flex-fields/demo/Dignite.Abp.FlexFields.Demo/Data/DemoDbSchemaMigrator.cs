@@ -1,5 +1,6 @@
-﻿using Volo.Abp.DependencyInjection;
+using Volo.Abp.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Dignite.Abp.FlexFields.Demo.Data;
 
@@ -15,17 +16,14 @@ public class DemoDbSchemaMigrator : ITransientDependency
 
     public async Task MigrateAsync()
     {
-        
-        /* We intentionally resolving the DemoDbContext
+
+        /* We intentionally resolve the DemoDbContext
          * from IServiceProvider (instead of directly injecting it)
          * to properly get the connection string of the current tenant in the
          * current scope.
          */
-
-        await _serviceProvider
-            .GetRequiredService<DemoDbContext>()
-            .Database
-            .MigrateAsync();
-
+        await using var scope = _serviceProvider.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<DemoDbContext>();
+        await dbContext.Database.MigrateAsync();
     }
 }

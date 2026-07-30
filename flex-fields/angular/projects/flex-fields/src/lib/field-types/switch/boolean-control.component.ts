@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CoreModule } from '@abp/ng.core';
+import { CommonModule } from '@angular/common';
 import { AbstractControl, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { FieldTypeControlBase } from '../field-type-control-base';
 import { SwitchConfiguration } from './switch-configuration';
@@ -8,7 +8,7 @@ import { SwitchConfiguration } from './switch-configuration';
 @Component({
   selector: 'ff-boolean-control',
   templateUrl: './boolean-control.component.html',
-  imports: [CoreModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
 })
 export class BooleanControlComponent extends FieldTypeControlBase {
   protected configurationDefaults(): object {

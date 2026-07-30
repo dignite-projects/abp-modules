@@ -1,0 +1,138 @@
+<div class="card mb-3">
+  <div class="card-body">
+    <h6 class="mb-3">{{ 'Demo::Search' | abpLocalization }}</h6>
+    <form [formGroup]="searchForm">
+      <div class="row">
+        @for (field of searchableFields; track field.id) {
+          <div class="col-md-4 col-lg-3">
+            <!-- Renders nothing for a field type with no search component (DateEdit, today) - that is
+                 by design, not a missing binding. -->
+            <ff-flex-field-search
+              [fields]="definitionValueOf(field)"
+              [entity]="searchForm"
+              parentFieldName="flexFieldSearch"
+            ></ff-flex-field-search>
+          </div>
+        }
+      </div>
+      <div class="mb-3">
+        <button type="button" class="btn btn-primary btn-sm" (click)="applySearch()">
+          {{ 'Demo::Search' | abpLocalization }}
+        </button>
+        <button type="button" class="btn btn-light btn-sm ms-2" (click)="clearSearch()">
+          {{ 'Demo::ClearFilters' | abpLocalization }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0">{{ 'Demo::Menu:Products' | abpLocalization }}</h5>
+      <button
+        *abpPermission="'Demo.Products.Create'"
+        type="button"
+        class="btn btn-primary"
+        (click)="openCreate()"
+      >
+        <i class="fa fa-plus me-1"></i>{{ 'Demo::NewProduct' | abpLocalization }}
+      </button>
+    </div>
+
+    <ngx-datatable
+      class="material"
+      [rows]="data.items"
+      [list]="list"
+      [count]="data.totalCount"
+      [externalPaging]="true"
+      columnMode="flex"
+      [headerHeight]="42"
+      [footerHeight]="42"
+      rowHeight="auto"
+    >
+      <ngx-datatable-column prop="name" [flexGrow]="2" [name]="'Demo::ProductName' | abpLocalization"></ngx-datatable-column>
+
+      @for (field of fields; track field.id) {
+        <ngx-datatable-column [flexGrow]="2" [name]="field.displayName" [sortable]="false">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <ff-flex-field-view
+              [showInList]="true"
+              [type]="field.fieldTypeName"
+              [value]="rowValueOf(row, field).value"
+              [fields]="rowValueOf(row, field)"
+            ></ff-flex-field-view>
+          </ng-template>
+        </ngx-datatable-column>
+      }
+
+      <ngx-datatable-column [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button
+            *abpPermission="'Demo.Products.Update'"
+            type="button"
+            class="btn btn-sm btn-light"
+            (click)="openEdit(row)"
+          >
+            <i class="fa fa-pencil"></i>
+          </button>
+          <button
+            *abpPermission="'Demo.Products.Delete'"
+            type="button"
+            class="btn btn-sm btn-light"
+            (click)="delete(row)"
+          >
+            <i class="fa fa-trash text-danger"></i>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen" [busy]="isModalBusy" (disappear)="closeModal()">
+  <ng-template #abpHeader>
+    <h3>{{ (editingProduct ? 'AbpUi::Edit' : 'Demo::NewProduct') | abpLocalization }}</h3>
+  </ng-template>
+  <ng-template #abpBody>
+    @if (form) {
+      <form [formGroup]="form" (submit)="save()">
+        <button type="submit" #submitButton style="display: none"></button>
+
+        <div class="mb-3">
+          <label class="form-label">{{ 'Demo::ProductName' | abpLocalization }}</label>
+          <input type="text" class="form-control" formControlName="name" />
+        </div>
+
+        <hr />
+
+        <!-- The demonstration site for the control role component: one per field definition, each
+             rendering whatever editor its field type registers. -->
+        <div>
+          @for (field of fields; track field.id) {
+            <ff-flex-field-control
+              [fields]="definitionValueOf(field)"
+              [entity]="form"
+              parentFieldName="flexFields"
+              [selected]="editingProduct ? rowValueOf(editingProduct, field).value : undefined"
+            ></ff-flex-field-control>
+          }
+        </div>
+      </form>
+    }
+  </ng-template>
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>
+      {{ 'AbpUi::Cancel' | abpLocalization }}
+    </button>
+    <abp-button
+      iconClass="fa fa-check"
+      [disabled]="!form?.valid"
+      [loading]="isModalBusy"
+      (click)="submitButton?.nativeElement?.click()"
+    >
+      {{ 'AbpUi::Save' | abpLocalization }}
+    </abp-button>
+  </ng-template>
+</abp-modal>

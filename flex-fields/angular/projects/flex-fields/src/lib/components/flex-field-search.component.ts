@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, ViewChild, ViewContainerRef, inject } from '@angular/core';
+import { Component, Input, OnChanges, Type, ViewChild, ViewContainerRef, inject } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { FieldTypeResolver } from '../field-types';
 import { FlexFieldValue } from '../models';
@@ -31,28 +31,62 @@ export class FlexFieldSearchComponent implements OnChanges {
   @ViewChild('fieldRef', { read: ViewContainerRef, static: true })
   fieldRef?: ViewContainerRef;
 
+  private renderedType?: Type<unknown>;
+  private renderedFields?: FlexFieldValue;
+  private renderedEntity?: FormGroup;
+  private renderedParentFieldName?: string;
+  private renderedSelected: unknown;
+
   ngOnChanges(): void {
-    this.render();
-  }
-
-  private render(): void {
-    this.fieldRef?.clear();
-
     if (!this.fields || !this.entity || !this.parentFieldName) {
+      this.fieldRef?.clear();
+      this.resetRenderedState();
       return;
     }
 
     const fieldType = this.fieldTypes.find(this.fields.field.fieldTypeName);
 
     if (!fieldType?.searchComponent) {
+      this.fieldRef?.clear();
+      this.resetRenderedState();
       return;
     }
 
-    const componentRef = this.fieldRef!.createComponent(fieldType.searchComponent);
+    if (
+      this.renderedType === fieldType.searchComponent &&
+      this.renderedFields === this.fields &&
+      this.renderedEntity === this.entity &&
+      this.renderedParentFieldName === this.parentFieldName &&
+      this.renderedSelected === this.selected
+    ) {
+      return;
+    }
+
+    this.render(fieldType.searchComponent);
+  }
+
+  private render(componentType: Type<unknown>): void {
+    this.fieldRef?.clear();
+
+    const componentRef = this.fieldRef!.createComponent(componentType);
 
     componentRef.setInput('fields', this.fields);
     componentRef.setInput('parentFieldName', this.parentFieldName);
     componentRef.setInput('selected', this.selected);
     componentRef.setInput('entity', this.entity);
+
+    this.renderedType = componentType;
+    this.renderedFields = this.fields;
+    this.renderedEntity = this.entity;
+    this.renderedParentFieldName = this.parentFieldName;
+    this.renderedSelected = this.selected;
+  }
+
+  private resetRenderedState(): void {
+    this.renderedType = undefined;
+    this.renderedFields = undefined;
+    this.renderedEntity = undefined;
+    this.renderedParentFieldName = undefined;
+    this.renderedSelected = undefined;
   }
 }

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CoreModule } from '@abp/ng.core';
+import { CommonModule } from '@angular/common';
 import { AbstractControl, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { FieldTypeControlBase } from '../field-type-control-base';
 import { TextConfiguration } from './text-configuration';
@@ -9,7 +9,7 @@ import { TextMode } from './text-mode';
 @Component({
   selector: 'ff-text-control',
   templateUrl: './text-control.component.html',
-  imports: [CoreModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
 })
 export class TextControlComponent extends FieldTypeControlBase {
   readonly TextMode = TextMode;

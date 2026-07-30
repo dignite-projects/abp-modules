@@ -1,4 +1,4 @@
-<form [formGroup]="entityForm">
+<div [formGroup]="entityForm">
   <div [formGroupName]="parentField">
     <div class="mb-3">
       <label class="form-label" *ngIf="fieldValue.field.displayName">
@@ -19,5 +19,4 @@
       </small>
     </div>
   </div>
-  <button type="submit" style="display: none" #submitclick></button>
-</form>
+</div>

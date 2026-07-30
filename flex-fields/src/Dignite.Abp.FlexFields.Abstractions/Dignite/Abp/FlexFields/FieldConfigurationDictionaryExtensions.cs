@@ -32,11 +32,16 @@ public static class FieldConfigurationDictionaryExtensions
         try
         {
             var conversionType = typeof(TConfiguration);
-            if (TypeHelper.IsNullable(conversionType))
+            var isNullable = TypeHelper.IsNullable(conversionType);
+            if (isNullable)
             {
                 conversionType = conversionType.GetFirstGenericArgumentIfNullable();
             }
 
+            if (isNullable && value.ToString().IsNullOrWhiteSpace())
+            {
+                return defaultValue;
+            }
 
             if (conversionType.IsEnum)
             {

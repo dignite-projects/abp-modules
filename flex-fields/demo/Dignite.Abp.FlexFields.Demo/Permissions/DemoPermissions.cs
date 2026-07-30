@@ -4,8 +4,19 @@ public static class DemoPermissions
 {
     public const string GroupName = "Demo";
 
+    public static class Products
+    {
+        public const string Default = GroupName + ".Products";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+    }
 
-
-    //Add your own permission names. Example:
-    //public const string MyPermission1 = GroupName + ".MyPermission1";
+    public static class ProductFields
+    {
+        public const string Default = GroupName + ".ProductFields";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+    }
 }

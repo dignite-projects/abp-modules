@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, ViewChild, ViewContainerRef, inject } from '@angular/core';
+import { Component, Input, OnChanges, Type, ViewChild, ViewContainerRef, inject } from '@angular/core';
 import { FieldTypeResolver } from '../field-types';
 import { FlexFieldValue } from '../models';
 
@@ -23,30 +23,51 @@ export class FlexFieldViewComponent implements OnChanges {
   @ViewChild('fieldRef', { read: ViewContainerRef, static: true })
   fieldRef?: ViewContainerRef;
 
+  private renderedType?: Type<unknown>;
+  private renderedFields?: FlexFieldValue;
+  private renderedValue: unknown;
+  private renderedShowInList = false;
+
   ngOnChanges(): void {
-    this.render();
+    const fieldType = this.type ? this.fieldTypes.find(this.type) : undefined;
+    const componentType = fieldType?.viewComponent;
+
+    if (!componentType) {
+      this.fieldRef?.clear();
+      this.renderedType = undefined;
+      this.renderedFields = undefined;
+      this.renderedValue = undefined;
+      this.renderedShowInList = false;
+      return;
+    }
+
+    if (
+      this.renderedType === componentType &&
+      this.renderedFields === this.fields &&
+      this.renderedValue === this.value &&
+      this.renderedShowInList === this.showInList
+    ) {
+      return;
+    }
+
+    this.render(componentType);
   }
 
-  private render(): void {
+  private render(componentType: Type<unknown>): void {
     this.fieldRef?.clear();
 
     // An empty value still renders: a view component decides for itself how to show "nothing", and a
     // Switch showing "No" is not the same as a Switch showing nothing at all.
-    if (!this.type) {
-      return;
-    }
-
-    const fieldType = this.fieldTypes.find(this.type);
-
-    if (!fieldType?.viewComponent) {
-      return;
-    }
-
-    const componentRef = this.fieldRef!.createComponent(fieldType.viewComponent);
+    const componentRef = this.fieldRef!.createComponent(componentType);
 
     componentRef.setInput('type', this.type);
     componentRef.setInput('value', this.value);
     componentRef.setInput('fields', this.fields);
     componentRef.setInput('showInList', this.showInList);
+
+    this.renderedType = componentType;
+    this.renderedFields = this.fields;
+    this.renderedValue = this.value;
+    this.renderedShowInList = this.showInList;
   }
 }

@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
-import { CoreModule } from '@abp/ng.core';
+import { CommonModule } from '@angular/common';
 import { AbstractControl, ReactiveFormsModule } from '@angular/forms';
-import { NzSelectModule } from 'ng-zorro-antd/select';
 import { readStringList } from '../../utils';
 import { FieldTypeControlBase } from '../field-type-control-base';
 import { SelectConfiguration } from './select-configuration';
@@ -11,7 +10,7 @@ import { SelectListItem, normalizeSelectListItems } from './select-list-item';
 @Component({
   selector: 'ff-select-search',
   templateUrl: './select-search.component.html',
-  imports: [CoreModule, ReactiveFormsModule, NzSelectModule],
+  imports: [CommonModule, ReactiveFormsModule],
 })
 export class SelectSearchComponent extends FieldTypeControlBase {
   get multiple(): boolean {

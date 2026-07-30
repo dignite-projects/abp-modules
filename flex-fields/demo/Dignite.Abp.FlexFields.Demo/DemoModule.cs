@@ -4,6 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
 using Dignite.Abp.FlexFields.Demo.Data;
+using Dignite.Abp.FlexFields.Demo.Entities;
+using Dignite.Abp.FlexFields.Demo.Services.FlexFields;
+using Dignite.Abp.FlexFields.EntityFrameworkCore;
 using Dignite.Abp.FlexFields.Demo.Localization;
 using Dignite.Abp.FlexFields.Demo.HealthChecks;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -14,6 +17,7 @@ using Volo.Abp.Uow;
 using Volo.Abp.Account;
 using Volo.Abp.Account.Web;
 using Volo.Abp.AspNetCore.Mvc;
+using Volo.Abp.AspNetCore.Mvc.Libs;
 using Volo.Abp.AspNetCore.Mvc.Localization;
 using Volo.Abp.AspNetCore.Mvc.UI.Bundling;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared;
@@ -104,7 +108,10 @@ namespace Dignite.Abp.FlexFields.Demo;
     typeof(AbpSettingManagementEntityFrameworkCoreModule),
     typeof(AbpBackgroundJobsEntityFrameworkCoreModule),
     typeof(BlobStoringDatabaseEntityFrameworkCoreModule),
-    typeof(AbpEntityFrameworkCoreSqliteModule)
+    typeof(AbpEntityFrameworkCoreSqliteModule),
+
+    // FlexFields kernel - the demo is a downstream consumer, wired up in Entities/ and Services/FlexFields/
+    typeof(FlexFieldsEntityFrameworkCoreModule)
 )]
 public class DemoModule : AbpModule
 {
@@ -169,6 +176,14 @@ public class DemoModule : AbpModule
 
         ConfigureStudio(hostingEnvironment);
         ConfigureAuthentication(context);
+        // This host is API + Swagger only (no Razor views), and has never run `abp install-libs`, so
+        // wwwroot/libs does not exist. Without this, AbpMvcLibsOptions' dev-time check intercepts
+        // every request - including /swagger - with a "Libs Folder is Missing" error page. Mirrors
+        // file-storing/host/Dignite.FileExplorer.Web.Host/HostModule.cs.
+        Configure<AbpMvcLibsOptions>(options =>
+        {
+            options.CheckLibs = false;
+        });
         ConfigureBundles(hostingEnvironment);
         ConfigureMultiTenancy();
         ConfigureUrls(configuration);
@@ -373,7 +388,17 @@ public class DemoModule : AbpModule
              * Documentation: https://docs.abp.io/en/abp/latest/Entity-Framework-Core#add-default-repositories
              */
             options.AddDefaultRepositories(includeAllEntities: true);
+
+            // Routes the standard IRepository<ProductField, Guid> family to our own repository instead
+            // of a second, generic one.
+            options.AddRepository<ProductField, ProductFieldRepository>();
         });
+
+        // ABP's conventional registration only auto-exposes a custom repository interface when the
+        // concrete class name ends with the interface name (minus "I") - e.g. EfCoreIdentityUserRepository
+        // matching IIdentityUserRepository. ProductFieldRepository doesn't end in "FlexFieldRepository",
+        // so IFlexFieldRepository<ProductField> needs this explicit line.
+        context.Services.AddTransient<IFlexFieldRepository<ProductField>, ProductFieldRepository>();
 
         Configure<AbpDbContextOptions>(options =>
         {

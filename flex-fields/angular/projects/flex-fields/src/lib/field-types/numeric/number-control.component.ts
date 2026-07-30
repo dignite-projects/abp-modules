@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CoreModule } from '@abp/ng.core';
+import { CommonModule } from '@angular/common';
 import { AbstractControl, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { FieldTypeControlBase } from '../field-type-control-base';
 import { NumericConfiguration } from './numeric-configuration';
@@ -8,7 +8,7 @@ import { NumericConfiguration } from './numeric-configuration';
 @Component({
   selector: 'ff-number-control',
   templateUrl: './number-control.component.html',
-  imports: [CoreModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
 })
 export class NumberControlComponent extends FieldTypeControlBase {
   protected configurationDefaults(): object {

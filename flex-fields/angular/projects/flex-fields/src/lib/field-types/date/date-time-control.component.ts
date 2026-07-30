@@ -1,6 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CoreModule } from '@abp/ng.core';
-import { DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { AbstractControl, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { FieldTypeControlBase } from '../field-type-control-base';
 import { DATE_INPUT_MODE_FORMATS, DateConfiguration } from './date-configuration';
@@ -10,7 +9,7 @@ import { DateInputMode } from './date-input-mode';
 @Component({
   selector: 'ff-date-time-control',
   templateUrl: './date-time-control.component.html',
-  imports: [CoreModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
   providers: [DatePipe],
 })
 export class DateTimeControlComponent extends FieldTypeControlBase {

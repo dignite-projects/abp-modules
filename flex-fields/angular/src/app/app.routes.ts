@@ -18,4 +18,17 @@ export const APP_ROUTES: Routes = [
     path: 'setting-management',
     loadChildren: () => import('@abp/ng.setting-management').then(c => c.createRoutes()),
   },
+  {
+    path: 'products',
+    canActivate: [authGuard, permissionGuard],
+    data: { requiredPolicy: 'Demo.Products' },
+    loadComponent: () => import('./products/products.component').then(c => c.ProductsComponent),
+  },
+  {
+    path: 'product-fields',
+    canActivate: [authGuard, permissionGuard],
+    data: { requiredPolicy: 'Demo.ProductFields' },
+    loadComponent: () =>
+      import('./product-fields/product-fields.component').then(c => c.ProductFieldsComponent),
+  },
 ];

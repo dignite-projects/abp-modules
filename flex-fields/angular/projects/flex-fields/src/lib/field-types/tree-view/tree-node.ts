@@ -14,9 +14,22 @@ export interface TreeNode {
   children: TreeNode[];
 }
 
+export interface FlatTreeNode {
+  key: string;
+  label: string;
+}
+
 /** Stored options → view-model nodes. */
 export function toTreeNodes(nodes: unknown): TreeNode[] {
   return normalizeTreeViewNodeItems(nodes).map(toTreeNode);
+}
+
+/** Flattens a tree for native select controls while preserving its hierarchy in the label. */
+export function flattenTreeNodes(nodes: TreeNode[], depth = 0): FlatTreeNode[] {
+  return nodes.flatMap(node => [
+    { key: node.key, label: `${'— '.repeat(depth)}${node.title}` },
+    ...flattenTreeNodes(node.children ?? [], depth + 1),
+  ]);
 }
 
 function toTreeNode(item: TreeViewNodeItem): TreeNode {

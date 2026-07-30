@@ -11,13 +11,13 @@ export class NumericConfiguration {
 
   // Optional, matching the server's `decimal? Min` / `decimal? Max`. The old Angular library put
   // Validators.required on both, which made every numeric field unconfigurable without bounds.
-  'NumericEditField.Min': unknown = [''];
+  'NumericEditField.Min': unknown = [null];
 
-  'NumericEditField.Max': unknown = [''];
+  'NumericEditField.Max': unknown = [null];
 
   'NumericEditField.Decimals': unknown = [2];
 
-  'NumericEditField.Step': unknown = [''];
+  'NumericEditField.Step': unknown = [null];
 
   'FormatSpecifier': unknown = [''];
 }

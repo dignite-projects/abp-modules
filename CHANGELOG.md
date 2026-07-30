@@ -36,6 +36,9 @@ so it stays clear which part of the repository actually moved.
   - The tree designer's value suggestion is now an optional `FLEX_FIELD_SLUG_GENERATOR` token with a
     plain slug default, rather than a hard-wired `pinyin-pro` dependency in a general-purpose module.
   - `DateEdit` still has no search component, as before. Known gap, not a regression.
+  - `Dignite.Abp.FlexFields.Abstractions`'s `FlexFields` localization resource gains two keys the
+    migrated tree designer's node-key validator needs: `Validate:InvalidNodeValue`,
+    `Validate:NodeValueAlreadyExists` (en/ja/zh-Hans/zh-Hant).
 
 ### Changed
 

@@ -58,8 +58,18 @@
               },
               {
                 "input": "node_modules/ng-zorro-antd/tree/style/index.min.css",
-                "inject": false,
+                "inject": true,
                 "bundleName": "ng-zorro-antd-tree"
+              },
+              {
+                "input": "node_modules/ng-zorro-antd/select/style/index.min.css",
+                "inject": true,
+                "bundleName": "ng-zorro-antd-select"
+              },
+              {
+                "input": "node_modules/ng-zorro-antd/tree-select/style/index.min.css",
+                "inject": true,
+                "bundleName": "ng-zorro-antd-tree-select"
               },
               {
                 "input": "node_modules/@swimlane/ngx-datatable/index.css",

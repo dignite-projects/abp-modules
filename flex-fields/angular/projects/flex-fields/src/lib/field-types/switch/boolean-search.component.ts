@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { CoreModule } from '@abp/ng.core';
+import { LocalizationPipe } from '@abp/ng.core';
+import { CommonModule } from '@angular/common';
 import { AbstractControl, ReactiveFormsModule } from '@angular/forms';
 import { FieldTypeControlBase } from '../field-type-control-base';
 import { SwitchConfiguration } from './switch-configuration';
@@ -11,7 +12,7 @@ import { SwitchConfiguration } from './switch-configuration';
 @Component({
   selector: 'ff-boolean-search',
   templateUrl: './boolean-search.component.html',
-  imports: [CoreModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, LocalizationPipe],
 })
 export class BooleanSearchComponent extends FieldTypeControlBase {
   protected configurationDefaults(): object {

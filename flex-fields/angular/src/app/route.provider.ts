@@ -15,5 +15,21 @@ function configureRoutes() {
       order: 1,
       layout: eLayoutType.application,
     },
+    {
+      path: '/products',
+      name: '::Menu:Products',
+      iconClass: 'fas fa-box',
+      order: 2,
+      layout: eLayoutType.application,
+      requiredPolicy: 'Demo.Products',
+    },
+    {
+      path: '/product-fields',
+      name: '::Menu:ProductFields',
+      iconClass: 'fas fa-list-alt',
+      order: 3,
+      layout: eLayoutType.application,
+      requiredPolicy: 'Demo.ProductFields',
+    },
   ]);
 }

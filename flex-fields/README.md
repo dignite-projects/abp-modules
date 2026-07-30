@@ -82,9 +82,13 @@ protected override void OnModelCreating(ModelBuilder builder)
 }
 ```
 
-See [`docs/flexfields-design.md`](docs/flexfields-design.md) for the full design rationale, and the
-`Dignite.Abp.FlexFields.EntityFrameworkCore.Tests` project for a complete worked example
-(`TestField`, `TestArticle`, `TestArticleFlexFieldProvider`, …).
+See [`docs/flexfields-design.md`](docs/flexfields-design.md) for the full design rationale. For a
+worked example, [`demo/`](demo/) is the same seam wired to a real, runnable feature
+(`Product`/`ProductField`, an Angular admin UI, seeded data) — run it with
+`dotnet run --project demo/Dignite.Abp.FlexFields.Demo -- --migrate-database` followed by
+`dotnet run --project demo/Dignite.Abp.FlexFields.Demo` and `cd angular && npm start`. The
+`Dignite.Abp.FlexFields.EntityFrameworkCore.Tests` project (`TestField`, `TestArticle`,
+`TestArticleFlexFieldProvider`, …) is the same shape distilled to its minimum, without a UI.
 
 ## Renaming or deleting a field definition
 
