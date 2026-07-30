@@ -1,0 +1,51 @@
+:host ::ng-deep .ff-form-felect {
+  width: 100%;
+
+  &.ant-select {
+    color: inherit !important;
+  }
+
+  .ant-select-selector {
+    background: transparent !important;
+    border: none !important;
+    padding: 0.475rem 1.25rem !important;
+    box-shadow: none !important;
+    height: auto !important;
+  }
+
+  .ant-select-arrow {
+    display: none !important;
+  }
+
+  .ant-select-selection-placeholder {
+    color: inherit !important;
+  }
+}
+
+// Bootstrap's .form-select padding is intended for native <select> elements.
+// On nz-select it is applied to the host in addition to the inner selector
+// padding and makes the multiple control too tall.
+:host ::ng-deep .ff-form-felect.form-select {
+  padding: 0 !important;
+}
+
+::ng-deep .ff-form-felect-dropdown {
+  .ant-select-dropdown {
+    background: var(--lpx-content-bg, #fff) !important;
+  }
+
+  .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+    background-color: var(--bs-primary) !important;
+    color: var(--bs-white) !important;
+  }
+
+  .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+    background-color: var(--lpx-brand);
+    color: var(--bs-white) !important;
+  }
+
+  .ant-select-item {
+    color: var(--bs-body-color);
+    background-color: transparent;
+  }
+}

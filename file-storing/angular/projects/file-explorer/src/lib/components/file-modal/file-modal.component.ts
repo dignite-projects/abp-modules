@@ -24,7 +24,6 @@ import {
   FileDescriptorService,
   GetFilesInput,
 } from '../../proxy/dignite/file-explorer/files';
-import { SelectionType, NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -43,7 +42,6 @@ import { GetDirectoryNamePipe } from '../../pipe/get-directory-name.pipe';
     ReactiveFormsModule,
     CoreModule,
     ThemeSharedModule,
-    NgxDatatableModule,
     FileModalTreeComponent,
     FilePreviewComponent,
     FormatFileSizePipe,
@@ -276,9 +274,6 @@ export class FileModalComponent implements OnChanges {
 
   /**文件表格-条件*/
   filters = {} as GetFilesInput;
-
-  /**文件表格-表格自带选择类型 */
-  SelectionType = SelectionType;
 
   /**选择文件回调 */
   @Output() selectFilefn = new EventEmitter<any[]>();

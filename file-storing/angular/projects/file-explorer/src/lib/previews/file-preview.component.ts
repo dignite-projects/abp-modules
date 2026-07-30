@@ -1,6 +1,6 @@
-import { Component, Input, OnChanges, OnDestroy, TemplateRef } from '@angular/core';
+import { Component, Input, OnChanges, OnDestroy } from '@angular/core';
 import { ImageTypeOption } from './models';
-import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { ModalComponent } from '@abp/ng.theme.shared';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { FileDescriptorService } from '../proxy/dignite/file-explorer/files';
@@ -12,7 +12,7 @@ import { ObjectUrlService } from '../services/object-url.service';
   selector: 'fe-file-preview',
   templateUrl: './file-preview.component.html',
   styleUrls: ['./file-preview.component.scss'],
-  imports: [CommonModule],
+  imports: [CommonModule, ModalComponent],
 })
 export class FilePreviewComponent implements OnChanges, OnDestroy {
 
@@ -46,7 +46,6 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
 
 
   constructor(
-    private modalService: NgbModal,
     private fileDescriptorService: FileDescriptorService,
     private objectUrlService: ObjectUrlService,
   ) { }
@@ -166,29 +165,22 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
 
   }
 
-  /**模态框实例 */
-  modalRef!: NgbModalRef;
-
   /**放大倍数 */
   zoom: number = 10
   /**旋转 */
   rotate: number = 0
 
+  /**图片预览弹窗 */
+  isPreviewOpen = false
 
   /**打开预览弹窗 */
-  OpenPreviewImage(content: TemplateRef<any>) {
+  OpenPreviewImage() {
+    this.isPreviewOpen = true;
+  }
 
-    this.modalRef = this.modalService.open(content, {
-      fullscreen: true,
-      modalDialogClass: 'dignite-preview',
-    });
-    this.modalRef.result.then(
-      (result) => {
-      },
-      (reason) => {
-        this.zoom = 10
-      },
-    );
+  onPreviewDisappear() {
+    this.isPreviewOpen = false;
+    this.zoom = 10;
   }
   /**放大图像 */
   zoomIn() {

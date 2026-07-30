@@ -28,10 +28,7 @@
     "@angular/core": "~21.2.0",
     "@angular/forms": "~21.2.0",
     "@angular/router": "~21.2.0",
-    "@ng-bootstrap/ng-bootstrap": "~20.0.0",
     "@ngx-validate/core": "^0.2.0",
-    "@swimlane/ngx-datatable": "^22.0.0",
-    "ng-zorro-antd": "^21.3.3",
     "rxjs": "~7.8.0"
   }
 }

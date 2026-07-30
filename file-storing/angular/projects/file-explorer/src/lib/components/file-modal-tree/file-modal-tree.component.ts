@@ -10,16 +10,23 @@ import {
   ViewChild,
 } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NzFormatEmitEvent, NzTreeNode } from 'ng-zorro-antd/tree';
 import * as DescriptorService from '../../proxy/dignite/file-explorer/directories';
 import { Confirmation, ConfirmationService, ThemeSharedModule, ToasterService } from '@abp/ng.theme.shared';
-import { NzFormatBeforeDropEvent } from 'ng-zorro-antd/tree';
 import { finalize, map, of, tap } from 'rxjs';
 import { CoreModule, LocalizationService } from '@abp/ng.core';
 import { ValidatorsService } from '../../services/validators.service';
 import { CommonModule } from '@angular/common';
-import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
-import { TreeModule } from '@abp/ng.components/tree';
+import { TreeModule, TreeNode } from '@abp/ng.components/tree';
+
+type TreeDropEvent = {
+  pos: number;
+  dragNode: { key: string };
+  node: {
+    key: string;
+    origin: { order: number; children: unknown[] };
+    parentNode?: { key: string } | null;
+  };
+};
 @Component({
   
   selector: 'fe-file-modal-tree',
@@ -31,7 +38,6 @@ import { TreeModule } from '@abp/ng.components/tree';
     ReactiveFormsModule,
     CoreModule,
     ThemeSharedModule,
-    NgbDropdownModule,
     TreeModule,
   ],
 })
@@ -133,11 +139,11 @@ export class FileModalTreeComponent implements AfterContentInit {
   }
 
   /**tree-拖拽 */
-  nzEvent(event: NzFormatEmitEvent): void {}
+  nzEvent(_event: unknown): void {}
 
   /**tree-拖拽 -验证*/
-  beforeDrop(arg: NzFormatBeforeDropEvent) {
-    const { pos, dragNode, node } = arg;
+  beforeDrop(arg: unknown) {
+    const { pos, dragNode, node } = arg as TreeDropEvent;
     // 只处理有效的拖拽位置
     if (pos === 0 || pos === 1 || pos === -1) {
       // 根据不同的拖拽位置计算参数
@@ -162,9 +168,9 @@ export class FileModalTreeComponent implements AfterContentInit {
     return of(false);
   }
 
-  selectedNode: NzTreeNode[] = [];
+  selectedNode: TreeNode<any>[] = [];
   /**tree--选择节点 */
-  activeNode(node: NzTreeNode) {
+  activeNode(node: TreeNode<any>) {
     if ((event as any)?.target?.localName == 'i') return;
     if (this._theSelectedTreeNode?.key == node.key) return;
     this.selectedNode = [node];

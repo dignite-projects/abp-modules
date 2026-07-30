@@ -8,11 +8,11 @@
     (dropOver)="nzEvent($event)" [beforeDrop]="beforeDrop" (selectedNodeChange)="activeNode($event)" [changeCheckboxWithNode]="true"  [isNodeSelected]="isNodeSelected">
 
     <ng-template #menu let-node>
-      <button ngbDropdownItem (click.stop)="addDescriptorBtn(node)"><i
+      <button type="button" class="dropdown-item" (click.stop)="addDescriptorBtn(node)"><i
       class=" me-1 fa fa-pencil"></i>{{'FileExplorer::NewDirectory' | abpLocalization}}</button>
-      <button ngbDropdownItem (click.stop)="addDescriptorBtn(node,true)"><i
+      <button type="button" class="dropdown-item" (click.stop)="addDescriptorBtn(node,true)"><i
       class=" me-1 fa fa-plus"></i>{{'AbpUi::Edit' | abpLocalization}}</button>
-      <button ngbDropdownItem (click.stop)="deleteDescriptorBtn(node)"><i
+      <button type="button" class="dropdown-item" (click.stop)="deleteDescriptorBtn(node)"><i
       class=" me-1 fa fa-remove"></i>{{'AbpUi::Delete' | abpLocalization}}</button>
     </ng-template>
 

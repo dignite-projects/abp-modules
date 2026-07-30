@@ -2,7 +2,6 @@ import { Component, ElementRef, ViewChild, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ABP, CoreModule, ListService, LIST_QUERY_DEBOUNCE_TIME, PagedResultDto, PermissionDirective } from '@abp/ng.core';
 import { Confirmation, ConfirmationService, ThemeSharedModule, ToasterService } from '@abp/ng.theme.shared';
-import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import {
   FieldConfigurationDictionary,
   FlexFieldControlComponent,
@@ -33,7 +32,6 @@ import {
     CoreModule,
     ThemeSharedModule,
     ReactiveFormsModule,
-    NgxDatatableModule,
     PermissionDirective,
     FlexFieldControlComponent,
     FlexFieldSearchComponent,

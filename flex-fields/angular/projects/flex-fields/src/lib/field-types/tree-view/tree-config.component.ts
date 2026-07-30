@@ -2,7 +2,6 @@ import { ChangeDetectorRef, Component, ElementRef, ViewChild, inject } from '@an
 import { CoreModule, LocalizationService } from '@abp/ng.core';
 import { TreeModule } from '@abp/ng.components/tree';
 import { ThemeSharedModule } from '@abp/ng.theme.shared';
-import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import {
   AbstractControl,
   FormControl,
@@ -33,7 +32,7 @@ let nextCheckboxId = 0;
 @Component({
   selector: 'ff-tree-config',
   templateUrl: './tree-config.component.html',
-  imports: [CoreModule, ThemeSharedModule, ReactiveFormsModule, TreeModule, NgbDropdownModule],
+  imports: [CoreModule, ThemeSharedModule, ReactiveFormsModule, TreeModule],
 })
 export class TreeConfigComponent extends FieldTypeConfigBase {
   private readonly cdRef = inject(ChangeDetectorRef);
@@ -219,7 +218,10 @@ export class TreeConfigComponent extends FieldTypeConfigBase {
     const editing = this.editingNode;
 
     if (editing && this.isCreatingChild) {
-      editing.children = [...(editing.children ?? []), { title, key, isChecked, children: [] }];
+      editing.children = [
+        ...(editing.children ?? []),
+        { title, key, entity: { key }, isChecked, children: [] },
+      ];
       // Adding a child to a collapsed node would otherwise appear to do nothing.
       if (!this.expandedKeys.includes(editing.key)) {
         this.expandedKeys = [...this.expandedKeys, editing.key];
@@ -227,9 +229,10 @@ export class TreeConfigComponent extends FieldTypeConfigBase {
     } else if (editing) {
       editing.title = title;
       editing.key = key;
+      editing.entity = { key };
       editing.isChecked = isChecked;
     } else {
-      this.nodes.push({ title, key, isChecked, children: [] });
+      this.nodes.push({ title, key, entity: { key }, isChecked, children: [] });
     }
 
     if (!this.isMultiple && isChecked) {

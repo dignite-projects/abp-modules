@@ -23,13 +23,13 @@
             (nzExpandChange)="onExpandChange($event)"
           >
             <ng-template #menu let-node>
-              <button ngbDropdownItem type="button" (click)="editNode(node)">
+              <button class="dropdown-item" type="button" (click)="editNode(node)">
                 <i class="me-1 fa fa-pencil"></i>{{ 'AbpUi::Edit' | abpLocalization }}
               </button>
-              <button ngbDropdownItem type="button" (click)="addChildNode(node)">
+              <button class="dropdown-item" type="button" (click)="addChildNode(node)">
                 <i class="me-1 fa fa-plus"></i>{{ 'FlexFields::AddSubNode' | abpLocalization }}
               </button>
-              <button ngbDropdownItem type="button" (click)="deleteNode(node)">
+              <button class="dropdown-item" type="button" (click)="deleteNode(node)">
                 <i class="me-1 fa fa-remove"></i>{{ 'AbpUi::Delete' | abpLocalization }}
               </button>
             </ng-template>

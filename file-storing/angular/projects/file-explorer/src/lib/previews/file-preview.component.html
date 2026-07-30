@@ -4,7 +4,7 @@
       <img [src]="displaySrc"  />
       @if (preview) {
         <div class="option_box">
-          <i class="fa fa-eye " (click.stop)="OpenPreviewImage(content)"></i>
+          <i class="fa fa-eye " (click.stop)="OpenPreviewImage()"></i>
         </div>
       }
     </div>
@@ -26,16 +26,22 @@
   </a>
 </div>
 
-<ng-template #content let-modal>
-  <div class="modal-header">
+<abp-modal
+  [(visible)]="isPreviewOpen"
+  [options]="{ fullscreen: true, modalDialogClass: 'dignite-preview' }"
+  (disappear)="onPreviewDisappear()"
+>
+  <ng-template #abpHeader>
     <div class="d-flex justify-content-end w-100 fs-3">
-      <i class="mx-2 fa  fa fa-repeat" aria-hidden="true" title="右旋转" role="button" (click)="RotateRight()"></i>
-      <i class="mx-2 fa  fa-search-minus" aria-hidden="true" title="缩小" role="button" (click)="zoomOut()"></i>
-      <i class="mx-2 fa  fa-search-plus" aria-hidden="true" title="放大" role="button" (click)="zoomIn()"></i>
-      <i class="mx-2 fa  fa-times" aria-hidden="true" role="button" (click)="modal.dismiss('Cross click')"></i>
+      <i class="mx-2 fa fa-repeat" aria-hidden="true" title="右旋转" role="button" (click)="RotateRight()"></i>
+      <i class="mx-2 fa fa-search-minus" aria-hidden="true" title="缩小" role="button" (click)="zoomOut()"></i>
+      <i class="mx-2 fa fa-search-plus" aria-hidden="true" title="放大" role="button" (click)="zoomIn()"></i>
+      <i class="mx-2 fa fa-times" aria-hidden="true" title="关闭" role="button" (click)="isPreviewOpen = false"></i>
     </div>
-  </div>
-  <div class="modal-body d-flex justify-content-center align-items-center ">
-    <img width="400" class="modal-body-preview"  [src]="displaySrc" [style.transform]="'scale('+zoom/10+') rotate('+rotate+'deg)'"   >
-  </div>
-</ng-template>
+  </ng-template>
+  <ng-template #abpBody>
+    <div class="d-flex justify-content-center align-items-center">
+      <img width="400" class="modal-body-preview" [src]="displaySrc" [style.transform]="'scale('+zoom/10+') rotate('+rotate+'deg)'">
+    </div>
+  </ng-template>
+</abp-modal>

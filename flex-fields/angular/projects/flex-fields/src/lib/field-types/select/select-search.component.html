@@ -4,16 +4,29 @@
       <label class="form-label" *ngIf="fieldValue.field.displayName">
         {{ fieldValue.field.displayName }}
       </label>
-      <select
-        class="form-select"
-        [attr.data-flex-field-name]="fieldValue.field.name"
-        [multiple]="multiple"
-        [attr.size]="multiple ? 4 : null"
-        [formControlName]="fieldValue.field.name"
-      >
-        <option *ngIf="!multiple" value="">{{ nullText }}</option>
-        <option *ngFor="let item of options" [value]="item.Value">{{ item.Text }}</option>
-      </select>
+      @if (multiple) {
+        <nz-select
+          class="form-select ff-form-felect form-select-multiple"
+          [attr.data-flex-field-name]="fieldValue.field.name"
+          nzShowSearch
+          nzMode="multiple"
+          [nzMaxTagCount]="1"
+          [nzPlaceHolder]="nullText"
+          [nzDropdownMatchSelectWidth]="true"
+          nzDropdownClassName="ff-form-felect-dropdown"
+          [nzOptions]="nzOptions"
+          [formControlName]="fieldValue.field.name"
+        ></nz-select>
+      } @else {
+        <select
+          class="form-select"
+          [attr.data-flex-field-name]="fieldValue.field.name"
+          [formControlName]="fieldValue.field.name"
+        >
+          <option value="">{{ nullText }}</option>
+          <option *ngFor="let item of options" [value]="item.Value">{{ item.Text }}</option>
+        </select>
+      }
     </div>
   </div>
 </div>

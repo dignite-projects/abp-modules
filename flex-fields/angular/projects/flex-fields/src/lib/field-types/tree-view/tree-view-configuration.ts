@@ -1,5 +1,3 @@
-import { FormArray } from '@angular/forms';
-
 /**
  * One node of a `TreeView` field's option tree. Mirrors `TreeViewNodeItem` on the server.
  *
@@ -39,5 +37,5 @@ export function normalizeTreeViewNodeItems(nodes: unknown): TreeViewNodeItem[] {
 export class TreeViewConfiguration {
   'TreeView.Multiple': unknown = [false];
 
-  'TreeView.Nodes': unknown = new FormArray<never>([]);
+  'TreeView.Nodes': unknown = [[]];
 }

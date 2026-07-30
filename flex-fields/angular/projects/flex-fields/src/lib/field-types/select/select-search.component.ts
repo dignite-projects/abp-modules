@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NzSelectModule, NzSelectOptionInterface } from 'ng-zorro-antd/select';
 import { AbstractControl, ReactiveFormsModule } from '@angular/forms';
 import { readStringList } from '../../utils';
 import { FieldTypeControlBase } from '../field-type-control-base';
@@ -10,9 +11,14 @@ import { SelectListItem, normalizeSelectListItems } from './select-list-item';
 @Component({
   selector: 'ff-select-search',
   templateUrl: './select-search.component.html',
-  imports: [CommonModule, ReactiveFormsModule],
+  styleUrls: ['./select-field.component.scss'],
+  imports: [CommonModule, ReactiveFormsModule, NzSelectModule],
 })
 export class SelectSearchComponent extends FieldTypeControlBase {
+  private optionsSource: unknown;
+  private normalizedOptions: SelectListItem[] = [];
+  private selectOptions: NzSelectOptionInterface[] = [];
+
   get multiple(): boolean {
     return !!this.fieldValue?.field.configuration['Select.Multiple'];
   }
@@ -22,7 +28,23 @@ export class SelectSearchComponent extends FieldTypeControlBase {
   }
 
   get options(): SelectListItem[] {
-    return normalizeSelectListItems(this.fieldValue?.field.configuration['Select.Options']);
+    const source = this.fieldValue?.field.configuration['Select.Options'];
+
+    if (source !== this.optionsSource) {
+      this.optionsSource = source;
+      this.normalizedOptions = normalizeSelectListItems(source);
+      this.selectOptions = this.normalizedOptions.map(item => ({
+        label: item.Text,
+        value: item.Value,
+      }));
+    }
+
+    return this.normalizedOptions;
+  }
+
+  get nzOptions(): NzSelectOptionInterface[] {
+    this.options;
+    return this.selectOptions;
   }
 
   protected configurationDefaults(): object {

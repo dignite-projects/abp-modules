@@ -37,12 +37,9 @@
     "tslib": "^2.0.0",
     "zone.js": "~0.15.0",
     "@angular/cdk": "~21.2.0",
-    "@ng-bootstrap/ng-bootstrap": "~20.0.0",
     "@ngx-validate/core": "^0.2.0",
     "@popperjs/core": "^2.11.8",
-    "@swimlane/ngx-datatable": "^22.0.0",
     "bootstrap": "^5.3.3",
-    "bootstrap-icons": "^1.11.3",
     "ng-zorro-antd": "^21.3.3"
   },
   "devDependencies": {

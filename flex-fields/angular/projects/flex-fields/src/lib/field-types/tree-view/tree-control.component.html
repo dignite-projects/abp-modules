@@ -4,16 +4,59 @@
       <label class="form-label" *ngIf="fieldValue.field.displayName">
         {{ fieldValue.field.displayName }}
       </label>
-      <select
-        class="form-select"
-        [attr.data-flex-field-name]="fieldValue.field.name"
-        [multiple]="multiple"
-        [attr.size]="multiple ? 5 : null"
-        [formControlName]="fieldValue.field.name"
-      >
-        <option *ngIf="!multiple" [ngValue]="null"></option>
-        <option *ngFor="let item of options" [value]="item.key">{{ item.label }}</option>
-      </select>
+      <div class="ff-tree-picker" [attr.data-flex-field-name]="fieldValue.field.name">
+        <button
+          type="button"
+          class="form-select text-start ff-tree-picker-toggle"
+          [class.text-muted]="selectedKeys.length === 0"
+          [class.is-invalid]="fieldControl?.invalid && fieldControl?.touched"
+          [attr.aria-expanded]="isDropdownOpen"
+          (click)="toggleDropdown()"
+        >
+          <span>{{ displayText }}</span>
+        </button>
+        <button
+          *ngIf="selectedKeys.length > 0"
+          type="button"
+          class="btn btn-link ff-tree-picker-clear"
+          (click)="clearSelection($event)"
+        >
+          <i class="fa fa-times" aria-hidden="true"></i>
+        </button>
+
+        @if (isDropdownOpen) {
+          <div class="ff-tree-picker-menu">
+            @if (nodes.length > 0) {
+              <abp-tree
+                [nodes]="nodes"
+                [checkable]="false"
+                [expandedKeys]="expandedKeys"
+                [isNodeSelected]="isNodeSelected"
+                (nzExpandChange)="onExpandChange($event)"
+                (selectedNodeChange)="onTreeNodeChange($event)"
+              >
+                <ng-template abpTreeNodeTemplate let-node>
+                  <div
+                    class="d-inline-flex align-items-center ff-tree-picker-node"
+                    [class.ff-tree-picker-node-selected]="isNodeActive(node)"
+                    (click)="toggleSelected($event, node)"
+                  >
+                    <input
+                      *ngIf="multiple"
+                      type="checkbox"
+                      class="form-check-input me-2"
+                      [checked]="isNodeChecked(node)"
+                      [indeterminate]="isIndeterminate(node)"
+                      [attr.data-indeterminate]="isIndeterminate(node)"
+                    />
+                    <span>{{ node.title }}</span>
+                  </div>
+                </ng-template>
+              </abp-tree>
+            }
+          </div>
+        }
+      </div>
       <small class="form-text text-muted d-block" *ngIf="fieldValue.field.description">
         {{ fieldValue.field.description }}
       </small>

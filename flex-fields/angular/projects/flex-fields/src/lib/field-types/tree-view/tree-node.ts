@@ -8,6 +8,7 @@ import { TreeViewNodeItem, normalizeTreeViewNodeItems } from './tree-view-config
 export interface TreeNode {
   title: string;
   key: string;
+  entity: { key: string };
   isChecked: boolean;
   isLeaf?: boolean;
   expanded?: boolean;
@@ -38,6 +39,7 @@ function toTreeNode(item: TreeViewNodeItem): TreeNode {
   return {
     title: item.Text,
     key: item.Value,
+    entity: { key: item.Value },
     isChecked: item.Selected,
     isLeaf: children.length === 0,
     children,

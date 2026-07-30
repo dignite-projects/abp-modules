@@ -1,18 +1,24 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NzSelectModule, NzSelectOptionInterface } from 'ng-zorro-antd/select';
 import { AbstractControl, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { readStringList } from '../../utils';
 import { FieldTypeControlBase } from '../field-type-control-base';
 import { SelectConfiguration } from './select-configuration';
 import { SelectListItem, normalizeSelectListItems } from './select-list-item';
 
-/** Edits the value of a `Select` field — a native select, or an ng-zorro multi-select. */
+/** Edits the value of a `Select` field with the ABP Angular select experience. */
 @Component({
   selector: 'ff-select-control',
   templateUrl: './select-control.component.html',
-  imports: [CommonModule, ReactiveFormsModule],
+  styleUrls: ['./select-field.component.scss'],
+  imports: [CommonModule, ReactiveFormsModule, NzSelectModule],
 })
 export class SelectControlComponent extends FieldTypeControlBase {
+  private optionsSource: unknown;
+  private normalizedOptions: SelectListItem[] = [];
+  private selectOptions: NzSelectOptionInterface[] = [];
+
   get multiple(): boolean {
     return !!this.fieldValue?.field.configuration['Select.Multiple'];
   }
@@ -22,7 +28,24 @@ export class SelectControlComponent extends FieldTypeControlBase {
   }
 
   get options(): SelectListItem[] {
-    return normalizeSelectListItems(this.fieldValue?.field.configuration['Select.Options']);
+    const source = this.fieldValue?.field.configuration['Select.Options'];
+
+    if (source !== this.optionsSource) {
+      this.optionsSource = source;
+      this.normalizedOptions = normalizeSelectListItems(source);
+      this.selectOptions = this.normalizedOptions.map(item => ({
+        label: item.Text,
+        value: item.Value,
+      }));
+    }
+
+    return this.normalizedOptions;
+  }
+
+  get nzOptions(): NzSelectOptionInterface[] {
+    // Read through options first so the cache is initialized before the template consumes it.
+    this.options;
+    return this.selectOptions;
   }
 
   protected configurationDefaults(): object {
