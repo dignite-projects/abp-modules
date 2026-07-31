@@ -130,6 +130,13 @@ export function checkAncestors(nodes: TreeNode[], key: string): void {
   });
 }
 
+/** Keys of every ancestor of a node, root-first, not including the node itself. */
+export function ancestorKeys(nodes: TreeNode[], key: string): string[] {
+  return pathTo(nodes, key)
+    .slice(0, -1)
+    .map(node => node.key);
+}
+
 /** Removes a node, and returns whether it was found. */
 export function removeTreeNode(nodes: TreeNode[], key: string): boolean {
   const index = nodes.findIndex(node => node.key === key);

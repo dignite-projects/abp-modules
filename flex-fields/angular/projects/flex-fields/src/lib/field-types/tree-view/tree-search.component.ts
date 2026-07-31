@@ -4,7 +4,7 @@ import { TreeModule } from '@abp/ng.components/tree';
 import { AbstractControl, ReactiveFormsModule } from '@angular/forms';
 import { readStringList } from '../../utils';
 import { FieldTypeControlBase } from '../field-type-control-base';
-import { TreeNode, findTreeNode, toTreeNodes } from './tree-node';
+import { TreeNode, ancestorKeys, findTreeNode, toTreeNodes } from './tree-node';
 import { TreeViewConfiguration } from './tree-view-configuration';
 
 /** Filters by a `TreeView` field, using a dropdown tree picker. */
@@ -184,10 +184,19 @@ export class TreeSearchComponent extends FieldTypeControlBase {
   }
 
   private toggleMultiple(key: string): void {
-    this.selectedKeys = this.selectedKeys.includes(key)
-      ? this.selectedKeys.filter(selected => selected !== key)
-      : [...this.selectedKeys, key];
+    const checking = !this.selectedKeys.includes(key);
+    const next = new Set(this.selectedKeys);
 
+    if (checking) {
+      next.add(key);
+      // Selecting a child implies its ancestors — a checked leaf should never read as orphaned
+      // under unchecked parents.
+      ancestorKeys(this.nodes, key).forEach(ancestor => next.add(ancestor));
+    } else {
+      next.delete(key);
+    }
+
+    this.selectedKeys = [...next];
     this.fieldControl?.patchValue(this.selectedKeys);
     this.fieldControl?.markAsDirty();
     this.fieldControl?.markAsTouched();
