@@ -9,6 +9,7 @@ body:
       options:
         - "file-storing (Dignite.Abp.FileStoring / Dignite.FileExplorer)"
         - "notifications (Dignite.Abp.Notifications / Dignite.NotificationCenter)"
+        - "flex-fields (Dignite.Abp.FlexFields / @dignite/ng.flex-fields)"
         - "Repo-wide / not sure"
     validations:
       required: true

@@ -3,7 +3,7 @@
 #
 # The label names below must already exist in the repository (Settings -> Labels) or a labeler run
 # will error. "documentation" usually exists by default; create the "module: *" and "area: *" ones
-# once. The two module trees are independent, so most PRs match exactly one "module:" label.
+# once. The three module trees are independent, so most PRs match exactly one "module:" label.
 
 "module: file-storing":
   - changed-files:
@@ -13,11 +13,16 @@
   - changed-files:
       - any-glob-to-any-file: 'notifications/**'
 
+"module: flex-fields":
+  - changed-files:
+      - any-glob-to-any-file: 'flex-fields/**'
+
 "area: angular":
   - changed-files:
       - any-glob-to-any-file:
           - 'file-storing/angular/**'
           - 'notifications/angular/**'
+          - 'flex-fields/angular/**'
 
 "area: build/ci":
   - changed-files:

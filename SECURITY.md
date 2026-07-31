@@ -1,7 +1,7 @@
 # Security Policy
 
-Covers every package released from this repository — both the `file-storing/` and `notifications/`
-module trees.
+Covers every package released from this repository — the `file-storing/`, `notifications/`, and
+`flex-fields/` module trees.
 
 ## Supported versions
 
@@ -14,7 +14,7 @@ basis. Once `10.0.0` (or later) ships, this table will track the currently-suppo
 against the ABP Framework major version each targets.
 
 Because every package in this repository is released in lockstep on a single version, a supported
-version line covers both modules at once.
+version line covers all three modules at once.
 
 ## Reporting a vulnerability
 
@@ -31,7 +31,7 @@ Instead, use GitHub's private vulnerability reporting for this repository:
      provider) and version / commit
    - Any suggested remediation, if you have one
 
-Reports about the demo hosts (`file-storing/host/`, `notifications/host/`) are welcome but are
+Reports about the demo hosts (`file-storing/host/`, `notifications/host/`, `flex-fields/demo/`) are welcome but are
 triaged at lower priority: they are local-development demos, never packed or published, and not
 intended to be deployed.
 

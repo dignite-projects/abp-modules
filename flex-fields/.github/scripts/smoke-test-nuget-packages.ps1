@@ -10,22 +10,12 @@ $ErrorActionPreference = 'Stop'
 
 $artifacts = (Resolve-Path -LiteralPath $ArtifactsPath).Path
 $packageIds = @(
-    'Dignite.Abp.Notifications.Abstractions',
-    'Dignite.Abp.Notifications',
-    'Dignite.Abp.Notifications.Emailing',
-    'Dignite.Abp.Notifications.Emailing.Identity',
-    'Dignite.Abp.Notifications.Identity',
-    'Dignite.Abp.Notifications.SignalR',
-    'Dignite.NotificationCenter.Domain.Shared',
-    'Dignite.NotificationCenter.Domain',
-    'Dignite.NotificationCenter.Application.Contracts',
-    'Dignite.NotificationCenter.Application',
-    'Dignite.NotificationCenter.HttpApi',
-    'Dignite.NotificationCenter.HttpApi.Client',
-    'Dignite.NotificationCenter.EntityFrameworkCore',
-    'Dignite.NotificationCenter.MongoDB',
-    'Dignite.NotificationCenter.Web',
-    'Dignite.NotificationCenter.Installer'
+    'Dignite.Abp.FlexFields.Domain.Shared',
+    'Dignite.Abp.FlexFields.Abstractions',
+    'Dignite.Abp.FlexFields.Domain',
+    'Dignite.Abp.FlexFields.EntityFrameworkCore',
+    'Dignite.Abp.FlexFields.MongoDB',
+    'Dignite.Abp.FlexFields.Installer'
 )
 
 foreach ($packageId in $packageIds) {
@@ -35,7 +25,7 @@ foreach ($packageId in $packageIds) {
     }
 }
 
-$tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) "dignite-notifications-nuget-smoke-$([Guid]::NewGuid().ToString('N'))"
+$tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) "dignite-flex-fields-nuget-smoke-$([Guid]::NewGuid().ToString('N'))"
 $projectPath = Join-Path $tempRoot 'PackageSmoke.csproj'
 $sourcePath = Join-Path $tempRoot 'PackageSmoke.cs'
 $nuGetConfigPath = Join-Path $tempRoot 'NuGet.Config'
@@ -69,22 +59,12 @@ public static class PackageSurface
 {
     public static readonly Type[] ModuleTypes =
     [
-        typeof(Dignite.Abp.Notifications.AbpNotificationsAbstractionsModule),
-        typeof(Dignite.Abp.Notifications.AbpNotificationsModule),
-        typeof(Dignite.Abp.Notifications.Emailing.AbpNotificationsEmailingModule),
-        typeof(Dignite.Abp.Notifications.Emailing.Identity.AbpNotificationsEmailingIdentityModule),
-        typeof(Dignite.Abp.Notifications.Identity.AbpNotificationsIdentityModule),
-        typeof(Dignite.Abp.Notifications.SignalR.AbpNotificationsSignalRModule),
-        typeof(Dignite.NotificationCenter.NotificationCenterDomainSharedModule),
-        typeof(Dignite.NotificationCenter.NotificationCenterDomainModule),
-        typeof(Dignite.NotificationCenter.NotificationCenterApplicationContractsModule),
-        typeof(Dignite.NotificationCenter.NotificationCenterApplicationModule),
-        typeof(Dignite.NotificationCenter.NotificationCenterHttpApiModule),
-        typeof(Dignite.NotificationCenter.NotificationCenterHttpApiClientModule),
-        typeof(Dignite.NotificationCenter.EntityFrameworkCore.NotificationCenterEntityFrameworkCoreModule),
-        typeof(Dignite.NotificationCenter.MongoDB.NotificationCenterMongoDbModule),
-        typeof(Dignite.NotificationCenter.Web.NotificationCenterWebModule),
-        typeof(Dignite.NotificationCenter.NotificationCenterInstallerModule)
+        typeof(Dignite.Abp.FlexFields.FlexFieldsDomainSharedModule),
+        typeof(Dignite.Abp.FlexFields.FlexFieldsAbstractionsModule),
+        typeof(Dignite.Abp.FlexFields.FlexFieldsDomainModule),
+        typeof(Dignite.Abp.FlexFields.EntityFrameworkCore.FlexFieldsEntityFrameworkCoreModule),
+        typeof(Dignite.Abp.FlexFields.MongoDB.FlexFieldsMongoDbModule),
+        typeof(Dignite.Abp.FlexFields.FlexFieldsInstallerModule)
     ];
 }
 '@
@@ -111,7 +91,7 @@ public static class PackageSurface
         throw "NuGet package smoke build failed with exit code $LASTEXITCODE."
     }
 
-    Write-Host "Successfully restored and compiled a consumer of all $($packageIds.Count) NuGet packages at version $Version."
+    Write-Host "Successfully restored and compiled a consumer of all $($packageIds.Count) FlexFields NuGet packages at version $Version."
 }
 finally {
     if ($null -eq $previousNuGetPackages) {

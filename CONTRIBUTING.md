@@ -6,7 +6,7 @@ See the root [README.md](./README.md) for the repository layout and the full bui
 In short:
 
 ```bash
-# Both modules
+# All modules
 dotnet build Dignite.Abp.Modules.slnx
 dotnet test Dignite.Abp.Modules.slnx
 
@@ -20,6 +20,7 @@ The Angular libraries are npm workspaces, built separately from MSBuild:
 ```bash
 cd file-storing/angular  && npm install --legacy-peer-deps && npm run build:lib
 cd notifications/angular && npm install && npm run build:lib
+cd flex-fields/angular   && npm install --legacy-peer-deps && npm run build:lib
 ```
 
 ## Code conventions
@@ -36,12 +37,11 @@ contributors. They're split by how the content loads:
 - **`<module>/.claude/skills/`** — two per module: a **`*-conventions`** skill ("how *this* module
   applies ABP") and a **`*-invariants`** skill ("what a change must not break").
 
-`file-storing/` and `notifications/` have genuinely different DDD shapes, persistence conventions,
-and hard invariants. Where they disagree — repository convention, object mapper, distributed-event
-posture, test naming — **each module states its own** rather than sharing an averaged rule that would
-be wrong for both. Test naming is the clearest case: the two modules use deliberately opposite
-conventions. Where a module's `*-conventions` skill disagrees with a generic `abp-*` skill, the
-module skill wins for code in that module.
+`file-storing/`, `notifications/`, and `flex-fields/` have genuinely different DDD shapes,
+persistence conventions, and hard invariants. Where they disagree — repository convention, object
+mapper, distributed-event posture, test naming — **each module states its own** rather than sharing
+an averaged rule that would be wrong for all three. Where a module's `*-conventions` skill disagrees
+with a generic `abp-*` skill, the module skill wins for code in that module.
 
 Start with:
 
@@ -78,13 +78,12 @@ project, and the version is repository-wide rather than per-module.
 ### One version for the whole repository (lockstep)
 
 **Every package in this repository ships the same version**, from the single `<Version>` in the root
-[`Directory.Build.props`](./Directory.Build.props): all 10 packable `file-storing/` projects, all 15
-packable `notifications/` projects, and both Angular npm packages. One `v*` tag, one release
-pipeline, one number.
+[`Directory.Build.props`](./Directory.Build.props): all 33 packable NuGet projects across the three
+module trees and all three Angular npm packages. One `v*` tag, one release pipeline, one number.
 
 The consequence is **empty bumps**: a change to `file-storing/` alone still releases a new version of
-every `notifications/` package, whose content is identical to the previous release. That is accepted
-on purpose. The alternative — independent per-module versions in one repository — means consumers
+every other module's package, whose content is identical to the previous release. That is accepted on
+purpose. The alternative — independent per-module versions in one repository — means consumers
 must reason about which `Dignite.Abp.Notifications` version pairs with which
 `Dignite.Abp.FileStoring` version, and the maintainers must run two release pipelines and two tag
 namespaces. One number that sometimes moves for no reason is cheaper than a compatibility matrix
@@ -94,7 +93,7 @@ There is therefore **no per-module versioning** and no per-project `<Version>`. 
 
 ### MAJOR tracks the ABP Framework version, not this repository's own breaking changes
 
-Both modules supersede legacy package lines already published on NuGet.org under this same
+`file-storing/` and `notifications/` supersede legacy package lines already published on NuGet.org under this same
 `dignite-projects` org at versions `1.0.0` through `3.8.2` (`Dignite.Abp.Notifications*` and
 `Dignite.FileExplorer.*`). To make these releases unambiguously win NuGet.org's "latest version"
 resolution — no package rename needed — `<Version>`'s **MAJOR** segment tracks the **major version
@@ -130,7 +129,7 @@ safe to upgrade, which is the opposite of what this project's positioning needs.
 
 | Property | Segments | Purpose |
 |----------|----------|---------|
-| `<Version>` in [`Directory.Build.props`](./Directory.Build.props) | 3-segment SemVer (+ optional pre-release suffix) | The NuGet package version for **all 25 packable projects across both modules**, and the value a `v*` tag must match. **This is the release version.** |
+| `<Version>` in [`Directory.Build.props`](./Directory.Build.props) | 3-segment SemVer (+ optional pre-release suffix) | The NuGet package version for **all 33 packable projects across all three modules**, and the value a `v*` tag must match. **This is the release version.** |
 | `version` in [`file-storing/angular/projects/file-explorer/package.json`](./file-storing/angular/projects/file-explorer/package.json) | Same value as `<Version>` | npm version for `@dignite/ng.file-explorer`. |
 | `version` in [`notifications/angular/projects/notification-center/package.json`](./notifications/angular/projects/notification-center/package.json) | Same value as `<Version>` | npm version for `@dignite/ng.notification-center`. |
 | `version` in [`flex-fields/angular/projects/flex-fields/package.json`](./flex-fields/angular/projects/flex-fields/package.json) | Same value as `<Version>` | npm version for `@dignite/ng.flex-fields`. |
@@ -146,18 +145,18 @@ which fails the build if `<Version>` and **any** Angular package version drift a
 
 1. Move the CHANGELOG `[Unreleased]` section to `## [x.y.z] - YYYY-MM-DD`, keeping entries grouped
    by module so readers can tell which half of the repo changed.
-2. Confirm `<Version>` in `Directory.Build.props` and `version` in **both** Angular
+2. Confirm `<Version>` in `Directory.Build.props` and `version` in **all three** Angular
    `package.json` files match the intended release (tags do not drive the version — the release
    workflow reads and compares all three).
 3. Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`. The release workflow
    (`.github/workflows/release.yml`) triggers on `v*` tags; `workflow_dispatch` only builds and
    packs artifacts and does not create a GitHub Release.
-4. **Immediately open the next development version**: bump `<Version>` and both Angular package
+4. **Immediately open the next development version**: bump `<Version>` and all three Angular package
    versions to the next pre-release in a standalone `chore(release): bump version to X` commit.
    Because the release version is read from `Directory.Build.props` (not the tag), leaving it on the
    just-released value means the next `workflow_dispatch` build would re-emit artifacts that collide
    with the already-published packages.
-5. Tagged releases publish the NuGet packages to NuGet.org and **both** Angular libraries to npm.
+5. Tagged releases publish the NuGet packages to NuGet.org and **all three** Angular libraries to npm.
    Pre-release npm versions use the `next` dist-tag; stable versions use `latest`.
    `workflow_dispatch` remains a private preview build and does not publish to either public
    registry. npm requires every package to have a `latest` tag, so when a package's first-ever

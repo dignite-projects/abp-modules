@@ -13,6 +13,9 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -68,7 +71,7 @@ jobs:
             exit 1
           fi
 
-      # Includes both demo hosts (file-storing/host/..., notifications/host/...) - each opts out of
+      # Includes all three demo hosts (file-storing/host/..., notifications/host/..., flex-fields/demo/...) - each opts out of
       # central package management on its own (common.props / its own nested Directory.Build.props)
       # and pins its own inline package versions.
       - name: Build
@@ -123,8 +126,18 @@ jobs:
       - name: Run NotificationCenter (MongoDB) tests
         run: dotnet test notifications/notification-center/test/Dignite.NotificationCenter.MongoDB.Tests/Dignite.NotificationCenter.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/notifications
 
-      # Upload each module's coverage under its own flag, so Codecov tracks file-storing and
-      # notifications coverage separately instead of blending them into one number (the two module
+      # --- flex-fields tests ---
+      - name: Run FlexFields (core) tests
+        run: dotnet test flex-fields/test/Dignite.Abp.FlexFields.Tests/Dignite.Abp.FlexFields.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/flex-fields
+
+      - name: Run FlexFields (EF Core) tests
+        run: dotnet test flex-fields/test/Dignite.Abp.FlexFields.EntityFrameworkCore.Tests/Dignite.Abp.FlexFields.EntityFrameworkCore.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/flex-fields
+
+      - name: Run FlexFields (MongoDB) tests
+        run: dotnet test flex-fields/test/Dignite.Abp.FlexFields.MongoDB.Tests/Dignite.Abp.FlexFields.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/flex-fields
+
+      # Upload each module's coverage under its own flag, so Codecov tracks each module separately
+      # instead of blending unrelated code into one number (the module
       # trees are otherwise-unrelated per CLAUDE.md, so a blended number would hide which one
       # regressed). Guarded two ways so a Codecov outage or a missing CODECOV_TOKEN can never fail
       # this required check: continue-on-error on the step and fail_ci_if_error: false on the action.
@@ -148,8 +161,17 @@ jobs:
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 
-      # Projects with IsPackable=false (both demo hosts + test projects) are skipped automatically.
-      # Only the 10 file-storing + 15 notifications packable projects are produced.
+      - name: Upload flex-fields coverage to Codecov
+        uses: codecov/codecov-action@v5
+        continue-on-error: true
+        with:
+          directory: ./artifacts-ci/coverage/flex-fields
+          flags: flex-fields
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      # Projects with IsPackable=false (all three demo hosts + test projects) are skipped automatically.
+      # All 33 packable NuGet projects across the three module trees are produced.
       - name: Pack NuGet packages
         run: dotnet pack Dignite.Abp.Modules.slnx --no-build --configuration Release --output ./artifacts-ci/nuget
 
@@ -160,6 +182,10 @@ jobs:
       - name: Smoke-test notifications NuGet packages
         shell: pwsh
         run: ./notifications/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}'
+
+      - name: Smoke-test flex-fields NuGet packages
+        shell: pwsh
+        run: ./flex-fields/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}'
 
       # --- file-storing Angular (angular/projects/file-explorer) ---
       - name: Install file-storing Angular dependencies

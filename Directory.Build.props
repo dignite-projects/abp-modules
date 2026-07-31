@@ -8,8 +8,8 @@
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 
-    <!-- Lockstep version: one <Version> for every packable project in this repo (file-storing/ and
-         notifications/ alike) - see CONTRIBUTING.md#versioning-and-releases. MAJOR tracks the ABP
+    <!-- Lockstep version: one <Version> for every packable project in this repo (all three module
+         trees) - see CONTRIBUTING.md#versioning-and-releases. MAJOR tracks the ABP
          Framework major version targeted in Directory.Packages.props (currently 10.5.0 -> MAJOR =
          10) and must stay >= 10 forever, permanently ahead of the legacy Dignite.FileExplorer.* / Dignite.Abp.Notifications*
          package lines already published on NuGet up to 3.8.2 under these same PackageIds. -->
@@ -51,7 +51,7 @@
 
   <!-- Test-project detection (name + path based, so it is available this early - the SDK's own
        IsTestProject isn't set until much later). *.Tests run xunit; *.TestBase is shared scenario
-       infrastructure with no runner. The two demo hosts have their OWN nested Directory.Build.props
+       infrastructure with no runner. The three demo hosts have their OWN nested Directory.Build.props
        that does not import this file, so nothing below ever reaches them. -->
   <PropertyGroup>
     <IsTestProject Condition="$(MSBuildProjectFullPath.Contains('test')) and ($(MSBuildProjectName.EndsWith('.Tests')) or $(MSBuildProjectName.EndsWith('.TestBase')))">true</IsTestProject>
