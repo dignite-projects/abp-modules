@@ -19,7 +19,8 @@ $packageIds = @(
     'Dignite.FileExplorer.EntityFrameworkCore',
     'Dignite.FileExplorer.MongoDB',
     'Dignite.FileExplorer.HttpApi',
-    'Dignite.FileExplorer.HttpApi.Client'
+    'Dignite.FileExplorer.HttpApi.Client',
+    'Dignite.FileExplorer.Installer'
 )
 
 foreach ($packageId in $packageIds) {
@@ -72,7 +73,8 @@ public static class PackageSurface
         typeof(Dignite.FileExplorer.EntityFrameworkCore.FileExplorerEntityFrameworkCoreModule),
         typeof(Dignite.FileExplorer.MongoDB.FileExplorerMongoDbModule),
         typeof(Dignite.FileExplorer.FileExplorerHttpApiModule),
-        typeof(Dignite.FileExplorer.FileExplorerHttpApiClientModule)
+        typeof(Dignite.FileExplorer.FileExplorerHttpApiClientModule),
+        typeof(Dignite.FileExplorer.FileExplorerInstallerModule)
     ];
 }
 '@

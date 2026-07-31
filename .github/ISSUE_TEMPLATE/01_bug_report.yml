@@ -9,15 +9,16 @@ body:
         a minimal reproduction is by far the most useful thing you can give us.
 
         For a **security** vulnerability, do **not** open a public issue — follow
-        [SECURITY.md](../blob/main/SECURITY.md) instead.
+        [the security policy](https://github.com/dignite-projects/abp-modules/security/policy) instead.
   - type: dropdown
     id: module
     attributes:
       label: Which module?
-      description: The two module trees are independent and never reference each other.
+      description: The three module trees are independent and never reference each other.
       options:
         - "file-storing (Dignite.Abp.FileStoring / Dignite.FileExplorer)"
         - "notifications (Dignite.Abp.Notifications / Dignite.NotificationCenter)"
+        - "flex-fields (Dignite.Abp.FlexFields / @dignite/ng.flex-fields)"
         - "Not sure / repo-wide"
     validations:
       required: true

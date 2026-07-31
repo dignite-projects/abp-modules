@@ -7,11 +7,12 @@ Resolves #xxxx (write the related issue number if there is one)
 
 ### Affected module(s)
 
-<!-- Tick the module tree(s) this PR touches. The two modules never reference each other, so most
+<!-- Tick the module tree(s) this PR touches. The three modules never reference each other, so most
      PRs touch only one. -->
 
 - [ ] `file-storing/` (Dignite.Abp.FileStoring / Dignite.FileExplorer)
 - [ ] `notifications/` (Dignite.Abp.Notifications / Dignite.NotificationCenter)
+- [ ] `flex-fields/` (Dignite.Abp.FlexFields / @dignite/ng.flex-fields)
 - [ ] Repo-wide (build, CI, docs, shared config)
 
 ### Checklist
@@ -19,7 +20,7 @@ Resolves #xxxx (write the related issue number if there is one)
 - [ ] I built and tested it locally (`./build/build-all-release.ps1` and `./build/test-all.ps1`, or the equivalent `dotnet` commands)
 - [ ] I added or updated unit / integration tests where it made sense
 - [ ] I updated the docs / `CHANGELOG.md` (or no documentation change is needed)
-- [ ] I did **not** add a `ProjectReference` across the `file-storing/` ↔ `notifications/` boundary, rename a PackageId, or inline a library package version (all repo invariants — see `CLAUDE.md`)
+- [ ] I did **not** add a cross-module `ProjectReference`, rename a PackageId, or inline a library package version (all repo invariants — see `CLAUDE.md`)
 
 ### How to test it?
 

@@ -1,0 +1,69 @@
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: nuget
+    directory: "/"
+    schedule:
+      interval: monthly
+    groups:
+      abp:
+        patterns:
+          - "Volo.Abp.*"
+      microsoft:
+        patterns:
+          - "Microsoft.*"
+          - "System.*"
+
+  - package-ecosystem: nuget
+    directory: "/file-storing/host/Dignite.FileExplorer.Web.Host"
+    schedule:
+      interval: monthly
+
+  - package-ecosystem: nuget
+    directory: "/notifications/host/Dignite.NotificationCenter.Web.Host"
+    schedule:
+      interval: monthly
+
+  - package-ecosystem: nuget
+    directory: "/flex-fields/demo/Dignite.Abp.FlexFields.Demo"
+    schedule:
+      interval: monthly
+
+  - package-ecosystem: npm
+    directory: "/file-storing/angular"
+    schedule:
+      interval: monthly
+    groups:
+      angular:
+        patterns:
+          - "@angular/*"
+          - "@angular-eslint/*"
+
+  - package-ecosystem: npm
+    directory: "/notifications/angular"
+    schedule:
+      interval: monthly
+    groups:
+      angular:
+        patterns:
+          - "@angular/*"
+          - "@angular-eslint/*"
+
+  - package-ecosystem: npm
+    directory: "/flex-fields/angular"
+    schedule:
+      interval: monthly
+    groups:
+      angular:
+        patterns:
+          - "@angular/*"
+          - "@angular-eslint/*"
