@@ -116,10 +116,7 @@ dotnet test  Dignite.Abp.FlexFields.slnx
 dotnet run --project demo/Dignite.Abp.FlexFields.Demo -- --migrate-database    # first run only
 dotnet run --project demo/Dignite.Abp.FlexFields.Demo                          # :44330
 
-cd angular && npm install --legacy-peer-deps && npm run build:lib && npm start  # :4200
+cd angular && npx yarn && npx yarn build:lib && npx yarn start  # :4200
 ```
-
-`--legacy-peer-deps` is required: `@abp/ng.theme.shared` pulls in `@swimlane/ngx-datatable`, whose
-Angular peer range stops at 20, so npm will not hoist it beside Angular 21 without it.
 
 No migrations ship in the library projects — a consuming host owns its own DbContext and migrations.

@@ -87,12 +87,12 @@ only the demo host, so build its libraries through the aggregate solution.
 `dotnet test` starts an embedded mongod (MongoSandbox) for the MongoDB provider tests and uses
 in-memory SQLite for the EF Core ones, so no local database install is needed.
 
-The Angular libraries are npm workspaces, outside MSBuild:
+The Angular libraries are separate Node packages, outside MSBuild:
 
 ```bash
-cd file-storing/angular  && npm install --legacy-peer-deps && npm run build:lib
-cd notifications/angular && npm install && npm run build:lib
-cd flex-fields/angular   && npm install --legacy-peer-deps && npm run build:lib
+cd file-storing/angular  && npx yarn && npx yarn build:lib
+cd notifications/angular && npx yarn && npx yarn build:lib
+cd flex-fields/angular   && npx yarn && npx yarn build:lib
 ```
 
 ## Versioning

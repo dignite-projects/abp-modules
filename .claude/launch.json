@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "flex-fields-angular",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "flex-fields/angular", "start"],
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["yarn", "--cwd", "flex-fields/angular", "start"],
       "port": 4200
     }
   ]

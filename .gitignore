@@ -289,9 +289,13 @@ Logs/
 # Use abp install-libs to restore.
 **/wwwroot/libs/*
 
-# Angular workspace (file-storing/angular, notifications/angular)
+# Angular workspace (file-storing/angular, flex-fields/angular, notifications/angular)
 dist/
 .angular/
+
+# Yarn is the authoritative package manager for the Angular projects (see each project's
+# start.ps1) - yarn.lock is tracked, npm's own lockfile is not.
+*/angular/package-lock.json
 
 # ASP.NET Core Data Protection key ring, written at runtime by the demo hosts. Each key-*.xml
 # holds an unencrypted <masterKey>, which protects auth cookies, antiforgery tokens and OpenIddict

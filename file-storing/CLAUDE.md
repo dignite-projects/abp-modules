@@ -96,7 +96,7 @@ dotnet test core/test/Dignite.Abp.FileStoring.Tests
 
 dotnet pack Dignite.FileExplorer.slnx -c Release
 
-cd angular && npm install --legacy-peer-deps && npm run build:lib && npm start   # :4200
+cd angular && npx yarn && npx yarn build:lib && npx yarn start                   # :4200
 dotnet run --project host/Dignite.FileExplorer.Web.Host                          # :44390
 ```
 
