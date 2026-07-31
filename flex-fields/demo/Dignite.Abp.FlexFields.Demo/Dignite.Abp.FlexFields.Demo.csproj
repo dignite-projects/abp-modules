@@ -11,6 +11,23 @@
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
   </PropertyGroup>
 
+  <!--
+    Security overrides for vulnerable transitive dependencies (this project pins its own
+    inline versions, so a direct reference is how we force a patched version). Each entry
+    lifts a transitive package to its first patched release; drop it once the upstream
+    ABP/Swashbuckle/MagicOnion/EF Core graph rolls forward past it.
+      MessagePack                3.1.1  -> 3.1.7   (GHSA-hv8m-jj95-wg3x et al.; via Volo.Abp.Studio.Client.AspNetCore -> MagicOnion)
+      Microsoft.OpenApi          2.3.0  -> 2.7.5   (GHSA-v5pm-xwqc-g5wc; via Volo.Abp.Swashbuckle -> Swashbuckle.AspNetCore)
+      Scriban                    7.2.1  -> 7.2.2   (GHSA-7jvp-hj45-2f2m; via Volo.Abp.TextTemplating.Scriban)
+      SQLitePCLRaw.bundle_e_sqlite3 2.1.11 -> 2.1.12 (GHSA-2m69-gcr7-jv3q; via Microsoft.EntityFrameworkCore.Sqlite)
+  -->
+  <ItemGroup Label="Security overrides for vulnerable transitive dependencies">
+    <PackageReference Include="MessagePack" Version="3.1.7" />
+    <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
+    <PackageReference Include="Scriban" Version="7.2.2" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
