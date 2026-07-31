@@ -131,6 +131,11 @@
                 "inject": false,
                 "bundleName": "abp-bundle.rtl"
               },
+              {
+                "input": "node_modules/bootstrap-icons/font/bootstrap-icons.css",
+                "inject": true,
+                "bundleName": "bootstrap-icons"
+              },
               "src/styles.scss"
             ],
             "scripts": [],

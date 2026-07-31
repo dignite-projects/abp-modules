@@ -40,6 +40,7 @@
     "@ngx-validate/core": "^0.2.0",
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.11.3",
     "ng-zorro-antd": "^21.3.3"
   },
   "devDependencies": {

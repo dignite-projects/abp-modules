@@ -39,7 +39,8 @@
     "zone.js": "~0.15.0",
     "@angular/cdk": "~21.2.0",
     "ng-zorro-antd": "~21.0.0-next.1",
-    "@swimlane/ngx-datatable": "^22.0.0"
+    "@swimlane/ngx-datatable": "^22.0.0",
+    "bootstrap-icons": "^1.11.3"
   },
   "devDependencies": {
     "@abp/ng.schematics": "~10.5.0",
