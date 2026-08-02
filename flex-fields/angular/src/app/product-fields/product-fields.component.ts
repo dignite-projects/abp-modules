@@ -77,14 +77,16 @@ export class ProductFieldsComponent {
   openCreate(): void {
     this.editingField = undefined;
     this.isModalOpen = true;
+    const fieldTypeName = this.fieldTypes[0]?.name ?? '';
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(64)]],
       displayName: ['', [Validators.required, Validators.maxLength(128)]],
       description: [''],
-      fieldTypeName: [this.fieldTypes[0]?.name ?? '', Validators.required],
+      fieldTypeName: [fieldTypeName, Validators.required],
       required: [false],
       searchable: [false],
     });
+    this.applySearchableAvailability(fieldTypeName);
   }
 
   openEdit(field: ProductFieldDto): void {
@@ -99,6 +101,34 @@ export class ProductFieldsComponent {
       required: [field.required],
       searchable: [field.searchable],
     });
+    this.applySearchableAvailability(field.fieldTypeName);
+  }
+
+  /**
+   * Re-applied whenever the create form's field-type dropdown changes (the edit form's is fixed, so
+   * openEdit only needs the one-time call above).
+   */
+  onFieldTypeChange(event: Event): void {
+    this.applySearchableAvailability((event.target as HTMLSelectElement).value);
+  }
+
+  /**
+   * A field type with no query-index slot (`indexable: false`, e.g. FileExplorer) can never actually be
+   * searched - FlexFieldIndexManagerBase.GetIndexableFieldsAsync skips it regardless of `Searchable`.
+   * Lock the checkbox off rather than let an admin set a flag that looks like it did something.
+   */
+  private applySearchableAvailability(fieldTypeName: string): void {
+    const searchableControl = this.form?.get('searchable');
+    if (!searchableControl) {
+      return;
+    }
+
+    if (this.fieldTypeResolver.find(fieldTypeName)?.indexable === false) {
+      searchableControl.setValue(false);
+      searchableControl.disable();
+    } else {
+      searchableControl.enable();
+    }
   }
 
   closeModal(): void {

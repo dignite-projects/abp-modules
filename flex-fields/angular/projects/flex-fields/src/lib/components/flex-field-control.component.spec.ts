@@ -36,6 +36,7 @@ class BuiltInControlsHostComponent {
 const stubType: FieldTypeDefinition = {
   name: 'Stub',
   displayNameKey: 'FlexFields::FieldType:Text',
+  indexable: true,
   controlComponent: StubControlComponent,
 };
 

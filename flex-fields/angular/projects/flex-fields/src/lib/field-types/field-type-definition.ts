@@ -22,6 +22,19 @@ export interface FieldTypeDefinition {
    */
   displayNameKey: string;
 
+  /**
+   * Mirrors the server's `IFieldType.IndexValueType != null` — whether a value of this type can ever
+   * be written to the query index, regardless of a particular field's `Searchable` setting. `false` for
+   * a type like `FileExplorer` that stores something with no sensible typed index slot (an array of
+   * file descriptors, not a bare scalar).
+   *
+   * A downstream's own field-admin UI (Required/Searchable are its own concern, not a library
+   * component — see `FieldTypeDefinition`'s file doc) should read this to disable or hide its
+   * "Searchable" control: toggling it on for a non-indexable type is accepted but silently has no
+   * effect, since the index manager skips these fields regardless of `Searchable`.
+   */
+  indexable: boolean;
+
   /** Designs the field — the admin-side editor for this type's configuration. */
   configComponent?: Type<unknown>;
 

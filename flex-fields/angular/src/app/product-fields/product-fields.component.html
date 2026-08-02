@@ -91,7 +91,7 @@
         </div>
         <div class="mb-3">
           <label class="form-label">{{ 'Demo::FieldType' | abpLocalization }}</label>
-          <select class="form-select" formControlName="fieldTypeName">
+          <select class="form-select" formControlName="fieldTypeName" (change)="onFieldTypeChange($event)">
             @for (fieldType of fieldTypes; track fieldType.name) {
               <option [value]="fieldType.name">{{ fieldType.displayNameKey | abpLocalization }}</option>
             }

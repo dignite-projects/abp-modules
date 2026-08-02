@@ -52,6 +52,12 @@ describe('built-in field types', () => {
     expect(withoutSearch).toEqual(['DateEdit']);
   });
 
+  it('is indexable for all six — none of the built-ins mirror a null server IndexValueType', () => {
+    for (const fieldType of BUILT_IN_FIELD_TYPES) {
+      expect(fieldType.indexable).toBe(true);
+    }
+  });
+
   it('cannot be mutated at runtime', () => {
     expect(Object.isFrozen(BUILT_IN_FIELD_TYPES)).toBe(true);
   });
