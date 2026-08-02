@@ -33,11 +33,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: npm
+          cache: yarn
           cache-dependency-path: |
-            file-storing/angular/package-lock.json
-            notifications/angular/package-lock.json
-            flex-fields/angular/package-lock.json
+            file-storing/angular/yarn.lock
+            notifications/angular/yarn.lock
+            flex-fields/angular/yarn.lock
 
       - name: Verify NuGet and npm version lockstep
         id: version
@@ -190,23 +190,23 @@ jobs:
       # --- file-storing Angular (angular/projects/file-explorer) ---
       - name: Install file-storing Angular dependencies
         working-directory: file-storing/angular
-        run: npm ci --legacy-peer-deps
+        run: yarn install --frozen-lockfile
 
       - name: Lint file-storing Angular projects
         working-directory: file-storing/angular
-        run: npm run lint -- --max-warnings=0
+        run: yarn lint --max-warnings=0
 
       - name: Run file-storing Angular unit tests
         working-directory: file-storing/angular
-        run: npm test -- --watch=false
+        run: yarn test --watch=false
 
       - name: Build file-storing Angular library
         working-directory: file-storing/angular
-        run: npm run build:lib
+        run: yarn build:lib
 
       - name: Build file-storing Angular demo
         working-directory: file-storing/angular
-        run: npm run build:prod
+        run: yarn build:prod
 
       - name: Pack file-storing Angular library
         shell: pwsh
@@ -228,15 +228,15 @@ jobs:
       # --- notifications Angular (angular/projects/notification-center) ---
       - name: Install notifications Angular dependencies
         working-directory: notifications/angular
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Build notifications Angular library
         working-directory: notifications/angular
-        run: npm run build:lib
+        run: yarn build:lib
 
       - name: Build notifications Angular demo
         working-directory: notifications/angular
-        run: npm run build:prod
+        run: yarn build:prod
 
       - name: Pack notifications Angular library
         shell: pwsh
@@ -261,23 +261,23 @@ jobs:
       # Angular 21 without this - and the demo app's global styles import it by top-level path.
       - name: Install flex-fields Angular dependencies
         working-directory: flex-fields/angular
-        run: npm ci --legacy-peer-deps
+        run: yarn install --frozen-lockfile
 
       - name: Lint flex-fields Angular projects
         working-directory: flex-fields/angular
-        run: npm run lint -- --max-warnings=0
+        run: yarn lint --max-warnings=0
 
       - name: Run flex-fields Angular unit tests
         working-directory: flex-fields/angular
-        run: npm test -- --watch=false
+        run: yarn test --watch=false
 
       - name: Build flex-fields Angular library
         working-directory: flex-fields/angular
-        run: npm run build:lib
+        run: yarn build:lib
 
       - name: Build flex-fields Angular demo
         working-directory: flex-fields/angular
-        run: npm run build:prod
+        run: yarn build:prod
 
       - name: Pack flex-fields Angular library
         shell: pwsh
