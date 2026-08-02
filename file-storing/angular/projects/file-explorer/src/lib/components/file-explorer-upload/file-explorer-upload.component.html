@@ -1,44 +1,48 @@
-<div class="input-group mb-3">
-  <input type="file" class="form-control" #fileUploadInput [multiple]="_multiple" (change)="getFileChange($event)">
-</div>
+@if (fileContainerName) {
+  <div class="input-group mb-3">
+    <input type="file" class="form-control" #fileUploadInput [multiple]="multiple" (change)="onFileInputChange($event)">
+  </div>
 
-@if (filesTableData.length>0) {
-  <table class="table">
-    <thead>
-      <tr>
-        <th scope="col">{{'FileExplorer::FileName' | abpLocalization}}</th>
-        <th scope="col" style="width: 120px;">{{'FileExplorer::FileSize' | abpLocalization}}</th>
-        <th scope="col" style="width: 50px;"></th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (item of filesTableData; track item; let i = $index) {
+  @if (filesTableData.length>0) {
+    <table class="table">
+      <thead>
         <tr>
-          <td>
-            
-            
-                <div class="d-flex">
-                  <div class="flex-grow-1">
-                    {{item.name}}
-                    @if (item.size > sizeLimit) {
-                      <div class="form-text text-danger">
-                        {{'FileExplorer::ExceedsMaximumSize' |
-                      abpLocalization:(sizeLimit|formatFileSize)}}</div>
-                    }
-                  </div>
-                  <div class="" [attr.title]="item.name">
-                    <fe-file-preview [width]="'60px'" [src]="item.src" [name]="item.name" [type]="item.type"></fe-file-preview>
-                  </div>
-                </div>
-          </td>
-          <td>{{item.fileSize}}</td>
-          <td>
-            <button class="btn btn-sm p-0 btn-outline-secondary " (click.stop)="deleteFileTableItem(i,item)">
-              <i class="fas fa-trash p-2"></i>
-            </button>
-          </td>
+          <th scope="col">{{'FileExplorer::FileName' | abpLocalization}}</th>
+          <th scope="col" style="width: 120px;">{{'FileExplorer::FileSize' | abpLocalization}}</th>
+          <th scope="col" style="width: 50px;"></th>
         </tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @for (item of filesTableData; track item; let i = $index) {
+          <tr>
+            <td>
+              <div class="d-flex">
+                <div class="flex-grow-1">
+                  {{item.name}}
+                  @if (item.size > sizeLimit) {
+                    <div class="form-text text-danger">
+                      {{'FileExplorer::ExceedsMaximumSize' |
+                    abpLocalization:(sizeLimit|formatFileSize)}}</div>
+                  }
+                </div>
+                <div class="" [attr.title]="item.name">
+                  <fe-file-preview [width]="'60px'" [src]="item.src" [name]="item.name" [type]="item.type"></fe-file-preview>
+                </div>
+              </div>
+            </td>
+            <td>{{item.fileSize}}</td>
+            <td>
+              <button class="btn btn-sm p-0 btn-outline-secondary " (click.stop)="deleteFileTableItem(i,item)">
+                <i class="fas fa-trash p-2"></i>
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+} @else {
+  <div class="alert alert-warning py-2 px-3 mb-0">
+    {{ 'FileExplorer::ContainerNotConfigured' | abpLocalization }}
+  </div>
 }

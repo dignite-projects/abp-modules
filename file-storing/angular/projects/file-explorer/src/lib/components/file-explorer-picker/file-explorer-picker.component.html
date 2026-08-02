@@ -1,44 +1,49 @@
-<button class="btn btn-sm btn-dark soft ms-2 float-end" type="button"
-(click.stop)="ModalOpen = true">{{'FileExplorer::SelectFile' | abpLocalization}}</button>
+@if (fileContainerName) {
+  <button class="btn btn-sm btn-dark soft ms-2 float-end" type="button"
+  (click.stop)="modalOpen = true">{{'FileExplorer::SelectFile' | abpLocalization}}</button>
 
-<fe-file-explorer-modal [(visible)]="ModalOpen" [selectPickerFile]="_fileShowTable" [multiple]="_multiple"
-(selectFilefn)="_selectFilefn($event)" [fileContainerName]="_fileContainerName"></fe-file-explorer-modal>
-@if (_fileShowTable.length>0) {
-  <table class="table" cdkDropList (cdkDropListDropped)="drop($event)">
-    <thead>
-      <tr>
-        <th scope="col" style="width: 50px;">序号</th>
-        <th scope="col">{{'FileExplorer::FileName' | abpLocalization}}</th>
-        <th scope="col" style="width: 120px;">{{'FileExplorer::FileSize' | abpLocalization}}</th>
-        <th scope="col" style="width: 50px;"></th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (item of _fileShowTable; track item; let i = $index) {
-        <tr cdkDrag cdkDragLockAxis="y" [cdkDragData]="item">
-          <td>{{ i + 1 }}</td>
-          <!-- item 可能来自持久化的表单字段（历史数据以 PascalCase 保存），也可能来自接口返回的 camelCase DTO，
-               两种大小写都要兼容，不要只留一侧 -->
-          <td>            
-                <div class="d-flex">
-                  <div class="flex-grow-1 file-name-drag-handle" cdkDragHandle
-                    title="拖拽文件名可调整顺序" aria-label="拖拽文件名可调整顺序">
-                    <div>{{ item.name }}</div>
-                  </div>
-                  <div class="" [attr.title]="item.name">
-                    <fe-file-preview [width]="'60px'" [src]="item.url" [containerName]="item.containerName"
-                      [blobName]="item.blobName" [name]="item.name" [type]="item.mimeType"></fe-file-preview>
-                  </div>
-                </div>
-          </td>
-          <td>{{(item.size)|formatFileSize}}</td>
-          <td>
-            <button class="btn btn-sm btn-outline-secondary p-0" (click.stop)="deleteFileTableItem(i)">
-              <i class="fas fa-trash p-2"></i>
-            </button>
-          </td>
+  <fe-file-explorer-modal [(visible)]="modalOpen" [selectPickerFile]="fileShowTable" [multiple]="multiple"
+  (selectFilefn)="onSelectFile($event)" [fileContainerName]="fileContainerName"></fe-file-explorer-modal>
+  @if (fileShowTable.length>0) {
+    <table class="table" cdkDropList (cdkDropListDropped)="drop($event)">
+      <thead>
+        <tr>
+          <th scope="col" style="width: 50px;">{{'FileExplorer::RowNumber' | abpLocalization}}</th>
+          <th scope="col">{{'FileExplorer::FileName' | abpLocalization}}</th>
+          <th scope="col" style="width: 120px;">{{'FileExplorer::FileSize' | abpLocalization}}</th>
+          <th scope="col" style="width: 50px;"></th>
         </tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @for (item of fileShowTable; track item; let i = $index) {
+          <tr cdkDrag cdkDragLockAxis="y" [cdkDragData]="item">
+            <td>{{ i + 1 }}</td>
+            <td>
+                  <div class="d-flex">
+                    <div class="flex-grow-1 file-name-drag-handle" cdkDragHandle
+                      [title]="'FileExplorer::DragFileNameToReorder' | abpLocalization"
+                      [attr.aria-label]="'FileExplorer::DragFileNameToReorder' | abpLocalization">
+                      <div>{{ item.name }}</div>
+                    </div>
+                    <div class="" [attr.title]="item.name">
+                      <fe-file-preview [width]="'60px'" [src]="item.url" [containerName]="item.containerName"
+                        [blobName]="item.blobName" [name]="item.name" [type]="item.mimeType"></fe-file-preview>
+                    </div>
+                  </div>
+            </td>
+            <td>{{(item.size)|formatFileSize}}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-secondary p-0" (click.stop)="deleteFileTableItem(i)">
+                <i class="fas fa-trash p-2"></i>
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+} @else {
+  <div class="alert alert-warning py-2 px-3 mb-0">
+    {{ 'FileExplorer::ContainerNotConfigured' | abpLocalization }}
+  </div>
 }

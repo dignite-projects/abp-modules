@@ -15,7 +15,12 @@
     "target": "ES2022",
     "lib": ["ES2022", "dom", "esnext.disposable"],
     "paths": {
-      "@dignite/ng.flex-fields": ["projects/flex-fields/src/public-api.ts"]
+      "@dignite/ng.flex-fields": [
+        "projects/flex-fields/src/public-api.ts"
+      ],
+      "@dignite/ng.flex-fields-file-explorer": [
+        "projects/flex-fields-file-explorer/src/public-api.ts"
+      ]
     },
     "useDefineForClassFields": false
   },

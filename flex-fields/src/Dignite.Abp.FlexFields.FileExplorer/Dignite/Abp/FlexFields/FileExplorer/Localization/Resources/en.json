@@ -1,0 +1,10 @@
+{
+  "culture": "en",
+  "texts": {
+    "FieldType:FileExplorer": "File Explorer",
+    "FieldType:FileExplorer:FileContainerName": "File Container Name",
+    "FieldType:FileExplorer:UploadFileMultiple": "Allow Multiple Files",
+    "FieldType:FileExplorer:ContainerNotConfigured": "This field has no file container configured yet. Set one in the field's configuration before it can be used.",
+    "Validate:Required": "{0} Field Required!"
+  }
+}

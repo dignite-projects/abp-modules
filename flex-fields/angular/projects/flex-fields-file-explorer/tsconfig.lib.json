@@ -1,0 +1,22 @@
+/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
+/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../out-tsc/lib",
+    "declaration": true,
+    "declarationMap": true,
+    "types": [],
+    // Overrides (replaces, not merges) the workspace root's `paths`: those map
+    // `@dignite/ng.flex-fields` straight to its TypeScript source for the Demo app's convenience,
+    // but ng-packagr can't cleanly roll up declarations across two entry points that way — it needs
+    // to resolve sibling packages through node_modules like any other consumer would.
+    "paths": {}
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "**/*.spec.ts"
+  ]
+}

@@ -1,0 +1,22 @@
+<div [formGroup]="entityForm">
+  <div [formGroupName]="parentField">
+    <label class="form-label" *ngIf="fieldValue.field.displayName">
+      {{ fieldValue.field.displayName }}
+    </label>
+    @if (isContainerConfigured) {
+      <fe-file-explorer-picker
+        [selectFormFile]="fieldControl?.value"
+        [multiple]="multiple"
+        [fileContainerName]="containerName"
+        (selectedFileChange)="onSelectedFileChange($event)"
+      />
+    } @else {
+      <div class="alert alert-warning py-2 px-3 mb-0">
+        {{ 'FlexFieldsFileExplorer::FieldType:FileExplorer:ContainerNotConfigured' | abpLocalization }}
+      </div>
+    }
+    <small class="form-text text-muted d-block" *ngIf="fieldValue.field.description">
+      {{ fieldValue.field.description }}
+    </small>
+  </div>
+</div>

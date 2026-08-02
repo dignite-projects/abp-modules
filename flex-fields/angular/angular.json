@@ -249,6 +249,42 @@
           }
         }
       }
+    },
+    "flex-fields-file-explorer": {
+      "projectType": "library",
+      "root": "projects/flex-fields-file-explorer",
+      "sourceRoot": "projects/flex-fields-file-explorer/src",
+      "prefix": "ff",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/flex-fields-file-explorer/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/flex-fields-file-explorer/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/flex-fields-file-explorer/tsconfig.spec.json",
+            "runner": "vitest"
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "projects/flex-fields-file-explorer/**/*.ts",
+              "projects/flex-fields-file-explorer/**/*.html"
+            ]
+          }
+        }
+      }
     }
   }
 }

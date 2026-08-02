@@ -1,0 +1,10 @@
+{
+  "culture": "ja",
+  "texts": {
+    "FieldType:FileExplorer": "ファイルエクスプローラー",
+    "FieldType:FileExplorer:FileContainerName": "ファイルコンテナ名",
+    "FieldType:FileExplorer:UploadFileMultiple": "複数ファイルのアップロードを許可",
+    "FieldType:FileExplorer:ContainerNotConfigured": "このフィールドにはまだファイルコンテナが設定されていません。使用する前に、フィールドの設定でコンテナを指定してください。",
+    "Validate:Required": "{0} フィールド必須！"
+  }
+}

@@ -1,12 +1,11 @@
 import { Component, Input, OnChanges, OnDestroy } from '@angular/core';
-import { ImageTypeOption } from './models';
+import { IMAGE_TYPE_OPTIONS } from './models';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { FileDescriptorService } from '../proxy/dignite/file-explorer/files';
 import { ObjectUrlService } from '../services/object-url.service';
 
 @Component({
-  
   // eslint-disable-next-line @angular-eslint/component-selector
   selector: 'fe-file-preview',
   templateUrl: './file-preview.component.html',
@@ -14,39 +13,29 @@ import { ObjectUrlService } from '../services/object-url.service';
   imports: [CommonModule],
 })
 export class FilePreviewComponent implements OnChanges, OnDestroy {
+  @Input() width = '100px';
+  @Input() src = '';
+  @Input() type = '';
+  @Input() name = '';
+  @Input() className = '';
+  @Input() containerName = '';
+  @Input() blobName = '';
+  @Input() resizeWidth?: number;
+  @Input() resizeHeight?: number;
 
-  /**文件宽度 */
-  @Input() width: any = '100px'
-  /*文件链接 */
-  @Input() src: any = ''
-  /**文件类型 */
-  @Input() type: any = ''
-  /**文件名称 */
-  @Input() name: any = ''
-  @Input() className: any = ''
-  @Input() containerName: any = ''
-  @Input() blobName: any = ''
-  @Input() resizeWidth: any
-  @Input() resizeHeight: any
+  isImage = true;
+  isAudio = false;
+  isVideo = false;
+  displaySrc = '';
 
-  /**是否是文件 */
-  isImage = true
-  /**是否是视频 */
-  isAudio = false
-  /**是否是音频 */
-  isVideo = false
-  /**文件类型及图标 */
-  _ImageTypeOption = ImageTypeOption
-  displaySrc = ''
-  private previewObjectUrl = ''
-  private streamSubscription?: Subscription
-
+  private previewObjectUrl = '';
+  private streamSubscription?: Subscription;
 
   constructor(
     private fileDescriptorService: FileDescriptorService,
     private objectUrlService: ObjectUrlService,
-  ) { }
-  
+  ) {}
+
   ngOnChanges(): void {
     this.updateFileType();
     this.updatePreviewSource();
@@ -61,11 +50,11 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
     const fileName = this.name || '';
     const fileType = this.type || '';
     if (!this.type) {
-      this.type = fileName.includes('.7z') ? '7z' : ''
+      this.type = fileName.includes('.7z') ? '7z' : '';
     }
-    this.isImage = fileType.includes('image/')
-    this.isAudio = fileType.includes('audio/')
-    this.isVideo = fileType.includes('video/')
+    this.isImage = fileType.includes('image/');
+    this.isAudio = fileType.includes('audio/');
+    this.isVideo = fileType.includes('video/');
   }
 
   private updatePreviewSource() {
@@ -127,8 +116,9 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
     try {
       const url = new URL(String(src), window.location.origin);
       const parts = url.pathname.split('/').filter(Boolean);
-      const filesIndex = parts.findIndex((part, index) =>
-        part === 'files' && parts[index - 1] === 'file-explorer' && parts[index - 2] === 'api'
+      const filesIndex = parts.findIndex(
+        (part, index) =>
+          part === 'files' && parts[index - 1] === 'file-explorer' && parts[index - 2] === 'api',
       );
 
       if (filesIndex < 0) {
@@ -141,7 +131,10 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
       const containerIndex = parts[filesIndex + 1] === 'download' ? filesIndex + 2 : filesIndex + 1;
       return {
         containerName: decodeURIComponent(parts[containerIndex] ?? ''),
-        blobName: parts.slice(containerIndex + 1).map(part => decodeURIComponent(part)).join('/'),
+        blobName: parts
+          .slice(containerIndex + 1)
+          .map(part => decodeURIComponent(part))
+          .join('/'),
       };
     } catch {
       return {
@@ -156,15 +149,15 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
     return value.startsWith('blob:') || value.startsWith('data:');
   }
 
-  private revokePreviewObjectUrl() {
+  private revokePreviewObjectUrl(): void {
     if (this.previewObjectUrl) {
       URL.revokeObjectURL(this.previewObjectUrl);
       this.previewObjectUrl = '';
     }
   }
 
-  /**获取文件图标，未匹配到类型时使用通用文件图标 */
-  getFileIconClass() {
-    return this._ImageTypeOption.find(item => item.type === this.type)?.icon || 'fa fa-file-o';
+  /** Falls back to a generic file icon when the type has no dedicated one. */
+  getFileIconClass(): string {
+    return IMAGE_TYPE_OPTIONS.find(item => item.type === this.type)?.icon || 'fa fa-file-o';
   }
 }

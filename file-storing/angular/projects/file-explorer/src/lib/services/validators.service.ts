@@ -35,8 +35,8 @@ export class ValidatorsService {
     return false;
   }
 
-  getFormValidationStatus(formEntity: FormGroup | FormArray): { [key: string]: any } {
-    const validationStatus: { [key: string]: any } = {};
+  getFormValidationStatus(formEntity: FormGroup | FormArray): Record<string, boolean> {
+    const validationStatus: Record<string, boolean> = {};
 
     const traverseForm = (form: FormGroup | FormArray, prefix = '') => {
       if (form instanceof FormGroup) {

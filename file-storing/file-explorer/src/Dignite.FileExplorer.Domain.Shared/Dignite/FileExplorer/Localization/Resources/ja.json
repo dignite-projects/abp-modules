@@ -40,6 +40,10 @@
     "SelectDirectory": "ディレクトリを選択",
     "Directory": "ディレクトリ",
     "SelectFile": "ファイルを選択",
+    "ContainerNotConfigured": "ファイルコンテナが設定されていません。",
+    "RowNumber": "番号",
+    "DragFileNameToReorder": "ファイル名をドラッグして並べ替え",
+    "ItemsFailedToDelete": "{0} 件の削除に失敗しました。",
     "DirectoryName{0}AlreadyExist": "ディレクトリ名「{0}」はすでに存在しています！"
   }
 }

@@ -40,6 +40,10 @@
     "SelectDirectory": "选择目录",
     "Directory": "目录",
     "SelectFile": "选择文件",
+    "ContainerNotConfigured": "尚未配置文件容器。",
+    "RowNumber": "序号",
+    "DragFileNameToReorder": "拖拽文件名可调整顺序",
+    "ItemsFailedToDelete": "{0} 个项目删除失败。",
     "DirectoryName{0}AlreadyExist": "文件夹名称 {0} 已存在！"
   }
 }

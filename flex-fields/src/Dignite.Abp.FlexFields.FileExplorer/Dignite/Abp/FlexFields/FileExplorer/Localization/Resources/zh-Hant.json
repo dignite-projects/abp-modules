@@ -1,0 +1,10 @@
+{
+  "culture": "zh-Hant",
+  "texts": {
+    "FieldType:FileExplorer": "檔案總管",
+    "FieldType:FileExplorer:FileContainerName": "檔案容器名稱",
+    "FieldType:FileExplorer:UploadFileMultiple": "允許多選檔案",
+    "FieldType:FileExplorer:ContainerNotConfigured": "該欄位尚未設定檔案容器，請先在欄位設定中指定容器名稱後再使用。",
+    "Validate:Required": "{0} 為必填欄位！"
+  }
+}

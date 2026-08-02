@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+    <Description>FileExplorer field type for Dignite.Abp.FlexFields - lets a flex field reference one or more files picked through Dignite.FileExplorer. A bolt-on, not a built-in: referencing this package pulls in only Dignite.Abp.FlexFields.Abstractions, never Dignite.FileExplorer itself - the Angular half (@dignite/ng.flex-fields-file-explorer) is what actually talks to FileExplorer's API, so a host wires both together, but neither module references the other.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.Abp.FlexFields.Abstractions\Dignite.Abp.FlexFields.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Dignite\Abp\FlexFields\FileExplorer\Localization\Resources\*.json" />
+    <Content Remove="Dignite\Abp\FlexFields\FileExplorer\Localization\Resources\*.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" />
+  </ItemGroup>
+
+</Project>

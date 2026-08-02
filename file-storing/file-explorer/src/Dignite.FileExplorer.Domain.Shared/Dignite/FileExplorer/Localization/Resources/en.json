@@ -40,6 +40,10 @@
     "SelectDirectory": "Select directory",
     "Directory": "Directory",
     "SelectFile": "Select File",
+    "ContainerNotConfigured": "No file container configured.",
+    "RowNumber": "#",
+    "DragFileNameToReorder": "Drag the file name to reorder",
+    "ItemsFailedToDelete": "{0} item(s) failed to delete.",
     "DirectoryName{0}AlreadyExist": "The directory name \"{0}\" already exist!"
   }
 }

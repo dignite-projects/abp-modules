@@ -10,6 +10,7 @@ import { provideThemeLeptonX } from '@abp/ng.theme.lepton-x';
 import { provideSideMenuLayout } from '@abp/ng.theme.lepton-x/layouts';
 import { provideLogo, withEnvironmentOptions } from "@abp/ng.theme.shared";
 import { provideFlexFields } from '@dignite/ng.flex-fields';
+import { provideFileExplorerFieldType } from '@dignite/ng.flex-fields-file-explorer';
 import { ApplicationConfig } from '@angular/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
@@ -42,5 +43,10 @@ export const appConfig: ApplicationConfig = {
     // Registers the six built-in field types' FieldTypeResolver - without this, <ff-flex-field-*>
     // renders nothing, because the registry it looks the field type up in is empty.
     provideFlexFields(),
+    // Bolt-on: the FileExplorer field type, demonstrating a field type registered from outside
+    // the flex-fields package itself. Requires @dignite/ng.file-explorer's picker to actually
+    // browse/upload files, which needs a running FileExplorer backend - see this demo's README
+    // for the current state of that wiring.
+    provideFileExplorerFieldType(),
   ]
 };

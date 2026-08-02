@@ -772,6 +772,16 @@
   resolved "https://registry.yarnpkg.com/@ctrl/tinycolor/-/tinycolor-4.2.0.tgz#ba5d0b917303c0b3d3c14c4865cdc6ded25ac05f"
   integrity sha512-kzyuwOAQnXJNLS9PSyrk0CWk35nWJW/zl/6KvnTBMFK65gm7U1/Z5BqjxeapjZCIhQcM/DsrEmcbRwDyXyXK4A==
 
+"@dignite/ng.file-explorer@file:../../file-storing/angular/dist/file-explorer":
+  version "10.0.0-rc.4"
+  dependencies:
+    tslib "^2.0.0"
+
+"@dignite/ng.flex-fields@file:./dist/flex-fields":
+  version "10.0.0-rc.4"
+  dependencies:
+    tslib "^2.0.0"
+
 "@emnapi/core@1.11.1":
   version "1.11.1"
   resolved "https://registry.yarnpkg.com/@emnapi/core/-/core-1.11.1.tgz#b9e1064f3a6b1631e241e638eb48d736bfd372a6"

@@ -1,0 +1,44 @@
+@if (showInList) {
+  @if (files.length > 0) {
+    <div class="d-flex align-items-center">
+      <fe-file-preview
+        width="60px"
+        className="overflow-hidden me-1"
+        [src]="files[0].url"
+        [containerName]="files[0].containerName"
+        [blobName]="files[0].blobName"
+        [name]="files[0].name"
+        [type]="files[0].mimeType"
+      />
+      @if (files.length - 1 > 0) {
+        <span>+{{ files.length - 1 }}</span>
+      }
+    </div>
+  } @else {
+    <span>&mdash;</span>
+  }
+} @else {
+  <div class="mb-3">
+    <label class="form-label" *ngIf="fields?.field?.displayName">
+      {{ fields.field.displayName }}
+    </label>
+    @if (files.length > 0) {
+      <div class="d-flex align-items-center">
+        <fe-file-preview
+          width="60px"
+          className="overflow-hidden me-1"
+          [src]="files[0].url"
+          [containerName]="files[0].containerName"
+          [blobName]="files[0].blobName"
+          [name]="files[0].name"
+          [type]="files[0].mimeType"
+        />
+        @if (files.length - 1 > 0) {
+          <span>+{{ files.length - 1 }}</span>
+        }
+      </div>
+    } @else {
+      <div>&mdash;</div>
+    }
+  </div>
+}
