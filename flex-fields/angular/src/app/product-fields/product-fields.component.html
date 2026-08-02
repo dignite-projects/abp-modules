@@ -104,6 +104,10 @@
         <div class="mb-3 form-check">
           <input type="checkbox" class="form-check-input" id="ff-field-searchable" formControlName="searchable" />
           <label class="form-check-label" for="ff-field-searchable">{{ 'Demo::Searchable' | abpLocalization }}</label>
+          <!-- Greyed out on its own reads as broken; say which of the two it is. -->
+          @if (searchableUnsupported) {
+            <div class="form-text">{{ 'Demo::SearchableNotSupportedHint' | abpLocalization }}</div>
+          }
         </div>
 
         <hr />

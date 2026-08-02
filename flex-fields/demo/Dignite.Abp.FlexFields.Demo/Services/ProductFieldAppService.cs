@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dignite.Abp.FlexFields.Demo.Entities;
@@ -23,21 +25,47 @@ public class ProductFieldAppService : DemoAppService
     private readonly IFlexFieldRepository<ProductField> _fieldRepository;
     private readonly IFlexFieldValueMigrator<Product> _valueMigrator;
     private readonly IFlexFieldIndexManager<Product> _indexManager;
+    private readonly IFieldTypeResolver _fieldTypeResolver;
 
     public ProductFieldAppService(
         IFlexFieldRepository<ProductField> fieldRepository,
         IFlexFieldValueMigrator<Product> valueMigrator,
-        IFlexFieldIndexManager<Product> indexManager)
+        IFlexFieldIndexManager<Product> indexManager,
+        IFieldTypeResolver fieldTypeResolver)
     {
         _fieldRepository = fieldRepository;
         _valueMigrator = valueMigrator;
         _indexManager = indexManager;
+        _fieldTypeResolver = fieldTypeResolver;
     }
 
     public virtual async Task<ProductFieldDto> GetAsync(Guid id)
     {
         var field = await _fieldRepository.GetAsync(id);
         return MapToDto(field);
+    }
+
+    /// <summary>
+    /// The registered field types and what the client cannot derive about them - see
+    /// <see cref="FieldTypeDto"/>. <c>GET /api/app/product-field/field-types</c>.
+    /// <para>
+    /// The kernel has no application layer, so serving this is a downstream's job; this is the worked
+    /// example. It exists so the field designer's "searchable" setting is driven by the server's own
+    /// <see cref="IFieldType.IndexValueType"/> instead of a copy of it maintained by hand on the client -
+    /// a copy nothing in either build could catch drifting.
+    /// </para>
+    /// </summary>
+    public virtual Task<List<FieldTypeDto>> GetFieldTypesAsync()
+    {
+        var fieldTypes = _fieldTypeResolver.GetAll()
+            .Select(fieldType => new FieldTypeDto
+            {
+                Name = fieldType.Name,
+                Indexable = fieldType.IsIndexable(),
+            })
+            .ToList();
+
+        return Task.FromResult(fieldTypes);
     }
 
     public virtual async Task<PagedResultDto<ProductFieldDto>> GetListAsync(GetProductFieldListDto input)
@@ -55,6 +83,8 @@ public class ProductFieldAppService : DemoAppService
         {
             throw new BusinessException("Demo:FieldNameAlreadyExists").WithData("Name", input.Name);
         }
+
+        CheckSearchable(input.FieldTypeName, input.Searchable);
 
         var field = new ProductField(GuidGenerator.Create(), input.Name, input.DisplayName, input.FieldTypeName)
         {
@@ -81,6 +111,9 @@ public class ProductFieldAppService : DemoAppService
     {
         var field = await _fieldRepository.GetAsync(id);
         var wasSearchable = field.Searchable;
+
+        // The field type is fixed at creation, so this checks the stored one against the incoming flag.
+        CheckSearchable(field.FieldTypeName, input.Searchable);
 
         if (!string.Equals(field.Name, input.Name, StringComparison.Ordinal))
         {
@@ -126,6 +159,25 @@ public class ProductFieldAppService : DemoAppService
         await _valueMigrator.RemoveFieldAsync(field.Name);
 
         await _fieldRepository.DeleteAsync(field);
+    }
+
+    /// <summary>
+    /// Rejects a field marked searchable under a field type with no query-index slot.
+    /// <para>
+    /// The Angular field designer already disables the setting for such a type, but that is a courtesy to
+    /// the admin, not the rule: anything reaching this service another way - a direct API call, a future
+    /// admin UI, a data seeder - would otherwise store a flag that <c>FlexFieldIndexManagerBase</c>
+    /// silently ignores, and the only symptom would be a search that never matches. Failing the save is
+    /// the difference between a mistake that is reported and one that is invisible.
+    /// </para>
+    /// </summary>
+    private void CheckSearchable(string fieldTypeName, bool searchable)
+    {
+        if (searchable && !_fieldTypeResolver.IsIndexable(fieldTypeName))
+        {
+            throw new BusinessException("Demo:FieldTypeNotSearchable")
+                .WithData("FieldType", _fieldTypeResolver.Get(fieldTypeName).DisplayName);
+        }
     }
 
     private ProductFieldDto MapToDto(ProductField field)

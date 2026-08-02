@@ -54,6 +54,21 @@ export class ProductFieldsComponent {
   editingField?: ProductFieldDto;
   form?: FormGroup;
 
+  /**
+   * Whether the currently selected field type rules out searching. Drives the disabled state of the
+   * "searchable" checkbox and the hint that explains it.
+   */
+  searchableUnsupported = false;
+
+  /**
+   * Which field types can be searched at all, keyed by registration name - straight from the server, via
+   * ProductFieldAppService.GetFieldTypesAsync. It has to come from there: the answer is
+   * IFieldType.IndexValueType, and the Angular library deliberately does not restate it (see
+   * FieldTypeDefinition's doc). Empty until the request lands, which reads as "no restriction" - the
+   * server rejects the combination anyway, so a slow response can at worst let a save fail loudly.
+   */
+  private indexableByFieldType = new Map<string, boolean>();
+
   @ViewChild('submitButton') submitButton?: ElementRef<HTMLButtonElement>;
 
   constructor() {
@@ -67,6 +82,14 @@ export class ProductFieldsComponent {
       });
     const setData = (result: PagedResultDto<ProductFieldDto>) => (this.data = result);
     this.list.hookToQuery(getData).subscribe(setData);
+
+    this.fieldService.getFieldTypes().subscribe(fieldTypes => {
+      this.indexableByFieldType = new Map(
+        fieldTypes.map(fieldType => [fieldType.name ?? '', fieldType.indexable ?? true]),
+      );
+      // A modal opened before this landed was built against an empty map - re-apply so it catches up.
+      this.applySearchableAvailability(this.form?.getRawValue().fieldTypeName);
+    });
   }
 
   /** Localization key for a field type's display name, e.g. "FlexFields::FieldType:Text" - use with | abpLocalization. */
@@ -113,17 +136,21 @@ export class ProductFieldsComponent {
   }
 
   /**
-   * A field type with no query-index slot (`indexable: false`, e.g. FileExplorer) can never actually be
-   * searched - FlexFieldIndexManagerBase.GetIndexableFieldsAsync skips it regardless of `Searchable`.
-   * Lock the checkbox off rather than let an admin set a flag that looks like it did something.
+   * A field type with no query-index slot (FileExplorer) can never actually be searched -
+   * FlexFieldIndexManagerBase.GetIndexableFieldsAsync skips it regardless of `Searchable`. Lock the
+   * checkbox off rather than let an admin set a flag that looks like it did something; the hint beside
+   * it says why, since a control that is merely greyed out reads as broken.
    */
-  private applySearchableAvailability(fieldTypeName: string): void {
+  private applySearchableAvailability(fieldTypeName?: string): void {
+    this.searchableUnsupported =
+      !!fieldTypeName && this.indexableByFieldType.get(fieldTypeName) === false;
+
     const searchableControl = this.form?.get('searchable');
     if (!searchableControl) {
       return;
     }
 
-    if (this.fieldTypeResolver.find(fieldTypeName)?.indexable === false) {
+    if (this.searchableUnsupported) {
       searchableControl.setValue(false);
       searchableControl.disable();
     } else {

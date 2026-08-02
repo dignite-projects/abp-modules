@@ -26,4 +26,9 @@ public class FieldTypeResolver : IFieldTypeResolver, ITransientDependency
         else
             return fieldType;
     }
+
+    public virtual IReadOnlyList<IFieldType> GetAll()
+    {
+        return FieldTypes.ToList();
+    }
 }

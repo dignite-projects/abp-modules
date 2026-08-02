@@ -55,7 +55,6 @@ export const BUILT_IN_FIELD_TYPES: readonly FieldTypeDefinition[] = Object.freez
   {
     name: 'TextEdit',
     displayNameKey: 'FlexFields::FieldType:Text',
-    indexable: true,
     configComponent: TextConfigComponent,
     controlComponent: TextControlComponent,
     viewComponent: TextViewComponent,
@@ -64,7 +63,6 @@ export const BUILT_IN_FIELD_TYPES: readonly FieldTypeDefinition[] = Object.freez
   {
     name: 'NumericEdit',
     displayNameKey: 'FlexFields::FieldType:Number',
-    indexable: true,
     configComponent: NumberConfigComponent,
     controlComponent: NumberControlComponent,
     viewComponent: NumberViewComponent,
@@ -75,7 +73,6 @@ export const BUILT_IN_FIELD_TYPES: readonly FieldTypeDefinition[] = Object.freez
     // library never shipped a date range filter and building one is feature work, not migration.
     name: 'DateEdit',
     displayNameKey: 'FlexFields::FieldType:DateTime',
-    indexable: true,
     configComponent: DateTimeConfigComponent,
     controlComponent: DateTimeControlComponent,
     viewComponent: DateTimeViewComponent,
@@ -83,7 +80,6 @@ export const BUILT_IN_FIELD_TYPES: readonly FieldTypeDefinition[] = Object.freez
   {
     name: 'Select',
     displayNameKey: 'FlexFields::FieldType:Select',
-    indexable: true,
     configComponent: SelectConfigComponent,
     controlComponent: SelectControlComponent,
     viewComponent: SelectViewComponent,
@@ -92,7 +88,6 @@ export const BUILT_IN_FIELD_TYPES: readonly FieldTypeDefinition[] = Object.freez
   {
     name: 'Switch',
     displayNameKey: 'FlexFields::FieldType:Boolean',
-    indexable: true,
     configComponent: BooleanConfigComponent,
     controlComponent: BooleanControlComponent,
     viewComponent: BooleanViewComponent,
@@ -101,7 +96,6 @@ export const BUILT_IN_FIELD_TYPES: readonly FieldTypeDefinition[] = Object.freez
   {
     name: 'TreeView',
     displayNameKey: 'FlexFields::FieldType:Tree',
-    indexable: true,
     configComponent: TreeConfigComponent,
     controlComponent: TreeControlComponent,
     viewComponent: TreeViewComponent,

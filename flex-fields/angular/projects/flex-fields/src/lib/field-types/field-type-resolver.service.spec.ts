@@ -6,7 +6,6 @@ import { FieldTypeResolver } from './field-type-resolver.service';
 const boltOn: FieldTypeDefinition = {
   name: 'CkEditor',
   displayNameKey: 'MyApp::FieldType:RichText',
-  indexable: false,
 };
 
 describe('FieldTypeResolver', () => {
@@ -56,7 +55,6 @@ describe('FieldTypeResolver', () => {
     const replacement: FieldTypeDefinition = {
       name: 'TextEdit',
       displayNameKey: 'MyApp::FieldType:MyOwnText',
-      indexable: true,
     };
     TestBed.configureTestingModule({
       providers: [provideFlexFields(), provideFlexFieldTypes(replacement)],

@@ -9,13 +9,14 @@ import { FileExplorerViewComponent } from './file-explorer-view.component';
  * No search component — the built-ins skip it too when there's no straightforward filter UI (see
  * `DateEdit`); a "field contains file X" search is feature work, not migration.
  *
- * `indexable: false` mirrors the server's `FileExplorerFieldType.IndexValueType => null`: the value
- * stored is an array of file descriptor objects, not a bare scalar the query index has a slot for.
+ * That this type is also *not indexable* — `FileExplorerFieldType.IndexValueType` is null, so a field
+ * of it can never be marked searchable — is deliberately not restated here. The server owns that
+ * answer and a downstream serves it to the client (the demo's `GET /api/app/product-field/field-types`);
+ * declaring it a second time in this file is exactly the drift `FieldTypeDefinition`'s doc warns about.
  */
 export const FILE_EXPLORER_FIELD_TYPE: FieldTypeDefinition = {
   name: 'FileExplorer',
   displayNameKey: 'FlexFieldsFileExplorer::FieldType:FileExplorer',
-  indexable: false,
   configComponent: FileExplorerConfigComponent,
   controlComponent: FileExplorerControlComponent,
   viewComponent: FileExplorerViewComponent,

@@ -17,6 +17,11 @@ export interface CreateUpdateProductDto {
   flexFields?: Record<string, object>;
 }
 
+export interface FieldTypeDto {
+  name?: string;
+  indexable?: boolean;
+}
+
 export interface FlexFieldDataDto {
   id?: string;
   name?: string;

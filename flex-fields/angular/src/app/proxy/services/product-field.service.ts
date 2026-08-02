@@ -1,4 +1,4 @@
-import type { CreateProductFieldDto, GetProductFieldListDto, ProductFieldDto, UpdateProductFieldDto } from './dtos/models';
+import type { CreateProductFieldDto, FieldTypeDto, GetProductFieldListDto, ProductFieldDto, UpdateProductFieldDto } from './dtos/models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
@@ -32,6 +32,14 @@ export class ProductFieldService {
     this.restService.request<any, ProductFieldDto>({
       method: 'GET',
       url: `/api/app/product-field/${id}`,
+    },
+    { apiName: this.apiName,...config });
+  
+
+  getFieldTypes = (config?: Partial<Rest.Config>) =>
+    this.restService.request<any, FieldTypeDto[]>({
+      method: 'GET',
+      url: '/api/app/product-field/field-types',
     },
     { apiName: this.apiName,...config });
   

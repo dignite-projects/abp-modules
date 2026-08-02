@@ -87,7 +87,7 @@ public abstract class FlexFieldIndexManagerBase<TEntity> : IFlexFieldIndexManage
             }
 
             var fieldType = FieldTypeResolver.Get(field.FieldTypeName);
-            if (fieldType.IndexValueType == null)
+            if (!fieldType.IsIndexable())
             {
                 continue;
             }
