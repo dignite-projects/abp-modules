@@ -228,14 +228,15 @@ public class DemoModule : AbpModule
         context.Services.AddDemoHealthChecks();
     }
 
-    // "Images" matches FileExplorerPickerComponent's own default container name, so a FileExplorer
-    // field left unconfigured (empty FileExplorer.FileContainerName) still resolves to a real,
-    // authorized container instead of a 404/403 the first time someone tries the picker.
+    // The FileExplorer field type has no fallback container of its own (an unconfigured field just
+    // shows a "not configured" warning - see FileExplorerControlComponent.isContainerConfigured), so
+    // the seeded "images" ProductField points its FileExplorer.FileContainerName at this container by
+    // name; it needs to exist and be authorized before that field is usable in the demo.
     private void ConfigureBlobStoring()
     {
         Configure<AbpBlobStoringOptions>(options =>
         {
-            options.Containers.Configure("Images", container =>
+            options.Containers.Configure("images", container =>
             {
                 container.UseDatabase();
                 container.AddFileSizeLimitHandler(config =>

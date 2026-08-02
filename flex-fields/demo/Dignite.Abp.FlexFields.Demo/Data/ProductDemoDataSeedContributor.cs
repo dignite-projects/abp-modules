@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dignite.Abp.FlexFields.Date;
 using Dignite.Abp.FlexFields.Demo.Entities;
+using Dignite.Abp.FlexFields.FileExplorer;
 using Dignite.Abp.FlexFields.Numeric;
 using Dignite.Abp.FlexFields.Select;
 using Dignite.Abp.FlexFields.Switch;
@@ -17,9 +18,9 @@ using Volo.Abp.Guids;
 namespace Dignite.Abp.FlexFields.Demo.Data;
 
 /// <summary>
-/// Seeds six <see cref="ProductField"/> definitions - one per built-in field type - and five
-/// <see cref="Product"/>s using them, so a developer who runs this demo for the first time sees flex
-/// fields working immediately instead of an empty database.
+/// Seeds seven <see cref="ProductField"/> definitions - one per built-in field type plus the
+/// FileExplorer bolt-on - and five <see cref="Product"/>s using the built-in ones, so a developer who
+/// runs this demo for the first time sees flex fields working immediately instead of an empty database.
 /// </summary>
 public class ProductDemoDataSeedContributor : IDataSeedContributor, ITransientDependency
 {
@@ -124,6 +125,17 @@ public class ProductDemoDataSeedContributor : IDataSeedContributor, ITransientDe
                 },
             },
             searchable: true);
+
+        // Not indexable (FileExplorerFieldType.IndexValueType is null) and not used on any seeded
+        // product below - there's no real blob behind a fabricated file descriptor value here, so the
+        // field is left empty rather than pointing the picker at files that don't exist.
+        _ = await CreateFieldAsync(
+            "images", "Images", FileExplorerFieldType.ControlName,
+            new FieldConfigurationDictionary
+            {
+                [FileExplorerConfigurationNames.FileContainerName] = "images",
+                [FileExplorerConfigurationNames.UploadFileMultiple] = true,
+            });
 
         var products = new[]
         {
