@@ -2,3 +2,12 @@
     border-collapse: collapse;
     table-layout: fixed;
 }
+
+.file-name-drag-handle {
+    cursor: grab;
+    user-select: none;
+}
+
+.file-name-drag-handle:active {
+    cursor: grabbing;
+}

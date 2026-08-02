@@ -4,9 +4,10 @@ import { ObjectUrlService } from '../../services/object-url.service';
 import { FormatFileSizePipe } from '../../pipe/format-file-size.pipe';
 import { CoreModule } from '@abp/ng.core';
 import { FilePreviewComponent } from '../../previews/file-preview.component';
+import { FileDescriptorService } from '../../proxy/dignite/file-explorer/files';
 
 @Component({
-  
+
   selector: 'fe-file-explorer-upload',
   templateUrl: './file-explorer-upload.component.html',
   imports: [CoreModule, FilePreviewComponent, FormatFileSizePipe],
@@ -16,7 +17,19 @@ export class FileExplorerUploadComponent implements OnDestroy {
   constructor(
     private formatFileSizePipe: FormatFileSizePipe,
     private objectUrlService: ObjectUrlService,
+    private fileDescriptorService: FileDescriptorService,
   ) {}
+
+  /**图片容器--提供后会按该容器的服务端实际限制刷新 sizeLimit，取代下面的默认值/手动 limit */
+  @Input()
+  public set fileContainerName(v: string) {
+    if (!v) return;
+    this.fileDescriptorService.getFileContainerConfiguration(v).subscribe(res => {
+      if (res?.maxBlobSize > 0) {
+        this.sizeLimit = res.maxBlobSize;
+      }
+    });
+  }
 
   /**是否多选 */
   _multiple = true;

@@ -3,7 +3,7 @@
         <div class="card">
             <div class="card-header py-2 border-bottom">File upload</div>
             <div class="card-body">
-                <fe-file-explorer-upload [multiple]="false" [(fileData)]="fileSubmittedData" (fileDataChange)="fileDataChange($event)"></fe-file-explorer-upload>
+                <fe-file-explorer-upload [multiple]="false" fileContainerName="SampleContainer" [(fileData)]="fileSubmittedData" (fileDataChange)="fileDataChange($event)"></fe-file-explorer-upload>
             </div>
         </div>
     </div>

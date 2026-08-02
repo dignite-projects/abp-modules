@@ -6,7 +6,6 @@
   <table class="table">
     <thead>
       <tr>
-        <th scope="col"></th>
         <th scope="col">{{'FileExplorer::FileName' | abpLocalization}}</th>
         <th scope="col">{{'FileExplorer::FileSize' | abpLocalization}}</th>
         <th scope="col"></th>
@@ -16,19 +15,25 @@
       @for (item of filesTableData; track item; let i = $index) {
         <tr>
           <td>
-            <fe-file-preview [width]="'80px'" [src]="item.src" [name]="item.name" [type]="item.type"></fe-file-preview>
+            
+            
+                <div class="d-flex">
+                  <div class="flex-grow-1">
+                    {{item.name}}
+                    @if (item.size > sizeLimit) {
+                      <div class="form-text text-danger">
+                        {{'FileExplorer::ExceedsMaximumSize' |
+                      abpLocalization:(sizeLimit|formatFileSize)}}</div>
+                    }
+                  </div>
+                  <div class="" [attr.title]="item.name">
+                    <fe-file-preview [width]="'60px'" [src]="item.src" [name]="item.name" [type]="item.type"></fe-file-preview>
+                  </div>
+                </div>
           </td>
-          <th scope="row">
-            <div>{{item.name}}</div>
-            @if (item.size > sizeLimit) {
-              <div class="form-text text-danger">
-                {{'FileExplorer::ExceedsMaximumSize' |
-              abpLocalization:(sizeLimit|formatFileSize)}}</div>
-            }
-          </th>
           <td>{{item.fileSize}}</td>
           <td>
-            <button class="btn btn-sm p-0 btn-light " (click.stop)="deleteFileTableItem(i,item)">
+            <button class="btn btn-sm p-0 btn-outline-secondary " (click.stop)="deleteFileTableItem(i,item)">
               <i class="fas fa-trash p-2"></i>
             </button>
           </td>

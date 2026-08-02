@@ -7,7 +7,7 @@
   <table class="table" cdkDropList (cdkDropListDropped)="drop($event)">
     <thead>
       <tr>
-        <th scope="col" style="width: 30px;"></th>
+        <th scope="col" style="width: 50px;">序号</th>
         <th scope="col">{{'FileExplorer::FileName' | abpLocalization}}</th>
         <th scope="col" style="width: 120px;">{{'FileExplorer::FileSize' | abpLocalization}}</th>
         <th scope="col" style="width: 40px;"></th>
@@ -16,16 +16,13 @@
     <tbody>
       @for (item of _fileShowTable; track item; let i = $index) {
         <tr cdkDrag cdkDragLockAxis="y" [cdkDragData]="item">
-          <td>
-            <div class="drag-handle" cdkDragHandle>
-              <span class="fas fa-up-down-left-right"></span>
-            </div>
-          </td>
+          <td>{{ i + 1 }}</td>
           <!-- item 可能来自持久化的表单字段（历史数据以 PascalCase 保存），也可能来自接口返回的 camelCase DTO，
                两种大小写都要兼容，不要只留一侧 -->
           <td>            
                 <div class="d-flex">
-                  <div class="flex-grow-1">
+                  <div class="flex-grow-1 file-name-drag-handle" cdkDragHandle
+                    title="拖拽文件名可调整顺序" aria-label="拖拽文件名可调整顺序">
                     <div>{{ item.name }}</div>
                   </div>
                   <div class="" [attr.title]="item.name">
@@ -36,7 +33,7 @@
           </td>
           <td>{{(item.size)|formatFileSize}}</td>
           <td>
-            <button class="btn btn-sm btn-secondary p-0" (click.stop)="deleteFileTableItem(i)">
+            <button class="btn btn-sm btn-outline-secondary p-0" (click.stop)="deleteFileTableItem(i)">
               <i class="fas fa-trash p-2"></i>
             </button>
           </td>
