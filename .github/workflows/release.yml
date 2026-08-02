@@ -1,9 +1,9 @@
-# Release workflow. The NuGet version in Directory.Build.props and the npm versions in all three
-# Angular library package.json files are kept in lockstep; a pushed v* tag must match all four,
+# Release workflow. The NuGet version in Directory.Build.props and the npm versions in all four
+# Angular library package.json files are kept in lockstep; a pushed v* tag must match all five,
 # but tags do not drive the number.
 #
 # Tagged releases are public: NuGet packages go to NuGet.org through Trusted Publishing (GitHub
-# OIDC -> short-lived API key), and all three Angular packages go to npm (`next` for a pre-release,
+# OIDC -> short-lived API key), and all four Angular packages go to npm (`next` for a pre-release,
 # `latest` for a stable release). Pre-release NuGet packages are also mirrored to GitHub Packages.
 # workflow_dispatch remains a private preview build: it packs and smoke-tests everything, then
 # pushes a pre-release to GitHub Packages only.
@@ -42,11 +42,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: npm
+          cache: yarn
           cache-dependency-path: |
-            file-storing/angular/package-lock.json
-            notifications/angular/package-lock.json
-            flex-fields/angular/package-lock.json
+            file-storing/angular/yarn.lock
+            notifications/angular/yarn.lock
+            flex-fields/angular/yarn.lock
           registry-url: 'https://registry.npmjs.org'
 
       - name: Verify tag, NuGet, and npm version lockstep
@@ -166,23 +166,23 @@ jobs:
       # --- file-storing Angular ---
       - name: Install file-storing Angular dependencies
         working-directory: file-storing/angular
-        run: npm ci --legacy-peer-deps
+        run: yarn install --frozen-lockfile
 
       - name: Lint file-storing Angular projects
         working-directory: file-storing/angular
-        run: npm run lint -- --max-warnings=0
+        run: yarn lint --max-warnings=0
 
       - name: Run file-storing Angular unit tests
         working-directory: file-storing/angular
-        run: npm test -- --watch=false
+        run: yarn test --watch=false
 
       - name: Build file-storing Angular library
         working-directory: file-storing/angular
-        run: npm run build:lib
+        run: yarn build:lib
 
       - name: Build file-storing Angular demo
         working-directory: file-storing/angular
-        run: npm run build:prod
+        run: yarn build:prod
 
       - name: Pack file-storing Angular library
         shell: pwsh
@@ -204,15 +204,15 @@ jobs:
       # --- notifications Angular ---
       - name: Install notifications Angular dependencies
         working-directory: notifications/angular
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Build notifications Angular library
         working-directory: notifications/angular
-        run: npm run build:lib
+        run: yarn build:lib
 
       - name: Build notifications Angular demo
         working-directory: notifications/angular
-        run: npm run build:prod
+        run: yarn build:prod
 
       - name: Pack notifications Angular library
         shell: pwsh
@@ -232,26 +232,32 @@ jobs:
           node ./notifications/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
 
       # --- flex-fields Angular ---
-      # --legacy-peer-deps for the same reason as file-storing - see the note in ci.yml.
       - name: Install flex-fields Angular dependencies
         working-directory: flex-fields/angular
-        run: npm ci --legacy-peer-deps
+        run: yarn install --frozen-lockfile
 
       - name: Lint flex-fields Angular projects
         working-directory: flex-fields/angular
-        run: npm run lint -- --max-warnings=0
+        run: yarn lint --max-warnings=0
 
       - name: Run flex-fields Angular unit tests
         working-directory: flex-fields/angular
-        run: npm test -- --watch=false
+        run: yarn test --watch=false
 
       - name: Build flex-fields Angular library
         working-directory: flex-fields/angular
-        run: npm run build:lib
+        run: yarn build:lib
+
+      # Must run after "Build flex-fields Angular library" - flex-fields-file-explorer resolves
+      # @dignite/ng.flex-fields straight from that library's dist output (see the comment in
+      # flex-fields-file-explorer's tsconfig.lib.json for why it can't go through node_modules).
+      - name: Build flex-fields-file-explorer Angular library
+        working-directory: flex-fields/angular
+        run: yarn build:lib:file-explorer
 
       - name: Build flex-fields Angular demo
         working-directory: flex-fields/angular
-        run: npm run build:prod
+        run: yarn build:prod
 
       - name: Pack flex-fields Angular library
         shell: pwsh
@@ -269,6 +275,23 @@ jobs:
             throw "Expected one flex-fields Angular package tarball, found $($tarballs.Count)."
           }
           node ./flex-fields/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
+
+      - name: Pack flex-fields-file-explorer Angular library
+        shell: pwsh
+        working-directory: flex-fields/angular
+        run: |
+          New-Item -ItemType Directory -Force ../../artifacts/npm/flex-fields-file-explorer | Out-Null
+          npm pack ./dist/flex-fields-file-explorer --pack-destination ../../artifacts/npm/flex-fields-file-explorer
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Smoke-test flex-fields-file-explorer Angular package
+        shell: pwsh
+        run: |
+          $tarballs = @(Get-ChildItem ./artifacts/npm/flex-fields-file-explorer/*.tgz)
+          if ($tarballs.Count -ne 1) {
+            throw "Expected one flex-fields-file-explorer Angular package tarball, found $($tarballs.Count)."
+          }
+          node ./flex-fields/.github/scripts/smoke-test-file-explorer-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
 
       # --- file-storing HTTP E2E smoke test (file-explorer's demo host only; notifications has no
       #     equivalent host-level E2E script) ---
@@ -372,6 +395,10 @@ jobs:
             --tag '${{ steps.channel.outputs.npm-tag }}' \
             --provenance
           npm publish ./artifacts/npm/flex-fields/*.tgz \
+            --access public \
+            --tag '${{ steps.channel.outputs.npm-tag }}' \
+            --provenance
+          npm publish ./artifacts/npm/flex-fields-file-explorer/*.tgz \
             --access public \
             --tag '${{ steps.channel.outputs.npm-tag }}' \
             --provenance

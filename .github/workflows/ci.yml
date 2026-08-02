@@ -275,6 +275,13 @@ jobs:
         working-directory: flex-fields/angular
         run: yarn build:lib
 
+      # Must run after "Build flex-fields Angular library" - flex-fields-file-explorer resolves
+      # @dignite/ng.flex-fields straight from that library's dist output (see the comment in
+      # flex-fields-file-explorer's tsconfig.lib.json for why it can't go through node_modules).
+      - name: Build flex-fields-file-explorer Angular library
+        working-directory: flex-fields/angular
+        run: yarn build:lib:file-explorer
+
       - name: Build flex-fields Angular demo
         working-directory: flex-fields/angular
         run: yarn build:prod
@@ -295,3 +302,20 @@ jobs:
             throw "Expected one flex-fields Angular package tarball, found $($tarballs.Count)."
           }
           node ./flex-fields/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
+
+      - name: Pack flex-fields-file-explorer Angular library
+        shell: pwsh
+        working-directory: flex-fields/angular
+        run: |
+          New-Item -ItemType Directory -Force ../../artifacts-ci/npm/flex-fields-file-explorer | Out-Null
+          npm pack ./dist/flex-fields-file-explorer --pack-destination ../../artifacts-ci/npm/flex-fields-file-explorer
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Smoke-test flex-fields-file-explorer Angular package
+        shell: pwsh
+        run: |
+          $tarballs = @(Get-ChildItem ./artifacts-ci/npm/flex-fields-file-explorer/*.tgz)
+          if ($tarballs.Count -ne 1) {
+            throw "Expected one flex-fields-file-explorer Angular package tarball, found $($tarballs.Count)."
+          }
+          node ./flex-fields/.github/scripts/smoke-test-file-explorer-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
