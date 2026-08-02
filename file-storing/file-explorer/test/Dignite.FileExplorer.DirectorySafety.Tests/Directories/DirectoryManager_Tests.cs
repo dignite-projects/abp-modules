@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Dignite.Abp.FileStoring;
 using Dignite.FileExplorer.Directories;
@@ -90,10 +91,54 @@ public class DirectoryManager_Tests
             .Returns(new List<FileDescriptor> { new FileDescriptor(Guid.NewGuid(), "Default", "blob", "file", "text/plain", string.Empty, directory.Id, string.Empty, null) });
         var manager = new DirectoryManager(repository, new ContainerNameValidator(), fileRepository);
 
+        var exception = await Should.ThrowAsync<DirectoryContainsFilesException>(() =>
+            manager.EnsureEmptyAsync(directory));
+
+        exception.Code.ShouldBe(FileExplorerErrorCodes.Directories.DirectoryContainsFiles);
+    }
+
+    [Fact]
+    public async Task EnsureEmptyAsync_ShouldRejectDirectoriesWithChildDirectories()
+    {
+        var directory = CreateDirectory(Guid.NewGuid(), null);
+        var repository = Substitute.For<IDirectoryDescriptorRepository>();
+        repository.GetListAsync(directory.CreatorId.Value, directory.ContainerName, directory.Id)
+            .Returns(new List<DirectoryDescriptor> { CreateDirectory(Guid.NewGuid(), directory.Id) });
+        var fileRepository = Substitute.For<IFileDescriptorRepository>();
+        fileRepository.GetListAsync(directory.ContainerName, null, directory.Id, maxResultCount: 1)
+            .Returns(new List<FileDescriptor>());
+        var manager = new DirectoryManager(repository, new ContainerNameValidator(), fileRepository);
+
         var exception = await Should.ThrowAsync<DirectoryNotEmptyException>(() =>
             manager.EnsureEmptyAsync(directory));
 
         exception.Code.ShouldBe(FileExplorerErrorCodes.Directories.DirectoryNotEmpty);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldClearDirectoryIdFromSoftDeletedFiles()
+    {
+        var directory = CreateDirectory(Guid.NewGuid(), null);
+        var repository = Substitute.For<IDirectoryDescriptorRepository>();
+        repository.GetListAsync(directory.CreatorId.Value, directory.ContainerName, directory.Id)
+            .Returns(new List<DirectoryDescriptor>());
+        var fileRepository = Substitute.For<IFileDescriptorRepository>();
+        fileRepository.GetListAsync(directory.ContainerName, null, directory.Id, maxResultCount: 1)
+            .Returns(new List<FileDescriptor>());
+        var manager = new DirectoryManager(
+            repository,
+            new ContainerNameValidator(),
+            fileRepository);
+
+        await manager.DeleteAsync(directory);
+
+        await fileRepository.Received(1).ClearDirectoryFromDeletedFilesAsync(
+            directory.Id,
+            Arg.Any<CancellationToken>());
+        await repository.Received(1).DeleteAsync(
+            directory,
+            Arg.Any<bool>(),
+            Arg.Any<CancellationToken>());
     }
 
     private static DirectoryDescriptor CreateDirectory(Guid id, Guid? parentId)

@@ -1,6 +1,5 @@
 import { Component, Input, OnChanges, OnDestroy } from '@angular/core';
 import { ImageTypeOption } from './models';
-import { ModalComponent } from '@abp/ng.theme.shared';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { FileDescriptorService } from '../proxy/dignite/file-explorer/files';
@@ -12,7 +11,7 @@ import { ObjectUrlService } from '../services/object-url.service';
   selector: 'fe-file-preview',
   templateUrl: './file-preview.component.html',
   styleUrls: ['./file-preview.component.scss'],
-  imports: [CommonModule, ModalComponent],
+  imports: [CommonModule],
 })
 export class FilePreviewComponent implements OnChanges, OnDestroy {
 
@@ -20,8 +19,6 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
   @Input() width: any = '100px'
   /*文件链接 */
   @Input() src: any = ''
-  /**是否支持大图预览 */
-  @Input() preview: any = true;
   /**文件类型 */
   @Input() type: any = ''
   /**文件名称 */
@@ -74,17 +71,23 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
   private updatePreviewSource() {
     this.streamSubscription?.unsubscribe();
     this.revokePreviewObjectUrl();
-    this.displaySrc = this.src;
 
     if (!this.isImage || this.isBrowserLocalUrl(this.src)) {
+      this.displaySrc = this.src;
       return;
     }
 
     const fileSource = this.getFileSource();
     if (!fileSource.containerName || !fileSource.blobName) {
+      this.displaySrc = this.src;
       return;
     }
 
+    // Don't show `src` as a placeholder here: it points straight at the API (no auth header),
+    // so for any container that requires a permission to Get, the browser would fetch it
+    // unauthenticated and the server logs a spurious AbpAuthorizationException. Leave the
+    // preview blank until the authenticated stream below resolves (or falls back on error).
+    this.displaySrc = '';
     this.streamSubscription = this.fileDescriptorService
       .getStream(fileSource.containerName, fileSource.blobName, {
         width: this.resizeWidth,
@@ -160,45 +163,8 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
     }
   }
 
-  /**预览图片 */
-  previewImage() {
-
-  }
-
-  /**放大倍数 */
-  zoom: number = 10
-  /**旋转 */
-  rotate: number = 0
-
-  /**图片预览弹窗 */
-  isPreviewOpen = false
-
-  /**打开预览弹窗 */
-  OpenPreviewImage() {
-    this.isPreviewOpen = true;
-  }
-
-  onPreviewDisappear() {
-    this.isPreviewOpen = false;
-    this.zoom = 10;
-  }
-  /**放大图像 */
-  zoomIn() {
-    let zoom = this.zoom
-    if (zoom == 20) return
-    zoom++
-    this.zoom = zoom
-  }
-  /**缩小图像 */
-  zoomOut() {
-    let zoom = this.zoom
-    if (zoom == 3) return
-    zoom--
-    this.zoom = zoom
-  }
-  /**右旋转 */
-  RotateRight() {
-    if (this.rotate == 360) return this.rotate = 0
-    this.rotate += 90
+  /**获取文件图标，未匹配到类型时使用通用文件图标 */
+  getFileIconClass() {
+    return this._ImageTypeOption.find(item => item.type === this.type)?.icon || 'fa fa-file-o';
   }
 }

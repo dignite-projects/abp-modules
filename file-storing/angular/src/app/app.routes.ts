@@ -1,3 +1,4 @@
+import { authGuard, permissionGuard } from '@abp/ng.core';
 import { Routes } from '@angular/router';
 export const APP_ROUTES: Routes = [
   {
@@ -18,7 +19,14 @@ export const APP_ROUTES: Routes = [
     loadChildren: () => import('@abp/ng.setting-management').then(c => c.createRoutes()),
   },
   {
-    path: 'file',
-    loadChildren: () => import('@dignite/ng.file-explorer').then(m => m.fileExplorerRoutes),
+    path: 'file-explorer',
+    children: [
+      {
+        path: 'file-upload-demo',
+        canActivate: [authGuard, permissionGuard],
+        data: { requiredPolicy: 'FileExplorer.File.Management' },
+        loadComponent: () => import('./demo/file-upload-demo.component').then(c => c.FileUploadDemoComponent),
+      },
+    ],
   },
 ];

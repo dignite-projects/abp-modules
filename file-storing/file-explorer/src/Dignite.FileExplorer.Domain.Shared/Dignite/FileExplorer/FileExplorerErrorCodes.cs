@@ -10,6 +10,7 @@ public static class FileExplorerErrorCodes
         public const string InvalidMove = "Dignite.FileExplorer:Directory:0004";
         public const string ForbidMovingToChild = "Dignite.FileExplorer:Directory:0005";
         public const string DirectoryNotEmpty = "Dignite.FileExplorer:Directory:0006";
+        public const string DirectoryContainsFiles = "Dignite.FileExplorer:Directory:0007";
     }
     public static class Files
     {

@@ -32,7 +32,26 @@ public class FileExplorerLocalization_Tests : AbpIntegratedTest<FileExplorerLoca
             var exception = Should.Throw<DirectoryNotEmptyException>(() => throw new DirectoryNotEmptyException());
             var localizer = GetRequiredService<IStringLocalizer<FileExplorerResource>>();
 
-            localizer[exception.Code].Value.ShouldBe("The directory is not empty!");
+            localizer[exception.Code].Value.ShouldBe("The directory is not empty and cannot be deleted!");
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = originalCulture;
+        }
+    }
+
+    [Fact]
+    public void DirectoryContainsFilesException_ShouldResolveLocalizedMessage()
+    {
+        var originalCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en");
+            var exception = Should.Throw<DirectoryContainsFilesException>(
+                () => throw new DirectoryContainsFilesException());
+            var localizer = GetRequiredService<IStringLocalizer<FileExplorerResource>>();
+
+            localizer[exception.Code].Value.ShouldBe("The directory contains files and cannot be deleted!");
         }
         finally
         {

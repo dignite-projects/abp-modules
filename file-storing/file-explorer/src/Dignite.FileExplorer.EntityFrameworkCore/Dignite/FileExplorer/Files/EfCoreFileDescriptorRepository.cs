@@ -50,6 +50,16 @@ public class EfCoreFileDescriptorRepository : EfCoreRepository<IFileExplorerDbCo
                    .FirstOrDefaultAsync(b => b.ContainerName == containerName && b.Md5 != null && b.Md5 == md5, GetCancellationToken(cancellationToken));
     }
 
+    public async Task ClearDirectoryFromDeletedFilesAsync(Guid directoryId, CancellationToken cancellationToken = default)
+    {
+        await (await GetDbSetAsync())
+            .IgnoreQueryFilters()
+            .Where(file => file.IsDeleted && file.DirectoryId == directoryId)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(file => file.DirectoryId, (Guid?)null),
+                GetCancellationToken(cancellationToken));
+    }
+
     public async Task<int> GetCountAsync(string containerName,
         Guid? creatorId, Guid? directoryId, string filter = null, string entityId = null, CancellationToken cancellationToken = default)
     {

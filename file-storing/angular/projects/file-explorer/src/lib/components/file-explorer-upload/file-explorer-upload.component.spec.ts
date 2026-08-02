@@ -1,19 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { FileEditComponent } from './file-edit.component';
+import { FileExplorerUploadComponent } from './file-explorer-upload.component';
 import { CoreTestingModule } from '@abp/ng.core/testing';
 import { NgxValidateCoreModule } from '@ngx-validate/core';
 import { ObjectUrlService } from '../../services/object-url.service';
 
-describe('FileEditComponent', () => {
-  let component: FileEditComponent;
-  let fixture: ComponentFixture<FileEditComponent>;
+describe('FileExplorerUploadComponent', () => {
+  let component: FileExplorerUploadComponent;
+  let fixture: ComponentFixture<FileExplorerUploadComponent>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [FileEditComponent,CoreTestingModule.withConfig(), NgxValidateCoreModule.forRoot()]
+      imports: [FileExplorerUploadComponent,CoreTestingModule.withConfig(), NgxValidateCoreModule.forRoot()]
     });
-    fixture = TestBed.createComponent(FileEditComponent);
+    fixture = TestBed.createComponent(FileExplorerUploadComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
@@ -27,7 +27,7 @@ describe('FileEditComponent', () => {
     imageUrlService.get = () => 'blob:test-preview';
     const files = [new File(['content'], 'test.txt', { type: 'text/plain' })] as any[];
 
-    const result = await component.setfileSizeUnits(files);
+    const result = await component.setFileSizeUnits(files);
 
     expect(result).toBe(files);
     expect(files[0].src).toBe('blob:test-preview');

@@ -1,16 +1,15 @@
 import { Component } from '@angular/core';
-import { FileEditComponent } from '../file-edit/file-edit.component';
-import { FilePickerComponent } from '../file-picker/file-picker.component';
+import { FileExplorerUploadComponent, FileExplorerPickerComponent } from '@dignite/ng.file-explorer';
 
 @Component({
   
   // eslint-disable-next-line @angular-eslint/component-selector
-  selector: 'fe-file-dome',
-  templateUrl: './file-dome.component.html',
-  styleUrls: ['./file-dome.component.scss'],
-  imports: [FileEditComponent, FilePickerComponent],
+  selector: 'app-file-upload-demo',
+  templateUrl: './file-upload-demo.component.html',
+  styleUrls: ['./file-upload-demo.component.scss'],
+  imports: [FileExplorerUploadComponent, FileExplorerPickerComponent],
 })
-export class FileDomeComponent {
+export class FileUploadDemoComponent {
 
   /**跟随表单提交--已提交的数据，或选择的数据源 */
   fileSubmittedData: any[] = []

@@ -52,6 +52,18 @@ public class MongoFileDescriptorRepository : MongoDbRepository<IFileExplorerMong
         return await FindAsync(b => b.ContainerName == containerName && b.Md5 != null && b.Md5 == md5, false, token);
     }
 
+    public async Task ClearDirectoryFromDeletedFilesAsync(Guid directoryId, CancellationToken cancellationToken = default)
+    {
+        var token = GetCancellationToken(cancellationToken);
+        var collection = await GetCollectionAsync(token);
+        var filter = Builders<FileDescriptor>.Filter.And(
+            Builders<FileDescriptor>.Filter.Eq(file => file.IsDeleted, true),
+            Builders<FileDescriptor>.Filter.Eq(file => file.DirectoryId, directoryId));
+        var update = Builders<FileDescriptor>.Update.Set(file => file.DirectoryId, null);
+
+        await collection.UpdateManyAsync(filter, update, cancellationToken: token);
+    }
+
     public async Task<int> GetCountAsync(string containerName,
         Guid? creatorId,
         Guid? directoryId, string filter = null, string entityId = null, CancellationToken cancellationToken = default)

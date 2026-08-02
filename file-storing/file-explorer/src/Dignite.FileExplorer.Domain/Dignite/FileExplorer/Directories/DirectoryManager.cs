@@ -27,7 +27,8 @@ public class DirectoryManager : DomainService
     }
 
     /// <summary>
-    /// Directories must be empty before deletion. Children and files are not cascaded or reparented.
+    /// Directories must have no active files or child directories before deletion. Soft-deleted
+    /// file descriptors are detached during deletion so their audit records can be retained.
     /// </summary>
     public virtual async Task EnsureEmptyAsync(DirectoryDescriptor directory, CancellationToken cancellationToken = default)
     {
@@ -48,9 +49,14 @@ public class DirectoryManager : DomainService
             maxResultCount: 1,
             cancellationToken: cancellationToken);
 
-        if (childDirectories == null || files == null || childDirectories.Count != 0 || files.Count != 0)
+        if (childDirectories == null || childDirectories.Count != 0 || files == null)
         {
             throw new DirectoryNotEmptyException();
+        }
+
+        if (files.Count != 0)
+        {
+            throw new DirectoryContainsFilesException();
         }
     }
 
@@ -65,7 +71,24 @@ public class DirectoryManager : DomainService
         CancellationToken cancellationToken = default)
     {
         await EnsureEmptyAsync(directory, cancellationToken);
+        await ClearDeletedFileDirectoryReferencesAsync(directory, cancellationToken);
         await DirectoryDescriptorRepository.DeleteAsync(directory, cancellationToken: cancellationToken);
+    }
+
+    private async Task ClearDeletedFileDirectoryReferencesAsync(
+        DirectoryDescriptor directory,
+        CancellationToken cancellationToken)
+    {
+        if (FileDescriptorRepository == null)
+        {
+            return;
+        }
+
+        // Active files are checked by EnsureEmptyAsync with the normal data filter. The
+        // repository explicitly bypasses that filter and detaches only soft-deleted rows.
+        await FileDescriptorRepository.ClearDirectoryFromDeletedFilesAsync(
+            directory.Id,
+            cancellationToken);
     }
 
     public virtual async Task<DirectoryDescriptor> CreateAsync(

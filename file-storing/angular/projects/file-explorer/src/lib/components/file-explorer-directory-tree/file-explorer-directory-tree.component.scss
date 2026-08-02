@@ -1,0 +1,60 @@
+
+.file-tree-panel abp-tree {
+  display: block;
+}
+
+::ng-deep .file-tree-panel abp-tree {
+  .ant-tree-node-content-wrapper {
+    padding: 0;
+
+    .ng-star-inserted[title] {
+      padding: 0 10px;
+    }
+  }
+
+  .ant-tree-node-content-wrapper.ant-tree-node-selected {
+    background-color: transparent;
+  }
+}
+
+// `abp-tree` applies `selected` to the node wrapper, not to `.file-tree-node-drop-target`.
+::ng-deep .file-tree-panel abp-tree .selected {
+  background-color: var(--lpx-brand) !important;
+  color: var(--bs-white);
+}
+
+.file-tree-node-drop-target {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+}
+
+// The tree's `drag-over` class represents the inside-folder drop position (pos === 0).
+::ng-deep .file-tree-panel abp-tree.directory-dragging {
+  .drag-over nz-tree-drop-indicator,
+  .drag-over .ant-tree-drop-indicator {
+    display: none !important;
+  }
+
+  .drag-over .file-tree-node-drop-target {
+    border-color: var(--bs-primary);
+    background-color: var(--bs-primary-bg-subtle);
+  }
+
+  // The gap before an expanded directory's first child semantically means
+  // "after the parent" here, so align its indicator with the parent level.
+  .drag-over-gap-top:has(.file-tree-node-drop-target.first-child-of-directory) {
+    nz-tree-drop-indicator,
+    .ant-tree-drop-indicator {
+      left: -20px !important;
+    }
+  }
+}
+
+// ng-zorro does not clear its indicator when a drag is cancelled outside the tree.
+::ng-deep .file-tree-panel abp-tree:not(.directory-dragging) {
+  nz-tree-drop-indicator,
+  .ant-tree-drop-indicator {
+    display: none !important;
+  }
+}

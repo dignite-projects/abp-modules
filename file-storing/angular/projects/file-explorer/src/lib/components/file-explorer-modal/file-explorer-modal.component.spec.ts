@@ -1,19 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SimpleChange } from '@angular/core';
 
-import { FileModalComponent } from './file-modal.component';
+import { FileExplorerModalComponent } from './file-explorer-modal.component';
 import { CoreTestingModule } from '@abp/ng.core/testing';
 import { NgxValidateCoreModule } from '@ngx-validate/core';
 
-describe('FileModalComponent', () => {
-  let component: FileModalComponent;
-  let fixture: ComponentFixture<FileModalComponent>;
+describe('FileExplorerModalComponent', () => {
+  let component: FileExplorerModalComponent;
+  let fixture: ComponentFixture<FileExplorerModalComponent>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [FileModalComponent,CoreTestingModule.withConfig(), NgxValidateCoreModule.forRoot()]
+      imports: [FileExplorerModalComponent,CoreTestingModule.withConfig(), NgxValidateCoreModule.forRoot()]
     });
-    fixture = TestBed.createComponent(FileModalComponent);
+    fixture = TestBed.createComponent(FileExplorerModalComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
@@ -24,7 +24,7 @@ describe('FileModalComponent', () => {
 
   it('should mark a failed upload without throwing', async () => {
     const file = { name: 'failed.txt', size: 1 } as any;
-    const testComponent = Object.create(FileModalComponent.prototype) as FileModalComponent;
+    const testComponent = Object.create(FileExplorerModalComponent.prototype) as FileExplorerModalComponent;
     (testComponent as any).sizeLimit = 1024;
     (testComponent as any).list = { get: () => undefined };
     (testComponent as any).uploadPictureStatusList = [file];
@@ -65,5 +65,21 @@ describe('FileModalComponent', () => {
 
     expect(component.selectedTable).toEqual(inputFiles);
     expect(component.selectedTable).not.toBe(inputFiles);
+  });
+
+  it('should add a checked file to the selection', () => {
+    const selectedFile = { id: 'selected' };
+
+    component.onCheckboxChangeFn({ target: { checked: true } }, selectedFile, [selectedFile]);
+
+    expect(component.selectedTable).toHaveLength(1);
+    expect(component.selectedTable[0]).toBe(selectedFile);
+  });
+
+  it('should use the file list sort icon convention', () => {
+    expect(component.tableSortIcons).toEqual({
+      sortAscending: 'datatable-icon-down',
+      sortDescending: 'datatable-icon-up',
+    });
   });
 });

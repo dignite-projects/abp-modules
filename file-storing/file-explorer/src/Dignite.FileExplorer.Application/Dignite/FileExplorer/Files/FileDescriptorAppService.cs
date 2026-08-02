@@ -223,6 +223,15 @@ public class FileDescriptorAppService : ApplicationService, IFileDescriptorAppSe
         _containerNameValidator.Validate(containerName);
         var entity = await _fileManager.GetOrNullAsync(containerName, blobName, cancellationToken);
 
+        // A preview request can race with the file delete request. Soft-deleted
+        // descriptors must behave like missing files here; otherwise the stale
+        // preview request reaches authorization and produces a misleading
+        // authorization failure for a file that no longer exists.
+        if (entity == null || entity.IsDeleted)
+        {
+            return null;
+        }
+
         if (entity != null)
         {
             await AuthorizationService.CheckAsync(entity, CommonOperations.Get);
@@ -424,7 +433,7 @@ public class FileDescriptorAppService : ApplicationService, IFileDescriptorAppSe
         var blobSizeLimitConfiguration = configuration.GetFileSizeLimitConfiguration();
         var fileTypeCheckConfiguration = configuration.GetFileTypeCheckConfiguration();
         var authorizationConfiguration = configuration.GetAuthorizationConfiguration();
-        dto.MaxBlobSize= blobSizeLimitConfiguration.MaxFileSize;
+        dto.MaxBlobSize = (int)Math.Min(blobSizeLimitConfiguration.MaxFileSizeInBytes, int.MaxValue);
         dto.AllowedFileTypeNames = fileTypeCheckConfiguration.AllowedFileTypeNames;
         dto.CreateDirectoryPermissionName= authorizationConfiguration.CreateDirectoryPermissionName;
         dto.CreateFilePermissionName= authorizationConfiguration.CreateFilePermissionName;

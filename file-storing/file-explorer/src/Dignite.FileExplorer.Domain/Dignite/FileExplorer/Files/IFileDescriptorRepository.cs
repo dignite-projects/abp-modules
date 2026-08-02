@@ -18,6 +18,8 @@ public interface IFileDescriptorRepository : IBasicRepository<FileDescriptor, Gu
 
     Task<FileDescriptor?> FindByMd5Async(string containerName, string md5, CancellationToken cancellationToken = default);
 
+    Task ClearDirectoryFromDeletedFilesAsync(Guid directoryId, CancellationToken cancellationToken = default);
+
     Task<List<FileDescriptor>> GetListAsync(
         string containerName,
         Guid? creatorId,

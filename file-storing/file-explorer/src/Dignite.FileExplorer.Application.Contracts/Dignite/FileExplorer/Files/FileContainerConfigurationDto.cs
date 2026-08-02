@@ -4,7 +4,7 @@ namespace Dignite.FileExplorer.Files;
 public class FileContainerConfigurationDto
 {
     /// <summary>
-    /// Limit file size(KB)
+    /// Maximum allowed file size, in bytes.
     /// </summary>
     public int MaxBlobSize { get; set; }
 

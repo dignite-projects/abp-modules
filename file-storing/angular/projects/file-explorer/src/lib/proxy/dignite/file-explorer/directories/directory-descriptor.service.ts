@@ -6,7 +6,7 @@ import { Injectable } from '@angular/core';
 @Injectable({
   providedIn: 'root',
 })
-export class FileDescriptorService {
+export class DirectoryDescriptorService {
   apiName = 'FileExplorer';
   
 

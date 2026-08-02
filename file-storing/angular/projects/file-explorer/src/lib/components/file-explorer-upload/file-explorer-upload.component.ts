@@ -7,16 +7,15 @@ import { FilePreviewComponent } from '../../previews/file-preview.component';
 
 @Component({
   
-  selector: 'fe-file-edit',
-  templateUrl: './file-edit.component.html',
-  styleUrls: ['./file-edit.component.scss'],
+  selector: 'fe-file-explorer-upload',
+  templateUrl: './file-explorer-upload.component.html',
   imports: [CoreModule, FilePreviewComponent, FormatFileSizePipe],
   providers: [FormatFileSizePipe],
 })
-export class FileEditComponent implements OnDestroy {
+export class FileExplorerUploadComponent implements OnDestroy {
   constructor(
-    public _FormatFileSizePipe: FormatFileSizePipe,
-    private _objectUrlService: ObjectUrlService,
+    private formatFileSizePipe: FormatFileSizePipe,
+    private objectUrlService: ObjectUrlService,
   ) {}
 
   /**是否多选 */
@@ -31,7 +30,7 @@ export class FileEditComponent implements OnDestroy {
   @Input()
   public set fileData(v: any[]) {
     this._fileData = v;
-    if (v.length > 0) {
+    if (v?.length > 0) {
       this.getFileChange({ target: { files: v } });
     }
   }
@@ -54,23 +53,18 @@ export class FileEditComponent implements OnDestroy {
   deleteTheUploadedFiles: any[] = [];
 
   /**获取文件选择框的元素 */
-  @ViewChild('fileEdit', { static: true }) fileEdit: ElementRef;
+  @ViewChild('fileUploadInput', { static: true }) fileUploadInput: ElementRef;
 
   /**获取文件信息改变 */
   async getFileChange(event) {
     const files = new Array(...event.target.files);
-    /**需要等待setfileSizeUnits执行完后在执行其他方法--需要完善 */
     await this.waitFileToAddTable(files);
     this.fileHandling();
   }
 
   /**等待将文件数据加入到文件表格数据中 */
-  waitFileToAddTable(files) {
-    // eslint-disable-next-line no-async-promise-executor
-    return new Promise(async (resolve) => {
-      this.filesTableData.push(...(await this.setfileSizeUnits(files)));
-      resolve(true);
-    });
+  async waitFileToAddTable(files) {
+    this.filesTableData.push(...(await this.setFileSizeUnits(files)));
   }
 
   /**删除文件表格的项 */
@@ -96,14 +90,14 @@ export class FileEditComponent implements OnDestroy {
   }
 
   /**设置值文件大小单位/ */
-  async setfileSizeUnits(files: File[] | any[]): Promise<any> {
+  async setFileSizeUnits(files: File[] | any[]): Promise<any> {
     for (const file of files as any[]) {
       const fileItem = file as any;
       const previewItem = fileItem as { src?: string };
-      fileItem.fileSize = this._FormatFileSizePipe.transform(fileItem.size);
+      fileItem.fileSize = this.formatFileSizePipe.transform(fileItem.size);
       // Use a browser-managed object URL instead of retaining a base64 copy in memory.
       if (!previewItem.src && fileItem instanceof Blob) {
-        previewItem.src = this._objectUrlService.get(fileItem);
+        previewItem.src = this.objectUrlService.get(fileItem);
         this.previewObjectUrls.add(previewItem.src);
       }
     }

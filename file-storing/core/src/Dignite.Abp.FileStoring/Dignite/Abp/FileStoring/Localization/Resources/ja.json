@@ -1,0 +1,9 @@
+{
+  "culture": "ja",
+  "texts": {
+    "Dignite.Abp.File:0001": "アップロードされたファイルが大きすぎます。",
+    "Dignite.Abp.File:0002": "このファイル形式は許可されていません。",
+    "Dignite.Abp.File:0003": "ファイルの拡張子を認識できません。",
+    "Dignite.Abp.File:0004": "指定されたコンテナは登録されていません。"
+  }
+}

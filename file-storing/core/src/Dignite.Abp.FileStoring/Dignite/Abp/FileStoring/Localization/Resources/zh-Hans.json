@@ -1,0 +1,9 @@
+{
+  "culture": "zh-Hans",
+  "texts": {
+    "Dignite.Abp.File:0001": "上传的文件过大！",
+    "Dignite.Abp.File:0002": "不支持该文件类型！",
+    "Dignite.Abp.File:0003": "无法识别文件类型（缺少扩展名）！",
+    "Dignite.Abp.File:0004": "请求的容器未注册！"
+  }
+}

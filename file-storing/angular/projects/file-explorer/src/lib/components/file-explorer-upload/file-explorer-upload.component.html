@@ -1,5 +1,5 @@
 <div class="input-group mb-3">
-  <input type="file" class="form-control" #fileEdit [multiple]="_multiple" (change)="getFileChange($event)">
+  <input type="file" class="form-control" #fileUploadInput [multiple]="_multiple" (change)="getFileChange($event)">
 </div>
 
 @if (filesTableData.length>0) {
@@ -16,7 +16,7 @@
       @for (item of filesTableData; track item; let i = $index) {
         <tr>
           <td>
-            <fe-file-preview [width]="'80px'" [src]="item.src" [name]="item.name" [type]="item.type" [preview]="true"></fe-file-preview>
+            <fe-file-preview [width]="'80px'" [src]="item.src" [name]="item.name" [type]="item.type"></fe-file-preview>
           </td>
           <th scope="row">
             <div>{{item.name}}</div>

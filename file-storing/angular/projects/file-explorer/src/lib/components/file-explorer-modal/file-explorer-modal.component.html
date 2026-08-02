@@ -1,0 +1,215 @@
+<abp-modal [(visible)]="ModalOpen" (visibleChange)="ModalVisibleChange($event)" (init)="onModalInit()"
+  [options]="{ size: 'xl', scrollable: false, windowClass: 'file-explorer-modal-window' }">
+  <ng-template #abpHeader>
+    <h3>{{'FileExplorer::FileExplorer' | abpLocalization}}</h3>
+  </ng-template>
+  <ng-template #abpBody>
+    @if (ModalOpen) {
+        <div class="row file-explorer-modal-body file-explorer-modal">
+        @if (createDirectoryPermissionName) {
+          <div class="col-3" style="overflow: auto; height: calc(100vh - 240px)">
+            <fe-file-explorer-directory-tree [theSelectedTreeNode]="_theSelectedTreeNode" (nodeClick)="_nodeClick($event)"
+              (treeNodeData)="treeNodeData($event)"
+            [fileContainerName]="_fileContainerName"></fe-file-explorer-directory-tree>
+          </div>
+        }
+        <div [class]="createDirectoryPermissionName ? 'col-9 file-explorer-content' : 'col-12 file-explorer-content'">
+          <div class="mb-3 d-flex justify-content-between align-items-center">
+            <div class="file-list-actions d-flex align-items-center gap-3" style="flex: 2">
+              @if (selectedTable.length > 0) {
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click.stop)="onDeleteAllSelectFile()"
+                  [attr.aria-label]="'FileExplorer::Delete' | abpLocalization"
+                  [title]="'FileExplorer::Delete' | abpLocalization">
+                  <i class="fa fa-trash" aria-hidden="true"></i>
+                </button>
+                @if (createDirectoryPermissionName) {
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click.stop)="openMoveModal()"
+                    [attr.aria-label]="'FileExplorer::Move' | abpLocalization"
+                    [title]="'FileExplorer::Move' | abpLocalization">
+                    <i class="fa fa-folder-open-o" aria-hidden="true"></i>
+                  </button>
+                }
+              }
+            </div>
+          <div class="input-group form-file" style="flex: 2">
+            <input type="file" class="form-control" #fileUploadInput [multiple]="true" (change)="getFileChange($event)" />
+          </div>
+        </div>
+          <div class="file-table-container">
+          <ngx-datatable #fileTable class="material container-height" [rows]="data.items" [list]="list"
+            [cssClasses]="tableSortIcons" columnMode="flex"
+            [headerHeight]="50" [footerHeight]="50" rowHeight="auto" [scrollbarV]="true" [scrollbarVDynamic]="true"
+            [virtualization]="false"
+            [externalPaging]="true" [count]="data.totalCount">
+            <ngx-datatable-column [flexGrow]="0.6" prop="id" [sortable]="false" [draggable]="false"
+              [resizeable]="false">
+              <ng-template ngx-datatable-header-template let-value="value" let-allRowsSelected="allRowsSelected"
+                let-selectFn="selectFn">
+                @if (_multiple) {
+                  <input type="checkbox" class="form-check-input" [checked]="isAllSelected"
+                    (change)="onSelectAllFn($event,data.items)" />
+                }
+              </ng-template>
+              <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                <input type="checkbox" class="form-check-input" [checked]="selectedcheckbox(value)"
+                  (change)="onCheckboxChangeFn($event,row,data.items)" />
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column [name]="'FileExplorer::FileName' | abpLocalization" prop="name" [sortable]="false"
+                [flexGrow]="4">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                  <div class="file-name-cell">
+                    <div class="file-name-content">
+                      @if (getFileDirectoryPath(row.directoryId)) {
+                        <div class="file-directory-path" [title]="getFileDirectoryPath(row.directoryId)">
+                          <i class="fa fa-folder-o me-1" aria-hidden="true"></i>{{ getFileDirectoryPath(row.directoryId) }}
+                        </div>
+                      }
+                      <div>{{ value }}</div>
+                    </div>
+                    <div class="file-name-preview" [attr.title]="row.name">
+                      <fe-file-preview [width]="'48px'" [src]="row.url" [containerName]="row.containerName"
+                        [blobName]="row.blobName" [name]="row.name" [type]="row.mimeType"></fe-file-preview>
+                    </div>
+                  </div>
+                </ng-template>
+              </ngx-datatable-column>
+                <ngx-datatable-column [name]="'FileExplorer::FileSize' | abpLocalization" prop="size" [flexGrow]="1.5">
+                  <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                    {{(value|formatFileSize) }}
+                  </ng-template>
+                </ngx-datatable-column>
+                <ngx-datatable-column [name]="'FileExplorer::CreationTime' | abpLocalization" prop="creationTime"
+                  [flexGrow]="2">
+                  <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                    {{ value | date : 'short' }}
+                  </ng-template>
+                </ngx-datatable-column>
+                <ngx-datatable-column [name]="'AbpUi::Edit' | abpLocalization" [flexGrow]="1" [sortable]="false">
+                  <ng-template let-row="row" ngx-datatable-cell-template>
+                    <button type="button" class="btn btn-sm btn-secondary p-0" (click.stop)="onEditFileName(row)"
+                      [attr.aria-label]="'AbpUi::Edit' | abpLocalization">
+                      <i class="fas fa-edit p-2" aria-hidden="true"></i>
+                    </button>
+                  </ng-template>
+                </ngx-datatable-column>
+              </ngx-datatable>
+            </div>
+            @if (uploadPictureStatusList.length > 0) {
+              <div
+                class="position-fixed bottom-0 end-0 shadow-lg file-status-modal   m-5" style="border-radius: 10px">
+                <div class="card p-1">
+                  <div class="card-header d-flex align-items-center justify-content-between p-0 py-1 border-bottom">
+                    <div>{{'FileExplorer::UploadFiles' | abpLocalization}}</div>
+                    <button type="button" class="btn-close" aria-label="Close" (click.stop)="closeFileStatusModal()"></button>
+                  </div>
+                  <div class="card-body">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th scope="col">{{'FileExplorer::FileName' | abpLocalization}}</th>
+                          <th scope="col">{{'FileExplorer::FileSize' | abpLocalization}}</th>
+                          <th scope="col"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (item of uploadPictureStatusList; track item; let i = $index) {
+                          <tr>
+                            <th scope="row">
+                              <div>{{ item.name }}</div>
+                              @if (item.size > sizeLimit) {
+                                <div class="form-text text-danger">
+                                  {{'FileExplorer::ExceedsMaximumSize' |
+                                  abpLocalization:(sizeLimit|formatFileSize)}}
+                                </div>
+                              }
+                            </th>
+                            <td>{{ item.size | formatFileSize }}</td>
+                            <td>
+                              @if (item.status === 1) {
+                                <i class="fas fa-check text-primary"></i>
+                              }
+                              @if (item.status === 2) {
+                                <i class="fas fa-times-circle text-danger"></i>
+                              }
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </ng-template>
+    <ng-template #abpFooter>
+      <button type="button" class="btn btn-outline-secondary" abpClose>{{'AbpUi::Close' | abpLocalization}}</button>
+      <abp-button iconClass="fa fa-check" [disabled]="selectedTable.length === 0" (click)="modalSave()">
+        <span>{{'FileExplorer::Confirm' | abpLocalization}}</span>
+        <span class="selected-file-count" [class.d-none]="selectedTable.length === 0">
+          ({{selectedTable.length}})
+        </span>
+      </abp-button>
+    </ng-template>
+  </abp-modal>
+
+  <abp-modal [(visible)]="FileNameModalOpen" (visibleChange)="FileNameModalVisibleChange($event)">
+    <ng-template #abpHeader>
+      <h3>{{'AbpUi::Edit' | abpLocalization}} {{'FileExplorer::FileName' | abpLocalization}}</h3>
+    </ng-template>
+    <ng-template #abpBody>
+      @if (FileNameForm) {
+        <form id="file-name-edit-form" [formGroup]="FileNameForm" (ngSubmit)="onSubmitFileName()">
+          <div class="mb-3">
+            <label class="form-label" for="file-name-edit-input">
+              {{'FileExplorer::FileName' | abpLocalization}}
+            </label>
+            <input id="file-name-edit-input" class="form-control" type="text" formControlName="fileName" />
+          </div>
+        </form>
+      }
+    </ng-template>
+    <ng-template #abpFooter>
+      <button type="button" class="btn btn-secondary" (click)="onCancelFileName()">
+        {{'AbpUi::Cancel' | abpLocalization}}
+      </button>
+      <button type="submit" class="btn btn-primary" form="file-name-edit-form"
+        [disabled]="isloading || FileNameForm?.invalid">
+        @if (isloading) {
+          <i class="fa-spin fa fa-spinner me-1" aria-hidden="true"></i>
+        }
+        {{'AbpUi::Save' | abpLocalization}}
+      </button>
+    </ng-template>
+  </abp-modal>
+
+  <abp-modal [(visible)]="MoveModalOpen" [busy]="MoveModalBusy"
+    (visibleChange)="MoveModalVisibleChange($event)">
+    <ng-template #abpHeader>
+      <h3>{{'FileExplorer::Move' | abpLocalization}}</h3>
+    </ng-template>
+      <ng-template #abpBody>
+      @if (MoveModalOpen) {
+        <div class="move-directory-tree">
+          <fe-file-explorer-directory-tree [theSelectedTreeNode]="moveTargetDirectoryNode"
+            (nodeClick)="onMoveTargetDirectoryChange($event)" [fileContainerName]="_fileContainerName">
+          </fe-file-explorer-directory-tree>
+        </div>
+      }
+    </ng-template>
+    <ng-template #abpFooter>
+      <button type="button" class="btn btn-secondary" abpClose>
+        {{'AbpUi::Cancel' | abpLocalization}}
+      </button>
+      <button type="button" class="btn btn-primary" [disabled]="MoveModalBusy || !moveTargetDirectoryNode"
+        (click)="moveSelectedFiles()">
+        @if (MoveModalBusy) {
+          <i class="fa-spin fa fa-spinner me-1" aria-hidden="true"></i>
+        }
+        {{'AbpUi::Save' | abpLocalization}}
+      </button>
+    </ng-template>
+  </abp-modal>

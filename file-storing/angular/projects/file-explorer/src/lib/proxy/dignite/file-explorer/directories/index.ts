@@ -1,2 +1,2 @@
-export * from './file-descriptor.service';
+export * from './directory-descriptor.service';
 export * from './models';

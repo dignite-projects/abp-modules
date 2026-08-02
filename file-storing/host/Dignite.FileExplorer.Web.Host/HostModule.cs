@@ -242,6 +242,16 @@ public class HostModule : AbpModule
                 {
                     config.MaxFileSize = 10;
                 });
+                container.AddFileTypeCheckHandler(config =>
+                {
+                    config.AllowedFileTypeNames = new[]
+                    {
+                        // Documents
+                        ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".csv",
+                        // Images
+                        ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp",
+                    };
+                });
                 container.SetAuthorizationConfiguration(config =>
                 {
                     config.CreateDirectoryPermissionName = FileExplorerPermissions.Files.Management;

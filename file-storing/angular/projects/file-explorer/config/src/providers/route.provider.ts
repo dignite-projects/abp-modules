@@ -11,7 +11,7 @@ export const FILE_ROUTE_PROVIDERS: EnvironmentProviders[] = [
 export function configureRoutes(routesService: RoutesService): void {
   routesService.add([
     {
-      path: '/file/file-dome',
+      path: '/file-explorer/file-upload-demo',
       name: eFileRouteNames.FileUploadDemo,
       iconClass: 'fas fa fa-file-archive-o',
       layout: eLayoutType.application,

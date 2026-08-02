@@ -4,18 +4,16 @@ import {
   Input,
   Output,
   SimpleChanges,
-  inject,
+  ViewChild,
   OnChanges,
 } from '@angular/core';
-import * as FileService from '../../proxy/dignite/file-explorer/files';
+import { DatatableComponent } from '@swimlane/ngx-datatable';
 import { Confirmation, ConfirmationService, ThemeSharedModule, ToasterService } from '@abp/ng.theme.shared';
 import {
   PagedResultDto,
   ABP,
   CoreModule,
   ListService,
-  Rest,
-  RestService,
   LocalizationService,
   LIST_QUERY_DEBOUNCE_TIME,
 } from '@abp/ng.core';
@@ -27,55 +25,62 @@ import {
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { CommonModule } from '@angular/common';
-import { FileModalTreeComponent } from '../file-modal-tree/file-modal-tree.component';
+import {
+  FileExplorerDirectoryTreeComponent,
+  MY_FILES_NODE_KEY,
+  isMyFilesNode,
+} from '../file-explorer-directory-tree/file-explorer-directory-tree.component';
 import { FilePreviewComponent } from '../../previews/file-preview.component';
 import { FormatFileSizePipe } from '../../pipe/format-file-size.pipe';
-import { GetDirectoryNamePipe } from '../../pipe/get-directory-name.pipe';
+
 @Component({
-  
   // eslint-disable-next-line @angular-eslint/component-selector
-  selector: 'fe-file-modal',
-  templateUrl: './file-modal.component.html',
-  styleUrls: ['./file-modal.component.scss'],
+  selector: 'fe-file-explorer-modal',
+  templateUrl: './file-explorer-modal.component.html',
+  styleUrls: ['./file-explorer-modal.component.scss'],
   imports: [
     CommonModule,
     ReactiveFormsModule,
     CoreModule,
     ThemeSharedModule,
-    FileModalTreeComponent,
+    FileExplorerDirectoryTreeComponent,
     FilePreviewComponent,
     FormatFileSizePipe,
-    GetDirectoryNamePipe,
   ],
   providers: [
-    // [Required]
     ListService,
-    // [Optional]
-    // Provide this token if you want a different debounce time.
-    // Default is 300. Cannot be 0. Any value below 100 is not recommended.
     { provide: LIST_QUERY_DEBOUNCE_TIME, useValue: 500 },
   ],
 })
-export class FileModalComponent implements OnChanges {
+export class FileExplorerModalComponent implements OnChanges {
+  @ViewChild('fileTable') private fileTable?: DatatableComponent<FileDescriptorDto>;
+  private tableRecalculationFrame?: number;
+
+  // The file list uses the opposite visual convention for sort arrows.
+  // Keep the direction sent by ListService unchanged and only swap the icons.
+  readonly tableSortIcons = {
+    sortAscending: 'datatable-icon-down',
+    sortDescending: 'datatable-icon-up',
+  };
+
   constructor(
-    private _FileService: FileService.FileDescriptorService,
+    private fileService: FileDescriptorService,
     private toaster: ToasterService,
     public readonly list: ListService,
-    private restService: RestService,
     private confirmation: ConfirmationService,
-    private _LocalizationService: LocalizationService,
+    private localizationService: LocalizationService,
   ) {}
 
-  private _FileDescriptorService = inject(FileDescriptorService);
   /**获取目录配置 */
-  getFilesConfiguration() {
-    return new Promise((resolve, reject) => {
-      this._FileDescriptorService
-        .getFileContainerConfiguration(this._fileContainerName)
-        .subscribe(res => {
-          this.createDirectoryPermissionName = res?.createDirectoryPermissionName;
-          resolve(res);
-        });
+  getFilesConfiguration(): void {
+    this.fileService.getFileContainerConfiguration(this._fileContainerName).subscribe(res => {
+      this.createDirectoryPermissionName = res?.createDirectoryPermissionName;
+      // Reflect the container's actual server-side limit (FileSizeLimitHandler.MaxFileSize) once
+      // it's known, instead of leaving the pre-fetch default of 1MB as the permanent client cap.
+      if (res?.maxBlobSize > 0) {
+        this.sizeLimit = res.maxBlobSize;
+      }
+      this.scheduleTableRecalculation();
     });
   }
   /**目录的权限名称 */
@@ -87,7 +92,6 @@ export class FileModalComponent implements OnChanges {
   public set fileContainerName(v: string) {
     if (v) {
       this._fileContainerName = v;
-      // this.loadData()
     }
   }
 
@@ -121,38 +125,75 @@ export class FileModalComponent implements OnChanges {
   /**模态框-状态-是否打开 */
   ModalOpen = false;
 
-  /**模态框-繁忙状态-用于确定模态的繁忙状态是否为真 */
-  ModalBusy = false;
+  /**文件名编辑模态框状态 */
+  FileNameModalOpen = false;
+
+  /**文件名编辑模态框状态改变回调 */
+  FileNameModalVisibleChange(event: boolean) {
+    this.FileNameModalOpen = event;
+    if (!event) {
+      this.FileNameForm = undefined;
+      this.newEditRow = '';
+    }
+  }
 
   /**模态框-状态改变回调 */
   ModalVisibleChange(event) {
     if (!event) {
       this.ModalOpen = false;
-      this.ModalBusy = false;
       this.visibleChange.emit(event);
       this.createDirectoryPermissionName = '';
       this._theSelectedTreeNode = '';
       this.selectedTable = [];
       this.uploadPictureStatusList = [];
+      this.onCancelFileName();
       return;
     }
   }
 
+  /** 模态框内容完成布局后重新计算表格列宽，避免缓存到过渡阶段的宽度。 */
+  onModalInit(): void {
+    this.scheduleTableRecalculation();
+  }
+
+  private scheduleTableRecalculation(): void {
+    if (!this.ModalOpen) return;
+
+    if (typeof requestAnimationFrame === 'undefined') {
+      setTimeout(() => this.fileTable?.recalculate());
+      return;
+    }
+
+    if (this.tableRecalculationFrame !== undefined) {
+      cancelAnimationFrame(this.tableRecalculationFrame);
+    }
+
+    this.tableRecalculationFrame = requestAnimationFrame(() => {
+      this.tableRecalculationFrame = requestAnimationFrame(() => {
+        this.tableRecalculationFrame = undefined;
+        if (this.ModalOpen) {
+          this.fileTable?.recalculate();
+        }
+      });
+    });
+  }
+
   /**模态框保存 */
   modalSave() {
+    if (this.selectedTable.length === 0) return;
+
     const selectedTablearr = structuredClone(this.selectedTable);
     this.selectFilefn.emit(selectedTablearr);
     this.ModalVisibleChange(false);
   }
-  /**dignite-file-modal-tree */
+  /**dignite-file-explorer-directory-tree */
   /**选择的tree节点 */
   _theSelectedTreeNode: any = '';
   isCreateList = false;
   /**初始化数据 */
   loadData() {
     if (this.ModalOpen && this._fileContainerName) {
-      this.list.maxResultCount = 100;
-      // this.filters.skipCount = 0;
+      this.list.maxResultCount = 50;
       this.getFilesConfiguration();
       if (!this.isCreateList) {
         this.hookToQuery();
@@ -164,9 +205,45 @@ export class FileModalComponent implements OnChanges {
   }
   /** 从tree获取来的数据 */
   fileGroupList: any[] = [];
+
+  /**虚拟根节点“我的文件”不对应后端目录，查询时表示全部文件 */
+  private getSelectedDirectoryId(): string | undefined {
+    const key = this._theSelectedTreeNode?.key;
+    return key && key !== MY_FILES_NODE_KEY ? key : undefined;
+  }
+
   /** 从tree获取数据 */
   treeNodeData(event) {
     this.fileGroupList = this.flattenNestedArray(event);
+  }
+
+  /**获取当前目录及其所有父级目录 */
+  getDirectoryPath(node: any): any[] {
+    const path = [];
+    const visitedKeys = new Set();
+    let currentKey = node?.key;
+
+    while (currentKey && !visitedKeys.has(currentKey)) {
+      visitedKeys.add(currentKey);
+      const currentNode = this.fileGroupList.find(item => item.key === currentKey || item.id === currentKey);
+
+      if (!currentNode) break;
+
+      path.unshift(currentNode);
+      currentKey = currentNode.parentId;
+    }
+
+    return path;
+  }
+
+  /**获取文件所在目录的完整路径 */
+  getFileDirectoryPath(directoryId: string): string {
+    if (!directoryId) return '';
+
+    return this.getDirectoryPath({ key: directoryId })
+      .map(node => node.name || node.title)
+      .filter(Boolean)
+      .join(' / ');
   }
   /**
    * 将嵌套数组扁平化
@@ -206,41 +283,35 @@ export class FileModalComponent implements OnChanges {
 
   /**图片上传-获取文件信息改变 */
   async getFileChange(event) {
-    const _that=this;
     const files = new Array(...event.target.files);
     this.uploadPictureStatusList = files;
-    const uploadPromises = [];
+    // Uploaded one at a time: concurrent creates against the same container can race inside
+    // the blob storage provider (e.g. Volo.Abp.BlobStoring.Database) and surface as a spurious
+    // AbpDbConcurrencyException (409) on one of the files. Sequential requests avoid that race.
     for (const file of files) {
       if (file.size > this.sizeLimit) {
-        this.setuploadPictureStatus(file, 2);
+        this.setUploadPictureStatus(file, 2);
         continue;
       }
-      uploadPromises.push(
-        this.uploadingFile(file)
-          .then(res => {
-            this.setuploadPictureStatus(file, 1);
-          })
-          .catch(err => {
-            this.setuploadPictureStatus(file, 2);
-            return err;
-          }), // 保证所有Promise都resolve
-      );
-    }
-    Promise.all(uploadPromises).then( (results)=> {
-      _that.list.get();
-      const isSubmit = !_that.uploadPictureStatusList.some(el => el.status == 2);
-      if (isSubmit) {
-        setTimeout(() => {
-          _that.uploadPictureStatusList = [];
-        }, 4000);
+      try {
+        await this.uploadingFile(file);
+        this.setUploadPictureStatus(file, 1);
+      } catch {
+        this.setUploadPictureStatus(file, 2);
       }
-    });
-
+    }
+    this.list.get();
+    const isSubmit = !this.uploadPictureStatusList.some(el => el.status == 2);
+    if (isSubmit) {
+      setTimeout(() => {
+        this.uploadPictureStatusList = [];
+      }, 4000);
+    }
   }
 
   /**图片上传-设置uploadPictureStatusList的状态 */
-  setuploadPictureStatus(file, type) {
-    this.uploadPictureStatusList.map(el => {
+  setUploadPictureStatus(file, type) {
+    this.uploadPictureStatusList.forEach(el => {
       if (el == file) el.status = type;
     });
   }
@@ -250,10 +321,10 @@ export class FileModalComponent implements OnChanges {
     return new Promise((resolve, rejects) => {
       const formData = new FormData();
       formData.append('file', file, file.name);
-      this.createFile({
-        file: formData,
+      this.fileService.create({
+        file: formData as any,
         containerName: this._fileContainerName,
-        directoryId: this._theSelectedTreeNode?.key || '',
+        directoryId: this.getSelectedDirectoryId() ?? null,
         entityId: '',
       }).subscribe(
         res => {
@@ -281,64 +352,37 @@ export class FileModalComponent implements OnChanges {
   /**文件表格-获取表格数据 */
   hookToQuery() {
     const getData = (query: ABP.PageQueryParams) =>
-      this._FileService.getList({
+      this.fileService.getList({
         ...query,
         ...this.filters,
         containerName: this._fileContainerName,
-        directoryId: this._theSelectedTreeNode.key,
+        directoryId: this.getSelectedDirectoryId(),
       });
     const setData = (list: PagedResultDto<FileDescriptorDto>) => {
       this.data = list;
-      this.onPageChange(list.items);
+      this.selectedTable = [];
+      this.isAllSelected = false;
+      this.scheduleTableRecalculation();
     };
     this.list.hookToQuery(getData).subscribe(setData);
-  }
-
-  /**文件表格-查看所有分组的文件数据 */
-  lookAllFile() {
-    this.filters.skipCount = 0;
-    this._theSelectedTreeNode = '';
-    this.list.get();
-  }
-
-  /**删除图片 */
-  deleteFile(file) {
-    this._FileService.delete(file.id).subscribe(res => {
-      this.toaster.success(this._LocalizationService.instant(`FileExplorer::DeletedSuccessfully`));
-      this.list.get();
-      const selectedTables=this.selectedTable;
-      this.selectedTable=selectedTables.filter(el => el.id != file.id);
-    });
   }
 
   /**删除所有选中图片 */
   onDeleteAllSelectFile() {
     this.confirmation
-      .warn('', {
-        key: '',
-        defaultValue: this._LocalizationService.instant(`FileExplorer::AreYouSure`),
+      .warn('FileExplorer::BatchDeletionConfirmationMessage', 'FileExplorer::BatchDeletionConfirmationTitle', {
+        messageLocalizationParams: [String(this.selectedTable.length)],
       })
       .subscribe(async (status: Confirmation.Status) => {
         if (status == 'confirm') {
           const selectedTable = this.selectedTable;
-          try {
-            const result = await this.batchDeleteItems(selectedTable);
-            console.log(result,'resultresultresult')
-            if (result.success) {
-              this.toaster.success(result.message);
-              this.list.get();
-              this.selectedTable=[];
-              // 可能需要刷新表格或更新UI
-            } else {
-              //删除失败的项
-              this.list.get();
-              // 可以选择展示失败项或重试
-              this.selectedTable= result.failedItems;
-
-            }
-          } catch (error) {
-            //批量删除过程中发生错误
+          const result = await this.batchDeleteItems(selectedTable);
+          if (result.success) {
+            this.toaster.success(result.message);
+          } else {
+            this.toaster.error(result.message);
           }
+          this.list.get();
         }
       });
   }
@@ -352,7 +396,7 @@ export class FileModalComponent implements OnChanges {
     // 存储所有删除请求的Promise
     const deletePromises = selectedTable.map(item => {
       return new Promise((resolve, reject) => {
-        this._FileService.delete(item.id).subscribe(
+        this.fileService.delete(item.id).subscribe(
           () => {
             resolve(null);
           },
@@ -378,9 +422,64 @@ export class FileModalComponent implements OnChanges {
       failedItems,
       message:
         failedItems.length === 0
-          ? this._LocalizationService.instant(`FileExplorer::DeletedSuccessfully`)
+          ? this.localizationService.instant(`FileExplorer::DeletedSuccessfully`)
           : `${failedItems.length}个项删除失败`,
     };
+  }
+
+  /**移动文件模态框状态 */
+  MoveModalOpen = false;
+  MoveModalBusy = false;
+  moveTargetDirectoryNode: any = '';
+
+  openMoveModal() {
+    if (this.selectedTable.length === 0 || !this.createDirectoryPermissionName) return;
+
+    this.moveTargetDirectoryNode = '';
+    this.MoveModalOpen = true;
+  }
+
+  onMoveTargetDirectoryChange(node: any) {
+    this.moveTargetDirectoryNode = node;
+  }
+
+  MoveModalVisibleChange(event: boolean) {
+    this.MoveModalOpen = event;
+    if (!event) {
+      this.MoveModalBusy = false;
+      this.moveTargetDirectoryNode = '';
+    }
+  }
+
+  async moveSelectedFiles() {
+    const targetNode = this.moveTargetDirectoryNode;
+    const targetDirectoryId = isMyFilesNode(targetNode) ? null : targetNode?.key;
+    if (!targetNode?.key || this.selectedTable.length === 0 || this.MoveModalBusy) return;
+
+    this.MoveModalBusy = true;
+    const results = await Promise.allSettled(
+      this.selectedTable.map(
+        file =>
+          new Promise((resolve, reject) => {
+            this.fileService
+              .update(file.id, { directoryId: targetDirectoryId })
+              .subscribe({ next: resolve, error: reject });
+          }),
+      ),
+    );
+    this.MoveModalBusy = false;
+
+    const failedCount = results.filter(result => result.status === 'rejected').length;
+    if (failedCount > 0) {
+      this.toaster.error(this.localizationService.instant('FileExplorer::MoveFailed'));
+      return;
+    }
+
+    this.toaster.success(this.localizationService.instant('FileExplorer::MovedSuccessfully'));
+    this.selectedTable = [];
+    this.isAllSelected = false;
+    this.list.get();
+    this.MoveModalOpen = false;
   }
 
 
@@ -389,27 +488,8 @@ export class FileModalComponent implements OnChanges {
     this.uploadPictureStatusList = [];
   }
 
-  /**创建图片的接口，代理中的file类型不匹配，切换为any类型 */
-  createFile = (input: any, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, FileDescriptorDto>(
-      {
-        method: 'POST',
-        url: '/api/file-explorer/files',
-        params: {
-          containerName: input.containerName,
-          cellName: input.cellName,
-          directoryId: input.directoryId,
-          entityId: input.entityId,
-        },
-        body: input.file,
-      },
-      { apiName: 'FileExplorer', ...config },
-    );
-
   /**文件表格-选择的表格数据项 */
   selectedTable = [];
-  /**当前选择的table项 id */
-  nowSelectId: any = '';
   /**是否全选 */
   isAllSelected = false;
 
@@ -423,10 +503,6 @@ export class FileModalComponent implements OnChanges {
     }
 
     this.selectedTable = structuredClone(selectPickerFileChange.currentValue ?? []);
-  }
-  /**表格分页切换 */
-  onPageChange(newArray) {
-    this.isAllSelected = this.isAllSelectedFn(newArray, this.selectedTable);
   }
   /**行选择框改变 */
   onCheckboxChangeFn(event, row, array: any[]) {
@@ -484,12 +560,12 @@ export class FileModalComponent implements OnChanges {
   /**是否正在加载 */
   isloading = false;
   /**提交FileName编辑 */
-  onSubmitFileName(event) {
+  onSubmitFileName() {
     const input = this.FileNameForm.value;
     if (!this.FileNameForm.valid) return;
     if (this.isloading) return;
     this.isloading = true;
-    this._FileService
+    this.fileService
       .update(input.id, {
         name: input.fileName,
       })
@@ -509,8 +585,8 @@ export class FileModalComponent implements OnChanges {
 
         this.FileNameForm = undefined;
         this.newEditRow = '';
-        this.toaster.success(this._LocalizationService.instant(`FileExplorer::SavedSuccessfully`));
-        // this.list.get();
+        this.FileNameModalOpen = false;
+        this.toaster.success(this.localizationService.instant(`FileExplorer::SavedSuccessfully`));
       });
   }
   /**打开编辑 */
@@ -524,9 +600,11 @@ export class FileModalComponent implements OnChanges {
       id: row.id,
     });
     this.newEditRow = row;
+    this.FileNameModalOpen = true;
   }
   /**关闭编辑 */
-  onCancelFileName(row) {
+  onCancelFileName() {
+    this.FileNameModalOpen = false;
     this.newEditRow = '';
     this.FileNameForm = undefined;
   }

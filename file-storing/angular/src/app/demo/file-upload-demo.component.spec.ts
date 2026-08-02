@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { FilePickerComponent } from './file-picker.component';
+import { FileUploadDemoComponent } from './file-upload-demo.component';
 import { CoreTestingModule } from '@abp/ng.core/testing';
 import { NgxValidateCoreModule } from '@ngx-validate/core';
 
-describe('FilePickerComponent', () => {
-  let component: FilePickerComponent;
-  let fixture: ComponentFixture<FilePickerComponent>;
+describe('FileUploadDemoComponent', () => {
+  let component: FileUploadDemoComponent;
+  let fixture: ComponentFixture<FileUploadDemoComponent>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [FilePickerComponent,CoreTestingModule.withConfig(), NgxValidateCoreModule.forRoot()]
+      imports: [FileUploadDemoComponent,CoreTestingModule.withConfig(), NgxValidateCoreModule.forRoot()]
     });
-    fixture = TestBed.createComponent(FilePickerComponent);
+    fixture = TestBed.createComponent(FileUploadDemoComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

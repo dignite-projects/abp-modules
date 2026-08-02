@@ -4,8 +4,8 @@
       @if (_fields.displayName) {
         <label class="form-label">{{ _fields.displayName }}</label>
       }
-      <fe-file-picker [selectFormFile]="selectedFileGroup" [multiple]="formConfiguration['FileExplorer.UploadFileMultiple']"
-      (selectedFileChange)="_selectedFileChange($event)" [fileContainerName]="FileContainerName"></fe-file-picker>
+      <fe-file-explorer-picker [selectFormFile]="selectedFileGroup" [multiple]="formConfiguration['FileExplorer.UploadFileMultiple']"
+      (selectedFileChange)="_selectedFileChange($event)" [fileContainerName]="FileContainerName"></fe-file-explorer-picker>
       @if (_fields.field.description) {
         <small class="form-text text-muted d-block">{{_fields.field.description}}</small>
       }

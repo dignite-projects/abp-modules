@@ -1,7 +1,10 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Dignite.FileExplorer.Directories;
 using Shouldly;
+using Volo.Abp;
+using Volo.Abp.Data;
 using Volo.Abp.MultiTenancy;
 using Volo.Abp.Modularity;
 using Xunit;
@@ -18,13 +21,17 @@ public abstract class FileDescriptorRepository_Tests<TStartupModule> : FileExplo
 {
     private readonly FileExplorerTestData testData;
     private readonly IFileDescriptorRepository _fileDescriptorRepository;
+    private readonly IDirectoryDescriptorRepository _directoryDescriptorRepository;
     private readonly ICurrentTenant _currentTenant;
+    private readonly IDataFilter<ISoftDelete> _softDeleteFilter;
 
     protected FileDescriptorRepository_Tests()
     {
         _fileDescriptorRepository = GetRequiredService<IFileDescriptorRepository>();
+        _directoryDescriptorRepository = GetRequiredService<IDirectoryDescriptorRepository>();
         testData = GetRequiredService<FileExplorerTestData>();
         _currentTenant = GetRequiredService<ICurrentTenant>();
+        _softDeleteFilter = GetRequiredService<IDataFilter<ISoftDelete>>();
     }
 
     [Fact]
@@ -99,6 +106,42 @@ public abstract class FileDescriptorRepository_Tests<TStartupModule> : FileExplo
             maxResultCount: 2);
 
         result.Select(file => file.Name).ShouldBe(new[] { "newer", "older" });
+    }
+
+    [Fact]
+    public async Task ClearDirectoryFromDeletedFilesAsync_ShouldDetachOnlySoftDeletedFiles()
+    {
+        var directory = new DirectoryDescriptor(
+            Guid.NewGuid(),
+            testData.ContainerName1,
+            "deleted-file-directory",
+            null,
+            0,
+            null)
+        {
+            CreatorId = Guid.NewGuid()
+        };
+        await _directoryDescriptorRepository.InsertAsync(directory, autoSave: true);
+
+        var deletedFile = CreateFileDescriptor(testData.ContainerName1, "deleted-file");
+        deletedFile.MoveToDirectory(directory.Id);
+        await _fileDescriptorRepository.InsertAsync(deletedFile, autoSave: true);
+        await _fileDescriptorRepository.DeleteAsync(deletedFile, autoSave: true);
+        var activeFile = CreateFileDescriptor(testData.ContainerName1, "active-file");
+        activeFile.MoveToDirectory(directory.Id);
+        await _fileDescriptorRepository.InsertAsync(activeFile, autoSave: true);
+
+        await _fileDescriptorRepository.ClearDirectoryFromDeletedFilesAsync(directory.Id);
+
+        var persistedActiveFile = await _fileDescriptorRepository.GetAsync(activeFile.Id);
+        persistedActiveFile.DirectoryId.ShouldBe(directory.Id);
+
+        using (_softDeleteFilter.Disable())
+        {
+            var persistedFile = await _fileDescriptorRepository.GetAsync(deletedFile.Id);
+            persistedFile.IsDeleted.ShouldBeTrue();
+            persistedFile.DirectoryId.ShouldBeNull();
+        }
     }
 
     private static FileDescriptor CreateFileDescriptor(string containerName, string name)

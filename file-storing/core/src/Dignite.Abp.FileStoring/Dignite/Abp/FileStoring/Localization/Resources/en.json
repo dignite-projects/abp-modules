@@ -1,0 +1,9 @@
+{
+  "culture": "en",
+  "texts": {
+    "Dignite.Abp.File:0001": "The uploaded file is too large.",
+    "Dignite.Abp.File:0002": "This file type is not allowed.",
+    "Dignite.Abp.File:0003": "The file has no extension.",
+    "Dignite.Abp.File:0004": "The requested blob container is not registered."
+  }
+}
