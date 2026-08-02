@@ -7,11 +7,19 @@
     "declaration": true,
     "declarationMap": true,
     "types": [],
-    // Overrides (replaces, not merges) the workspace root's `paths`: those map
-    // `@dignite/ng.flex-fields` straight to its TypeScript source for the Demo app's convenience,
-    // but ng-packagr can't cleanly roll up declarations across two entry points that way — it needs
-    // to resolve sibling packages through node_modules like any other consumer would.
-    "paths": {}
+    // Overrides (replaces, not merges) the workspace root's `paths`: those map both sibling
+    // packages straight to TypeScript source for the Demo app's convenience, but ng-packagr can't
+    // cleanly roll up declarations across two entry points that way.
+    // - `@dignite/ng.file-explorer` falls through to node_modules (a `file:` dependency in
+    //   package.json on file-storing's already-built dist — no cycle, that workspace builds first).
+    // - `@dignite/ng.flex-fields` points straight at this workspace's own `dist/flex-fields`
+    //   instead of node_modules: a `file:` dependency here would be self-referential (this
+    //   package.json can't depend on its own sibling's build output and still be `yarn install`-able
+    //   before that output exists). `yarn build:lib` (flex-fields core) must still run before this
+    //   library builds.
+    "paths": {
+      "@dignite/ng.flex-fields": ["dist/flex-fields"]
+    }
   },
   "include": [
     "src/**/*.ts"

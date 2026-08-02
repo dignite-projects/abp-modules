@@ -7,7 +7,9 @@
     "types": [
       "vitest/globals"
     ],
-    "paths": {}
+    "paths": {
+      "@dignite/ng.flex-fields": ["dist/flex-fields"]
+    }
   },
   "include": [
     "src/**/*.d.ts",
