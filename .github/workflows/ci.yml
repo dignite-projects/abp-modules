@@ -136,39 +136,17 @@ jobs:
       - name: Run FlexFields (MongoDB) tests
         run: dotnet test flex-fields/test/Dignite.Abp.FlexFields.MongoDB.Tests/Dignite.Abp.FlexFields.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/flex-fields
 
-      # Upload each module's coverage under its own flag, so Codecov tracks each module separately
-      # instead of blending unrelated code into one number (the module
-      # trees are otherwise-unrelated per CLAUDE.md, so a blended number would hide which one
-      # regressed). Guarded two ways so a Codecov outage or a missing CODECOV_TOKEN can never fail
-      # this required check: continue-on-error on the step and fail_ci_if_error: false on the action.
-      # Set the CODECOV_TOKEN repo secret to enable uploads (public-repo tokenless uploads also work
-      # but are rate-limited); until then these are no-ops. Flag defaults are in codecov.yml.
-      - name: Upload file-storing coverage to Codecov
-        uses: codecov/codecov-action@v5
-        continue-on-error: true
+      # Coverage is uploaded to Codecov from the separate upload-coverage job below, not here:
+      # codecov-action's upload latency is dominated by Codecov's own service (observed anywhere from
+      # 2s to 4.5min per call, most likely tokenless-upload rate limiting - see the comment on that
+      # job), and build-and-test is the required status check every PR waits on. Hand the coverage
+      # files off as an artifact instead of paying that latency on the blocking path.
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
         with:
-          directory: ./artifacts-ci/coverage/file-storing
-          flags: file-storing
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Upload notifications coverage to Codecov
-        uses: codecov/codecov-action@v5
-        continue-on-error: true
-        with:
-          directory: ./artifacts-ci/coverage/notifications
-          flags: notifications
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Upload flex-fields coverage to Codecov
-        uses: codecov/codecov-action@v5
-        continue-on-error: true
-        with:
-          directory: ./artifacts-ci/coverage/flex-fields
-          flags: flex-fields
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: coverage-reports
+          path: ./artifacts-ci/coverage
+          if-no-files-found: error
 
       # Projects with IsPackable=false (all three demo hosts + test projects) are skipped automatically.
       # All 33 packable NuGet projects across the three module trees are produced.
@@ -319,3 +297,55 @@ jobs:
             throw "Expected one flex-fields-file-explorer Angular package tarball, found $($tarballs.Count)."
           }
           node ./flex-fields/.github/scripts/smoke-test-file-explorer-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
+
+  # Not a required check: Codecov's upload latency is Codecov's, not ours (observed anywhere from a
+  # few seconds to 4+ minutes per module, most likely tokenless-upload rate limiting), and it must
+  # never be what a PR is waiting on to merge. Runs after build-and-test succeeds, using the coverage
+  # files that job already collected, instead of re-running any tests.
+  upload-coverage:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-reports
+          path: ./artifacts-ci/coverage
+
+      # Upload each module's coverage under its own flag, so Codecov tracks each module separately
+      # instead of blending unrelated code into one number (the module
+      # trees are otherwise-unrelated per CLAUDE.md, so a blended number would hide which one
+      # regressed). Guarded two ways so a Codecov outage or a missing CODECOV_TOKEN can never fail
+      # this job: continue-on-error on the step and fail_ci_if_error: false on the action. Set the
+      # CODECOV_TOKEN repo secret to enable uploads (public-repo tokenless uploads also work but are
+      # rate-limited); until then these are no-ops. Flag defaults are in codecov.yml.
+      - name: Upload file-storing coverage to Codecov
+        uses: codecov/codecov-action@v5
+        continue-on-error: true
+        with:
+          directory: ./artifacts-ci/coverage/file-storing
+          flags: file-storing
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload notifications coverage to Codecov
+        uses: codecov/codecov-action@v5
+        continue-on-error: true
+        with:
+          directory: ./artifacts-ci/coverage/notifications
+          flags: notifications
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload flex-fields coverage to Codecov
+        uses: codecov/codecov-action@v5
+        continue-on-error: true
+        with:
+          directory: ./artifacts-ci/coverage/flex-fields
+          flags: flex-fields
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
