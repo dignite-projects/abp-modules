@@ -27,10 +27,10 @@ describe('FileExplorerUploadComponent', () => {
     imageUrlService.get = () => 'blob:test-preview';
     const files = [new File(['content'], 'test.txt', { type: 'text/plain' })] as any[];
 
-    const result = await component.setFileSizeUnits(files);
+    await (component as any).addFiles(files);
 
-    expect(result).toBe(files);
     expect(files[0].src).toBe('blob:test-preview');
     expect(files[0].fileSize).toBeTruthy();
+    expect(component.filesTableData).toEqual(files);
   });
 });

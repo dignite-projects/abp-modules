@@ -80,16 +80,18 @@ try {
   writeFileSync(
     join(tempRoot, 'smoke.ts'),
     `import {
-  fileExplorerRoutes,
+  FileExplorerPickerComponent,
 } from '@dignite/ng.file-explorer';
 import {
   eFileRouteNames,
+  FILE_ROUTE_PROVIDERS,
   provideFileExplorerConfig,
 } from '@dignite/ng.file-explorer/config';
 
 export const packageSurface = {
-  fileExplorerRoutes,
+  FileExplorerPickerComponent,
   provideFileExplorerConfig,
+  FILE_ROUTE_PROVIDERS,
   fileUploadDemoRoute: eFileRouteNames.FileUploadDemo,
 };
 `,

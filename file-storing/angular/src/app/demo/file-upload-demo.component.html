@@ -3,7 +3,7 @@
         <div class="card">
             <div class="card-header py-2 border-bottom">File upload</div>
             <div class="card-body">
-                <fe-file-explorer-upload [multiple]="false" fileContainerName="SampleContainer" [(fileData)]="fileSubmittedData" (fileDataChange)="fileDataChange($event)"></fe-file-explorer-upload>
+                <fe-file-explorer-upload [multiple]="false" fileContainerName="SampleContainer" (fileDataChange)="onFileDataChange($event)"></fe-file-explorer-upload>
             </div>
         </div>
     </div>
@@ -11,7 +11,7 @@
         <div class="card">
             <div class="card-header py-2 border-bottom">File selection</div>
             <div class="card-body">
-                <fe-file-explorer-picker [multiple]="true" [selectFormFile]="selectedFileGroup" fileContainerName="SampleContainer" (selectedFileChange)="_selectedFileChange($event)" ></fe-file-explorer-picker>
+                <fe-file-explorer-picker [multiple]="true" [selectFormFile]="selectedFileGroup" fileContainerName="SampleContainer" (selectedFileChange)="onSelectedFileChange($event)" ></fe-file-explorer-picker>
             </div>
         </div>
     </div>

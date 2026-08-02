@@ -33,11 +33,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: npm
+          cache: yarn
           cache-dependency-path: |
-            file-storing/angular/package-lock.json
-            notifications/angular/package-lock.json
-            flex-fields/angular/package-lock.json
+            file-storing/angular/yarn.lock
+            notifications/angular/yarn.lock
+            flex-fields/angular/yarn.lock
 
       - name: Verify NuGet and npm version lockstep
         id: version
@@ -136,13 +136,193 @@ jobs:
       - name: Run FlexFields (MongoDB) tests
         run: dotnet test flex-fields/test/Dignite.Abp.FlexFields.MongoDB.Tests/Dignite.Abp.FlexFields.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/flex-fields
 
+      # Coverage is uploaded to Codecov from the separate upload-coverage job below, not here:
+      # codecov-action's upload latency is dominated by Codecov's own service (observed anywhere from
+      # 2s to 4.5min per call, most likely tokenless-upload rate limiting - see the comment on that
+      # job), and build-and-test is the required status check every PR waits on. Hand the coverage
+      # files off as an artifact instead of paying that latency on the blocking path.
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: ./artifacts-ci/coverage
+          if-no-files-found: error
+
+      # Projects with IsPackable=false (all three demo hosts + test projects) are skipped automatically.
+      # All 33 packable NuGet projects across the three module trees are produced.
+      - name: Pack NuGet packages
+        run: dotnet pack Dignite.Abp.Modules.slnx --no-build --configuration Release --output ./artifacts-ci/nuget
+
+      - name: Smoke-test file-storing NuGet packages
+        shell: pwsh
+        run: ./file-storing/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}'
+
+      - name: Smoke-test notifications NuGet packages
+        shell: pwsh
+        run: ./notifications/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}'
+
+      - name: Smoke-test flex-fields NuGet packages
+        shell: pwsh
+        run: ./flex-fields/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}'
+
+      # --- file-storing Angular (angular/projects/file-explorer) ---
+      - name: Install file-storing Angular dependencies
+        working-directory: file-storing/angular
+        run: yarn install --frozen-lockfile
+
+      - name: Lint file-storing Angular projects
+        working-directory: file-storing/angular
+        run: yarn lint --max-warnings=0
+
+      - name: Run file-storing Angular unit tests
+        working-directory: file-storing/angular
+        run: yarn test --watch=false
+
+      - name: Build file-storing Angular library
+        working-directory: file-storing/angular
+        run: yarn build:lib
+
+      - name: Build file-storing Angular demo
+        working-directory: file-storing/angular
+        run: yarn build:prod
+
+      - name: Pack file-storing Angular library
+        shell: pwsh
+        working-directory: file-storing/angular
+        run: |
+          New-Item -ItemType Directory -Force ../../artifacts-ci/npm/file-storing | Out-Null
+          npm pack ./dist/file-explorer --pack-destination ../../artifacts-ci/npm/file-storing
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Smoke-test file-storing Angular package
+        shell: pwsh
+        run: |
+          $tarballs = @(Get-ChildItem ./artifacts-ci/npm/file-storing/*.tgz)
+          if ($tarballs.Count -ne 1) {
+            throw "Expected one file-explorer Angular package tarball, found $($tarballs.Count)."
+          }
+          node ./file-storing/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
+
+      # --- notifications Angular (angular/projects/notification-center) ---
+      - name: Install notifications Angular dependencies
+        working-directory: notifications/angular
+        run: yarn install --frozen-lockfile
+
+      - name: Build notifications Angular library
+        working-directory: notifications/angular
+        run: yarn build:lib
+
+      - name: Build notifications Angular demo
+        working-directory: notifications/angular
+        run: yarn build:prod
+
+      - name: Pack notifications Angular library
+        shell: pwsh
+        working-directory: notifications/angular
+        run: |
+          New-Item -ItemType Directory -Force ../../artifacts-ci/npm/notifications | Out-Null
+          npm pack ./dist/notification-center --pack-destination ../../artifacts-ci/npm/notifications
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Smoke-test notifications Angular package
+        shell: pwsh
+        run: |
+          $tarballs = @(Get-ChildItem ./artifacts-ci/npm/notifications/*.tgz)
+          if ($tarballs.Count -ne 1) {
+            throw "Expected one notification-center Angular package tarball, found $($tarballs.Count)."
+          }
+          node ./notifications/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
+
+      # --- flex-fields Angular (angular/projects/flex-fields) ---
+      # --legacy-peer-deps for the same reason as file-storing: @abp/ng.theme.shared depends on
+      # @swimlane/ngx-datatable, whose Angular peer range stops at 20, so npm will not hoist it beside
+      # Angular 21 without this - and the demo app's global styles import it by top-level path.
+      - name: Install flex-fields Angular dependencies
+        working-directory: flex-fields/angular
+        run: yarn install --frozen-lockfile
+
+      - name: Lint flex-fields Angular projects
+        working-directory: flex-fields/angular
+        run: yarn lint --max-warnings=0
+
+      - name: Run flex-fields Angular unit tests
+        working-directory: flex-fields/angular
+        run: yarn test --watch=false
+
+      - name: Build flex-fields Angular library
+        working-directory: flex-fields/angular
+        run: yarn build:lib
+
+      # Must run after "Build flex-fields Angular library" - flex-fields-file-explorer resolves
+      # @dignite/ng.flex-fields straight from that library's dist output (see the comment in
+      # flex-fields-file-explorer's tsconfig.lib.json for why it can't go through node_modules).
+      - name: Build flex-fields-file-explorer Angular library
+        working-directory: flex-fields/angular
+        run: yarn build:lib:file-explorer
+
+      - name: Build flex-fields Angular demo
+        working-directory: flex-fields/angular
+        run: yarn build:prod
+
+      - name: Pack flex-fields Angular library
+        shell: pwsh
+        working-directory: flex-fields/angular
+        run: |
+          New-Item -ItemType Directory -Force ../../artifacts-ci/npm/flex-fields | Out-Null
+          npm pack ./dist/flex-fields --pack-destination ../../artifacts-ci/npm/flex-fields
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Smoke-test flex-fields Angular package
+        shell: pwsh
+        run: |
+          $tarballs = @(Get-ChildItem ./artifacts-ci/npm/flex-fields/*.tgz)
+          if ($tarballs.Count -ne 1) {
+            throw "Expected one flex-fields Angular package tarball, found $($tarballs.Count)."
+          }
+          node ./flex-fields/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
+
+      - name: Pack flex-fields-file-explorer Angular library
+        shell: pwsh
+        working-directory: flex-fields/angular
+        run: |
+          New-Item -ItemType Directory -Force ../../artifacts-ci/npm/flex-fields-file-explorer | Out-Null
+          npm pack ./dist/flex-fields-file-explorer --pack-destination ../../artifacts-ci/npm/flex-fields-file-explorer
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Smoke-test flex-fields-file-explorer Angular package
+        shell: pwsh
+        run: |
+          $tarballs = @(Get-ChildItem ./artifacts-ci/npm/flex-fields-file-explorer/*.tgz)
+          if ($tarballs.Count -ne 1) {
+            throw "Expected one flex-fields-file-explorer Angular package tarball, found $($tarballs.Count)."
+          }
+          node ./flex-fields/.github/scripts/smoke-test-file-explorer-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
+
+  # Not a required check: Codecov's upload latency is Codecov's, not ours (observed anywhere from a
+  # few seconds to 4+ minutes per module, most likely tokenless-upload rate limiting), and it must
+  # never be what a PR is waiting on to merge. Runs after build-and-test succeeds, using the coverage
+  # files that job already collected, instead of re-running any tests.
+  upload-coverage:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-reports
+          path: ./artifacts-ci/coverage
+
       # Upload each module's coverage under its own flag, so Codecov tracks each module separately
       # instead of blending unrelated code into one number (the module
       # trees are otherwise-unrelated per CLAUDE.md, so a blended number would hide which one
       # regressed). Guarded two ways so a Codecov outage or a missing CODECOV_TOKEN can never fail
-      # this required check: continue-on-error on the step and fail_ci_if_error: false on the action.
-      # Set the CODECOV_TOKEN repo secret to enable uploads (public-repo tokenless uploads also work
-      # but are rate-limited); until then these are no-ops. Flag defaults are in codecov.yml.
+      # this job: continue-on-error on the step and fail_ci_if_error: false on the action. Set the
+      # CODECOV_TOKEN repo secret to enable uploads (public-repo tokenless uploads also work but are
+      # rate-limited); until then these are no-ops. Flag defaults are in codecov.yml.
       - name: Upload file-storing coverage to Codecov
         uses: codecov/codecov-action@v5
         continue-on-error: true
@@ -169,129 +349,3 @@ jobs:
           flags: flex-fields
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
-
-      # Projects with IsPackable=false (all three demo hosts + test projects) are skipped automatically.
-      # All 33 packable NuGet projects across the three module trees are produced.
-      - name: Pack NuGet packages
-        run: dotnet pack Dignite.Abp.Modules.slnx --no-build --configuration Release --output ./artifacts-ci/nuget
-
-      - name: Smoke-test file-storing NuGet packages
-        shell: pwsh
-        run: ./file-storing/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}'
-
-      - name: Smoke-test notifications NuGet packages
-        shell: pwsh
-        run: ./notifications/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}'
-
-      - name: Smoke-test flex-fields NuGet packages
-        shell: pwsh
-        run: ./flex-fields/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}'
-
-      # --- file-storing Angular (angular/projects/file-explorer) ---
-      - name: Install file-storing Angular dependencies
-        working-directory: file-storing/angular
-        run: npm ci --legacy-peer-deps
-
-      - name: Lint file-storing Angular projects
-        working-directory: file-storing/angular
-        run: npm run lint -- --max-warnings=0
-
-      - name: Run file-storing Angular unit tests
-        working-directory: file-storing/angular
-        run: npm test -- --watch=false
-
-      - name: Build file-storing Angular library
-        working-directory: file-storing/angular
-        run: npm run build:lib
-
-      - name: Build file-storing Angular demo
-        working-directory: file-storing/angular
-        run: npm run build:prod
-
-      - name: Pack file-storing Angular library
-        shell: pwsh
-        working-directory: file-storing/angular
-        run: |
-          New-Item -ItemType Directory -Force ../../artifacts-ci/npm/file-storing | Out-Null
-          npm pack ./dist/file-explorer --pack-destination ../../artifacts-ci/npm/file-storing
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-      - name: Smoke-test file-storing Angular package
-        shell: pwsh
-        run: |
-          $tarballs = @(Get-ChildItem ./artifacts-ci/npm/file-storing/*.tgz)
-          if ($tarballs.Count -ne 1) {
-            throw "Expected one file-explorer Angular package tarball, found $($tarballs.Count)."
-          }
-          node ./file-storing/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
-
-      # --- notifications Angular (angular/projects/notification-center) ---
-      - name: Install notifications Angular dependencies
-        working-directory: notifications/angular
-        run: npm ci
-
-      - name: Build notifications Angular library
-        working-directory: notifications/angular
-        run: npm run build:lib
-
-      - name: Build notifications Angular demo
-        working-directory: notifications/angular
-        run: npm run build:prod
-
-      - name: Pack notifications Angular library
-        shell: pwsh
-        working-directory: notifications/angular
-        run: |
-          New-Item -ItemType Directory -Force ../../artifacts-ci/npm/notifications | Out-Null
-          npm pack ./dist/notification-center --pack-destination ../../artifacts-ci/npm/notifications
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-      - name: Smoke-test notifications Angular package
-        shell: pwsh
-        run: |
-          $tarballs = @(Get-ChildItem ./artifacts-ci/npm/notifications/*.tgz)
-          if ($tarballs.Count -ne 1) {
-            throw "Expected one notification-center Angular package tarball, found $($tarballs.Count)."
-          }
-          node ./notifications/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
-
-      # --- flex-fields Angular (angular/projects/flex-fields) ---
-      # --legacy-peer-deps for the same reason as file-storing: @abp/ng.theme.shared depends on
-      # @swimlane/ngx-datatable, whose Angular peer range stops at 20, so npm will not hoist it beside
-      # Angular 21 without this - and the demo app's global styles import it by top-level path.
-      - name: Install flex-fields Angular dependencies
-        working-directory: flex-fields/angular
-        run: npm ci --legacy-peer-deps
-
-      - name: Lint flex-fields Angular projects
-        working-directory: flex-fields/angular
-        run: npm run lint -- --max-warnings=0
-
-      - name: Run flex-fields Angular unit tests
-        working-directory: flex-fields/angular
-        run: npm test -- --watch=false
-
-      - name: Build flex-fields Angular library
-        working-directory: flex-fields/angular
-        run: npm run build:lib
-
-      - name: Build flex-fields Angular demo
-        working-directory: flex-fields/angular
-        run: npm run build:prod
-
-      - name: Pack flex-fields Angular library
-        shell: pwsh
-        working-directory: flex-fields/angular
-        run: |
-          New-Item -ItemType Directory -Force ../../artifacts-ci/npm/flex-fields | Out-Null
-          npm pack ./dist/flex-fields --pack-destination ../../artifacts-ci/npm/flex-fields
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-      - name: Smoke-test flex-fields Angular package
-        shell: pwsh
-        run: |
-          $tarballs = @(Get-ChildItem ./artifacts-ci/npm/flex-fields/*.tgz)
-          if ($tarballs.Count -ne 1) {
-            throw "Expected one flex-fields Angular package tarball, found $($tarballs.Count)."
-          }
-          node ./flex-fields/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'

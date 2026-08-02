@@ -7,8 +7,15 @@ using Dignite.Abp.FlexFields.Demo.Data;
 using Dignite.Abp.FlexFields.Demo.Entities;
 using Dignite.Abp.FlexFields.Demo.Services.FlexFields;
 using Dignite.Abp.FlexFields.EntityFrameworkCore;
+using Dignite.Abp.FlexFields.FileExplorer;
 using Dignite.Abp.FlexFields.Demo.Localization;
 using Dignite.Abp.FlexFields.Demo.HealthChecks;
+using Dignite.Abp.FileStoring;
+using Dignite.FileExplorer;
+using Dignite.FileExplorer.EntityFrameworkCore;
+using Dignite.FileExplorer.Permissions;
+using Volo.Abp.BlobStoring;
+using Volo.Abp.BlobStoring.Database;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using OpenIddict.Validation.AspNetCore;
 using Volo.Abp;
@@ -73,6 +80,12 @@ namespace Dignite.Abp.FlexFields.Demo;
     typeof(AbpAspNetCoreSerilogModule),
     typeof(AbpStudioClientAspNetCoreModule),
 
+    // FileExplorer module packages - backs the FileExplorer bolt-on field type; see the csproj
+    // comment on why this demo (uniquely) references another module tree.
+    typeof(FileExplorerApplicationModule),
+    typeof(FileExplorerHttpApiModule),
+    typeof(FileExplorerEntityFrameworkCoreModule),
+
     // theme
     typeof(AbpAspNetCoreMvcUiLeptonXLiteThemeModule),
 
@@ -111,7 +124,12 @@ namespace Dignite.Abp.FlexFields.Demo;
     typeof(AbpEntityFrameworkCoreSqliteModule),
 
     // FlexFields kernel - the demo is a downstream consumer, wired up in Entities/ and Services/FlexFields/
-    typeof(FlexFieldsEntityFrameworkCoreModule)
+    typeof(FlexFieldsEntityFrameworkCoreModule),
+
+    // FileExplorer field type bolt-on - references only FlexFields.Abstractions (see its own doc
+    // comment); it's this demo's separate FileExplorer *module* reference (above) that supplies the
+    // backend the Angular picker actually talks to.
+    typeof(FlexFieldsFileExplorerModule)
 )]
 public class DemoModule : AbpModule
 {
@@ -190,6 +208,7 @@ public class DemoModule : AbpModule
         ConfigureHealthChecks(context);
         ConfigureSwagger(context.Services, configuration);
         ConfigureAutoApiControllers();
+        ConfigureBlobStoring();
         ConfigureLocalization();
         ConfigureCors(context, configuration);
         ConfigureDataProtection(context);
@@ -208,7 +227,41 @@ public class DemoModule : AbpModule
     {
         context.Services.AddDemoHealthChecks();
     }
-    
+
+    // "Images" matches FileExplorerPickerComponent's own default container name, so a FileExplorer
+    // field left unconfigured (empty FileExplorer.FileContainerName) still resolves to a real,
+    // authorized container instead of a 404/403 the first time someone tries the picker.
+    private void ConfigureBlobStoring()
+    {
+        Configure<AbpBlobStoringOptions>(options =>
+        {
+            options.Containers.Configure("Images", container =>
+            {
+                container.UseDatabase();
+                container.AddFileSizeLimitHandler(config =>
+                {
+                    config.MaxFileSize = 10 * 1024 * 1024;
+                });
+                container.AddFileTypeCheckHandler(config =>
+                {
+                    config.AllowedFileTypeNames = new[]
+                    {
+                        ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".csv",
+                        ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp",
+                    };
+                });
+                container.SetAuthorizationConfiguration(config =>
+                {
+                    config.CreateDirectoryPermissionName = FileExplorerPermissions.Files.Management;
+                    config.CreateFilePermissionName = FileExplorerPermissions.Files.Management;
+                    config.UpdateFilePermissionName = FileExplorerPermissions.Files.Management;
+                    config.DeleteFilePermissionName = FileExplorerPermissions.Files.Management;
+                    config.GetFilePermissionName = FileExplorerPermissions.Files.Management;
+                });
+            });
+        });
+    }
+
     private void ConfigureStudio(IHostEnvironment hostingEnvironment)
     {
         if (hostingEnvironment.IsProduction())

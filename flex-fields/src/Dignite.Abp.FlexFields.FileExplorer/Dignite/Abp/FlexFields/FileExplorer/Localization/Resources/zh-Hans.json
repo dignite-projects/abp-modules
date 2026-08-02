@@ -1,0 +1,10 @@
+{
+  "culture": "zh-Hans",
+  "texts": {
+    "FieldType:FileExplorer": "文件管理器",
+    "FieldType:FileExplorer:FileContainerName": "文件容器名称",
+    "FieldType:FileExplorer:UploadFileMultiple": "允许多选文件",
+    "FieldType:FileExplorer:ContainerNotConfigured": "该字段尚未配置文件容器，请先在字段配置中设置容器名称后再使用。",
+    "Validate:Required": "{0} 字段要求必填！"
+  }
+}

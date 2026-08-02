@@ -1,8 +1,12 @@
 import { Component } from '@angular/core';
-import { FileExplorerUploadComponent, FileExplorerPickerComponent } from '@dignite/ng.file-explorer';
+import {
+  FileDescriptorDto,
+  FileExplorerUploadComponent,
+  FileExplorerPickerComponent,
+  FileUploadChangeEvent,
+} from '@dignite/ng.file-explorer';
 
 @Component({
-  
   // eslint-disable-next-line @angular-eslint/component-selector
   selector: 'app-file-upload-demo',
   templateUrl: './file-upload-demo.component.html',
@@ -10,27 +14,16 @@ import { FileExplorerUploadComponent, FileExplorerPickerComponent } from '@digni
   imports: [FileExplorerUploadComponent, FileExplorerPickerComponent],
 })
 export class FileUploadDemoComponent {
+  /** Mirrors what a host form would submit: already-uploaded files plus pending additions/deletions. */
+  fileDataToBeSubmitted: FileUploadChangeEvent | undefined;
 
-  /**跟随表单提交--已提交的数据，或选择的数据源 */
-  fileSubmittedData: any[] = []
-
-  /**跟随表单提交--待提交的数据
-   * 
-   * @param 待上传的文件们
-   * @param 待删除已上传的文件们
-   */
-  fileDataToBeSubmitted: any
-
-  /**跟随表单提交--数据发生改变回调 */
-  fileDataChange(event) {
-    this.fileDataToBeSubmitted = event
+  onFileDataChange(event: FileUploadChangeEvent): void {
+    this.fileDataToBeSubmitted = event;
   }
 
-  /**选择文件-弹窗的-已选定的文件 */
-  selectedFileGroup:any[]=[]
+  selectedFileGroup: FileDescriptorDto[] = [];
 
-  /**_selectedFile改变回调 */
-  _selectedFileChange(event) {
-    this.selectedFileGroup = event
+  onSelectedFileChange(files: FileDescriptorDto[]): void {
+    this.selectedFileGroup = files;
   }
 }

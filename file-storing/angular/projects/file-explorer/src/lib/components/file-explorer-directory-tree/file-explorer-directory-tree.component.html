@@ -1,16 +1,16 @@
 <div class="file-tree-panel">
-  <abp-tree class="mb-2" [class.directory-dragging]="isDirectoryDragging" [nodes]="fileGroupList" (nzExpandChange)="nzExpandChange($event)" [draggable]="true"
+  <abp-tree class="mb-2" [class.directory-dragging]="isDirectoryDragging" [nodes]="directoryTree" (nzExpandChange)="onExpandChange($event)" [draggable]="true"
     [beforeDrop]="beforeDrop" (selectedNodeChange)="activeNode($event)"
     [changeCheckboxWithNode]="true" [isNodeSelected]="isNodeSelected"
     (contextmenu)="$event.preventDefault()">
 
     <ng-template #menu let-node>
-      <button type="button" class="dropdown-item" (click.stop)="addDescriptorBtn(node)"><i
+      <button type="button" class="dropdown-item" (click.stop)="openDirectoryForm(node)"><i
         class="me-1 fa fa-plus"></i>{{'FileExplorer::NewDirectory' | abpLocalization}}</button>
       @if (!isMyFilesNode(node)) {
-        <button type="button" class="dropdown-item" (click.stop)="addDescriptorBtn(node,true)"><i
+        <button type="button" class="dropdown-item" (click.stop)="openDirectoryForm(node, true)"><i
           class="me-1 fa fa-pencil"></i>{{'AbpUi::Edit' | abpLocalization}}</button>
-        <button type="button" class="dropdown-item" (click.stop)="deleteDescriptorBtn(node)"><i
+        <button type="button" class="dropdown-item" (click.stop)="deleteDirectory(node)"><i
           class=" me-1 fa fa-remove"></i>{{'AbpUi::Delete' | abpLocalization}}</button>
       }
     </ng-template>
@@ -40,17 +40,17 @@
         </ng-template>
   </abp-tree>
 </div>
-      <abp-modal [(visible)]="ModalDescriptorOpen" [busy]="ModalDescriptorBusy"
-        (visibleChange)="ModalDescriptorVisibleChange($event)">
+      <abp-modal [(visible)]="directoryFormModalOpen" [busy]="directoryFormBusy"
+        (visibleChange)="onDirectoryFormVisibleChange($event)">
         <ng-template #abpHeader>
-          <h3>{{theNodeBeingEdited?('AbpUi::Edit' | abpLocalization):('FileExplorer::NewDirectory' | abpLocalization)}}
+          <h3>{{nodeBeingEdited?('AbpUi::Edit' | abpLocalization):('FileExplorer::NewDirectory' | abpLocalization)}}
           </h3>
         </ng-template>
         <ng-template #abpBody>
-          @if (ModalDescriptorForm) {
-            <form class="sites-modal-form" #myForm="ngForm" [formGroup]="ModalDescriptorForm"
-              (keydown.enter)="$event.preventDefault()" (submit)="createOrEditSave()">
-              <button type="submit" #ModalFormDescriptorSubmit style="display: none"></button>
+          @if (directoryForm) {
+            <form class="sites-modal-form" #myForm="ngForm" [formGroup]="directoryForm"
+              (keydown.enter)="$event.preventDefault()" (submit)="saveDirectoryForm()">
+              <button type="submit" #directoryFormSubmit style="display: none"></button>
               <div class="mb-3">
                 <label class="form-label">{{'FileExplorer::DirectoryName' | abpLocalization}}</label>
                 <input type="text" class="form-control" formControlName="name">
@@ -62,7 +62,7 @@
         </ng-template>
         <ng-template #abpFooter>
           <button type="button" class="btn btn-secondary" abpClose>{{'AbpUi::Close' | abpLocalization}}</button>
-          <abp-button iconClass="fa fa-check" [loading]="ModalDescriptorBusy"
-          (click)="ModalFormDescriptorSubmit.nativeElement.click()">{{'AbpUi::Save' | abpLocalization}}</abp-button>
+          <abp-button iconClass="fa fa-check" [loading]="directoryFormBusy"
+          (click)="directoryFormSubmit.nativeElement.click()">{{'AbpUi::Save' | abpLocalization}}</abp-button>
         </ng-template>
       </abp-modal>

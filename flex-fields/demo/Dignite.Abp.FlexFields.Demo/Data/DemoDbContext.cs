@@ -1,5 +1,6 @@
 using Dignite.Abp.FlexFields.Demo.Entities;
 using Dignite.Abp.FlexFields.EntityFrameworkCore;
+using Dignite.FileExplorer.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.EntityFrameworkCore;
@@ -51,6 +52,9 @@ public class DemoDbContext : AbpDbContext<DemoDbContext>, IDemoDbContext
         builder.ConfigureBlobStoring();
         builder.ConfigureIdentity();
         builder.ConfigureOpenIddict();
+        // Backs the FileExplorer bolt-on field type - see the csproj comment for why this demo
+        // (uniquely) references another module tree's EF Core model.
+        builder.ConfigureFileExplorer();
 
         /* Configure your own entities here */
 

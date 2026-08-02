@@ -6,8 +6,23 @@ import { CoreModule } from '@abp/ng.core';
 import { FilePreviewComponent } from '../../previews/file-preview.component';
 import { FileDescriptorService } from '../../proxy/dignite/file-explorer/files';
 
-@Component({
+/** A locally-picked `File` awaiting upload, or an already-uploaded file passed in via `fileData`. */
+interface UploadTableItem {
+  id?: string;
+  name?: string;
+  size: number;
+  type?: string;
+  fileSize?: string;
+  src?: string;
+}
 
+export interface FileUploadChangeEvent {
+  theFilesToBeUploaded: UploadTableItem[];
+  deleteTheUploadedFiles: UploadTableItem[];
+  isSubmit: boolean;
+}
+
+@Component({
   selector: 'fe-file-explorer-upload',
   templateUrl: './file-explorer-upload.component.html',
   imports: [CoreModule, FilePreviewComponent, FormatFileSizePipe],
@@ -20,102 +35,89 @@ export class FileExplorerUploadComponent implements OnDestroy {
     private fileDescriptorService: FileDescriptorService,
   ) {}
 
-  /**图片容器--提供后会按该容器的服务端实际限制刷新 sizeLimit，取代下面的默认值/手动 limit */
+  /**
+   * No default: an unconfigured container is not silently treated as any particular one - the
+   * upload input just doesn't render until a container is set (see the template).
+   */
   @Input()
-  public set fileContainerName(v: string) {
+  set fileContainerName(v: string) {
+    this._fileContainerName = v ?? '';
+
     if (!v) return;
+    // Reflects the container's actual server-side limit once known, replacing the pre-fetch
+    // default of 1MB below.
     this.fileDescriptorService.getFileContainerConfiguration(v).subscribe(res => {
       if (res?.maxBlobSize > 0) {
         this.sizeLimit = res.maxBlobSize;
       }
     });
   }
-
-  /**是否多选 */
-  _multiple = true;
-  @Input()
-  public set multiple(v: boolean) {
-    this._multiple = v;
-    // if (v) { }
+  get fileContainerName(): string {
+    return this._fileContainerName;
   }
-  /**文件数据--已上传的数据 */
-  _fileData: any[] = [];
+  private _fileContainerName = '';
+
+  @Input() multiple = true;
+
+  /** Already-uploaded files to show pre-populated in the table, e.g. when editing an existing record. */
   @Input()
-  public set fileData(v: any[]) {
-    this._fileData = v;
-    if (v?.length > 0) {
-      this.getFileChange({ target: { files: v } });
+  set fileData(files: UploadTableItem[]) {
+    if (files?.length > 0) {
+      void this.addFiles(files);
     }
   }
-  /** 跟随表单提交--已提交的数据，或选择的数据源--回调*/
-  @Output() fileDataChange = new EventEmitter();
 
-  /**文件大小限制
-   * @param 1mb
-   */
+  @Output() fileDataChange = new EventEmitter<FileUploadChangeEvent>();
+
   sizeLimit = 1048576;
   @Input()
-  public set limit(v: number) {
+  set limit(v: number) {
     this.sizeLimit = v;
   }
 
-  /**文件表格数据 */
-  filesTableData: any[] = [];
+  filesTableData: UploadTableItem[] = [];
   private readonly previewObjectUrls = new Set<string>();
-  /** 待删除已上传的文件们*/
-  deleteTheUploadedFiles: any[] = [];
+  private readonly deletedUploadedFiles: UploadTableItem[] = [];
 
-  /**获取文件选择框的元素 */
-  @ViewChild('fileUploadInput', { static: true }) fileUploadInput: ElementRef;
+  @ViewChild('fileUploadInput', { static: true }) fileUploadInput: ElementRef<HTMLInputElement>;
 
-  /**获取文件信息改变 */
-  async getFileChange(event) {
-    const files = new Array(...event.target.files);
-    await this.waitFileToAddTable(files);
-    this.fileHandling();
+  async onFileInputChange(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    await this.addFiles(Array.from(input.files ?? []));
+    this.emitChange();
   }
 
-  /**等待将文件数据加入到文件表格数据中 */
-  async waitFileToAddTable(files) {
-    this.filesTableData.push(...(await this.setFileSizeUnits(files)));
-  }
-
-  /**删除文件表格的项 */
-  deleteFileTableItem(index, item) {
+  deleteFileTableItem(index: number, item: UploadTableItem): void {
     this.filesTableData.splice(index, 1);
     this.releasePreviewUrl(item.src);
     if (item.id) {
-      this.deleteTheUploadedFiles.push(item);
+      this.deletedUploadedFiles.push(item);
     }
-    this.fileHandling();
+    this.emitChange();
   }
 
-  /**文件处理-调用回调函数 */
-  fileHandling() {
-    const theFilesToBeUploaded = this.filesTableData.filter(el => !el.id);
-    //判断图片大小是否超过限制-用于判断表单是否允许提交
-    const isSubmit = !this.filesTableData.some(el => el.size > this.sizeLimit);
-    this.fileDataChange.emit({
-      theFilesToBeUploaded,
-      deleteTheUploadedFiles: this.deleteTheUploadedFiles,
-      isSubmit,
-    });
-  }
-
-  /**设置值文件大小单位/ */
-  async setFileSizeUnits(files: File[] | any[]): Promise<any> {
-    for (const file of files as any[]) {
-      const fileItem = file as any;
-      const previewItem = fileItem as { src?: string };
-      fileItem.fileSize = this.formatFileSizePipe.transform(fileItem.size);
+  private async addFiles(files: UploadTableItem[]): Promise<void> {
+    for (const file of files) {
+      file.fileSize = this.formatFileSizePipe.transform(file.size);
       // Use a browser-managed object URL instead of retaining a base64 copy in memory.
-      if (!previewItem.src && fileItem instanceof Blob) {
-        previewItem.src = this.objectUrlService.get(fileItem);
-        this.previewObjectUrls.add(previewItem.src);
+      if (!file.src && file instanceof Blob) {
+        const objectUrl = this.objectUrlService.get(file);
+        (file as UploadTableItem).src = objectUrl;
+        this.previewObjectUrls.add(objectUrl);
       }
     }
 
-    return files;
+    this.filesTableData.push(...files);
+  }
+
+  private emitChange(): void {
+    const theFilesToBeUploaded = this.filesTableData.filter(item => !item.id);
+    const isSubmit = !this.filesTableData.some(item => item.size > this.sizeLimit);
+    this.fileDataChange.emit({
+      theFilesToBeUploaded,
+      deleteTheUploadedFiles: this.deletedUploadedFiles,
+      isSubmit,
+    });
   }
 
   ngOnDestroy(): void {
@@ -125,8 +127,8 @@ export class FileExplorerUploadComponent implements OnDestroy {
     this.previewObjectUrls.clear();
   }
 
-  private releasePreviewUrl(url: string): void {
-    if (!this.previewObjectUrls.delete(url)) {
+  private releasePreviewUrl(url?: string): void {
+    if (!url || !this.previewObjectUrls.delete(url)) {
       return;
     }
 

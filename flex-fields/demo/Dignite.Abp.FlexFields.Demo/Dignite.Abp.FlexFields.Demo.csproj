@@ -2,6 +2,16 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Dignite.Abp.FlexFields.EntityFrameworkCore\Dignite.Abp.FlexFields.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\..\src\Dignite.Abp.FlexFields.FileExplorer\Dignite.Abp.FlexFields.FileExplorer.csproj" />
+    <!--
+      Local-only, never-packed demo host. flex-fields and file-storing are otherwise independently
+      installable modules that never reference each other (see the repo root CLAUDE.md) - this
+      reference exists solely so this demo can exercise the FileExplorer bolt-on field type
+      (flex-fields/angular/projects/flex-fields-file-explorer) against a real backend.
+    -->
+    <ProjectReference Include="..\..\..\file-storing\file-explorer\src\Dignite.FileExplorer.Application\Dignite.FileExplorer.Application.csproj" />
+    <ProjectReference Include="..\..\..\file-storing\file-explorer\src\Dignite.FileExplorer.EntityFrameworkCore\Dignite.FileExplorer.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\..\..\file-storing\file-explorer\src\Dignite.FileExplorer.HttpApi\Dignite.FileExplorer.HttpApi.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
