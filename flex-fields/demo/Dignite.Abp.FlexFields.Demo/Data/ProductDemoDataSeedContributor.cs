@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 using Dignite.Abp.FlexFields.Date;
 using Dignite.Abp.FlexFields.Demo.Entities;
 using Dignite.Abp.FlexFields.FileExplorer;
-using Dignite.Abp.FlexFields.Numeric;
+using Dignite.Abp.FlexFields.Number;
 using Dignite.Abp.FlexFields.Select;
-using Dignite.Abp.FlexFields.Switch;
+using Dignite.Abp.FlexFields.Boolean;
 using Dignite.Abp.FlexFields.Text;
-using Dignite.Abp.FlexFields.TreeView;
+using Dignite.Abp.FlexFields.Tree;
 using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Repositories;
@@ -69,7 +69,7 @@ public class ProductDemoDataSeedContributor : IDataSeedContributor, ITransientDe
             "releaseDate", "Release Date", DateTimeFieldType.ControlName,
             new FieldConfigurationDictionary
             {
-                ["DateEdit.InputMode"] = DateInputMode.Date,
+                ["DateEdit.InputMode"] = DateTimeInputMode.Date,
             },
             searchable: true);
 
@@ -100,13 +100,13 @@ public class ProductDemoDataSeedContributor : IDataSeedContributor, ITransientDe
             "category", "Category", TreeFieldType.ControlName,
             new FieldConfigurationDictionary
             {
-                ["TreeView.Nodes"] = new List<TreeViewNodeItem>
+                ["TreeView.Nodes"] = new List<TreeNodeItem>
                 {
                     new()
                     {
                         Text = "Electronics",
                         Value = "electronics",
-                        Children = new List<TreeViewNodeItem>
+                        Children = new List<TreeNodeItem>
                         {
                             new() { Text = "Phones", Value = "electronics-phones" },
                             new() { Text = "Computers", Value = "electronics-computers" },
@@ -116,7 +116,7 @@ public class ProductDemoDataSeedContributor : IDataSeedContributor, ITransientDe
                     {
                         Text = "Apparel",
                         Value = "apparel",
-                        Children = new List<TreeViewNodeItem>
+                        Children = new List<TreeNodeItem>
                         {
                             new() { Text = "Tops", Value = "apparel-tops" },
                             new() { Text = "Pants", Value = "apparel-pants" },

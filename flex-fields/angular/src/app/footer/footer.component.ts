@@ -6,10 +6,7 @@ import { Component } from '@angular/core';
     <div class="lpx-footbar-container end-0">
       <div class="lpx-footbar">
         <div class="lpx-footbar-copyright">
-          <span>{{ currentYear }}© </span>
-          <a href="https://leptontheme.com/" target="_blank">Lepton Theme</a>
-          <span> by </span>
-          <a href="https://volosoft.com/" target="_blank">Volosoft</a>
+          <span>DIGNITE</span>
         </div>
         <div class="lpx-footbar-solo-links">
           <a href="#">About</a>
@@ -20,6 +17,4 @@ import { Component } from '@angular/core';
     </div>
   `,
 })
-export class FooterComponent {
-  currentYear = new Date().getFullYear();
-}
+export class FooterComponent {}

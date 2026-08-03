@@ -3,8 +3,8 @@ import { CoreModule } from '@abp/ng.core';
 import { DatePipe } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FieldTypeConfigBase } from '../field-type-config-base';
-import { DATE_INPUT_MODE_FORMATS, DateConfiguration } from './date-configuration';
-import { DateInputMode } from './date-input-mode';
+import { DATE_INPUT_MODE_FORMATS, DateTimeConfiguration } from './date-time-configuration';
+import { DateTimeInputMode } from './date-time-input-mode';
 
 let nextRadioId = 0;
 
@@ -20,19 +20,19 @@ let nextRadioId = 0;
 export class DateTimeConfigComponent extends FieldTypeConfigBase {
   private readonly datePipe = inject(DatePipe);
 
-  readonly DateInputMode = DateInputMode;
+  readonly DateTimeInputMode = DateTimeInputMode;
 
-  readonly radioIds: Record<DateInputMode, string> = {
-    [DateInputMode.Date]: `ff-date-mode-date-${nextRadioId}`,
-    [DateInputMode.DateTime]: `ff-date-mode-datetime-${nextRadioId}`,
-    [DateInputMode.Month]: `ff-date-mode-month-${nextRadioId++}`,
+  readonly radioIds: Record<DateTimeInputMode, string> = {
+    [DateTimeInputMode.Date]: `ff-date-mode-date-${nextRadioId}`,
+    [DateTimeInputMode.DateTime]: `ff-date-mode-datetime-${nextRadioId}`,
+    [DateTimeInputMode.Month]: `ff-date-mode-month-${nextRadioId++}`,
   };
 
   /** Which `<input type>` the Min/Max boxes use — it tracks the selected input mode. */
-  dateTimeType = DATE_INPUT_MODE_FORMATS[DateInputMode.Date].inputType;
+  dateTimeType = DATE_INPUT_MODE_FORMATS[DateTimeInputMode.Date].inputType;
 
   protected configurationDefaults(): object {
-    return new DateConfiguration();
+    return new DateTimeConfiguration();
   }
 
   protected override onConfigurationPatched(): void {
@@ -44,8 +44,8 @@ export class DateTimeConfigComponent extends FieldTypeConfigBase {
    * a full ISO timestamp, so switching mode without reformatting silently blanks both bounds.
    */
   onInputModeChange(): void {
-    const mode = this.configuration.value['DateEdit.InputMode'] as DateInputMode;
-    const { inputType, format } = DATE_INPUT_MODE_FORMATS[mode] ?? DATE_INPUT_MODE_FORMATS[DateInputMode.Date];
+    const mode = this.configuration.value['DateEdit.InputMode'] as DateTimeInputMode;
+    const { inputType, format } = DATE_INPUT_MODE_FORMATS[mode] ?? DATE_INPUT_MODE_FORMATS[DateTimeInputMode.Date];
 
     this.dateTimeType = inputType;
     this.configuration.patchValue({

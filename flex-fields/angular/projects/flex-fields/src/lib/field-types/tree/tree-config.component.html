@@ -1,0 +1,130 @@
+<form [formGroup]="formEntity">
+  <div formGroupName="configuration">
+    <div class="mb-3">
+      <label class="form-label">{{ 'FlexFields::Nodes' | abpLocalization }}</label>
+      <button class="btn btn-sm btn-dark soft ms-2 float-end" type="button" (click)="addNode()">
+        {{ 'FlexFields::AddNode' | abpLocalization }}
+      </button>
+      <div class="border p-2 rounded-2 mt-2">
+        @if (nodes.length > 0) {
+          <abp-tree
+            class="mb-2"
+            [nodes]="nodes"
+            [checkable]="false"
+            [draggable]="true"
+            [beforeDrop]="beforeDrop"
+            [expandedKeys]="expandedKeys"
+            (nzExpandChange)="onExpandChange($event)"
+          >
+            <ng-template #menu let-node>
+              <button class="dropdown-item" type="button" (click)="addChildNode(node)">
+                <i class="me-1 fa fa-plus"></i>{{ 'FlexFields::AddNode' | abpLocalization }}
+              </button>
+              <button class="dropdown-item" type="button" (click)="editNode(node)">
+                <i class="me-1 fa fa-pencil"></i>{{ 'AbpUi::Edit' | abpLocalization }}
+              </button>
+              <button class="dropdown-item" type="button" (click)="deleteNode(node)">
+                <i class="me-1 fa fa-remove"></i>{{ 'AbpUi::Delete' | abpLocalization }}
+              </button>
+            </ng-template>
+            <ng-template abpTreeNodeTemplate let-node>
+              <div (click)="toggleChecked($event, node)">
+                <input
+                  type="checkbox"
+                  class="form-check-input me-2"
+                  [checked]="node.origin?.isChecked"
+                  [indeterminate]="isIndeterminate(node)"
+                  [attr.data-indeterminate]="isIndeterminate(node)"
+                />
+                {{ node.title }}
+              </div>
+            </ng-template>
+            <ng-template abpTreeExpandedIconTemplate let-node>
+              <i aria-hidden="true" *ngIf="node.children.length > 0">
+                <ng-container
+                  *ngTemplateOutlet="node.isExpanded ? minusIcon : plusIcon"
+                ></ng-container>
+              </i>
+            </ng-template>
+            <ng-template #minusIcon>
+              <i class="fa fa-minus" aria-hidden="true"></i>
+            </ng-template>
+            <ng-template #plusIcon>
+              <i class="fa fa-plus" aria-hidden="true"></i>
+            </ng-template>
+          </abp-tree>
+        } @else {
+          <div class="text-muted">{{ 'FlexFields::PleaseAddNode' | abpLocalization }}</div>
+        }
+      </div>
+      <div *ngIf="treeNodesControl?.errors?.required" class="invalid-feedback d-block">
+        {{ 'AbpValidation::ThisFieldIsRequired.' | abpLocalization: 'Nodes' }}
+      </div>
+    </div>
+    <div class="mb-3">
+      <div class="form-check form-check-inline">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          formControlName="TreeView.Multiple"
+          [id]="multipleId"
+          (change)="onMultipleChange()"
+        />
+        <label class="form-check-label" [for]="multipleId">
+          {{ 'FlexFields::Multiple' | abpLocalization }}
+        </label>
+      </div>
+    </div>
+    <button type="submit" style="display: none" #submitclick></button>
+  </div>
+</form>
+
+<abp-modal [(visible)]="isModalVisible" [busy]="modalBusy" (disappear)="closeModal()">
+  <ng-template #abpHeader>
+    <h3>
+      @if (isCreatingChild) {
+        {{ 'FlexFields::AddSubNode' | abpLocalization }}
+      } @else if (editingNode) {
+        {{ 'AbpUi::Edit' | abpLocalization }}
+      } @else {
+        {{ 'FlexFields::AddNode' | abpLocalization }}
+      }
+    </h3>
+  </ng-template>
+  <ng-template #abpBody>
+    <form *ngIf="nodeForm" [formGroup]="nodeForm" (submit)="save()">
+      <button type="submit" #nodeModalSubmit style="display: none"></button>
+      <div class="mb-3">
+        <label class="form-label">{{ 'FlexFields::NodeItemText' | abpLocalization }}</label>
+        <input type="text" class="form-control" formControlName="title" (blur)="onTitleBlur($event)" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ 'FlexFields::SelectListItemValue' | abpLocalization }}</label>
+        <input type="text" class="form-control" formControlName="key" />
+        <div class="text-danger invalid-feedback d-block" *ngIf="keyInput?.errors?.repetition">
+          {{ keyInput.errors.repetition }}
+        </div>
+      </div>
+      <div class="mb-3">
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="checkbox" formControlName="isChecked" id="ff-tree-node-selected" />
+          <label class="form-check-label" for="ff-tree-node-selected">
+            {{ 'FlexFields::Selected' | abpLocalization }}
+          </label>
+        </div>
+      </div>
+    </form>
+  </ng-template>
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>
+      {{ 'AbpUi::Close' | abpLocalization }}
+    </button>
+    <abp-button
+      iconClass="fa fa-check"
+      [disabled]="!nodeForm?.valid"
+      (abpClick)="nodeModalSubmit.nativeElement.click()"
+    >
+      {{ 'AbpUi::Save' | abpLocalization }}
+    </abp-button>
+  </ng-template>
+</abp-modal>

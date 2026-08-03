@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Dignite.Abp.FlexFields.Numeric;
+using Dignite.Abp.FlexFields.Number;
 using Dignite.Abp.FlexFields.Text;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;

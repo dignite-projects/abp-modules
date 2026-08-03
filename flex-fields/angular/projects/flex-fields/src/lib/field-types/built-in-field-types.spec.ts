@@ -1,11 +1,11 @@
 import { FormBuilder } from '@angular/forms';
 import { BUILT_IN_FIELD_TYPES } from './built-in-field-types';
-import { DateConfiguration } from './date';
-import { NumericConfiguration } from './numeric';
+import { BooleanConfiguration } from './boolean';
+import { DateTimeConfiguration } from './date';
+import { NumberConfiguration } from './number';
 import { SelectConfiguration } from './select';
-import { SwitchConfiguration } from './switch';
 import { TextConfiguration } from './text';
-import { TreeViewConfiguration } from './tree-view';
+import { TreeViewConfiguration } from './tree';
 
 /**
  * These are wire-contract tests, not coverage.
@@ -69,7 +69,7 @@ describe('configuration keys', () => {
   });
 
   it('NumericEdit — note the NumericEditField. prefix and the unprefixed FormatSpecifier', () => {
-    expect(keysOf(new NumericConfiguration())).toEqual([
+    expect(keysOf(new NumberConfiguration())).toEqual([
       'NumericEditField.Placeholder',
       'NumericEditField.Min',
       'NumericEditField.Max',
@@ -80,7 +80,7 @@ describe('configuration keys', () => {
   });
 
   it('DateEdit', () => {
-    expect(keysOf(new DateConfiguration())).toEqual([
+    expect(keysOf(new DateTimeConfiguration())).toEqual([
       'DateEdit.InputMode',
       'DateEdit.Min',
       'DateEdit.Max',
@@ -97,7 +97,7 @@ describe('configuration keys', () => {
   });
 
   it('Switch', () => {
-    expect(keysOf(new SwitchConfiguration())).toEqual(['Switch.Default']);
+    expect(keysOf(new BooleanConfiguration())).toEqual(['Switch.Default']);
   });
 
   it('TreeView', () => {
@@ -113,7 +113,7 @@ describe('configuration keys', () => {
     // .controls[key], not .get(key): AbstractControl.get treats '.' as a path separator, so
     // get('NumericEditField.Min') looks for a *nested group* called NumericEditField and finds null.
     // Every configuration key here contains a dot, so this distinction is not incidental.
-    const group = new FormBuilder().group(new NumericConfiguration());
+    const group = new FormBuilder().group(new NumberConfiguration());
 
     // The old library made Min and Max required, so no numeric field could be saved without bounds.
     expect(group.controls['NumericEditField.Min'].valid).toBe(true);

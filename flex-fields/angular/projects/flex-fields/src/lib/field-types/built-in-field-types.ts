@@ -9,7 +9,7 @@ import {
   NumberControlComponent,
   NumberSearchComponent,
   NumberViewComponent,
-} from './numeric';
+} from './number';
 import {
   SelectConfigComponent,
   SelectControlComponent,
@@ -21,7 +21,7 @@ import {
   BooleanControlComponent,
   BooleanSearchComponent,
   BooleanViewComponent,
-} from './switch';
+} from './boolean';
 import {
   TextConfigComponent,
   TextControlComponent,
@@ -33,7 +33,7 @@ import {
   TreeControlComponent,
   TreeSearchComponent,
   TreeViewComponent,
-} from './tree-view';
+} from './tree';
 
 /**
  * The field types this library ships. Each `name` is the value persisted in
@@ -42,11 +42,11 @@ import {
  * | key | server type | this library |
  * |---|---|---|
  * | `TextEdit` | `TextFieldType` | `text/` |
- * | `NumericEdit` | `NumberFieldType` | `numeric/` |
+ * | `NumericEdit` | `NumberFieldType` | `number/` |
  * | `DateEdit` | `DateTimeFieldType` | `date/` |
  * | `Select` | `SelectFieldType` | `select/` |
- * | `Switch` | `BooleanFieldType` | `switch/` |
- * | `TreeView` | `TreeFieldType` | `tree-view/` |
+ * | `Switch` | `BooleanFieldType` | `boolean/` |
+ * | `TreeView` | `TreeFieldType` | `tree/` |
  *
  * A frozen array, not something to mutate at runtime: contributors register their own types through
  * the `FLEX_FIELD_TYPES` multi-provider instead.

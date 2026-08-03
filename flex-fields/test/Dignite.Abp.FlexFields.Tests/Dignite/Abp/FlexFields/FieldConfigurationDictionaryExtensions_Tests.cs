@@ -1,4 +1,4 @@
-using Dignite.Abp.FlexFields.Numeric;
+using Dignite.Abp.FlexFields.Number;
 using Shouldly;
 using Xunit;
 
@@ -9,12 +9,12 @@ public class FieldConfigurationDictionaryExtensions_Tests
     [Fact]
     public void Empty_strings_read_as_null_for_nullable_numeric_configuration()
     {
-        var configuration = new NumericConfiguration(
+        var configuration = new NumberConfiguration(
             new FieldConfigurationDictionary
             {
-                [NumericConfigurationNames.Max] = "",
-                [NumericConfigurationNames.Min] = " ",
-                [NumericConfigurationNames.Step] = "",
+                [NumberConfigurationNames.Max] = "",
+                [NumberConfigurationNames.Min] = " ",
+                [NumberConfigurationNames.Step] = "",
             });
 
         configuration.Max.ShouldBeNull();

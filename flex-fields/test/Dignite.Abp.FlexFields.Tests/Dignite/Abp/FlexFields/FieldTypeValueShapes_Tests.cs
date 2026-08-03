@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using Dignite.Abp.FlexFields.Select;
-using Dignite.Abp.FlexFields.TreeView;
+using Dignite.Abp.FlexFields.Tree;
 using Shouldly;
 using Xunit;
 using static Dignite.Abp.FlexFields.FlexFieldDataTestExtensions;

@@ -1,18 +1,18 @@
 <form [formGroup]="formEntity">
   <div formGroupName="configuration">
     <div class="mb-3">
-      <label class="form-label">{{ 'FlexFields::DateEditMode' | abpLocalization }}</label>
+      <label class="form-label">{{ 'FlexFields::DateTimeEditMode' | abpLocalization }}</label>
       <div>
         <div class="form-check form-check-inline">
           <input
             class="form-check-input"
             type="radio"
-            [value]="DateInputMode.Date"
+            [value]="DateTimeInputMode.Date"
             formControlName="DateEdit.InputMode"
-            [id]="radioIds[DateInputMode.Date]"
+            [id]="radioIds[DateTimeInputMode.Date]"
             (change)="onInputModeChange()"
           />
-          <label class="form-check-label" [for]="radioIds[DateInputMode.Date]">
+          <label class="form-check-label" [for]="radioIds[DateTimeInputMode.Date]">
             {{ 'FlexFields::Date' | abpLocalization }}
           </label>
         </div>
@@ -20,12 +20,12 @@
           <input
             class="form-check-input"
             type="radio"
-            [value]="DateInputMode.DateTime"
+            [value]="DateTimeInputMode.DateTime"
             formControlName="DateEdit.InputMode"
-            [id]="radioIds[DateInputMode.DateTime]"
+            [id]="radioIds[DateTimeInputMode.DateTime]"
             (change)="onInputModeChange()"
           />
-          <label class="form-check-label" [for]="radioIds[DateInputMode.DateTime]">
+          <label class="form-check-label" [for]="radioIds[DateTimeInputMode.DateTime]">
             {{ 'FlexFields::DateTime' | abpLocalization }}
           </label>
         </div>
@@ -33,12 +33,12 @@
           <input
             class="form-check-input"
             type="radio"
-            [value]="DateInputMode.Month"
+            [value]="DateTimeInputMode.Month"
             formControlName="DateEdit.InputMode"
-            [id]="radioIds[DateInputMode.Month]"
+            [id]="radioIds[DateTimeInputMode.Month]"
             (change)="onInputModeChange()"
           />
-          <label class="form-check-label" [for]="radioIds[DateInputMode.Month]">
+          <label class="form-check-label" [for]="radioIds[DateTimeInputMode.Month]">
             {{ 'FlexFields::Month' | abpLocalization }}
           </label>
         </div>

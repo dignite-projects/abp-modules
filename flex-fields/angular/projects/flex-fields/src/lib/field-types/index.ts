@@ -5,9 +5,9 @@ export * from './field-type-definition';
 export * from './field-type-resolver.service';
 export * from './field-type.tokens';
 
+export * from './boolean';
 export * from './date';
-export * from './numeric';
+export * from './number';
 export * from './select';
-export * from './switch';
 export * from './text';
-export * from './tree-view';
+export * from './tree';

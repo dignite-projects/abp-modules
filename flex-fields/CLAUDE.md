@@ -54,7 +54,7 @@ still writes `NumericEditField.Decimals` (not `NumericEdit.`) alongside an unpre
 | `DateEdit` | `DateTimeFieldType` | `date/` |
 | `Select` | `SelectFieldType` | `select/` |
 | `Switch` | `BooleanFieldType` | `switch/` |
-| `TreeView` | `TreeFieldType` | `tree-view/` |
+| `TreeView` | `TreeFieldType` | `tree/` |
 
 Renaming any of these "for consistency" orphans every field already stored under the old key, and
 nothing in the build catches it. `built-in-field-types.spec.ts` asserts all of them for that reason.

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using Dignite.Abp.FlexFields.Numeric;
+using Dignite.Abp.FlexFields.Number;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Volo.Abp.EntityFrameworkCore;

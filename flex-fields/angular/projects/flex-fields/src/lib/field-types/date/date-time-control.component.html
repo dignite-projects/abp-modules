@@ -4,7 +4,7 @@
       <label class="form-label" *ngIf="fieldValue.field.displayName">
         {{ fieldValue.field.displayName }}
       </label>
-      <ng-container *ngIf="configuration['DateEdit.InputMode'] === DateInputMode.Date">
+      <ng-container *ngIf="configuration['DateEdit.InputMode'] === DateTimeInputMode.Date">
         <input
           type="date"
           class="form-control"
@@ -14,7 +14,7 @@
           [max]="configuration['DateEdit.Max']"
         />
       </ng-container>
-      <ng-container *ngIf="configuration['DateEdit.InputMode'] === DateInputMode.DateTime">
+      <ng-container *ngIf="configuration['DateEdit.InputMode'] === DateTimeInputMode.DateTime">
         <input
           type="datetime-local"
           class="form-control"
@@ -24,7 +24,7 @@
           [max]="configuration['DateEdit.Max']"
         />
       </ng-container>
-      <ng-container *ngIf="configuration['DateEdit.InputMode'] === DateInputMode.Month">
+      <ng-container *ngIf="configuration['DateEdit.InputMode'] === DateTimeInputMode.Month">
         <input
           type="month"
           class="form-control"

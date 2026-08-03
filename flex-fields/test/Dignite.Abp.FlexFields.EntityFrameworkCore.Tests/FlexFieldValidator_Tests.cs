@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Dignite.Abp.FlexFields.Numeric;
+using Dignite.Abp.FlexFields.Number;
 using Dignite.Abp.FlexFields.Select;
-using Dignite.Abp.FlexFields.Switch;
+using Dignite.Abp.FlexFields.Boolean;
 using Dignite.Abp.FlexFields.Text;
 using Shouldly;
 using Xunit;
@@ -81,7 +81,7 @@ public class FlexFieldValidator_Tests : FlexFieldsEntityFrameworkCoreTestBase
     public async Task A_number_outside_its_configured_range_is_reported()
     {
         var usage = Provider.AddDefinition("ViewCount", NumberFieldType.ControlName);
-        new NumericConfiguration(usage.Field.Configuration) { Min = 10, Max = 100 };
+        new NumberConfiguration(usage.Field.Configuration) { Min = 10, Max = 100 };
 
         var article = new TestArticle(Guid.NewGuid(), "Host");
         article.SetField("ViewCount", 500);

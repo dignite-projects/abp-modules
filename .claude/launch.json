@@ -19,6 +19,13 @@
       "runtimeArgs": ["run", "--project", "file-storing/host/Dignite.FileExplorer.Web.Host"],
       "port": 44390,
       "url": "https://localhost:44390"
+    },
+    {
+      "name": "flex-fields-demo-host",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "flex-fields/demo/Dignite.Abp.FlexFields.Demo"],
+      "port": 44330,
+      "url": "https://localhost:44330"
     }
   ]
 }

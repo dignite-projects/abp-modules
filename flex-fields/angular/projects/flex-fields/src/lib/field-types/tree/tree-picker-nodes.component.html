@@ -1,0 +1,38 @@
+@if (nodes.length > 0) {
+  <abp-tree
+    [nodes]="nodes"
+    [checkable]="false"
+    [expandedKeys]="expandedKeys"
+    [isNodeSelected]="isNodeSelected"
+    (nzExpandChange)="expandChange.emit($event)"
+    (selectedNodeChange)="onAbpTreeNodeChange($event)"
+  >
+    <ng-template abpTreeNodeTemplate let-node>
+      <div
+        class="d-inline-flex align-items-center ff-tree-picker-node"
+        (click)="onNodeClick($event, node)"
+      >
+        <input
+          *ngIf="multiple"
+          type="checkbox"
+          class="form-check-input me-2"
+          [checked]="isNodeChecked(node)"
+          [indeterminate]="isIndeterminate(node)"
+          [attr.data-indeterminate]="isIndeterminate(node)"
+        />
+        <span>{{ node.title }}</span>
+      </div>
+    </ng-template>
+    <ng-template abpTreeExpandedIconTemplate let-node>
+      <i aria-hidden="true" *ngIf="node.children.length > 0">
+        <ng-container *ngTemplateOutlet="node.isExpanded ? minusIcon : plusIcon"></ng-container>
+      </i>
+    </ng-template>
+    <ng-template #minusIcon>
+      <i class="fa fa-minus" aria-hidden="true"></i>
+    </ng-template>
+    <ng-template #plusIcon>
+      <i class="fa fa-plus" aria-hidden="true"></i>
+    </ng-template>
+  </abp-tree>
+}

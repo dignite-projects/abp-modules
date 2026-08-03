@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using Dignite.Abp.FlexFields.Numeric;
+using Dignite.Abp.FlexFields.Number;
 using Dignite.Abp.FlexFields.Text;
 using Shouldly;
 using Xunit;

@@ -16,7 +16,7 @@ public class DateTimeFieldType : FieldTypeBase
 
     public override IReadOnlyList<ValidationResult> Validate(FieldValidationArgs args)
     {
-        var configuration = new DateConfiguration(args.Field.Configuration);
+        var configuration = new DateTimeConfiguration(args.Field.Configuration);
         var errors = new List<ValidationResult>();
 
         if (args.Field.Value != null && !args.Field.Value.ToString().IsNullOrWhiteSpace())
@@ -26,7 +26,7 @@ public class DateTimeFieldType : FieldTypeBase
             {
                 errors.Add(
                     new ValidationResult(
-                        L["Validate:NotDateType", args.Field.DisplayName],
+                        L["Validate:NotDateTimeType", args.Field.DisplayName],
                         new[] { args.Field.Name }
                         ));
             }
@@ -66,6 +66,6 @@ public class DateTimeFieldType : FieldTypeBase
 
     public override FieldConfigurationBase GetConfiguration(FieldConfigurationDictionary fieldConfiguration)
     {
-        return new DateConfiguration(fieldConfiguration);
+        return new DateTimeConfiguration(fieldConfiguration);
     }
 }
