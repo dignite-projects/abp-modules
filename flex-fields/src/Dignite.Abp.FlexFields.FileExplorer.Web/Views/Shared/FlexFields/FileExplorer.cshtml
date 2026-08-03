@@ -1,0 +1,70 @@
+@using Dignite.Abp.FlexFields.FileExplorer.Web
+@model Dignite.Abp.FlexFields.Web.FlexFieldViewModel
+@{
+    var files = FileDescriptorValueReader.ReadFiles(Model.Field.Value);
+}
+@if (Model.ShowInList)
+{
+    @(files.Count == 0 ? "No files" : $"{files.Count} file(s)")
+}
+else
+{
+    <div class="flex-field flex-field-view flex-field-view-file-explorer" data-field-type="@Model.Field.FieldTypeName" data-field-name="@Model.Field.Name">
+        <span class="flex-field-label">@Model.Field.DisplayName</span>
+        @if (files.Count == 0)
+        {
+            <span class="flex-field-value">No files</span>
+        }
+        else
+        {
+            <ul class="flex-field-value flex-field-value-file-explorer">
+                @foreach (var file in files)
+                {
+                    <li>
+                        @if (!string.IsNullOrEmpty(file.Url))
+                        {
+                            <a href="@file.Url" target="_blank" rel="noopener">@file.Name</a>
+                        }
+                        else
+                        {
+                            @file.Name
+                        }
+                        @if (file.Size != null || !string.IsNullOrEmpty(file.MimeType))
+                        {
+                            <text> (</text>
+                            @if (file.Size != null)
+                            {
+                                @FormatSize(file.Size.Value)
+                            }
+                            @if (file.Size != null && !string.IsNullOrEmpty(file.MimeType))
+                            {
+                                <text>, </text>
+                            }
+                            @if (!string.IsNullOrEmpty(file.MimeType))
+                            {
+                                @file.MimeType
+                            }
+                            <text>)</text>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+}
+@functions {
+    private static string FormatSize(long bytes)
+    {
+        if (bytes >= 1024 * 1024)
+        {
+            return $"{bytes / (1024.0 * 1024.0):0.#} MB";
+        }
+
+        if (bytes >= 1024)
+        {
+            return $"{bytes / 1024.0:0.#} KB";
+        }
+
+        return $"{bytes} B";
+    }
+}

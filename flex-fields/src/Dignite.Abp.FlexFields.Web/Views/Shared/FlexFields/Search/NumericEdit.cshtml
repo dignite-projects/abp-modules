@@ -1,0 +1,16 @@
+@using System.Globalization
+@using Dignite.Abp.FlexFields.Number
+@model Dignite.Abp.FlexFields.Web.FlexFieldSearchViewModel
+@{
+    var config = new NumberConfiguration(Model.Field.Configuration);
+    // Deliberately two independent inputs rather than the Angular search control's single combined
+    // "min-max" string: a plain HTML form doesn't share that control's one-string-typed-binding
+    // constraint, two `type="number"` inputs give native browser validation/spinners, and a hyphen
+    // separator is ambiguous for negative numbers anyway ("-10--5"). The host reads "{Name}Min" /
+    // "{Name}Max" back independently.
+    var step = config.Step?.ToString(CultureInfo.InvariantCulture) ?? "any";
+}
+<span class="flex-field-search flex-field-search-numeric" data-field-type="@Model.Field.FieldTypeName">
+    <input type="number" name="@(Model.Name)Min" step="@step" placeholder="Min" aria-label="@(Model.Field.DisplayName) min" />
+    <input type="number" name="@(Model.Name)Max" step="@step" placeholder="Max" aria-label="@(Model.Field.DisplayName) max" />
+</span>

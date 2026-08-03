@@ -1,0 +1,17 @@
+@model Dignite.Abp.FlexFields.Web.FlexFieldViewModel
+@{
+    var raw = Dignite.Abp.FlexFields.Web.FlexFieldValueReader.ReadDecimal(Model.Field.Value);
+    var config = new Dignite.Abp.FlexFields.Number.NumberConfiguration(Model.Field.Configuration);
+    var formatted = raw?.ToString(config.FormatSpecifier ?? "N" + config.Decimals);
+}
+@if (Model.ShowInList)
+{
+    @formatted
+}
+else
+{
+    <div class="flex-field flex-field-view" data-field-type="@Model.Field.FieldTypeName" data-field-name="@Model.Field.Name">
+        <span class="flex-field-label">@Model.Field.DisplayName</span>
+        <span class="flex-field-value">@formatted</span>
+    </div>
+}

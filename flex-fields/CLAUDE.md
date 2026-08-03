@@ -5,7 +5,7 @@ mould of `Volo.Abp.Users`, not a runnable application module: it ships mechanism
 configuration, validation, a value bag, a query index — and **no domain model**. Every downstream
 (CMS today, Commerce later) owns its own field definitions and host entities.
 
-Published: `src/` (five NuGet packages, plus `.Installer`), `angular/projects/flex-fields`
+Published: `src/` (six NuGet packages, plus `.Installer`), `angular/projects/flex-fields`
 (`@dignite/ng.flex-fields`). `demo/` and the Angular demo app are local-dev-only, never packed.
 
 Design rationale lives in [`docs/flexfields-design.md`](./docs/flexfields-design.md) — read §1–§5
@@ -13,8 +13,14 @@ before changing any contract; it records what was rejected and why.
 
 ## Structure
 
-- **`src/`** — `Abstractions`, `Domain.Shared`, `Domain`, `EntityFrameworkCore`, `MongoDB`, `Installer`.
-  No `.Application` / `.HttpApi`: the kernel has no app service, so there is nothing to expose.
+- **`src/`** — `Abstractions`, `Domain.Shared`, `Domain`, `EntityFrameworkCore`, `MongoDB`, `Web`,
+  `Installer`. No `.Application` / `.HttpApi`: the kernel has no app service, so there is nothing to
+  expose.
+  - `.Web` is the one exception to "the three module trees never reference each other and flex-fields
+    never reaches outside itself": it depends on `Dignite.Abp.AspNetCore.Mvc.Razor`, a separate
+    top-level tree (`aspnetcore-mvc-razor/`) of domain-agnostic ASP.NET Core MVC/Razor infrastructure,
+    not owned by any of the three modules — not a violation of that invariant, since it isn't one of
+    "the three."
 - **`demo/`** — single-project ABP host (`app-nolayers`, SQLite), in `Dignite.Abp.FlexFields.slnx`
   (this module's own focused solution, covering `src/` + `test/` + `demo/`) and in the aggregate
   `Dignite.Abp.Modules.slnx`, never packed: `dotnet run --project demo/Dignite.Abp.FlexFields.Demo`
@@ -32,7 +38,17 @@ before changing any contract; it records what was rejected and why.
 | `FlexFields.Domain` | `IFlexField` (Entity contract), `IFlexFieldProvider<T>` and the other seams, provider-neutral `FlexFieldValidator`/`FlexFieldValueMigrator` | Abstractions, Domain.Shared, ABP DDD |
 | `FlexFields.EntityFrameworkCore` | `FlexFieldIndexValue` (relational-only), index/repository base classes, model-creating extensions | Domain |
 | `FlexFields.MongoDB` | Embedded values, native path indexes — deliberately **no** pivot-table type | Domain |
+| `FlexFields.Web` | `<flex-field-view>`/`<flex-field-search>` TagHelpers + default `.cshtml` per built-in type — SSR counterpart to the Angular library's `<ff-flex-field-view>`/`<ff-flex-field-search>`. No config/control TagHelpers | Abstractions, `Dignite.Abp.AspNetCore.Mvc.Razor` |
 | `FlexFields.Installer` | ABP Studio/Suite install entry point, embeds the module's `.abpmdl` | `Volo.Abp.VirtualFileSystem` |
+
+Bolt-on field types (optional, not part of the six above): `FlexFields.FileExplorer` (the field type
+itself, references only Abstractions) and `FlexFields.FileExplorer.Web` (its `<flex-field-view>`
+rendering — file name/size/MIME type/link, read straight out of the value the Angular picker already
+denormalized at pick time; no search partial, since `FileExplorerFieldType.IndexValueType` is `null`).
+Depending on `.FileExplorer.Web` alone pulls in `.FileExplorer` and `.Web` too. Each bolt-on's own
+`.Web` counterpart is the pattern for any future one: a small project next to the field type itself,
+depending on it plus `FlexFields.Web`, shipping one view at the same
+`Views/Shared/FlexFields/{ControlName}.cshtml` convention path.
 
 ## Two hard invariants
 
@@ -70,6 +86,38 @@ Adding a field type means implementing `FieldTypeBase` (auto-registered via `ITr
 and, on the Angular side, registering a `FieldTypeDefinition` through `provideFlexFieldTypes()`.
 There is no options/registry class to add to.
 
+## `.Web`: the SSR counterpart to the Angular library
+
+`IFieldType`/`FieldTypeBase` carries **no rendering concerns on the C# side** by design (§3 of the
+design doc: "命名领域不命名 UI" — name the domain, not the UI) — so `.Web`'s type-name → Razor-view
+mapping lives entirely outside the kernel, the server-side mirror of how `FieldTypeDefinition`'s
+`viewComponent`/`searchComponent` live in the Angular *library*, not on the core field type.
+
+- `<flex-field-view field="@flexFieldValue">` / `<flex-field-search field="@flexFieldValue">` are
+  zero-IO leaf renderers: they take an already-resolved `FlexFieldValue`, never a lookup key — the
+  kernel has no application service to look one up with, so assembling it is the host's job, same as
+  everywhere else in the kernel.
+- Dispatch is by `FlexFieldValue.FieldTypeName` (the persisted registration key, e.g. `"TextEdit"`) to
+  a conventional partial path (`Views/Shared/FlexFields/{Key}.cshtml`,
+  `Views/Shared/FlexFields/Search/{Key}.cshtml`), resolved via `IRazorPartialRenderer` +
+  `IRazorViewEngine`'s normal controller/`Shared`-relative search — a downstream overrides one built-in
+  type, or adds a custom type, just by shipping a `.cshtml` at the same conventional path in its own
+  project. `PartialName` on either TagHelper bypasses the convention entirely.
+- `<flex-field-search>` only renders inputs. Turning what gets submitted into a
+  `FlexFieldQueryCondition` stays the host's job — the Angular library can't do that translation either
+  (see `ProductsComponent` below), so `.Web` doesn't try to; `ProductsWebController` in the demo does it
+  for real, against the same `IFlexFieldQueryExecutor<Product>` the API layer uses.
+- A referenced assembly's precompiled views are **not** reliably discovered through ABP's own
+  `AddApplicationPartIfNotExists`/automatic module registration (both add a bare `AssemblyPart`, which
+  `IViewsFeatureProvider` never surfaces views from) — every `.Web`-suffixed project's module registers
+  itself through `Dignite.Abp.AspNetCore.Mvc.Razor`'s `AddCompiledRazorAssemblyPartIfNotExists`
+  (the real `ApplicationPartFactory`) instead. Found by actually running the render pipeline in a test,
+  not by compiling it; see `Dignite.Abp.FlexFields.Web.Tests`.
+- The "downstream overrides one built-in type, or adds a custom type, at the same conventional path"
+  claim two bullets up is not theoretical: `FlexFields.FileExplorer.Web` is exactly that, for the
+  `FileExplorer` bolt-on (see the package table above) - a separate small project, not a fork of
+  `.Web`, shipping one view at `Views/Shared/FlexFields/FileExplorer.cshtml`.
+
 ## The demo
 
 `demo/Dignite.Abp.FlexFields.Demo` is the worked example of everything the previous section
@@ -92,8 +140,19 @@ describes, wired to a real feature instead of the test project's throwaway `Test
   method still named `GetListAsync` collides on the same URL as `CreateAsync` no matter what
   attribute you add. The rename is why it's `SearchAsync`, at `POST /api/app/product/search`.
 - **`Data/ProductDemoDataSeedContributor.cs`** — seeds one `ProductField` per built-in field type
-  and five products, so a first `dotnet run -- --migrate-database` leaves the demo immediately
-  browsable instead of empty.
+  plus the FileExplorer bolt-on, and five products, so a first `dotnet run -- --migrate-database`
+  leaves the demo immediately browsable instead of empty. One product's `images` field gets a real
+  uploaded file (`FileDescriptorManager.CreateAsync` directly, bypassing the `[Authorize]`-gated app
+  service the same way the field/product repositories are used directly elsewhere in this class) into
+  the already-configured `"images"` container, not a fabricated value — so `FlexFields.FileExplorer.Web`
+  has genuine data to render, and the other four products exercise the "no files" path.
+- **`Controllers/ProductsWebController.cs`** + **`Views/ProductsWeb/Index.cshtml`** — the SSR
+  counterpart to the Angular admin's products page, at `/ProductsWeb`: `<flex-field-view>` for the
+  results table (`show-in-list`) and one full detail block, `<flex-field-search>` for the filter form.
+  Also the one piece of translation `.Web` deliberately doesn't do: reads the submitted search inputs
+  back by the exact names its own default search partials render (`{Name}`, `{Name}Min`/`Max`,
+  `{Name}From`/`To`) and turns them into `FlexFieldQueryCondition`s for the same
+  `IFlexFieldQueryExecutor<Product>` the API layer uses.
 - **`angular/src/app/product-fields/`** and **`angular/src/app/products/`** — the Angular
   counterpart. `product-fields` is `<ff-flex-field-config>`'s demonstration site (swaps editors as
   the selected field type changes); `products` demonstrates all four host components at once:

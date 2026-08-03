@@ -1,0 +1,20 @@
+@using System.Linq
+@using Dignite.Abp.FlexFields.Select
+@model Dignite.Abp.FlexFields.Web.FlexFieldViewModel
+@{
+    var config = new SelectConfiguration(Model.Field.Configuration);
+    var selectedValues = Dignite.Abp.FlexFields.Web.FlexFieldValueReader.ReadStringList(Model.Field.Value);
+    var labels = config.Options.Where(o => selectedValues.Contains(o.Value)).Select(o => o.Text).ToList();
+    var display = labels.Count > 0 ? string.Join(", ", labels) : config.NullText;
+}
+@if (Model.ShowInList)
+{
+    @display
+}
+else
+{
+    <div class="flex-field flex-field-view" data-field-type="@Model.Field.FieldTypeName" data-field-name="@Model.Field.Name">
+        <span class="flex-field-label">@Model.Field.DisplayName</span>
+        <span class="flex-field-value">@display</span>
+    </div>
+}

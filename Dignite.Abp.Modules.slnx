@@ -1,4 +1,9 @@
 <Solution>
+  <Folder Name="/aspnetcore-mvc-razor/" />
+  <Folder Name="/aspnetcore-mvc-razor/src/">
+    <Project Path="aspnetcore-mvc-razor/src/Dignite.Abp.AspNetCore.Mvc.Razor/Dignite.Abp.AspNetCore.Mvc.Razor.csproj" />
+  </Folder>
+
   <Folder Name="/file-storing/" />
   <Folder Name="/file-storing/core/" />
   <Folder Name="/file-storing/core/src/">
@@ -79,13 +84,16 @@
     <Project Path="flex-fields/src/Dignite.Abp.FlexFields.Domain/Dignite.Abp.FlexFields.Domain.csproj" />
     <Project Path="flex-fields/src/Dignite.Abp.FlexFields.EntityFrameworkCore/Dignite.Abp.FlexFields.EntityFrameworkCore.csproj" />
     <Project Path="flex-fields/src/Dignite.Abp.FlexFields.FileExplorer/Dignite.Abp.FlexFields.FileExplorer.csproj" />
+    <Project Path="flex-fields/src/Dignite.Abp.FlexFields.FileExplorer.Web/Dignite.Abp.FlexFields.FileExplorer.Web.csproj" />
     <Project Path="flex-fields/src/Dignite.Abp.FlexFields.Installer/Dignite.Abp.FlexFields.Installer.csproj" />
     <Project Path="flex-fields/src/Dignite.Abp.FlexFields.MongoDB/Dignite.Abp.FlexFields.MongoDB.csproj" />
+    <Project Path="flex-fields/src/Dignite.Abp.FlexFields.Web/Dignite.Abp.FlexFields.Web.csproj" />
   </Folder>
   <Folder Name="/flex-fields/test/">
     <Project Path="flex-fields/test/Dignite.Abp.FlexFields.Tests/Dignite.Abp.FlexFields.Tests.csproj" />
     <Project Path="flex-fields/test/Dignite.Abp.FlexFields.EntityFrameworkCore.Tests/Dignite.Abp.FlexFields.EntityFrameworkCore.Tests.csproj" />
     <Project Path="flex-fields/test/Dignite.Abp.FlexFields.MongoDB.Tests/Dignite.Abp.FlexFields.MongoDB.Tests.csproj" />
+    <Project Path="flex-fields/test/Dignite.Abp.FlexFields.Web.Tests/Dignite.Abp.FlexFields.Web.Tests.csproj" />
   </Folder>
   <Folder Name="/flex-fields/demo/">
     <Project Path="flex-fields/demo/Dignite.Abp.FlexFields.Demo/Dignite.Abp.FlexFields.Demo.csproj" />

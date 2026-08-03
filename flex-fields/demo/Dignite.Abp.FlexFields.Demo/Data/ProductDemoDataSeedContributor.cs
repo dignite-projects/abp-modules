@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Dignite.Abp.FlexFields.Date;
@@ -10,6 +11,8 @@ using Dignite.Abp.FlexFields.Select;
 using Dignite.Abp.FlexFields.Boolean;
 using Dignite.Abp.FlexFields.Text;
 using Dignite.Abp.FlexFields.Tree;
+using Dignite.FileExplorer.Files;
+using Volo.Abp.Content;
 using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Repositories;
@@ -28,17 +31,20 @@ public class ProductDemoDataSeedContributor : IDataSeedContributor, ITransientDe
     private readonly IRepository<Product, Guid> _productRepository;
     private readonly IFlexFieldIndexManager<Product> _indexManager;
     private readonly IGuidGenerator _guidGenerator;
+    private readonly FileDescriptorManager _fileDescriptorManager;
 
     public ProductDemoDataSeedContributor(
         IFlexFieldRepository<ProductField> fieldRepository,
         IRepository<Product, Guid> productRepository,
         IFlexFieldIndexManager<Product> indexManager,
-        IGuidGenerator guidGenerator)
+        IGuidGenerator guidGenerator,
+        FileDescriptorManager fileDescriptorManager)
     {
         _fieldRepository = fieldRepository;
         _productRepository = productRepository;
         _indexManager = indexManager;
         _guidGenerator = guidGenerator;
+        _fileDescriptorManager = fileDescriptorManager;
     }
 
     public async Task SeedAsync(DataSeedContext context)
@@ -126,9 +132,8 @@ public class ProductDemoDataSeedContributor : IDataSeedContributor, ITransientDe
             },
             searchable: true);
 
-        // Not indexable (FileExplorerFieldType.IndexValueType is null) and not used on any seeded
-        // product below - there's no real blob behind a fabricated file descriptor value here, so the
-        // field is left empty rather than pointing the picker at files that don't exist.
+        // Not indexable (FileExplorerFieldType.IndexValueType is null) - see CreateSeedImageAsync for
+        // why exactly one product gets a real value here rather than every product or none.
         _ = await CreateFieldAsync(
             "images", "Images", FileExplorerFieldType.ControlName,
             new FieldConfigurationDictionary
@@ -137,11 +142,18 @@ public class ProductDemoDataSeedContributor : IDataSeedContributor, ITransientDe
                 [FileExplorerConfigurationNames.UploadFileMultiple] = true,
             });
 
+        // A real blob in the already-configured "images" container (DemoModule.ConfigureBlobStoring),
+        // not a fabricated value pointing at a file that doesn't exist - lets FlexFields.FileExplorer.Web's
+        // view render actual name/size/mimeType/url instead of nothing. Only Wireless Mouse gets one, so
+        // the demo also shows the "no files" path every other product renders.
+        var mouseImages = await CreateSeedImageAsync();
+
         var products = new[]
         {
             CreateProduct("Wireless Mouse", ("description", "A comfortable wireless mouse."), ("price", 29.90m),
                 ("releaseDate", new DateTime(2025, 3, 1)), ("color", new List<string> { "black", "white" }),
-                ("inStock", true), ("category", new List<string> { "electronics-computers" })),
+                ("inStock", true), ("category", new List<string> { "electronics-computers" }),
+                ("images", mouseImages)),
             CreateProduct("Mechanical Keyboard", ("description", "Tactile switches, RGB backlight."), ("price", 89.00m),
                 ("releaseDate", new DateTime(2025, 5, 12)), ("color", new List<string> { "black" }),
                 ("inStock", true), ("category", new List<string> { "electronics-computers" })),
@@ -186,6 +198,46 @@ public class ProductDemoDataSeedContributor : IDataSeedContributor, ITransientDe
         // (called below, once per seeded product) can see it. Without this, every seeded product's index
         // ends up empty because none of the six fields had been flushed yet.
         return await _fieldRepository.InsertAsync(field, autoSave: true);
+    }
+
+    /// <summary>
+    /// Uploads one real, tiny file into the "images" blob container and returns the field value shape
+    /// the Angular picker itself writes (see <c>FileExplorerControlComponent.onSelectedFileChange</c>):
+    /// the file descriptor's own id/containerName/blobName/name/mimeType/size, denormalized into the
+    /// value at pick time - the picker never stores a bare id and re-resolves it later, so seeding does
+    /// the same. <c>url</c> is a relative path rather than <see cref="FileDescriptorController"/>'s
+    /// absolute one - it has no HttpContext to read a scheme/host from at seed time, and a relative URL
+    /// is resolved against the current origin regardless, so it works everywhere the absolute one would.
+    /// </summary>
+    private async Task<List<object>> CreateSeedImageAsync()
+    {
+        // A minimal valid 1x1 transparent PNG (67 bytes) - a real, decodable image rather than an
+        // arbitrary byte array, so a future thumbnail-rendering view has genuine image bytes behind it.
+        const string onePixelPngBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+
+        await using var stream = new MemoryStream(Convert.FromBase64String(onePixelPngBase64));
+        var content = new RemoteStreamContent(stream, "placeholder.png", "image/png");
+
+        // FileDescriptorManager predates nullable reference type annotations (cellName/entityId are
+        // [CanBeNull] JetBrains-attributed, not C# `string?`) - the null-forgiving operators below are
+        // silencing an inaccurate signature, not asserting non-null values that could actually be null.
+        // entityId is cast to string? first because CreateAsync is also overloaded on IEntity entity - a
+        // bare null there is ambiguous between the two overloads.
+        var file = await _fileDescriptorManager.CreateAsync("images", content, cellName: null!, directoryId: null, entityId: (string?)null!);
+
+        return new List<object>
+        {
+            new Dictionary<string, object?>
+            {
+                ["id"] = file.Id,
+                ["containerName"] = file.ContainerName,
+                ["blobName"] = file.BlobName,
+                ["name"] = file.Name,
+                ["mimeType"] = file.MimeType,
+                ["size"] = file.Size,
+                ["url"] = $"/api/file-explorer/files/{file.ContainerName}/{file.BlobName}",
+            },
+        };
     }
 
     private Product CreateProduct(string name, params (string FieldName, object Value)[] values)

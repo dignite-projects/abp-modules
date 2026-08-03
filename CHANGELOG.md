@@ -39,6 +39,25 @@ so it stays clear which part of the repository actually moved.
   - `Dignite.Abp.FlexFields.Abstractions`'s `FlexFields` localization resource gains two keys the
     migrated tree designer's node-key validator needs: `Validate:InvalidNodeValue`,
     `Validate:NodeValueAlreadyExists` (en/ja/zh-Hans/zh-Hant).
+- **New `Dignite.Abp.FlexFields.Web` package.** `<flex-field-view>`/`<flex-field-search>` TagHelpers
+  plus default views for the six built-in field types — the server-side (Razor) counterpart to the
+  Angular library's `<ff-flex-field-view>`/`<ff-flex-field-search>`. Zero-IO by design: TagHelpers
+  render an already-resolved `FlexFieldValue`, the same way the kernel has no application service of
+  its own to look one up with, so assembling it is the host's job. No config/control TagHelpers —
+  display and search only. `<flex-field-search>` renders inputs only; turning what gets submitted into
+  a `FlexFieldQueryCondition` stays the host's job, same as the Angular library.
+- **New `Dignite.Abp.FlexFields.FileExplorer.Web` package.** The FileExplorer bolt-on field type's own
+  view — file name/size/MIME type/link, read straight out of the value the Angular picker already
+  denormalized at pick time. No IO, no reference to `Dignite.FileExplorer`, and no search partial
+  (`FileExplorerFieldType.IndexValueType` is `null`). Depending on it alone pulls in both the field
+  type and `Dignite.Abp.FlexFields.Web`.
+- **New top-level tree `aspnetcore-mvc-razor/`, package `Dignite.Abp.AspNetCore.Mvc.Razor`.**
+  Domain-agnostic ASP.NET Core MVC/Razor infrastructure — `IRazorPartialRenderer` (render a partial
+  view + model to an HTML string outside a controller action) and `TenantViewLocationExpander`
+  (resolve Razor views per tenant, then per theme, before falling back to the host's default) — that
+  `Dignite.Abp.FlexFields.Web` depends on and any of the three modules (or a downstream host) may too.
+  Not a fourth module: it carries no domain model, so depending on it is not the cross-module reference
+  the "three modules never reference each other" invariant guards against.
 
 ### Changed
 

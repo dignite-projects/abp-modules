@@ -1,0 +1,25 @@
+@using Dignite.Abp.FlexFields.Date
+@model Dignite.Abp.FlexFields.Web.FlexFieldViewModel
+@{
+    var raw = Dignite.Abp.FlexFields.Web.FlexFieldValueReader.ReadDateTime(Model.Field.Value);
+    var mode = new DateTimeConfiguration(Model.Field.Configuration).InputMode;
+    string? formatted = raw == null
+        ? null
+        : mode switch
+        {
+            DateTimeInputMode.DateTime => raw.Value.ToString("g"),
+            DateTimeInputMode.Month => raw.Value.ToString("Y"),
+            _ => raw.Value.ToString("d")
+        };
+}
+@if (Model.ShowInList)
+{
+    @formatted
+}
+else
+{
+    <div class="flex-field flex-field-view" data-field-type="@Model.Field.FieldTypeName" data-field-name="@Model.Field.Name">
+        <span class="flex-field-label">@Model.Field.DisplayName</span>
+        <span class="flex-field-value">@formatted</span>
+    </div>
+}

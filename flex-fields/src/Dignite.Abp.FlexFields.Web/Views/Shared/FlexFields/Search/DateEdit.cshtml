@@ -1,0 +1,14 @@
+@using Dignite.Abp.FlexFields.Date
+@model Dignite.Abp.FlexFields.Web.FlexFieldSearchViewModel
+@{
+    var inputType = new DateTimeConfiguration(Model.Field.Configuration).InputMode switch
+    {
+        DateTimeInputMode.DateTime => "datetime-local",
+        DateTimeInputMode.Month => "month",
+        _ => "date"
+    };
+}
+<span class="flex-field-search flex-field-search-date" data-field-type="@Model.Field.FieldTypeName">
+    <input type="@inputType" name="@(Model.Name)From" aria-label="@(Model.Field.DisplayName) from" />
+    <input type="@inputType" name="@(Model.Name)To" aria-label="@(Model.Field.DisplayName) to" />
+</span>

@@ -33,6 +33,7 @@
     <PackageVersion Include="Volo.Abp.Authorization" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.Authorization.Abstractions" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore.Mvc" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.Http.Client" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.Mapperly" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.EntityFrameworkCore" Version="10.5.0" />
