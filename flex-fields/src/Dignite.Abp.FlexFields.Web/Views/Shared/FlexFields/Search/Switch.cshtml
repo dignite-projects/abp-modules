@@ -1,0 +1,12 @@
+@model Dignite.Abp.FlexFields.Web.FlexFieldSearchViewModel
+@* Tri-state, not a checkbox: "not filtering on this field" has to be a distinct third option from
+   "filtering for false" - the same reason the Angular search control never emits a real boolean,
+   only the literal strings "true"/"false" (see the FlexFields demo's ProductsComponent). *@
+<select class="flex-field-search flex-field-search-switch"
+        name="@Model.Name"
+        data-field-type="@Model.Field.FieldTypeName"
+        aria-label="@Model.Field.DisplayName">
+    <option value="">Any</option>
+    <option value="true">Yes</option>
+    <option value="false">No</option>
+</select>

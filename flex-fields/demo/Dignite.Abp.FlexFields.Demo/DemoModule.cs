@@ -7,7 +7,8 @@ using Dignite.Abp.FlexFields.Demo.Data;
 using Dignite.Abp.FlexFields.Demo.Entities;
 using Dignite.Abp.FlexFields.Demo.Services.FlexFields;
 using Dignite.Abp.FlexFields.EntityFrameworkCore;
-using Dignite.Abp.FlexFields.FileExplorer;
+using Dignite.Abp.FlexFields.FileExplorer.Web;
+using Dignite.Abp.FlexFields.Web;
 using Dignite.Abp.FlexFields.Demo.Localization;
 using Dignite.Abp.FlexFields.Demo.HealthChecks;
 using Dignite.Abp.FileStoring;
@@ -126,10 +127,15 @@ namespace Dignite.Abp.FlexFields.Demo;
     // FlexFields kernel - the demo is a downstream consumer, wired up in Entities/ and Services/FlexFields/
     typeof(FlexFieldsEntityFrameworkCoreModule),
 
-    // FileExplorer field type bolt-on - references only FlexFields.Abstractions (see its own doc
-    // comment); it's this demo's separate FileExplorer *module* reference (above) that supplies the
-    // backend the Angular picker actually talks to.
-    typeof(FlexFieldsFileExplorerModule)
+    // SSR display/search for the flex fields Products/ProductFields already have - see
+    // Controllers/ProductsWebController.cs and Views/ProductsWeb/Index.cshtml.
+    typeof(FlexFieldsWebModule),
+
+    // FileExplorer field type bolt-on (references only FlexFields.Abstractions - see its own doc
+    // comment) plus its SSR view - one module dependency for both, per its own doc comment. It's this
+    // demo's separate FileExplorer *module* reference (above, FileExplorerApplicationModule etc.) that
+    // supplies the backend the Angular picker actually talks to.
+    typeof(FlexFieldsFileExplorerWebModule)
 )]
 public class DemoModule : AbpModule
 {
@@ -194,9 +200,10 @@ public class DemoModule : AbpModule
 
         ConfigureStudio(hostingEnvironment);
         ConfigureAuthentication(context);
-        // This host is API + Swagger only (no Razor views), and has never run `abp install-libs`, so
-        // wwwroot/libs does not exist. Without this, AbpMvcLibsOptions' dev-time check intercepts
-        // every request - including /swagger - with a "Libs Folder is Missing" error page. Mirrors
+        // This host is mostly API + Swagger, plus the one plain (no Theme.Shared, no bundling)
+        // FlexFields.Web demo page - it has never run `abp install-libs`, so wwwroot/libs does not
+        // exist. Without this, AbpMvcLibsOptions' dev-time check intercepts every request - including
+        // /swagger - with a "Libs Folder is Missing" error page. Mirrors
         // file-storing/host/Dignite.FileExplorer.Web.Host/HostModule.cs.
         Configure<AbpMvcLibsOptions>(options =>
         {

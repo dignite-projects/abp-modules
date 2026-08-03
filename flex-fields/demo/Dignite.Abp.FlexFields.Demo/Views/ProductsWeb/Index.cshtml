@@ -1,0 +1,88 @@
+@using System.Linq
+@model ProductsWebViewModel
+@{
+    Layout = null;
+    var searchableFields = Model.SearchFields.Where(f => f.Searchable).ToList();
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Products - Dignite.Abp.FlexFields.Web demo</title>
+    @* Deliberately no ABP bundling/Theme.Shared - FlexFields.Web is a plain fragment renderer with no
+       styling opinion of its own; this page's CSS exists only so the demo is readable, not as guidance
+       for how a real host should style it. *@
+    <style>
+        body { font-family: sans-serif; margin: 2rem; color: #222; }
+        table { border-collapse: collapse; margin-bottom: 2rem; }
+        th, td { border: 1px solid #ccc; padding: 0.4rem 0.6rem; text-align: left; vertical-align: top; }
+        th { background: #f2f2f2; }
+        form.search-form td { border: none; padding: 0.2rem 0.6rem 0.2rem 0; }
+        .flex-field-label { font-weight: 600; margin-right: 0.4rem; }
+        .flex-field-view { margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body>
+    <h1>Products</h1>
+    <p>Rendered by <code>&lt;flex-field-view&gt;</code> / <code>&lt;flex-field-search&gt;</code> (Dignite.Abp.FlexFields.Web) against this demo's real <code>Product</code> / <code>ProductField</code> data.</p>
+
+    <h2>Search</h2>
+    <form class="search-form" method="get">
+        <table>
+            @foreach (var field in searchableFields)
+            {
+                <tr>
+                    <td>@field.DisplayName</td>
+                    <td><flex-field-search field="@field" /></td>
+                </tr>
+            }
+        </table>
+        <button type="submit">Search</button>
+        <a href="@Url.Action("Index")">Reset</a>
+    </form>
+
+    <h2>Results (@Model.Products.Count)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                @foreach (var field in Model.SearchFields)
+                {
+                    <th>@field.DisplayName</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model.Products)
+            {
+                <tr>
+                    <td>@row.Product.Name</td>
+                    @foreach (var searchField in Model.SearchFields)
+                    {
+                        var field = row.Fields.FirstOrDefault(f => f.FieldId == searchField.FieldId);
+                        <td>
+                            @if (field != null)
+                            {
+                                <flex-field-view field="@field" show-in-list="true" />
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (Model.Products.Count > 0)
+    {
+        <h2>Detail view (first result, full - not show-in-list)</h2>
+        var detail = Model.Products[0];
+        <div>
+            <strong>@detail.Product.Name</strong>
+            @foreach (var field in detail.Fields)
+            {
+                <flex-field-view field="@field" />
+            }
+        </div>
+    }
+</body>
+</html>

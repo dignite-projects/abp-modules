@@ -1,0 +1,19 @@
+@using Dignite.Abp.FlexFields.Tree
+@using Dignite.Abp.FlexFields.Web
+@model Dignite.Abp.FlexFields.Web.FlexFieldSearchViewModel
+@{
+    var config = new TreeConfiguration(Model.Field.Configuration);
+}
+@* A flattened, depth-indented <select> - a pragmatic default, not a real tree-picker widget. Same
+   extension point CMS already established for its own complex field types: override this partial in
+   the host if a proper tree UI is needed. *@
+<select class="flex-field-search flex-field-search-tree"
+        name="@Model.Name"
+        multiple="@config.Multiple"
+        data-field-type="@Model.Field.FieldTypeName"
+        aria-label="@Model.Field.DisplayName">
+    @foreach (var (node, depth) in config.Nodes.Flatten())
+    {
+        <option value="@node.Value">@(new string('—', depth)) @node.Text</option>
+    }
+</select>

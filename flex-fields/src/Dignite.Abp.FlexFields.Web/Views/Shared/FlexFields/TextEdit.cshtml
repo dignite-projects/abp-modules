@@ -1,0 +1,17 @@
+@model Dignite.Abp.FlexFields.Web.FlexFieldViewModel
+@{
+    var value = Dignite.Abp.FlexFields.Web.FlexFieldValueReader.ReadString(Model.Field.Value);
+}
+@if (Model.ShowInList)
+{
+    @value
+}
+else
+{
+    <div class="flex-field flex-field-view" data-field-type="@Model.Field.FieldTypeName" data-field-name="@Model.Field.Name">
+        <span class="flex-field-label">@Model.Field.DisplayName</span>
+        @* white-space: pre-line, not a server-side line-split loop: preserves TextEdit's MultipleLine
+           breaks while staying one real text node - a downstream can restyle without fighting <br />s. *@
+        <span class="flex-field-value" style="white-space: pre-line">@value</span>
+    </div>
+}

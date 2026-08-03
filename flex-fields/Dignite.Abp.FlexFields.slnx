@@ -9,13 +9,16 @@
         <Project Path="src/Dignite.Abp.FlexFields.Domain/Dignite.Abp.FlexFields.Domain.csproj" />
         <Project Path="src/Dignite.Abp.FlexFields.EntityFrameworkCore/Dignite.Abp.FlexFields.EntityFrameworkCore.csproj" />
         <Project Path="src/Dignite.Abp.FlexFields.FileExplorer/Dignite.Abp.FlexFields.FileExplorer.csproj" />
+        <Project Path="src/Dignite.Abp.FlexFields.FileExplorer.Web/Dignite.Abp.FlexFields.FileExplorer.Web.csproj" />
         <Project Path="src/Dignite.Abp.FlexFields.Installer/Dignite.Abp.FlexFields.Installer.csproj" />
         <Project Path="src/Dignite.Abp.FlexFields.MongoDB/Dignite.Abp.FlexFields.MongoDB.csproj" />
+        <Project Path="src/Dignite.Abp.FlexFields.Web/Dignite.Abp.FlexFields.Web.csproj" />
     </Folder>
     <Folder Name="/test/">
         <Project Path="test/Dignite.Abp.FlexFields.Tests/Dignite.Abp.FlexFields.Tests.csproj" />
         <Project Path="test/Dignite.Abp.FlexFields.EntityFrameworkCore.Tests/Dignite.Abp.FlexFields.EntityFrameworkCore.Tests.csproj" />
         <Project Path="test/Dignite.Abp.FlexFields.MongoDB.Tests/Dignite.Abp.FlexFields.MongoDB.Tests.csproj" />
+        <Project Path="test/Dignite.Abp.FlexFields.Web.Tests/Dignite.Abp.FlexFields.Web.Tests.csproj" />
     </Folder>
     <Folder Name="/demo/">
         <Project Path="demo/Dignite.Abp.FlexFields.Demo/Dignite.Abp.FlexFields.Demo.csproj" />

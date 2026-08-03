@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <Description>Default &lt;flex-field-view&gt; rendering (Dignite.Abp.FlexFields.Web) for the FileExplorer bolt-on field type: file name, size, MIME type and a link, read straight out of the value the Angular picker already denormalized at pick time (id/containerName/blobName/name/mimeType/size/url - see FileExplorerFieldType's own doc comment). Zero IO and zero reference to Dignite.FileExplorer, the same boundary the field type itself keeps - the stored value already carries everything this view needs. No search partial: FileExplorerFieldType.IndexValueType is null, so there is nothing to search on.</Description>
+  </PropertyGroup>
+
+  <!-- See Dignite.Abp.FlexFields.Web's csproj comment - the Razor SDK's default @(RazorGenerate) glob
+       did not pick up Views/**/*.cshtml on its own in this repo. -->
+  <ItemGroup>
+    <RazorGenerate Include="Views\**\*.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.Abp.FlexFields.FileExplorer\Dignite.Abp.FlexFields.FileExplorer.csproj" />
+    <ProjectReference Include="..\Dignite.Abp.FlexFields.Web\Dignite.Abp.FlexFields.Web.csproj" />
+  </ItemGroup>
+
+</Project>

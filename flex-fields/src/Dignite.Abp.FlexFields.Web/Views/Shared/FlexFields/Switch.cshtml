@@ -1,0 +1,16 @@
+@model Dignite.Abp.FlexFields.Web.FlexFieldViewModel
+@{
+    var value = Dignite.Abp.FlexFields.Web.FlexFieldValueReader.ReadBool(Model.Field.Value);
+    var display = value ? "Yes" : "No";
+}
+@if (Model.ShowInList)
+{
+    @display
+}
+else
+{
+    <div class="flex-field flex-field-view" data-field-type="@Model.Field.FieldTypeName" data-field-name="@Model.Field.Name">
+        <span class="flex-field-label">@Model.Field.DisplayName</span>
+        <span class="flex-field-value flex-field-value-switch" data-value="@(value ? "true" : "false")">@display</span>
+    </div>
+}

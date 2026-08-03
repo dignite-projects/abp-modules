@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <Description>Server-side (Razor) display and search rendering for Dignite.Abp.FlexFields: the &lt;flex-field-view&gt;/&lt;flex-field-search&gt; TagHelpers and default views for the six built-in field types - the non-Angular counterpart to the Angular library's &lt;ff-flex-field-view&gt;/&lt;ff-flex-field-search&gt;. Zero IO: TagHelpers render an already-resolved FlexFieldValue, the same way the kernel has no application service of its own to look one up with. No config/control TagHelpers - display and search only.</Description>
+  </PropertyGroup>
+
+  <!-- The Razor SDK's default @(RazorGenerate) glob did not pick up Views/**/*.cshtml on its own in
+       this repo (verified with `dotnet msbuild -getItem:RazorGenerate` - empty without this line) -
+       force it explicitly rather than relying on a default that turned out not to fire. Once
+       generated, these are precompiled and discovered by IRazorViewEngine via the host's
+       ApplicationPart for this assembly - same as every other MVC UI library in this repo (see
+       Dignite.NotificationCenter.Web). No embedded-resource/virtual-file-system wiring needed for
+       them; that mechanism is only for wwwroot-style static assets, which this project has none of. -->
+  <ItemGroup>
+    <RazorGenerate Include="Views\**\*.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.Abp.FlexFields.Abstractions\Dignite.Abp.FlexFields.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\aspnetcore-mvc-razor\src\Dignite.Abp.AspNetCore.Mvc.Razor\Dignite.Abp.AspNetCore.Mvc.Razor.csproj" />
+  </ItemGroup>
+
+</Project>

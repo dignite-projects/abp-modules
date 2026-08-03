@@ -1,0 +1,21 @@
+@using System.Linq
+@using Dignite.Abp.FlexFields.Tree
+@using Dignite.Abp.FlexFields.Web
+@model Dignite.Abp.FlexFields.Web.FlexFieldViewModel
+@{
+    var config = new TreeConfiguration(Model.Field.Configuration);
+    var selectedValues = FlexFieldValueReader.ReadStringList(Model.Field.Value);
+    var labels = config.Nodes.FindSelectedLabels(selectedValues).ToList();
+    var display = string.Join(", ", labels);
+}
+@if (Model.ShowInList)
+{
+    @display
+}
+else
+{
+    <div class="flex-field flex-field-view" data-field-type="@Model.Field.FieldTypeName" data-field-name="@Model.Field.Name">
+        <span class="flex-field-label">@Model.Field.DisplayName</span>
+        <span class="flex-field-value">@display</span>
+    </div>
+}
