@@ -41,7 +41,7 @@
     "zone.js": "~0.15.0",
     "@angular/cdk": "~21.2.0",
     "ng-zorro-antd": "~21.0.0-next.1",
-    "@swimlane/ngx-datatable": "^22.0.0",
+    "@swimlane/ngx-datatable": "^25.0.0",
     "bootstrap-icons": "^1.11.3",
     "@ngx-validate/core": "^0.2.0",
     "@dignite/ng.file-explorer": "file:../../file-storing/angular/dist/file-explorer",
