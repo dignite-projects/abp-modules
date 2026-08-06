@@ -17,7 +17,7 @@
     "@abp/ng.components": "~10.5.0",
     "@abp/ng.core": "~10.5.0",
     "@abp/ng.feature-management": "~10.5.0",
-    "@abp/ng.identity": "~10.5.0",
+    "@abp/ng.identity": "~10.6.0",
     "@abp/ng.oauth": "~10.5.0",
     "@abp/ng.setting-management": "~10.5.0",
     "@abp/ng.theme.lepton-x": "~5.5.0",
