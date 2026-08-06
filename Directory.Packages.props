@@ -98,7 +98,7 @@
   </ItemGroup>
 
   <ItemGroup Label="SourceLink">
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.300" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.301" />
   </ItemGroup>
 
   <!--
