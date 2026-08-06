@@ -43,7 +43,7 @@
     "ng-zorro-antd": "^21.3.3"
   },
   "devDependencies": {
-    "@abp/ng.schematics": "~10.5.0",
+    "@abp/ng.schematics": "~10.6.0",
     "@angular-eslint/builder": "~21.2.0",
     "@angular-eslint/eslint-plugin": "~21.2.0",
     "@angular-eslint/eslint-plugin-template": "~21.2.0",
