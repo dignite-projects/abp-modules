@@ -40,6 +40,7 @@
     "SelectDirectory": "選擇目錄",
     "Directory": "目錄",
     "SelectFile": "選擇檔案",
+    "NoFileSelected": "尚未選擇檔案",
     "ContainerNotConfigured": "尚未設定檔案容器。",
     "RowNumber": "序號",
     "DragFileNameToReorder": "拖曳檔案名稱可調整順序",

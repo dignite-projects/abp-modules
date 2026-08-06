@@ -1,6 +1,14 @@
+:host {
+    display: block;
+}
+
 .table {
     border-collapse: collapse;
     table-layout: fixed;
+}
+
+.no-file-hint {
+    clear: both;
 }
 
 .file-name-drag-handle {

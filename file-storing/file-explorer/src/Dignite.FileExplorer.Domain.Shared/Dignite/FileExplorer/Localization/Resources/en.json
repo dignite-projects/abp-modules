@@ -40,6 +40,7 @@
     "SelectDirectory": "Select directory",
     "Directory": "Directory",
     "SelectFile": "Select File",
+    "NoFileSelected": "No file selected.",
     "ContainerNotConfigured": "No file container configured.",
     "RowNumber": "#",
     "DragFileNameToReorder": "Drag the file name to reorder",

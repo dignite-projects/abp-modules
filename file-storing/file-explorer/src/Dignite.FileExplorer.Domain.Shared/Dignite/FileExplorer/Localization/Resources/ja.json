@@ -40,6 +40,7 @@
     "SelectDirectory": "ディレクトリを選択",
     "Directory": "ディレクトリ",
     "SelectFile": "ファイルを選択",
+    "NoFileSelected": "ファイルが選択されていません",
     "ContainerNotConfigured": "ファイルコンテナが設定されていません。",
     "RowNumber": "番号",
     "DragFileNameToReorder": "ファイル名をドラッグして並べ替え",

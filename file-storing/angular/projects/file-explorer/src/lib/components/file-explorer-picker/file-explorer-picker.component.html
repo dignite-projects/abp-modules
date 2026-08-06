@@ -41,6 +41,8 @@
         }
       </tbody>
     </table>
+  } @else {
+    <div class="no-file-hint text-muted small mt-2">{{ 'FileExplorer::NoFileSelected' | abpLocalization }}</div>
   }
 } @else {
   <div class="alert alert-warning py-2 px-3 mb-0">
