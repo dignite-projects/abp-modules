@@ -1,0 +1,16 @@
+{
+  "culture": "ja",
+  "texts": {
+    "FieldType:CKEditor": "CKEditor",
+    "FieldType:CKEditor:Mode": "エディターモード",
+    "FieldType:CKEditor:Mode:Basic": "基本（バルーン）",
+    "FieldType:CKEditor:Mode:Full": "フル（クラシック）",
+    "FieldType:CKEditor:ContentFormat": "コンテンツ形式",
+    "FieldType:CKEditor:ContentFormat:Html": "HTML",
+    "FieldType:CKEditor:ContentFormat:Markdown": "Markdown",
+    "FieldType:CKEditor:ImagesContainerName": "画像コンテナ名",
+    "FieldType:CKEditor:InitialContent": "初期コンテンツ",
+    "Loading": "エディターを読み込み中...",
+    "Validate:Required": "{0} フィールド必須！"
+  }
+}

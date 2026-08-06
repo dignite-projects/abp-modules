@@ -1,0 +1,55 @@
+<form [formGroup]="formEntity">
+  <div formGroupName="configuration">
+    <div class="mb-3">
+      <label class="form-label">
+        {{ 'FlexFieldsCKEditor::FieldType:CKEditor:Mode' | abpLocalization }}
+      </label>
+      <!--
+        [ngValue], NOT [value]: a plain [value] on <option> always stringifies through the DOM
+        (NgSelectOption's setter writes the native `value` property directly), so the FormControl would
+        end up holding the string "1" instead of the number 1. [ngValue] stores the real typed value in
+        an internal map and looks it up by id on change - the only binding that round-trips a number
+        correctly here. Getting this wrong doesn't just look wrong: a stringified enum value fails
+        FieldConfigurationDictionaryExtensions.GetConfiguration<TConfiguration>'s enum branch server-side
+        (its `(int)(long)value` cast doesn't accept a JSON string), and the fallback JSON deserializer
+        can't turn a bare string into an enum either - the save would fail outright.
+      -->
+      <select class="form-select" formControlName="CKEditor.Mode" (change)="onModeChange()">
+        <option [ngValue]="CKEditorMode.Full">
+          {{ 'FlexFieldsCKEditor::FieldType:CKEditor:Mode:Full' | abpLocalization }}
+        </option>
+        <option [ngValue]="CKEditorMode.Basic">
+          {{ 'FlexFieldsCKEditor::FieldType:CKEditor:Mode:Basic' | abpLocalization }}
+        </option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">
+        {{ 'FlexFieldsCKEditor::FieldType:CKEditor:ContentFormat' | abpLocalization }}
+      </label>
+      <select class="form-select" formControlName="CKEditor.ContentFormat">
+        <option [ngValue]="CKEditorContentFormat.Html">
+          {{ 'FlexFieldsCKEditor::FieldType:CKEditor:ContentFormat:Html' | abpLocalization }}
+        </option>
+        <option [ngValue]="CKEditorContentFormat.Markdown">
+          {{ 'FlexFieldsCKEditor::FieldType:CKEditor:ContentFormat:Markdown' | abpLocalization }}
+        </option>
+      </select>
+    </div>
+    @if (showImagesContainerName) {
+      <div class="mb-3">
+        <label class="form-label">
+          {{ 'FlexFieldsCKEditor::FieldType:CKEditor:ImagesContainerName' | abpLocalization }}
+        </label>
+        <input type="text" class="form-control" formControlName="CKEditor.ImagesContainerName" />
+      </div>
+    }
+    <div class="mb-3">
+      <label class="form-label">
+        {{ 'FlexFieldsCKEditor::FieldType:CKEditor:InitialContent' | abpLocalization }}
+      </label>
+      <textarea class="form-control" formControlName="CKEditor.InitialContent" rows="3"></textarea>
+    </div>
+    <button type="submit" style="display: none" #submitclick></button>
+  </div>
+</form>

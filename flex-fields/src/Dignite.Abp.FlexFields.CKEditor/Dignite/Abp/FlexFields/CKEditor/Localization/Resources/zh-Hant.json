@@ -1,0 +1,16 @@
+{
+  "culture": "zh-Hant",
+  "texts": {
+    "FieldType:CKEditor": "CKEditor",
+    "FieldType:CKEditor:Mode": "編輯器模式",
+    "FieldType:CKEditor:Mode:Basic": "基礎（氣泡）",
+    "FieldType:CKEditor:Mode:Full": "完整（經典）",
+    "FieldType:CKEditor:ContentFormat": "內容格式",
+    "FieldType:CKEditor:ContentFormat:Html": "HTML",
+    "FieldType:CKEditor:ContentFormat:Markdown": "Markdown",
+    "FieldType:CKEditor:ImagesContainerName": "圖片容器名稱",
+    "FieldType:CKEditor:InitialContent": "初始內容",
+    "Loading": "編輯器載入中...",
+    "Validate:Required": "{0} 為必填欄位！"
+  }
+}

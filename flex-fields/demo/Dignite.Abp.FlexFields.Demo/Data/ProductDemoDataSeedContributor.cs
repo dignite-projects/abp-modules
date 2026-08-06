@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Dignite.Abp.FlexFields.CKEditor;
 using Dignite.Abp.FlexFields.Date;
 using Dignite.Abp.FlexFields.Demo.Entities;
 using Dignite.Abp.FlexFields.FileExplorer;
@@ -21,9 +22,10 @@ using Volo.Abp.Guids;
 namespace Dignite.Abp.FlexFields.Demo.Data;
 
 /// <summary>
-/// Seeds seven <see cref="ProductField"/> definitions - one per built-in field type plus the
-/// FileExplorer bolt-on - and five <see cref="Product"/>s using the built-in ones, so a developer who
-/// runs this demo for the first time sees flex fields working immediately instead of an empty database.
+/// Seeds nine <see cref="ProductField"/> definitions - one per built-in field type plus the
+/// FileExplorer and CKEditor bolt-ons - and five <see cref="Product"/>s using the built-in ones, so a
+/// developer who runs this demo for the first time sees flex fields working immediately instead of an
+/// empty database.
 /// </summary>
 public class ProductDemoDataSeedContributor : IDataSeedContributor, ITransientDependency
 {
@@ -148,15 +150,56 @@ public class ProductDemoDataSeedContributor : IDataSeedContributor, ITransientDe
         // the demo also shows the "no files" path every other product renders.
         var mouseImages = await CreateSeedImageAsync();
 
+        // Not indexable (CKEditorFieldType.IndexValueType is null, same reasoning as FileExplorer's).
+        // ContentFormat = Html (the default) and an images container configured, so this field also
+        // exercises the upload-image toolbar button end to end.
+        _ = await CreateFieldAsync(
+            "content", "Content", CKEditorFieldType.ControlName,
+            new FieldConfigurationDictionary
+            {
+                [CKEditorConfigurationNames.Mode] = CKEditorMode.Full,
+                [CKEditorConfigurationNames.ContentFormat] = CKEditorContentFormat.Html,
+                [CKEditorConfigurationNames.ImagesContainerName] = "images",
+            });
+
+        // ContentFormat = Markdown, Mode = Full, with an images container configured: Full must support
+        // image upload regardless of content format, exactly like "content" above but exercising the
+        // Markdown data processor + Image/ImageUpload plugin combination specifically (GFM serializes an
+        // uploaded image as "![](url)" - see FlexFieldsCKEditorWebModule for the read-back side).
+        _ = await CreateFieldAsync(
+            "notes", "Notes (Markdown)", CKEditorFieldType.ControlName,
+            new FieldConfigurationDictionary
+            {
+                [CKEditorConfigurationNames.Mode] = CKEditorMode.Full,
+                [CKEditorConfigurationNames.ContentFormat] = CKEditorContentFormat.Markdown,
+                [CKEditorConfigurationNames.ImagesContainerName] = "images",
+            });
+
+        // GFM-specific syntax on purpose (strikethrough, a pipe table): a plain CommonMark converter
+        // would render these two constructs as literal source text instead of <del>/<table> markup, so
+        // this is a direct check that the server's Markdig pipeline actually has .UseAdvancedExtensions()
+        // wired up (see FlexFieldsCKEditorWebModule) and that the client's `marked` call has GFM on
+        // (its default).
+        const string mouseNotesMarkdown =
+            "## Care Instructions\n\n" +
+            "Hand wash only. **Do not** tumble dry.\n\n" +
+            "- Keep away from direct sunlight\n" +
+            "- Store in a dry place\n\n" +
+            "~~Battery lasts 3 months~~ Battery lasts 6 months.\n\n" +
+            "| Step | Action |\n| --- | --- |\n| 1 | Unbox |\n| 2 | Pair via Bluetooth |";
+
         var products = new[]
         {
             CreateProduct("Wireless Mouse", ("description", "A comfortable wireless mouse."), ("price", 29.90m),
                 ("releaseDate", new DateTime(2025, 3, 1)), ("color", new List<string> { "black", "white" }),
                 ("inStock", true), ("category", new List<string> { "electronics-computers" }),
-                ("images", mouseImages)),
+                ("images", mouseImages),
+                ("content", "<h2>Product Highlights</h2><p><strong>2.4GHz wireless</strong> with up to 6 months of battery life.</p><ul><li>Ergonomic shape</li><li>Silent click buttons</li></ul>"),
+                ("notes", mouseNotesMarkdown)),
             CreateProduct("Mechanical Keyboard", ("description", "Tactile switches, RGB backlight."), ("price", 89.00m),
                 ("releaseDate", new DateTime(2025, 5, 12)), ("color", new List<string> { "black" }),
-                ("inStock", true), ("category", new List<string> { "electronics-computers" })),
+                ("inStock", true), ("category", new List<string> { "electronics-computers" }),
+                ("content", "<h2>Product Highlights</h2><p>Hot-swappable <strong>mechanical switches</strong> with per-key RGB.</p>")),
             CreateProduct("Smartphone X", ("description", "Flagship smartphone, 128GB."), ("price", 699.00m),
                 ("releaseDate", new DateTime(2025, 9, 20)), ("color", new List<string> { "black", "blue" }),
                 ("inStock", false), ("category", new List<string> { "electronics-phones" })),

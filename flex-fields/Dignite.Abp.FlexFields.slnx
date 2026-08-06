@@ -5,6 +5,8 @@
 
     <Folder Name="/src/">
         <Project Path="src/Dignite.Abp.FlexFields.Abstractions/Dignite.Abp.FlexFields.Abstractions.csproj" />
+        <Project Path="src/Dignite.Abp.FlexFields.CKEditor/Dignite.Abp.FlexFields.CKEditor.csproj" />
+        <Project Path="src/Dignite.Abp.FlexFields.CKEditor.Web/Dignite.Abp.FlexFields.CKEditor.Web.csproj" />
         <Project Path="src/Dignite.Abp.FlexFields.Domain.Shared/Dignite.Abp.FlexFields.Domain.Shared.csproj" />
         <Project Path="src/Dignite.Abp.FlexFields.Domain/Dignite.Abp.FlexFields.Domain.csproj" />
         <Project Path="src/Dignite.Abp.FlexFields.EntityFrameworkCore/Dignite.Abp.FlexFields.EntityFrameworkCore.csproj" />

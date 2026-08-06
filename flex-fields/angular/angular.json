@@ -285,6 +285,45 @@
           }
         }
       }
+    },
+    "flex-fields-ckeditor": {
+      "projectType": "library",
+      "root": "projects/flex-fields-ckeditor",
+      "sourceRoot": "projects/flex-fields-ckeditor/src",
+      "prefix": "ff",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "options": {
+            "project": "projects/flex-fields-ckeditor/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/flex-fields-ckeditor/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/flex-fields-ckeditor/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/flex-fields-ckeditor/tsconfig.spec.json",
+            "runner": "vitest"
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "projects/flex-fields-ckeditor/**/*.ts",
+              "projects/flex-fields-ckeditor/**/*.html"
+            ]
+          }
+        }
+      }
     }
   }
 }

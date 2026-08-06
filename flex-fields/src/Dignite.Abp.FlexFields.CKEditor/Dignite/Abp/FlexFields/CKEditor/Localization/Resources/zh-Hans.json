@@ -1,0 +1,16 @@
+{
+  "culture": "zh-Hans",
+  "texts": {
+    "FieldType:CKEditor": "CKEditor",
+    "FieldType:CKEditor:Mode": "编辑器模式",
+    "FieldType:CKEditor:Mode:Basic": "基础（气泡）",
+    "FieldType:CKEditor:Mode:Full": "完整（经典）",
+    "FieldType:CKEditor:ContentFormat": "内容格式",
+    "FieldType:CKEditor:ContentFormat:Html": "HTML",
+    "FieldType:CKEditor:ContentFormat:Markdown": "Markdown",
+    "FieldType:CKEditor:ImagesContainerName": "图片容器名称",
+    "FieldType:CKEditor:InitialContent": "初始内容",
+    "Loading": "编辑器加载中...",
+    "Validate:Required": "{0} 字段要求必填！"
+  }
+}

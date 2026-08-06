@@ -1,0 +1,20 @@
+/* CKEditor 5's own UI framework CSS. Without this, the toolbar/editable DOM CKEditor builds at
+   runtime is completely unstyled and typically renders as blank/collapsed space - no console error,
+   since nothing is actually broken, it just has no visual layout. Component-scoped rather than
+   pushed onto every consumer's global styles.css, which is easy to forget (this is a fix for exactly
+   that oversight) - see the ViewEncapsulation.None on this component's @Component decorator, required
+   because CKEditor attaches balloons/dropdowns outside this component's own template subtree, where
+   Angular's default per-component style scoping would not reach them. */
+@import 'ckeditor5/ckeditor5.css';
+
+/* CKEditor 5's balloon/dropdown panels (InlineEditor's floating toolbar, link/table pickers, etc.)
+   attach to a wrapper appended directly under <body> (see the import's own comment) and default to
+   z-index 1000 (--ck-z-default: 1, --ck-z-panel: default + 999). ng-bootstrap's modal window sits at
+   1055 - higher - so any of those panels opened while a CKEditor is inside an <abp-modal> or similar
+   ng-bootstrap dialog render fully in-DOM and CSS-"visible", but painted underneath the modal, i.e.
+   invisible to the user despite every element reporting visible/opacity:1. Raising the base above any
+   Bootstrap-derived dialog z-index (Bootstrap's own scale tops out at 1080) fixes every derived panel
+   at once; harmless when no modal is present since there is nothing competing for the stacking order. */
+:root {
+  --ck-z-default: 1100;
+}

@@ -102,6 +102,20 @@
   </ItemGroup>
 
   <!--
+    CKEditor bolt-on (Dignite.Abp.FlexFields.CKEditor.Web only): Markdig converts a Markdown-format
+    field value to HTML server-side before rendering (see FlexFieldsCKEditorWebModule, which builds the
+    pipeline with .UseAdvancedExtensions() for GFM support - CKEditor 5's Markdown plugin emits GitHub
+    Flavored Markdown, not bare CommonMark). HtmlSanitizer (Ganss.Xss) sanitizes the resulting HTML - and
+    the HTML-format path's raw value too - before @Html.Raw renders it; this is the first field type in
+    the repo that renders stored markup as markup rather than escaped text, so sanitizing server-side
+    output is new here, not an existing pattern being extended.
+  -->
+  <ItemGroup Label="CKEditor bolt-on: Markdown/HTML conversion and sanitization (Dignite.Abp.FlexFields.CKEditor.Web only)">
+    <PackageVersion Include="Markdig" Version="1.3.2" />
+    <PackageVersion Include="HtmlSanitizer" Version="9.1.982" />
+  </ItemGroup>
+
+  <!--
     Build-time-only tooling (all PrivateAssets="all" at the reference site, so none of it flows to
     consumers of the packages):
       - coverlet.collector    : code-coverage collector, added to test projects only

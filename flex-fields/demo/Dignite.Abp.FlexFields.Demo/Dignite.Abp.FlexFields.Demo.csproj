@@ -5,6 +5,7 @@
     <ProjectReference Include="..\..\src\Dignite.Abp.FlexFields.FileExplorer\Dignite.Abp.FlexFields.FileExplorer.csproj" />
     <ProjectReference Include="..\..\src\Dignite.Abp.FlexFields.Web\Dignite.Abp.FlexFields.Web.csproj" />
     <ProjectReference Include="..\..\src\Dignite.Abp.FlexFields.FileExplorer.Web\Dignite.Abp.FlexFields.FileExplorer.Web.csproj" />
+    <ProjectReference Include="..\..\src\Dignite.Abp.FlexFields.CKEditor.Web\Dignite.Abp.FlexFields.CKEditor.Web.csproj" />
     <!--
       Local-only, never-packed demo host. flex-fields and file-storing are otherwise independently
       installable modules that never reference each other (see the repo root CLAUDE.md) - this

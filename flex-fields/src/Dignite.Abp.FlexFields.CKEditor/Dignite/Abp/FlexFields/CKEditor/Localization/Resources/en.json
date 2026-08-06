@@ -1,0 +1,16 @@
+{
+  "culture": "en",
+  "texts": {
+    "FieldType:CKEditor": "CKEditor",
+    "FieldType:CKEditor:Mode": "Editor Mode",
+    "FieldType:CKEditor:Mode:Basic": "Basic (Balloon)",
+    "FieldType:CKEditor:Mode:Full": "Full (Classic)",
+    "FieldType:CKEditor:ContentFormat": "Content Format",
+    "FieldType:CKEditor:ContentFormat:Html": "HTML",
+    "FieldType:CKEditor:ContentFormat:Markdown": "Markdown",
+    "FieldType:CKEditor:ImagesContainerName": "Images Container Name",
+    "FieldType:CKEditor:InitialContent": "Initial Content",
+    "Loading": "Loading editor...",
+    "Validate:Required": "{0} Field Required!"
+  }
+}

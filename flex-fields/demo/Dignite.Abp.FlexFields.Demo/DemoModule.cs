@@ -7,6 +7,7 @@ using Dignite.Abp.FlexFields.Demo.Data;
 using Dignite.Abp.FlexFields.Demo.Entities;
 using Dignite.Abp.FlexFields.Demo.Services.FlexFields;
 using Dignite.Abp.FlexFields.EntityFrameworkCore;
+using Dignite.Abp.FlexFields.CKEditor.Web;
 using Dignite.Abp.FlexFields.FileExplorer.Web;
 using Dignite.Abp.FlexFields.Web;
 using Dignite.Abp.FlexFields.Demo.Localization;
@@ -135,7 +136,11 @@ namespace Dignite.Abp.FlexFields.Demo;
     // comment) plus its SSR view - one module dependency for both, per its own doc comment. It's this
     // demo's separate FileExplorer *module* reference (above, FileExplorerApplicationModule etc.) that
     // supplies the backend the Angular picker actually talks to.
-    typeof(FlexFieldsFileExplorerWebModule)
+    typeof(FlexFieldsFileExplorerWebModule),
+
+    // CKEditor field type bolt-on plus its SSR view (Markdig + HtmlSanitizer flow through
+    // transitively) - one module dependency for both, same pattern as FlexFieldsFileExplorerWebModule.
+    typeof(FlexFieldsCKEditorWebModule)
 )]
 public class DemoModule : AbpModule
 {
@@ -264,7 +269,19 @@ public class DemoModule : AbpModule
                     config.CreateFilePermissionName = FileExplorerPermissions.Files.Management;
                     config.UpdateFilePermissionName = FileExplorerPermissions.Files.Management;
                     config.DeleteFilePermissionName = FileExplorerPermissions.Files.Management;
-                    config.GetFilePermissionName = FileExplorerPermissions.Files.Management;
+                    // GetFilePermissionName deliberately left unset: FileDescriptorAuthorizationHandler
+                    // treats an unset Get permission as "public read" (see its own comment - "When
+                    // permissions are not set, all users will be authorized to get files"). Uploads/
+                    // edits/deletes still require FileExplorerPermissions.Files.Management above; this
+                    // only opens reads. Required for CKEditor's inline images specifically: CKEditor
+                    // embeds the plain absolute file URL as <img src>, both while live-editing and in the
+                    // read-only view/SSR renderers - there is no way to attach an Authorization header to
+                    // a bare <img> tag, and gating this container's reads left the images unloadable
+                    // (blank/broken) from the Angular dev server's origin, where the auth cookie's
+                    // SameSite policy does not carry across the http:4200/https:44330 scheme mismatch.
+                    // The FileExplorer field's own picker preview sidesteps this by fetching the bytes
+                    // through the authenticated HttpClient and rendering a blob: URL instead - not an
+                    // option for arbitrary HTML CKEditor renders.
                 });
             });
         });

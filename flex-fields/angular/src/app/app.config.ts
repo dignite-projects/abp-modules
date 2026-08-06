@@ -11,6 +11,7 @@ import { provideSideMenuLayout } from '@abp/ng.theme.lepton-x/layouts';
 import { provideLogo, withEnvironmentOptions } from "@abp/ng.theme.shared";
 import { provideFlexFields } from '@dignite/ng.flex-fields';
 import { provideFileExplorerFieldType } from '@dignite/ng.flex-fields-file-explorer';
+import { provideCKEditorFieldType } from '@dignite/ng.flex-fields-ckeditor';
 import { ApplicationConfig } from '@angular/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
@@ -48,5 +49,9 @@ export const appConfig: ApplicationConfig = {
     // browse/upload files, which needs a running FileExplorer backend - see this demo's README
     // for the current state of that wiring.
     provideFileExplorerFieldType(),
+    // Bolt-on: rich text edited with CKEditor 5, HTML or per-field Markdown. Image upload (when a
+    // field configures CKEditor.ImagesContainerName) posts straight to Dignite.FileExplorer's REST
+    // API via RestService - no @dignite/ng.file-explorer dependency needed for that alone.
+    provideCKEditorFieldType(),
   ]
 };

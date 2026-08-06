@@ -1,0 +1,30 @@
+@using Dignite.Abp.FlexFields.CKEditor
+@using Dignite.Abp.FlexFields.CKEditor.Web
+@model Dignite.Abp.FlexFields.Web.FlexFieldViewModel
+@inject Ganss.Xss.HtmlSanitizer Sanitizer
+@inject Markdig.MarkdownPipeline MarkdownPipeline
+@{
+    var configuration = new CKEditorConfiguration(Model.Field.Configuration);
+    var raw = CKEditorValueReader.ReadString(Model.Field.Value);
+    var html = string.IsNullOrEmpty(raw)
+        ? null
+        : configuration.ContentFormat == CKEditorContentFormat.Markdown
+            ? Markdig.Markdown.ToHtml(raw, MarkdownPipeline)
+            : raw;
+    var safeHtml = html == null ? null : Sanitizer.Sanitize(html);
+}
+@if (Model.ShowInList)
+{
+    @* Bare and sanitized, matching FileExplorer.cshtml's ShowInList branch pattern - a rich-text
+       field's list cell reasonably shows real formatting rather than escaping it to plain text. *@
+    @Html.Raw(safeHtml)
+}
+else
+{
+    <div class="flex-field flex-field-view flex-field-view-ckeditor" data-field-type="@Model.Field.FieldTypeName" data-field-name="@Model.Field.Name">
+        <span class="flex-field-label">@Model.Field.DisplayName</span>
+        <div class="flex-field-value flex-field-value-ckeditor">
+            @Html.Raw(safeHtml)
+        </div>
+    </div>
+}

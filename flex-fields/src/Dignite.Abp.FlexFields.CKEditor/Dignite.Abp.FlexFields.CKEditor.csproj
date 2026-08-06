@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+    <Description>CKEditor field type for Dignite.Abp.FlexFields - lets a flex field be edited with CKEditor 5 (https://ckeditor.com), persisted as HTML or, per field via ContentFormat, GitHub Flavored Markdown. A bolt-on, not a built-in: referencing this package pulls in only Dignite.Abp.FlexFields.Abstractions - the Angular half (@dignite/ng.flex-fields-ckeditor) is what actually loads the CKEditor 5 UI, so a host wires both together, but neither module references the other.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.Abp.FlexFields.Abstractions\Dignite.Abp.FlexFields.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Dignite\Abp\FlexFields\CKEditor\Localization\Resources\*.json" />
+    <Content Remove="Dignite\Abp\FlexFields\CKEditor\Localization\Resources\*.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" />
+  </ItemGroup>
+
+</Project>
