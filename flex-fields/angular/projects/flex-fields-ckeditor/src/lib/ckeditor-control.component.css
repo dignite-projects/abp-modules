@@ -18,3 +18,20 @@
 :root {
   --ck-z-default: 1100;
 }
+
+/* CKEditor 5's own theme gives every Balloon/Inline-style editable area
+   (.ck-editor__editable_inline - the class Basic mode's BalloonEditor uses) a fully transparent
+   border and no background by default ("border: 1px solid #0000" in ckeditor5's own CSS) - deliberate,
+   so it blends into the surrounding page until clicked. That also means an empty Basic-mode field is
+   completely invisible as a form control before it's focused: no border, no background, nothing to
+   distinguish it from blank space, exactly the "InlineEditor looked broken/unfinished" problem
+   resolveEditorClass's own doc describes - Balloon doesn't dodge it as fully as that doc assumed.
+   Classic mode never has this problem: ckeditor5's own ".ck-editor__main > .ck-editor__editable" rule
+   sets a real border/background unconditionally, focused or not. Reusing those same custom properties
+   here (rather than hardcoding colors) keeps Basic and Full visually consistent and both track
+   whatever theme is active. Unscoped like the z-index override above, for the same reason
+   (ViewEncapsulation.None - this file is already global by design). */
+.ck.ck-editor__editable_inline {
+  background: var(--ck-color-base-background);
+  border-color: var(--ck-color-base-border);
+}
