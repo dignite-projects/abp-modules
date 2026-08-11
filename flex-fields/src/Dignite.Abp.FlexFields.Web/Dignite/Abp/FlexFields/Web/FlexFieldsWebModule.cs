@@ -1,5 +1,5 @@
-using Dignite.Abp.AspNetCore.Mvc.Razor;
 using Microsoft.Extensions.DependencyInjection;
+using Volo.Abp.AspNetCore.Mvc.UI;
 using Volo.Abp.Modularity;
 
 namespace Dignite.Abp.FlexFields.Web;
@@ -21,7 +21,12 @@ namespace Dignite.Abp.FlexFields.Web;
 /// </summary>
 [DependsOn(
     typeof(FlexFieldsAbstractionsModule),
-    typeof(AbpAspNetCoreMvcRazorModule)
+    // Needed for RazorPartialRenderer's IRazorViewEngine/ITempDataProvider - AbpAspNetCoreMvcModule
+    // (this module's own dependency) is what actually calls AddMvc(). A real host ends up with these
+    // anyway via its own AddControllersWithViews()/AddMvc()/AddRazorPages() call, but an
+    // AbpIntegratedTest host never does, so this module has to bring them in itself rather than assume
+    // a consumer will.
+    typeof(AbpAspNetCoreMvcUiModule)
     )]
 public class FlexFieldsWebModule : AbpModule
 {

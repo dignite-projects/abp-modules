@@ -3,7 +3,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Dignite.Abp.AspNetCore.Mvc.Razor;
+namespace Dignite.Abp.FlexFields.Web;
 
 public static class AbpMvcBuilderCompiledRazorExtensions
 {

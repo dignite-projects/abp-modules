@@ -16,11 +16,10 @@ before changing any contract; it records what was rejected and why.
 - **`src/`** — `Abstractions`, `Domain.Shared`, `Domain`, `EntityFrameworkCore`, `MongoDB`, `Web`,
   `Installer`. No `.Application` / `.HttpApi`: the kernel has no app service, so there is nothing to
   expose.
-  - `.Web` is the one exception to "the three module trees never reference each other and flex-fields
-    never reaches outside itself": it depends on `Dignite.Abp.AspNetCore.Mvc.Razor`, a separate
-    top-level tree (`aspnetcore-mvc-razor/`) of domain-agnostic ASP.NET Core MVC/Razor infrastructure,
-    not owned by any of the three modules — not a violation of that invariant, since it isn't one of
-    "the three."
+  - `.Web` owns its own generic ASP.NET Core MVC/Razor plumbing directly —
+    `IRazorPartialRenderer`/`RazorPartialRenderer` and `AddCompiledRazorAssemblyPartIfNotExists` used
+    to live in a separate shared top-level tree (`aspnetcore-mvc-razor/`), but that tree had exactly
+    one consumer and was dissolved; the files now sit in `Dignite.Abp.FlexFields.Web` itself.
 - **`demo/`** — single-project ABP host (`app-nolayers`, SQLite), in `Dignite.Abp.FlexFields.slnx`
   (this module's own focused solution, covering `src/` + `test/` + `demo/`) and in the aggregate
   `Dignite.Abp.Modules.slnx`, never packed: `dotnet run --project demo/Dignite.Abp.FlexFields.Demo`
@@ -38,7 +37,7 @@ before changing any contract; it records what was rejected and why.
 | `FlexFields.Domain` | `IFlexField` (Entity contract), `IFlexFieldProvider<T>` and the other seams, provider-neutral `FlexFieldValidator`/`FlexFieldValueMigrator` | Abstractions, Domain.Shared, ABP DDD |
 | `FlexFields.EntityFrameworkCore` | `FlexFieldIndexValue` (relational-only), index/repository base classes, model-creating extensions | Domain |
 | `FlexFields.MongoDB` | Embedded values, native path indexes — deliberately **no** pivot-table type | Domain |
-| `FlexFields.Web` | `<flex-field-view>`/`<flex-field-search>` TagHelpers + default `.cshtml` per built-in type — SSR counterpart to the Angular library's `<ff-flex-field-view>`/`<ff-flex-field-search>`. No config/control TagHelpers | Abstractions, `Dignite.Abp.AspNetCore.Mvc.Razor` |
+| `FlexFields.Web` | `<flex-field-view>`/`<flex-field-search>` TagHelpers + default `.cshtml` per built-in type — SSR counterpart to the Angular library's `<ff-flex-field-view>`/`<ff-flex-field-search>`. No config/control TagHelpers | Abstractions |
 | `FlexFields.Installer` | ABP Studio/Suite install entry point, embeds the module's `.abpmdl` | `Volo.Abp.VirtualFileSystem` |
 
 Bolt-on field types (optional, not part of the six above): `FlexFields.FileExplorer` (the field type
@@ -110,7 +109,7 @@ mapping lives entirely outside the kernel, the server-side mirror of how `FieldT
 - A referenced assembly's precompiled views are **not** reliably discovered through ABP's own
   `AddApplicationPartIfNotExists`/automatic module registration (both add a bare `AssemblyPart`, which
   `IViewsFeatureProvider` never surfaces views from) — every `.Web`-suffixed project's module registers
-  itself through `Dignite.Abp.AspNetCore.Mvc.Razor`'s `AddCompiledRazorAssemblyPartIfNotExists`
+  itself through `Dignite.Abp.FlexFields.Web`'s own `AddCompiledRazorAssemblyPartIfNotExists`
   (the real `ApplicationPartFactory`) instead. Found by actually running the render pipeline in a test,
   not by compiling it; see `Dignite.Abp.FlexFields.Web.Tests`.
 - The "downstream overrides one built-in type, or adds a custom type, at the same conventional path"

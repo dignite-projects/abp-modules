@@ -1,8 +1,7 @@
 # Dignite ABP Modules — monorepo guide
 
 Three independently installable **ABP Framework** module trees, developed together and released in
-lockstep, plus one shared, domain-agnostic infrastructure tree (`aspnetcore-mvc-razor/`) that any of
-them — or a downstream host — may depend on.
+lockstep.
 
 ## Repository-wide invariants
 
@@ -16,13 +15,14 @@ These are the things most likely to be broken by an otherwise reasonable-looking
    `flex-fields/` share this repository for development and release only. A `ProjectReference`
    across those boundaries is a bug — nothing catches it: the aggregate `.slnx` contains all three,
    so it compiles fine.
-   - This is about the three *domain* modules specifically, not about the repository's top-level
-     trees in general. `aspnetcore-mvc-razor/` is deliberately not a fourth one of "the three": it
-     carries no domain model of its own (generic ASP.NET Core MVC/Razor plumbing — see its own
-     README), and a module referencing it (`flex-fields/src/Dignite.Abp.FlexFields.Web` does) is not
-     a cross-module reference in the sense this invariant guards against. If a second module ever
-     needs the same infrastructure, it should depend on this tree too rather than duplicating it or
-     reaching into a sibling module.
+   - There used to be a fourth, shared top-level tree (`aspnetcore-mvc-razor/`) for generic ASP.NET
+     Core MVC/Razor infrastructure with no domain model of its own. It was dissolved once it turned
+     out to have exactly one consumer per file: each piece now lives directly in the one project
+     that actually uses it (e.g. `Dignite.Abp.FlexFields.Web` owns its own
+     `IRazorPartialRenderer`/`RazorPartialRenderer`/`AddCompiledRazorAssemblyPartIfNotExists`) rather
+     than a shared tree with a single dependent. There is no longer a home in this repo for
+     cross-module ASP.NET Core/Razor infrastructure — if a genuine second consumer shows up, judge
+     fresh whether a shared tree is actually worth it rather than reflexively recreating one.
 
 3. **Library package versions live in the root `Directory.Packages.props`**, never inline in a
    library `.csproj`. The demo hosts (`file-storing/host/`, `notifications/host/`,

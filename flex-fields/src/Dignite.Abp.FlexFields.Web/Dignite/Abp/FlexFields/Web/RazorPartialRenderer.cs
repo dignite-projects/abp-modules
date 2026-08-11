@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Routing;
 using Volo.Abp.DependencyInjection;
 
-namespace Dignite.Abp.AspNetCore.Mvc.Razor;
+namespace Dignite.Abp.FlexFields.Web;
 
 public class RazorPartialRenderer : IRazorPartialRenderer, ITransientDependency
 {

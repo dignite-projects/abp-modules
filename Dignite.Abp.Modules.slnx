@@ -1,9 +1,4 @@
 <Solution>
-  <Folder Name="/aspnetcore-mvc-razor/" />
-  <Folder Name="/aspnetcore-mvc-razor/src/">
-    <Project Path="aspnetcore-mvc-razor/src/Dignite.Abp.AspNetCore.Mvc.Razor/Dignite.Abp.AspNetCore.Mvc.Razor.csproj" />
-  </Folder>
-
   <Folder Name="/file-storing/" />
   <Folder Name="/file-storing/core/" />
   <Folder Name="/file-storing/core/src/">

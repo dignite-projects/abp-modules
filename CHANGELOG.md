@@ -51,13 +51,6 @@ so it stays clear which part of the repository actually moved.
   denormalized at pick time. No IO, no reference to `Dignite.FileExplorer`, and no search partial
   (`FileExplorerFieldType.IndexValueType` is `null`). Depending on it alone pulls in both the field
   type and `Dignite.Abp.FlexFields.Web`.
-- **New top-level tree `aspnetcore-mvc-razor/`, package `Dignite.Abp.AspNetCore.Mvc.Razor`.**
-  Domain-agnostic ASP.NET Core MVC/Razor infrastructure — `IRazorPartialRenderer` (render a partial
-  view + model to an HTML string outside a controller action) and `TenantViewLocationExpander`
-  (resolve Razor views per tenant, then per theme, before falling back to the host's default) — that
-  `Dignite.Abp.FlexFields.Web` depends on and any of the three modules (or a downstream host) may too.
-  Not a fourth module: it carries no domain model, so depending on it is not the cross-module reference
-  the "three modules never reference each other" invariant guards against.
 
 ### Changed
 

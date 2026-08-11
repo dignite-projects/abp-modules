@@ -1,4 +1,3 @@
-using Dignite.Abp.AspNetCore.Mvc.Razor;
 using Dignite.Abp.FlexFields.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.Modularity;

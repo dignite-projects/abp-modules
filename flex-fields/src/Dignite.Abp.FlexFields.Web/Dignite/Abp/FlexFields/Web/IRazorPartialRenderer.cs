@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace Dignite.Abp.AspNetCore.Mvc.Razor;
+namespace Dignite.Abp.FlexFields.Web;
 
 /// <summary>
 /// Renders a partial view to an HTML string from outside a controller action - e.g. from a
