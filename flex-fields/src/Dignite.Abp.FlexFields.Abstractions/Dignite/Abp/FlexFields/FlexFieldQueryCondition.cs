@@ -46,6 +46,27 @@ public class FlexFieldQueryCondition
 
     public FlexFieldValueType ValueType { get; set; }
 
+    /// <summary>
+    /// For deserializers and model binders, which construct an empty instance and then set properties.
+    /// <para>
+    /// Without it, a condition cannot cross the wire on any transport that binds property-by-property.
+    /// ASP.NET Core's <c>ComplexObjectModelBinder</c> fails outright - "Model bound complex types must
+    /// ... have a parameterless constructor" - so an input carrying a
+    /// <c>List&lt;FlexFieldQueryCondition&gt;</c> bound <c>[FromQuery]</c> answers 500 rather than
+    /// filtering, however well-formed the request is. That is exactly the shape a downstream's
+    /// "list contents, filtered by field value" GET endpoint takes.
+    /// </para>
+    /// <para>
+    /// The five-argument constructor stays the one to call in code: it is what makes both
+    /// <see cref="FieldId"/> and <see cref="FieldName"/> unmissable, per this type's remarks.
+    /// </para>
+    /// </summary>
+    public FlexFieldQueryCondition()
+    {
+        FieldName = string.Empty;
+        Value = string.Empty;
+    }
+
     public FlexFieldQueryCondition(
         Guid fieldId,
         string fieldName,
