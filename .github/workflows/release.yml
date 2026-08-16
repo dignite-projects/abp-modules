@@ -1,10 +1,15 @@
-# Release workflow. The NuGet version in Directory.Build.props and the npm versions in all four
-# Angular library package.json files are kept in lockstep; a pushed v* tag must match all five,
+# Release workflow. The NuGet version in Directory.Build.props and the npm versions in all five
+# Angular library package.json files are kept in lockstep; a pushed v* tag must match all six,
 # but tags do not drive the number.
 #
 # Tagged releases are public: NuGet packages go to NuGet.org through Trusted Publishing (GitHub
-# OIDC -> short-lived API key), and all four Angular packages go to npm (`next` for a pre-release,
-# `latest` for a stable release). Pre-release NuGet packages are also mirrored to GitHub Packages.
+# OIDC -> short-lived API key), and four of the five Angular packages go to npm (`next` for a
+# pre-release, `latest` for a stable release) - flex-fields-ckeditor is built and packed like the
+# others but has no npmjs publish step yet, only the GitHub Packages prerelease mirror below.
+# Pre-release NuGet packages are also mirrored to GitHub Packages under the same @dignite/*
+# names; pre-release Angular packages are mirrored too, but GitHub Packages' npm registry requires
+# the scope to equal the owning org, so those publish under @dignite-projects/* instead of the
+# public @dignite/* names used on npmjs.
 # workflow_dispatch remains a private preview build: it packs and smoke-tests everything, then
 # pushes a pre-release to GitHub Packages only.
 #
@@ -255,6 +260,10 @@ jobs:
         working-directory: flex-fields/angular
         run: yarn build:lib:file-explorer
 
+      - name: Build flex-fields-ckeditor Angular library
+        working-directory: flex-fields/angular
+        run: yarn build:lib:ckeditor
+
       - name: Build flex-fields Angular demo
         working-directory: flex-fields/angular
         run: yarn build:prod
@@ -292,6 +301,17 @@ jobs:
             throw "Expected one flex-fields-file-explorer Angular package tarball, found $($tarballs.Count)."
           }
           node ./flex-fields/.github/scripts/smoke-test-file-explorer-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
+
+      # No smoke-test-*.mjs script exists yet for this one (the existing scripts hardcode the
+      # @dignite/ng.flex-fields / file-explorer dependency shape) - packed and published like its
+      # siblings, just not install-tested in CI yet.
+      - name: Pack flex-fields-ckeditor Angular library
+        shell: pwsh
+        working-directory: flex-fields/angular
+        run: |
+          New-Item -ItemType Directory -Force ../../artifacts/npm/flex-fields-ckeditor | Out-Null
+          npm pack ./dist/flex-fields-ckeditor --pack-destination ../../artifacts/npm/flex-fields-ckeditor
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       # --- file-storing HTTP E2E smoke test (file-explorer's demo host only; notifications has no
       #     equivalent host-level E2E script) ---
@@ -345,6 +365,25 @@ jobs:
               --api-key "${{ secrets.GITHUB_TOKEN }}" \
               --source https://nuget.pkg.github.com/dignite-projects/index.json \
               --skip-duplicate
+          done
+
+      # npm equivalent of the GH Packages NuGet mirror above. GitHub Packages' npm registry
+      # rejects any scope that doesn't match the owning org login, so @dignite/ng.flex-fields (etc.)
+      # can't be pushed there under its real name - only npmjs (tagged releases, below) can carry
+      # the public @dignite/* scope. Each tarball's package.json name is rewritten to
+      # @dignite-projects/* in a scratch copy just for this push; the packed artifact uploaded
+      # above and the eventual npmjs release keep the real @dignite/* name untouched.
+      - name: Publish pre-release Angular packages to GitHub Packages
+        if: steps.channel.outputs.channel == 'prerelease'
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+          for dir in file-storing flex-fields flex-fields-ckeditor flex-fields-file-explorer; do
+            tarball=$(ls ./artifacts/npm/"$dir"/*.tgz)
+            workdir=$(mktemp -d)
+            tar -xzf "$tarball" -C "$workdir"
+            name=$(node -p "require('$workdir/package/package.json').name")
+            npm pkg set name="@dignite-projects/${name#@dignite/}" --prefix "$workdir/package"
+            npm publish "$workdir/package" --registry https://npm.pkg.github.com
           done
 
       - name: Validate NuGet Trusted Publishing identity

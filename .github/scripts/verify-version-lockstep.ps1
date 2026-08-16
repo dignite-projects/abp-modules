@@ -17,7 +17,8 @@ $angularPackages = @(
     'file-storing\angular\projects\file-explorer\package.json',
     'notifications\angular\projects\notification-center\package.json',
     'flex-fields\angular\projects\flex-fields\package.json',
-    'flex-fields\angular\projects\flex-fields-file-explorer\package.json'
+    'flex-fields\angular\projects\flex-fields-file-explorer\package.json',
+    'flex-fields\angular\projects\flex-fields-ckeditor\package.json'
 )
 
 foreach ($relativePath in $angularPackages) {
