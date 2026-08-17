@@ -143,30 +143,47 @@ which fails the build if `<Version>` and **any** Angular package version drift a
 
 ### Cutting a release
 
+**The workspace `<Version>` always equals the currently-published version — never a "next dev
+version" opened in advance.** Bump it only when you are about to cut the release it names, in the
+same commit as that release; do not follow a release with a separate bump commit the way many repos
+do. This matters more here than in most repos: `site` (and any other repository that reaches this
+one through a cross-repository `ProjectReference` rather than a published `PackageReference` — see
+e.g. `Dignite.Site.slnx`'s `../../../abp-modules/...` paths) has `dotnet pack` turn that
+`ProjectReference` into a `PackageReference` pinned to whatever `<Version>` sits in this workspace at
+pack time, regardless of whether that version was ever actually published. A version bumped "for
+next time" and left sitting in the workspace between releases is invisible until some downstream
+pack picks it up as a dependency floor that doesn't exist on any feed. This already happened:
+`10.0.0-rc.6` was opened here immediately after cutting `rc.5`, and `site`'s very next release build
+pinned to `>= 10.0.0-rc.6` through its `ProjectReference`, before `rc.6` had ever been published —
+breaking `site`'s restore.
+
 1. Move the CHANGELOG `[Unreleased]` section to `## [x.y.z] - YYYY-MM-DD`, keeping entries grouped
    by module so readers can tell which half of the repo changed.
-2. Confirm `<Version>` in `Directory.Build.props` and `version` in **all three** Angular
-   `package.json` files match the intended release (tags do not drive the version — the release
-   workflow reads and compares all three).
+2. In that same commit, bump `<Version>` in `Directory.Build.props` and `version` in every Angular
+   `package.json` tracked by
+   [`verify-version-lockstep.ps1`](./.github/scripts/verify-version-lockstep.ps1) (currently five
+   packages) to `x.y.z`. This is the only time these values move; they then stay on `x.y.z` until
+   the commit that cuts the *next* release.
 3. Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`. The release workflow
    (`.github/workflows/release.yml`) triggers on `v*` tags; `workflow_dispatch` only builds and
    packs artifacts and does not create a GitHub Release.
-4. **Immediately open the next development version**: bump `<Version>` and all three Angular package
-   versions to the next pre-release in a standalone `chore(release): bump version to X` commit.
-   Because the release version is read from `Directory.Build.props` (not the tag), leaving it on the
-   just-released value means the next `workflow_dispatch` build would re-emit artifacts that collide
-   with the already-published packages.
-5. Tagged releases publish the NuGet packages to NuGet.org and **all three** Angular libraries to npm.
-   Pre-release npm versions use the `next` dist-tag; stable versions use `latest`.
-   `workflow_dispatch` remains a private preview build and does not publish to either public
-   registry. npm requires every package to have a `latest` tag, so when a package's first-ever
-   public version is a pre-release it temporarily owns both `next` and `latest`; the first stable
-   release moves `latest` to the stable version.
-6. NuGet.org publishing uses Trusted Publishing rather than a stored API key. The NuGet.org policy
+4. Tagged releases publish the NuGet packages to NuGet.org and four of the five Angular libraries to
+   npm (`flex-fields-ckeditor` has no npmjs publish step yet — see `release.yml`). Pre-release npm
+   versions use the `next` dist-tag; stable versions use `latest`. `workflow_dispatch` remains a
+   private preview build and does not publish to either public registry. npm requires every package
+   to have a `latest` tag, so when a package's first-ever public version is a pre-release it
+   temporarily owns both `next` and `latest`; the first stable release moves `latest` to the stable
+   version.
+5. NuGet.org publishing uses Trusted Publishing rather than a stored API key. The NuGet.org policy
    must select the intended package owner and match GitHub repository
    `dignite-projects/abp-modules` plus workflow file `release.yml`. Set the repository variable
    `NUGET_USER` to the NuGet profile name used by `NuGet/login@v1`; never use an email address for
    this value.
+
+Re-running `workflow_dispatch` without bumping the version first is safe on the NuGet side
+(`--skip-duplicate`), but **fails** on the Angular/npm side — GitHub Packages' npm registry rejects a
+duplicate publish outright, and this workflow doesn't soft-skip that error the way `site`'s does.
+Only dispatch a preview build when you actually mean to preview a version that hasn't shipped yet.
 
 > **Migrating from the old repositories:** these packages were previously released from
 > `dignite-projects/abp-file-storing` and `dignite-projects/abp-notifications`. Each package's
