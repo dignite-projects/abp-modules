@@ -22,15 +22,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.302'
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
           cache: yarn
@@ -142,7 +142,7 @@ jobs:
       # job), and build-and-test is the required status check every PR waits on. Hand the coverage
       # files off as an artifact instead of paying that latency on the blocking path.
       - name: Upload coverage reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-reports
           path: ./artifacts-ci/coverage
@@ -316,10 +316,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: coverage-reports
           path: ./artifacts-ci/coverage
@@ -332,7 +332,7 @@ jobs:
       # CODECOV_TOKEN repo secret to enable uploads (public-repo tokenless uploads also work but are
       # rate-limited); until then these are no-ops. Flag defaults are in codecov.yml.
       - name: Upload file-storing coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         continue-on-error: true
         with:
           directory: ./artifacts-ci/coverage/file-storing
@@ -341,7 +341,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload notifications coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         continue-on-error: true
         with:
           directory: ./artifacts-ci/coverage/notifications
@@ -350,7 +350,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload flex-fields coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         continue-on-error: true
         with:
           directory: ./artifacts-ci/coverage/flex-fields
