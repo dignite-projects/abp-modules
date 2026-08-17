@@ -5,7 +5,7 @@ import { readStringList } from '../../utils';
 import { findTreeNode, toTreeNodes } from './tree-node';
 
 /**
- * Displays the value of a `TreeView` field read-only, showing each node's label rather than the
+ * Displays the value of a `Tree` field read-only, showing each node's label rather than the
  * stored value.
  */
 @Component({
@@ -19,13 +19,13 @@ export class TreeViewComponent {
 
   @Input() fields?: FlexFieldValue;
 
-  /** Registration key of the field type, e.g. `TreeView`. */
+  /** Registration key of the field type, e.g. `Tree`. */
   @Input() type?: string;
 
   @Input() value: unknown = '';
 
   get displayValue(): string {
-    const nodes = toTreeNodes(this.fields?.field.configuration['TreeView.Nodes']);
+    const nodes = toTreeNodes(this.fields?.field.configuration['Tree.Nodes']);
 
     return readStringList(this.value)
       .map(stored => findTreeNode(nodes, stored)?.title ?? stored)

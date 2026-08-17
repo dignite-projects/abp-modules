@@ -5,7 +5,7 @@ import { FieldTypeControlBase } from '../field-type-control-base';
 import { TextConfiguration } from './text-configuration';
 import { TextMode } from './text-mode';
 
-/** Edits the value of a `TextEdit` field. */
+/** Edits the value of a `Text` field. */
 @Component({
   selector: 'ff-text-control',
   templateUrl: './text-control.component.html',
@@ -25,7 +25,7 @@ export class TextControlComponent extends FieldTypeControlBase {
       validators.push(Validators.required);
     }
 
-    const charLimit = this.fieldValue!.field.configuration['TextEdit.CharLimit'];
+    const charLimit = this.fieldValue!.field.configuration['Text.CharLimit'];
     if (charLimit) {
       validators.push(Validators.maxLength(Number(charLimit)));
     }

@@ -101,8 +101,8 @@ const field: FlexFieldData = {
   id: '00000000-0000-0000-0000-000000000000',
   name: 'colour',
   displayName: 'Colour',
-  fieldTypeName: 'TextEdit',
-  configuration: { 'TextEdit.CharLimit': 256 },
+  fieldTypeName: 'Text',
+  configuration: { 'Text.CharLimit': 256 },
 };
 
 const value: FlexFieldValue = { field, required: true, searchable: false, value: 'red' };

@@ -21,7 +21,7 @@ namespace Dignite.Abp.FlexFields.Web;
 public class FlexFieldViewRendering_Tests : DigniteAbpFlexFieldsWebTestBase
 {
     [Fact]
-    public async Task Renders_TextEdit_preserving_line_breaks()
+    public async Task Renders_Text_preserving_line_breaks()
     {
         var configuration = new FieldConfigurationDictionary();
         _ = new TextConfiguration(configuration) { Mode = TextMode.MultipleLine };
@@ -37,7 +37,7 @@ public class FlexFieldViewRendering_Tests : DigniteAbpFlexFieldsWebTestBase
     }
 
     [Fact]
-    public async Task Renders_NumericEdit_with_configured_decimals()
+    public async Task Renders_Number_with_configured_decimals()
     {
         var field = CreateField("Price", NumberFieldType.ControlName, new FieldConfigurationDictionary());
         var value = new FlexFieldValue(field, value: 1234.5m);
@@ -48,7 +48,7 @@ public class FlexFieldViewRendering_Tests : DigniteAbpFlexFieldsWebTestBase
     }
 
     [Fact]
-    public async Task Renders_DateEdit_as_date_only_by_default()
+    public async Task Renders_DateTime_as_date_only_by_default()
     {
         var field = CreateField("Birthday", DateTimeFieldType.ControlName, new FieldConfigurationDictionary());
         var value = new FlexFieldValue(field, value: new DateTime(2026, 1, 15));
@@ -83,7 +83,7 @@ public class FlexFieldViewRendering_Tests : DigniteAbpFlexFieldsWebTestBase
     }
 
     [Fact]
-    public async Task Renders_Switch_as_Yes_or_No_not_the_raw_boolean()
+    public async Task Renders_Boolean_as_Yes_or_No_not_the_raw_boolean()
     {
         var field = CreateField("Active", BooleanFieldType.ControlName, new FieldConfigurationDictionary());
         var value = new FlexFieldValue(field, value: true);
@@ -98,7 +98,7 @@ public class FlexFieldViewRendering_Tests : DigniteAbpFlexFieldsWebTestBase
     }
 
     [Fact]
-    public async Task Renders_TreeView_resolving_a_nested_child_nodes_label()
+    public async Task Renders_Tree_resolving_a_nested_child_nodes_label()
     {
         var configuration = new FieldConfigurationDictionary();
         _ = new TreeConfiguration(configuration)

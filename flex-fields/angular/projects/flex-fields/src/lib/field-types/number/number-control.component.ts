@@ -4,7 +4,7 @@ import { AbstractControl, ReactiveFormsModule, ValidatorFn, Validators } from '@
 import { FieldTypeControlBase } from '../field-type-control-base';
 import { NumberConfiguration } from './number-configuration';
 
-/** Edits the value of a `NumericEdit` field. */
+/** Edits the value of a `Number` field. */
 @Component({
   selector: 'ff-number-control',
   templateUrl: './number-control.component.html',
@@ -23,12 +23,12 @@ export class NumberControlComponent extends FieldTypeControlBase {
       validators.push(Validators.required);
     }
 
-    const min = configuration['NumericEditField.Min'];
+    const min = configuration['Number.Min'];
     if (min) {
       validators.push(Validators.min(Number(min)));
     }
 
-    const max = configuration['NumericEditField.Max'];
+    const max = configuration['Number.Max'];
     if (max) {
       validators.push(Validators.max(Number(max)));
     }
@@ -47,7 +47,7 @@ export class NumberControlComponent extends FieldTypeControlBase {
   onInput(event: Event): void {
     const input = event.target as HTMLInputElement;
     const value = input.value;
-    const decimals = Number(this.configuration['NumericEditField.Decimals'] ?? 0);
+    const decimals = Number(this.configuration['Number.Decimals'] ?? 0);
     const decimalPart = value.split('.')[1];
 
     if (decimalPart && decimalPart.length > decimals) {

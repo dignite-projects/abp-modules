@@ -28,7 +28,7 @@ export class BooleanControlComponent extends FieldTypeControlBase {
     const value =
       stored === false || stored
         ? stored
-        : this.fieldValue!.field.configuration['Switch.Default'];
+        : this.fieldValue!.field.configuration['Boolean.Default'];
 
     return this.fb.control(value, validators);
   }

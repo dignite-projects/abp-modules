@@ -4,34 +4,34 @@
       <label class="form-label" *ngIf="fieldValue.field.displayName">
         {{ fieldValue.field.displayName }}
       </label>
-      <ng-container *ngIf="configuration['DateEdit.InputMode'] === DateTimeInputMode.Date">
+      <ng-container *ngIf="configuration['DateTime.InputMode'] === DateTimeInputMode.Date">
         <input
           type="date"
           class="form-control"
           step="1"
           [formControlName]="fieldValue.field.name"
-          [min]="configuration['DateEdit.Min']"
-          [max]="configuration['DateEdit.Max']"
+          [min]="configuration['DateTime.Min']"
+          [max]="configuration['DateTime.Max']"
         />
       </ng-container>
-      <ng-container *ngIf="configuration['DateEdit.InputMode'] === DateTimeInputMode.DateTime">
+      <ng-container *ngIf="configuration['DateTime.InputMode'] === DateTimeInputMode.DateTime">
         <input
           type="datetime-local"
           class="form-control"
           step="1"
           [formControlName]="fieldValue.field.name"
-          [min]="configuration['DateEdit.Min']"
-          [max]="configuration['DateEdit.Max']"
+          [min]="configuration['DateTime.Min']"
+          [max]="configuration['DateTime.Max']"
         />
       </ng-container>
-      <ng-container *ngIf="configuration['DateEdit.InputMode'] === DateTimeInputMode.Month">
+      <ng-container *ngIf="configuration['DateTime.InputMode'] === DateTimeInputMode.Month">
         <input
           type="month"
           class="form-control"
           step="1"
           [formControlName]="fieldValue.field.name"
-          [min]="configuration['DateEdit.Min']"
-          [max]="configuration['DateEdit.Max']"
+          [min]="configuration['DateTime.Min']"
+          [max]="configuration['DateTime.Max']"
         />
       </ng-container>
       <small class="form-text text-muted d-block" *ngIf="fieldValue.field.description">

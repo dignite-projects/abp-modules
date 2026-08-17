@@ -1,11 +1,11 @@
 import { Directive } from '@angular/core';
 import { FieldTypeControlBase } from '../field-type-control-base';
 import { TreeNode, ancestorKeys, toggleExpandedKey } from './tree-node';
-import { TreeViewConfiguration } from './tree-view-configuration';
+import { TreeConfiguration } from './tree-configuration';
 
 /**
  * Shared value-selection logic for the two components that let an end user *pick* values out of a
- * `TreeView` field's node tree: the inline {@link TreeControlComponent} and the dropdown
+ * `Tree` field's node tree: the inline {@link TreeControlComponent} and the dropdown
  * {@link TreeSearchComponent}. A subclass supplies only its own wrapper markup, `createControl()`
  * (they seed `selectedKeys` from a different source), and {@link onSingleSelected} for any extra
  * behavior a single pick should trigger.
@@ -21,11 +21,11 @@ export abstract class TreePickerBase extends FieldTypeControlBase {
   selectedKeys: string[] = [];
 
   get multiple(): boolean {
-    return !!this.fieldValue?.field.configuration['TreeView.Multiple'];
+    return !!this.fieldValue?.field.configuration['Tree.Multiple'];
   }
 
   protected configurationDefaults(): object {
-    return new TreeViewConfiguration();
+    return new TreeConfiguration();
   }
 
   onExpandChange(event: { node?: { key?: string } }): void {

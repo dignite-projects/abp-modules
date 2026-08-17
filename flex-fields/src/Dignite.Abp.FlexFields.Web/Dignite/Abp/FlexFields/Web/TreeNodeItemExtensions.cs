@@ -4,7 +4,7 @@ using Dignite.Abp.FlexFields.Tree;
 namespace Dignite.Abp.FlexFields.Web;
 
 /// <summary>Rendering-only helpers over <see cref="TreeConfiguration.Nodes"/> - not part of the kernel
-/// because they exist purely to support the default view/search partials for the TreeView field type.</summary>
+/// because they exist purely to support the default view/search partials for the Tree field type.</summary>
 internal static class TreeNodeItemExtensions
 {
     /// <summary>Depth-first labels of every node (recursively, including descendants) whose

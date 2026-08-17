@@ -8,10 +8,10 @@
         type="number"
         class="form-control"
         [formControlName]="fieldValue.field.name"
-        [placeholder]="configuration['NumericEditField.Placeholder'] || ''"
-        [step]="configuration['NumericEditField.Step']"
-        [min]="configuration['NumericEditField.Min']"
-        [max]="configuration['NumericEditField.Max']"
+        [placeholder]="configuration['Number.Placeholder'] || ''"
+        [step]="configuration['Number.Step']"
+        [min]="configuration['Number.Min']"
+        [max]="configuration['Number.Max']"
         (input)="onInput($event)"
       />
       <small class="form-text text-muted d-block" *ngIf="fieldValue.field.description">

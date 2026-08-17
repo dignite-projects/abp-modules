@@ -2,17 +2,17 @@
   <div formGroupName="configuration">
     <div class="mb-3">
       <label class="form-label">{{ 'FlexFields::Placeholder' | abpLocalization }}</label>
-      <input type="text" class="form-control" formControlName="TextEdit.Placeholder" />
+      <input type="text" class="form-control" formControlName="Text.Placeholder" />
     </div>
     <div class="mb-3">
-      <label class="form-label">{{ 'FlexFields::TextEditMode' | abpLocalization }}</label>
+      <label class="form-label">{{ 'FlexFields::TextMode' | abpLocalization }}</label>
       <div>
         <div class="form-check form-check-inline">
           <input
             class="form-check-input"
             type="radio"
             [value]="TextMode.SingleLine"
-            formControlName="TextEdit.Mode"
+            formControlName="Text.Mode"
             [id]="singleLineId"
           />
           <label class="form-check-label" [for]="singleLineId">
@@ -24,7 +24,7 @@
             class="form-check-input"
             type="radio"
             [value]="TextMode.MultipleLine"
-            formControlName="TextEdit.Mode"
+            formControlName="Text.Mode"
             [id]="multipleLineId"
           />
           <label class="form-check-label" [for]="multipleLineId">
@@ -35,7 +35,7 @@
     </div>
     <div class="mb-3">
       <label class="form-label">{{ 'FlexFields::CharLimit' | abpLocalization }}</label>
-      <input type="number" class="form-control" formControlName="TextEdit.CharLimit" />
+      <input type="number" class="form-control" formControlName="Text.CharLimit" />
     </div>
     <button type="submit" style="display: none" #submitclick></button>
   </div>

@@ -5,7 +5,7 @@
     "FieldNameHelpText": "字段名稱只能包含字母、數字和底線，且必須確保在全局唯一。",
     "FieldDisplayName": "字段標籤",
     "FieldType:Text": "文本",
-    "TextEditMode": "文本框模式",
+    "TextMode": "文本框模式",
     "CharLimit": "字數限制",
     "SingleLine": "單行文本框",
     "MultipleLine": "多行文本框",

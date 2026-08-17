@@ -6,7 +6,7 @@ namespace Dignite.Abp.FlexFields.Number;
 
 public class NumberFieldType : FieldTypeBase
 {
-    public const string ControlName = "NumericEdit";
+    public const string ControlName = "Number";
 
     public override string Name => ControlName;
 

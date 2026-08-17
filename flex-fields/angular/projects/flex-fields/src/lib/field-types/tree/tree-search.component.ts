@@ -6,7 +6,7 @@ import { TreePickerBase } from './tree-picker-base';
 import { TreePickerNodesComponent } from './tree-picker-nodes.component';
 import { findTreeNode, toTreeNodes } from './tree-node';
 
-/** Filters by a `TreeView` field, using a dropdown tree picker. */
+/** Filters by a `Tree` field, using a dropdown tree picker. */
 @Component({
   selector: 'ff-tree-search',
   templateUrl: './tree-search.component.html',
@@ -69,7 +69,7 @@ export class TreeSearchComponent extends TreePickerBase {
   }
 
   protected createControl(): AbstractControl {
-    this.nodes = toTreeNodes(this.fieldValue!.field.configuration['TreeView.Nodes']);
+    this.nodes = toTreeNodes(this.fieldValue!.field.configuration['Tree.Nodes']);
 
     // Nodes marked `Selected` in the configuration are a default *answer*, not a default filter.
     const stored = readStringList(this.selectedValue).filter(value => value !== '');

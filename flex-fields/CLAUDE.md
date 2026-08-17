@@ -56,23 +56,31 @@ depending on it plus `FlexFields.Web`, shipping one view at the same
 2. **`FlexFieldIndexValue` is EF-only.** It is the shape of a relational pivot row. MongoDB queries
    the `FlexFieldDictionary` directly, which is the whole reason the two providers are separate.
 
-## Type names are code; registration keys and configuration keys are data
+## Registration keys and configuration keys are persisted data
 
-The C# rename (`IFormControl` → `IFieldType`, `TextEditFormControl` → `TextFieldType`, …) **did not**
-move the persisted strings. `TextFieldType.ControlName` is still `"TextEdit"`, and `NumericConfiguration`
-still writes `NumericEditField.Decimals` (not `NumericEdit.`) alongside an unprefixed `FormatSpecifier`.
+`IFieldType.Name`/`ControlName` and `FieldConfigurationDictionary` key strings live inside every
+downstream's stored field definitions — a rename here is a breaking wire-format change, not a
+refactor, and nothing in the build catches a mismatch.
+
+As of 2026-08-17 the registration keys were deliberately brought in line with the C# type names
+below — before that they were stragglers from the pre-rename `Dignite.Abp.DynamicForms` naming that
+the `IFormControl` → `IFieldType` class rename never touched (`TextFieldType.ControlName` was
+`"TextEdit"`, `NumberConfigurationNames` used a `NumericEditField.` prefix, etc. — see
+[`flexfields-design.md`](./docs/flexfields-design.md) §3). Any environment with field data persisted
+under the old keys needs its own data migration before upgrading past that point; the kernel has no
+DbContext of its own to run one.
 
 | Registration key | C# type | Angular folder |
 |---|---|---|
-| `TextEdit` | `TextFieldType` | `text/` |
-| `NumericEdit` | `NumberFieldType` | `numeric/` |
-| `DateEdit` | `DateTimeFieldType` | `date/` |
+| `Text` | `TextFieldType` | `text/` |
+| `Number` | `NumberFieldType` | `number/` |
+| `DateTime` | `DateTimeFieldType` | `date/` |
 | `Select` | `SelectFieldType` | `select/` |
-| `Switch` | `BooleanFieldType` | `switch/` |
-| `TreeView` | `TreeFieldType` | `tree/` |
+| `Boolean` | `BooleanFieldType` | `boolean/` |
+| `Tree` | `TreeFieldType` | `tree/` |
 
-Renaming any of these "for consistency" orphans every field already stored under the old key, and
-nothing in the build catches it. `built-in-field-types.spec.ts` asserts all of them for that reason.
+Renaming any of these again "for consistency" orphans every field already stored under the current
+key. `built-in-field-types.spec.ts` asserts all of them for that reason.
 
 ## The seams
 
@@ -96,7 +104,7 @@ mapping lives entirely outside the kernel, the server-side mirror of how `FieldT
   zero-IO leaf renderers: they take an already-resolved `FlexFieldValue`, never a lookup key — the
   kernel has no application service to look one up with, so assembling it is the host's job, same as
   everywhere else in the kernel.
-- Dispatch is by `FlexFieldValue.FieldTypeName` (the persisted registration key, e.g. `"TextEdit"`) to
+- Dispatch is by `FlexFieldValue.FieldTypeName` (the persisted registration key, e.g. `"Text"`) to
   a conventional partial path (`Views/Shared/FlexFields/{Key}.cshtml`,
   `Views/Shared/FlexFields/Search/{Key}.cshtml`), resolved via `IRazorPartialRenderer` +
   `IRazorViewEngine`'s normal controller/`Shared`-relative search — a downstream overrides one built-in
@@ -158,8 +166,8 @@ describes, wired to a real feature instead of the test project's throwaway `Test
   `<ff-flex-field-view>` for dynamic list columns, `<ff-flex-field-search>` for the filter bar,
   `<ff-flex-field-control>` for the create/edit form. `ProductsComponent` also owns the one piece of
   translation the library can't: turning each search control's raw value (a `"min-max"` string for
-  `NumericEdit`, an array for `Select`/`TreeView`, the literal strings `"true"`/`"false"` for
-  `Switch` — never a real boolean, because a native `<option [value]>` binding always stringifies)
+  `Number`, an array for `Select`/`Tree`, the literal strings `"true"`/`"false"` for
+  `Boolean` — never a real boolean, because a native `<option [value]>` binding always stringifies)
   into `FlexFieldQueryCondition`s.
 
 Both admin pages require the `Demo.Products`/`Demo.ProductFields` permission (grantable per role from

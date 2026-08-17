@@ -20,7 +20,7 @@ export class BooleanSearchComponent extends FieldTypeControlBase {
   }
 
   protected createControl(): AbstractControl {
-    // Unlike the control component, no fallback to `Switch.Default`: a filter starts unset.
+    // Unlike the control component, no fallback to `Boolean.Default`: a filter starts unset.
     return this.fb.control(this.selectedValue);
   }
 }

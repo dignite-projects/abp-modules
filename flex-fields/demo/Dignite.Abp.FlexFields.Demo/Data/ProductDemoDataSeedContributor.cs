@@ -60,16 +60,16 @@ public class ProductDemoDataSeedContributor : IDataSeedContributor, ITransientDe
             "description", "Description", TextFieldType.ControlName,
             new FieldConfigurationDictionary
             {
-                ["TextEdit.Mode"] = TextMode.MultipleLine,
-                ["TextEdit.CharLimit"] = 1024,
+                ["Text.Mode"] = TextMode.MultipleLine,
+                ["Text.CharLimit"] = 1024,
             });
 
         var price = await CreateFieldAsync(
             "price", "Price", NumberFieldType.ControlName,
             new FieldConfigurationDictionary
             {
-                ["NumericEditField.Decimals"] = 2,
-                ["NumericEditField.Min"] = 0,
+                ["Number.Decimals"] = 2,
+                ["Number.Min"] = 0,
             },
             required: true, searchable: true);
 
@@ -77,7 +77,7 @@ public class ProductDemoDataSeedContributor : IDataSeedContributor, ITransientDe
             "releaseDate", "Release Date", DateTimeFieldType.ControlName,
             new FieldConfigurationDictionary
             {
-                ["DateEdit.InputMode"] = DateTimeInputMode.Date,
+                ["DateTime.InputMode"] = DateTimeInputMode.Date,
             },
             searchable: true);
 
@@ -100,7 +100,7 @@ public class ProductDemoDataSeedContributor : IDataSeedContributor, ITransientDe
             "inStock", "In Stock", BooleanFieldType.ControlName,
             new FieldConfigurationDictionary
             {
-                ["Switch.Default"] = true,
+                ["Boolean.Default"] = true,
             },
             searchable: true);
 
@@ -108,7 +108,7 @@ public class ProductDemoDataSeedContributor : IDataSeedContributor, ITransientDe
             "category", "Category", TreeFieldType.ControlName,
             new FieldConfigurationDictionary
             {
-                ["TreeView.Nodes"] = new List<TreeNodeItem>
+                ["Tree.Nodes"] = new List<TreeNodeItem>
                 {
                     new()
                     {

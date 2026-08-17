@@ -102,7 +102,7 @@ export abstract class FieldTypeControlBase implements OnDestroy {
 
   /**
    * Fills in any configuration key the stored dictionary is missing. A field configured before a key
-   * existed has no value for it, and a template reading `configuration['TextEdit.Mode']` off that
+   * existed has no value for it, and a template reading `configuration['Text.Mode']` off that
    * would get `undefined` rather than the default the server would have applied.
    */
   private applyConfigurationDefaults(): void {

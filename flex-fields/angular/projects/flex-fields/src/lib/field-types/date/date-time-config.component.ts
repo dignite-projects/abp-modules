@@ -8,7 +8,7 @@ import { DateTimeInputMode } from './date-time-input-mode';
 
 let nextRadioId = 0;
 
-/** Designer-side editor for a `DateEdit` field's configuration. */
+/** Designer-side editor for a `DateTime` field's configuration. */
 @Component({
   selector: 'ff-date-time-config',
   templateUrl: './date-time-config.component.html',
@@ -44,13 +44,13 @@ export class DateTimeConfigComponent extends FieldTypeConfigBase {
    * a full ISO timestamp, so switching mode without reformatting silently blanks both bounds.
    */
   onInputModeChange(): void {
-    const mode = this.configuration.value['DateEdit.InputMode'] as DateTimeInputMode;
+    const mode = this.configuration.value['DateTime.InputMode'] as DateTimeInputMode;
     const { inputType, format } = DATE_INPUT_MODE_FORMATS[mode] ?? DATE_INPUT_MODE_FORMATS[DateTimeInputMode.Date];
 
     this.dateTimeType = inputType;
     this.configuration.patchValue({
-      'DateEdit.Min': this.datePipe.transform(this.configuration.value['DateEdit.Min'], format),
-      'DateEdit.Max': this.datePipe.transform(this.configuration.value['DateEdit.Max'], format),
+      'DateTime.Min': this.datePipe.transform(this.configuration.value['DateTime.Min'], format),
+      'DateTime.Max': this.datePipe.transform(this.configuration.value['DateTime.Max'], format),
     });
   }
 }

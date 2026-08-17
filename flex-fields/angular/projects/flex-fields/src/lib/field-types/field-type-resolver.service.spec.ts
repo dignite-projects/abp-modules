@@ -13,8 +13,8 @@ describe('FieldTypeResolver', () => {
     TestBed.configureTestingModule({ providers: [provideFlexFields()] });
     const resolver = TestBed.inject(FieldTypeResolver);
 
-    expect(resolver.get('TextEdit').displayNameKey).toBe('FlexFields::FieldType:Text');
-    expect(resolver.get('TreeView').displayNameKey).toBe('FlexFields::FieldType:Tree');
+    expect(resolver.get('Text').displayNameKey).toBe('FlexFields::FieldType:Text');
+    expect(resolver.get('Tree').displayNameKey).toBe('FlexFields::FieldType:Tree');
     expect(resolver.getAll()).toHaveLength(6);
   });
 
@@ -31,7 +31,7 @@ describe('FieldTypeResolver', () => {
     const resolver = TestBed.inject(FieldTypeResolver);
 
     expect(resolver.getAll()).toEqual([]);
-    expect(() => resolver.get('TextEdit')).toThrow(/provideFlexFields/);
+    expect(() => resolver.get('Text')).toThrow(/provideFlexFields/);
   });
 
   it('accepts extra types alongside the built-ins', () => {
@@ -53,7 +53,7 @@ describe('FieldTypeResolver', () => {
 
   it('lets a later registration override a built-in of the same name', () => {
     const replacement: FieldTypeDefinition = {
-      name: 'TextEdit',
+      name: 'Text',
       displayNameKey: 'MyApp::FieldType:MyOwnText',
     };
     TestBed.configureTestingModule({
@@ -61,7 +61,7 @@ describe('FieldTypeResolver', () => {
     });
     const resolver = TestBed.inject(FieldTypeResolver);
 
-    expect(resolver.get('TextEdit')).toEqual(replacement);
+    expect(resolver.get('Text')).toEqual(replacement);
     // Replaced, not duplicated.
     expect(resolver.getAll()).toHaveLength(6);
   });

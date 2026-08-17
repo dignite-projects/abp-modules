@@ -18,7 +18,7 @@ public class FlexFieldDataDto
 
     public string? Description { get; set; }
 
-    /// <summary>Registration key of the field type this field is bound to, e.g. <c>"TextEdit"</c>.</summary>
+    /// <summary>Registration key of the field type this field is bound to, e.g. <c>"Text"</c>.</summary>
     public string FieldTypeName { get; set; } = string.Empty;
 
     public Dictionary<string, object?> Configuration { get; set; } = new();

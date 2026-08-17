@@ -2,7 +2,7 @@
  * Normalizes a stored flex-field value into a list of strings — the client-side mirror of
  * `FieldTypeBase.ReadStringList` on the server.
  *
- * Multi-valued field types (`Select`, `TreeView`) can find their value stored as an array, as a bare
+ * Multi-valued field types (`Select`, `Tree`) can find their value stored as an array, as a bare
  * scalar (a single-select that was later switched to multiple), or as `null`. Every one of those has
  * to read as a list, and both halves of the stack have to agree on how — otherwise a value the
  * server considers set reads as empty in the browser, or the reverse.

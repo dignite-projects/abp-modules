@@ -20,7 +20,7 @@ namespace Dignite.Abp.FlexFields.FileExplorer;
 /// reason a RichText or Matrix field type would return null here - and the Angular side ships no search
 /// UI for this type for the identical reason. A future revision that narrows the stored value to bare
 /// file ids could reasonably index those as <see cref="FlexFieldValueType.Guid"/> (multi-valued, the
-/// same way <c>Select</c>/<c>TreeView</c> index each selected option); that is a value-shape change on
+/// same way <c>Select</c>/<c>Tree</c> index each selected option); that is a value-shape change on
 /// both sides together, not something to bolt on unilaterally here.
 /// </para>
 ///

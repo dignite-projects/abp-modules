@@ -2,7 +2,7 @@ import { Component, Input } from '@angular/core';
 import { CoreModule } from '@abp/ng.core';
 import { FlexFieldValue } from '../../models';
 
-/** Displays the value of a `NumericEdit` field read-only. */
+/** Displays the value of a `Number` field read-only. */
 @Component({
   selector: 'ff-number-view',
   templateUrl: './number-view.component.html',
@@ -14,7 +14,7 @@ export class NumberViewComponent {
 
   @Input() fields?: FlexFieldValue;
 
-  /** Registration key of the field type, e.g. `NumericEdit`. */
+  /** Registration key of the field type, e.g. `Number`. */
   @Input() type?: string;
 
   @Input() value: unknown = '';

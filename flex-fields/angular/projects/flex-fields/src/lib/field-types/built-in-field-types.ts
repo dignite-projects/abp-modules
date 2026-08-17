@@ -41,19 +41,19 @@ import {
  *
  * | key | server type | this library |
  * |---|---|---|
- * | `TextEdit` | `TextFieldType` | `text/` |
- * | `NumericEdit` | `NumberFieldType` | `number/` |
- * | `DateEdit` | `DateTimeFieldType` | `date/` |
+ * | `Text` | `TextFieldType` | `text/` |
+ * | `Number` | `NumberFieldType` | `number/` |
+ * | `DateTime` | `DateTimeFieldType` | `date/` |
  * | `Select` | `SelectFieldType` | `select/` |
- * | `Switch` | `BooleanFieldType` | `boolean/` |
- * | `TreeView` | `TreeFieldType` | `tree/` |
+ * | `Boolean` | `BooleanFieldType` | `boolean/` |
+ * | `Tree` | `TreeFieldType` | `tree/` |
  *
  * A frozen array, not something to mutate at runtime: contributors register their own types through
  * the `FLEX_FIELD_TYPES` multi-provider instead.
  */
 export const BUILT_IN_FIELD_TYPES: readonly FieldTypeDefinition[] = Object.freeze([
   {
-    name: 'TextEdit',
+    name: 'Text',
     displayNameKey: 'FlexFields::FieldType:Text',
     configComponent: TextConfigComponent,
     controlComponent: TextControlComponent,
@@ -61,7 +61,7 @@ export const BUILT_IN_FIELD_TYPES: readonly FieldTypeDefinition[] = Object.freez
     searchComponent: TextSearchComponent,
   },
   {
-    name: 'NumericEdit',
+    name: 'Number',
     displayNameKey: 'FlexFields::FieldType:Number',
     configComponent: NumberConfigComponent,
     controlComponent: NumberControlComponent,
@@ -71,7 +71,7 @@ export const BUILT_IN_FIELD_TYPES: readonly FieldTypeDefinition[] = Object.freez
   {
     // No search component: the server indexes DateTime and allows six operators on it, but the old
     // library never shipped a date range filter and building one is feature work, not migration.
-    name: 'DateEdit',
+    name: 'DateTime',
     displayNameKey: 'FlexFields::FieldType:DateTime',
     configComponent: DateTimeConfigComponent,
     controlComponent: DateTimeControlComponent,
@@ -86,7 +86,7 @@ export const BUILT_IN_FIELD_TYPES: readonly FieldTypeDefinition[] = Object.freez
     searchComponent: SelectSearchComponent,
   },
   {
-    name: 'Switch',
+    name: 'Boolean',
     displayNameKey: 'FlexFields::FieldType:Boolean',
     configComponent: BooleanConfigComponent,
     controlComponent: BooleanControlComponent,
@@ -94,7 +94,7 @@ export const BUILT_IN_FIELD_TYPES: readonly FieldTypeDefinition[] = Object.freez
     searchComponent: BooleanSearchComponent,
   },
   {
-    name: 'TreeView',
+    name: 'Tree',
     displayNameKey: 'FlexFields::FieldType:Tree',
     configComponent: TreeConfigComponent,
     controlComponent: TreeControlComponent,

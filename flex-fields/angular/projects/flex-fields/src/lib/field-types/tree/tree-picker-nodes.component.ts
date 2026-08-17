@@ -4,7 +4,7 @@ import { TreeModule } from '@abp/ng.components/tree';
 import { TreeNode, findTreeNode } from './tree-node';
 
 /**
- * Renders a `TreeView` field's node tree as a checkbox picker. This is the shared rendering core
+ * Renders a `Tree` field's node tree as a checkbox picker. This is the shared rendering core
  * behind `TreeControlComponent`'s always-expanded inline picker and `TreeSearchComponent`'s
  * dropdown picker — it owns how a node's checked/indeterminate state is drawn and reports clicks
  * upward as a plain key; the host decides what picking a key *means* (replace a single value vs.

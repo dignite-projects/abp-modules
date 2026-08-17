@@ -6,7 +6,7 @@ import { FlexFieldValue } from '../models';
 /**
  * Renders the **filter** widget for one flex field, whichever type it is.
  *
- * Renders nothing when the field's type has no search component — `DateEdit`, today. That is the only
+ * Renders nothing when the field's type has no search component — `DateTime`, today. That is the only
  * condition under which it should stay empty; the old library also required an unused `culture` input
  * before it would render anything, which made a missing filter look like a missing field type.
  */

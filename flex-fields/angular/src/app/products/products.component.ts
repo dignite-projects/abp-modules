@@ -54,7 +54,7 @@ export class ProductsComponent {
   fields: ProductFieldDto[] = [];
 
   /** The subset with `searchable: true` - drives the filter bar. Excludes `description` (a free-text
-   *  field not worth filtering on in this demo) and never includes DateEdit fields, since that field
+   *  field not worth filtering on in this demo) and never includes DateTime fields, since that field
    *  type ships no search component in the library. */
   get searchableFields(): ProductFieldDto[] {
     return this.fields.filter(f => f.searchable);
@@ -209,14 +209,14 @@ export class ProductsComponent {
    * Reads the raw value each `<ff-flex-field-search>` wrote into `searchForm.flexFieldSearch` and turns
    * it into the `FlexFieldQueryCondition`s the backend understands. The mapping depends on the field
    * type's storage shape, not on anything the search form knows about generically:
-   * - `TextEdit`: substring match.
-   * - `NumericEdit`: `ff-number-search` writes a single `"min-max"` string; split into two AND'ed bounds
+   * - `Text`: substring match.
+   * - `Number`: `ff-number-search` writes a single `"min-max"` string; split into two AND'ed bounds
    *   (GreaterThanOrEqual + LessThanOrEqual on the same field - the executor composes multiple
    *   conditions on one field as a range, not a conflict).
-   * - `Select` / `TreeView`: multi-select, so `In` over the comma-joined selection.
-   * - `Switch`: the native `<select>` in `ff-boolean-search` yields the *strings* `"true"`/`"false"`,
+   * - `Select` / `Tree`: multi-select, so `In` over the comma-joined selection.
+   * - `Boolean`: the native `<select>` in `ff-boolean-search` yields the *strings* `"true"`/`"false"`,
    *   not booleans - a plain `<option [value]>` binding always stringifies.
-   * - `DateEdit`: no search component exists for it, so it never contributes a condition.
+   * - `DateTime`: no search component exists for it, so it never contributes a condition.
    */
   private buildConditions(): FlexFieldQueryConditionDto[] {
     const raw = (this.searchForm.get('flexFieldSearch')?.value ?? {}) as Record<string, unknown>;
@@ -231,12 +231,12 @@ export class ProductsComponent {
 
   private toConditions(field: ProductFieldDto, value: unknown): FlexFieldQueryConditionDto[] {
     switch (field.fieldTypeName) {
-      case 'TextEdit':
+      case 'Text':
         return this.isBlank(value)
           ? []
           : [this.condition(field, FlexFieldQueryOperator.Contains, String(value), FlexFieldValueType.String)];
 
-      case 'NumericEdit': {
+      case 'Number': {
         const range = typeof value === 'string' ? value.split('-') : [];
         if (range.length !== 2 || range.some(part => part === '')) {
           return [];
@@ -247,13 +247,13 @@ export class ProductsComponent {
         ];
       }
 
-      case 'Switch':
+      case 'Boolean':
         return value === 'true' || value === 'false'
           ? [this.condition(field, FlexFieldQueryOperator.Equals, value, FlexFieldValueType.Boolean)]
           : [];
 
       case 'Select':
-      case 'TreeView': {
+      case 'Tree': {
         const values = Array.isArray(value) ? value : this.isBlank(value) ? [] : [value];
         return values.length === 0
           ? []

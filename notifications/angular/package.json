@@ -8,7 +8,7 @@
     "build:lib": "ng build notification-center",
     "build:prod": "ng build --configuration production",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test",
+    "test": "ng test notification-center",
     "lint": "ng lint"
   },
   "private": true,

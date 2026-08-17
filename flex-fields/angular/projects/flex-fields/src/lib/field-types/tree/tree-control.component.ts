@@ -6,7 +6,7 @@ import { TreePickerBase } from './tree-picker-base';
 import { TreePickerNodesComponent } from './tree-picker-nodes.component';
 import { checkedKeys, clearChecked, findTreeNode, toTreeNodes } from './tree-node';
 
-/** Edits the value of a `TreeView` field with an always-expanded, inline tree picker. */
+/** Edits the value of a `Tree` field with an always-expanded, inline tree picker. */
 @Component({
   selector: 'ff-tree-control',
   templateUrl: './tree-control.component.html',
@@ -20,7 +20,7 @@ export class TreeControlComponent extends TreePickerBase {
       validators.push(Validators.required);
     }
 
-    this.nodes = toTreeNodes(this.fieldValue!.field.configuration['TreeView.Nodes']);
+    this.nodes = toTreeNodes(this.fieldValue!.field.configuration['Tree.Nodes']);
 
     const stored = readStringList(this.selectedValue).filter(value => value !== '');
 

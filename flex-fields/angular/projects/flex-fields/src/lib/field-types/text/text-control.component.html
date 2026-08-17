@@ -5,22 +5,22 @@
         {{ fieldValue.field.displayName }}
       </label>
       <ng-container
-        *ngIf="fieldValue.field.configuration['TextEdit.Mode'] === TextMode.SingleLine"
+        *ngIf="fieldValue.field.configuration['Text.Mode'] === TextMode.SingleLine"
       >
         <input
           type="text"
           class="form-control"
           [formControlName]="fieldValue.field.name"
-          [placeholder]="fieldValue.field.configuration['TextEdit.Placeholder']"
+          [placeholder]="fieldValue.field.configuration['Text.Placeholder']"
         />
       </ng-container>
       <ng-container
-        *ngIf="fieldValue.field.configuration['TextEdit.Mode'] === TextMode.MultipleLine"
+        *ngIf="fieldValue.field.configuration['Text.Mode'] === TextMode.MultipleLine"
       >
         <textarea
           class="form-control"
           [formControlName]="fieldValue.field.name"
-          [placeholder]="fieldValue.field.configuration['TextEdit.Placeholder']"
+          [placeholder]="fieldValue.field.configuration['Text.Placeholder']"
           rows="3"
         ></textarea>
       </ng-container>

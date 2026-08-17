@@ -7,7 +7,7 @@ import { FileExplorerViewComponent } from './file-explorer-view.component';
  * The `FileExplorer` field type: picks one or more files through Dignite.FileExplorer's picker.
  *
  * No search component — the built-ins skip it too when there's no straightforward filter UI (see
- * `DateEdit`); a "field contains file X" search is feature work, not migration.
+ * `DateTime`); a "field contains file X" search is feature work, not migration.
  *
  * That this type is also *not indexable* — `FileExplorerFieldType.IndexValueType` is null, so a field
  * of it can never be marked searchable — is deliberately not restated here. The server owns that

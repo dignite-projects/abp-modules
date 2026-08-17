@@ -2,7 +2,7 @@ import { Component, Input } from '@angular/core';
 import { CoreModule } from '@abp/ng.core';
 import { FlexFieldValue } from '../../models';
 
-/** Displays the value of a `DateEdit` field read-only, in the user's short date-time format. */
+/** Displays the value of a `DateTime` field read-only, in the user's short date-time format. */
 @Component({
   selector: 'ff-date-time-view',
   templateUrl: './date-time-view.component.html',
@@ -14,7 +14,7 @@ export class DateTimeViewComponent {
 
   @Input() fields?: FlexFieldValue;
 
-  /** Registration key of the field type, e.g. `DateEdit`. */
+  /** Registration key of the field type, e.g. `DateTime`. */
   @Input() type?: string;
 
   @Input() value: unknown = '';

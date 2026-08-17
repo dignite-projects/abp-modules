@@ -15,6 +15,8 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+## [10.0.0-rc.5] - 2026-08-17
+
 ### Added
 
 #### flex-fields
@@ -23,9 +25,12 @@ so it stays clear which part of the repository actually moved.
   `Dignite.Abp.DynamicForms`' `@dignite-ng/expand.dynamic-form` in the `dignite-abp` repository and
   renamed in step with the C# naming map. Ships config / control / view / search components for all
   six field types, the `FieldTypeResolver` registry, and `provideFlexFields()`.
-  - The six **registration keys** (`TextEdit`, `NumericEdit`, `DateEdit`, `Select`, `Switch`,
-    `TreeView`) and every configuration key are unchanged — they are stored values, not class names,
-    and match the server byte-for-byte. A test asserts each one.
+  - The six **registration keys** (`Text`, `Number`, `DateTime`, `Select`, `Boolean`, `Tree`) and
+    every configuration key are stored values, not class names, and match the server byte-for-byte —
+    a test asserts each one. These were renamed once more during development, from the pre-rename
+    `Dignite.Abp.DynamicForms` stragglers (`TextEdit`/`NumericEdit`/`DateEdit`/`Switch`/`TreeView`) to
+    align with the C# type names, before this package's first release — see `flex-fields/CLAUDE.md`
+    for the full mapping.
   - Registering a field type is now a typed `InjectionToken` multi-provider instead of a bare
     `'MERGED_FORM_CONFIG'` string token that the library never provided and a `forRoot()` that
     silently discarded its argument. Several packages can register independently, and a later
@@ -35,7 +40,7 @@ so it stays clear which part of the repository actually moved.
     coupled two modules that are meant to be independently installable.
   - The tree designer's value suggestion is now an optional `FLEX_FIELD_SLUG_GENERATOR` token with a
     plain slug default, rather than a hard-wired `pinyin-pro` dependency in a general-purpose module.
-  - `DateEdit` still has no search component, as before. Known gap, not a regression.
+  - `DateTime` still has no search component, as before. Known gap, not a regression.
   - `Dignite.Abp.FlexFields.Abstractions`'s `FlexFields` localization resource gains two keys the
     migrated tree designer's node-key validator needs: `Validate:InvalidNodeValue`,
     `Validate:NodeValueAlreadyExists` (en/ja/zh-Hans/zh-Hant).

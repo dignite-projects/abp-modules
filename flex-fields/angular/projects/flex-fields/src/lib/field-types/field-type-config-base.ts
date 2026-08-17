@@ -13,7 +13,7 @@ import { FlexFieldData } from '../models';
 export abstract class FieldTypeConfigBase {
   protected readonly fb = inject(FormBuilder);
 
-  /** Which field type this editor configures — the registration key, e.g. `TextEdit`. */
+  /** Which field type this editor configures — the registration key, e.g. `Text`. */
   protected fieldTypeName?: string;
   @Input()
   set type(value: string) {

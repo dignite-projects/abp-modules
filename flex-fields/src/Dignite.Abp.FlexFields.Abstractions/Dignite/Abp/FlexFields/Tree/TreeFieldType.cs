@@ -6,7 +6,7 @@ namespace Dignite.Abp.FlexFields.Tree;
 
 public class TreeFieldType : FieldTypeBase
 {
-    public const string ControlName = "TreeView";
+    public const string ControlName = "Tree";
 
     public override string Name => ControlName;
 

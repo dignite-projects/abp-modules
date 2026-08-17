@@ -21,9 +21,9 @@ export interface FlexFieldData {
   description?: string;
 
   /**
-   * Registration key of the field type this field is bound to — `TextEdit`, `Select`, `TreeView`, …
+   * Registration key of the field type this field is bound to — `Text`, `Select`, `Tree`, …
    *
-   * This is a stored value, not a class name: `TextEdit` is served by `TextFieldType` on the server
+   * This is a stored value, not a class name: `Text` is served by `TextFieldType` on the server
    * and by `TextControlComponent` here.
    */
   fieldTypeName: string;

@@ -6,7 +6,7 @@ namespace Dignite.Abp.FlexFields.Date;
 
 public class DateTimeFieldType : FieldTypeBase
 {
-    public const string ControlName = "DateEdit";
+    public const string ControlName = "DateTime";
 
     public override string Name => ControlName;
 

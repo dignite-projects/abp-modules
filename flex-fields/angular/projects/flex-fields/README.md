@@ -23,17 +23,17 @@ Six built-in types, each with up to four role components — **config** (design 
 
 | Registration key | Type | Roles |
 |---|---|---|
-| `TextEdit` | single- or multi-line text | config, control, view, search |
-| `NumericEdit` | number with precision/step/bounds | config, control, view, search |
-| `DateEdit` | date, date-time or month | config, control, view |
+| `Text` | single- or multi-line text | config, control, view, search |
+| `Number` | number with precision/step/bounds | config, control, view, search |
+| `DateTime` | date, date-time or month | config, control, view |
 | `Select` | single or multiple choice | config, control, view, search |
-| `Switch` | boolean | config, control, view, search |
-| `TreeView` | single or multiple selection from a node tree | config, control, view, search |
+| `Boolean` | boolean | config, control, view, search |
+| `Tree` | single or multiple selection from a node tree | config, control, view, search |
 
 The registration keys are the values persisted in `IFlexFieldData.FieldTypeName` on the server.
-They are **data, not class names** — `TextEdit` is served by `TextFieldType` in C# and
-`TextControlComponent` here. Configuration dictionary keys (`TextEdit.CharLimit`,
-`NumericEditField.Decimals`, …) are likewise stored values and match the server byte-for-byte.
+They are **data, not class names** — `Text` is served by `TextFieldType` in C# and
+`TextControlComponent` here. Configuration dictionary keys (`Text.CharLimit`,
+`Number.Decimals`, …) are likewise stored values and match the server byte-for-byte.
 
 ## Usage
 

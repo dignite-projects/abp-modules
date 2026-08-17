@@ -1,23 +1,23 @@
 /**
- * Configuration of a `NumericEdit` field, shaped for `FormBuilder.group()`. Mirrors
- * `NumberConfiguration` on the server.
+ * Configuration of a `Number` field, shaped for `FormBuilder.group()`. Mirrors `NumberConfiguration`
+ * on the server.
  *
- * Two stored-key quirks are deliberate and match the server exactly: the prefix is
- * `NumericEditField.` (not `NumericEdit.`, unlike every other type), and `FormatSpecifier` carries no
- * prefix at all. Both are persisted keys — tidying them here would orphan stored configurations.
+ * One stored-key quirk is deliberate and matches the server exactly: `FormatSpecifier` carries no
+ * `Number.` prefix at all, unlike every other key here. That is a persisted key — tidying it here
+ * would orphan stored configurations.
  */
 export class NumberConfiguration {
-  'NumericEditField.Placeholder': unknown = [''];
+  'Number.Placeholder': unknown = [''];
 
   // Optional, matching the server's `decimal? Min` / `decimal? Max`. The old Angular library put
   // Validators.required on both, which made every numeric field unconfigurable without bounds.
-  'NumericEditField.Min': unknown = [null];
+  'Number.Min': unknown = [null];
 
-  'NumericEditField.Max': unknown = [null];
+  'Number.Max': unknown = [null];
 
-  'NumericEditField.Decimals': unknown = [2];
+  'Number.Decimals': unknown = [2];
 
-  'NumericEditField.Step': unknown = [null];
+  'Number.Step': unknown = [null];
 
   'FormatSpecifier': unknown = [''];
 }

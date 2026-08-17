@@ -5,7 +5,7 @@ import { DateTimeConfiguration } from './date';
 import { NumberConfiguration } from './number';
 import { SelectConfiguration } from './select';
 import { TextConfiguration } from './text';
-import { TreeViewConfiguration } from './tree';
+import { TreeConfiguration } from './tree';
 
 /**
  * These are wire-contract tests, not coverage.
@@ -19,12 +19,12 @@ import { TreeViewConfiguration } from './tree';
 describe('built-in field types', () => {
   it('registers exactly the six the server ships, under the server keys', () => {
     expect(BUILT_IN_FIELD_TYPES.map(fieldType => fieldType.name)).toEqual([
-      'TextEdit',
-      'NumericEdit',
-      'DateEdit',
+      'Text',
+      'Number',
+      'DateTime',
       'Select',
-      'Switch',
-      'TreeView',
+      'Boolean',
+      'Tree',
     ]);
   });
 
@@ -42,14 +42,14 @@ describe('built-in field types', () => {
     }
   });
 
-  it('has a search component for every type except DateEdit', () => {
+  it('has a search component for every type except DateTime', () => {
     const withoutSearch = BUILT_IN_FIELD_TYPES.filter(
       fieldType => !fieldType.searchComponent,
     ).map(fieldType => fieldType.name);
 
     // Tracked gap, not an oversight: the server indexes DateTime and allows six operators on it, so a
     // date range filter is a real thing to build — it just was never part of what was migrated.
-    expect(withoutSearch).toEqual(['DateEdit']);
+    expect(withoutSearch).toEqual(['DateTime']);
   });
 
   it('cannot be mutated at runtime', () => {
@@ -60,30 +60,30 @@ describe('built-in field types', () => {
 describe('configuration keys', () => {
   const keysOf = (configuration: object) => Object.keys(new FormBuilder().group(configuration).value);
 
-  it('TextEdit', () => {
+  it('Text', () => {
     expect(keysOf(new TextConfiguration())).toEqual([
-      'TextEdit.Placeholder',
-      'TextEdit.Mode',
-      'TextEdit.CharLimit',
+      'Text.Placeholder',
+      'Text.Mode',
+      'Text.CharLimit',
     ]);
   });
 
-  it('NumericEdit — note the NumericEditField. prefix and the unprefixed FormatSpecifier', () => {
+  it('Number — note the unprefixed FormatSpecifier', () => {
     expect(keysOf(new NumberConfiguration())).toEqual([
-      'NumericEditField.Placeholder',
-      'NumericEditField.Min',
-      'NumericEditField.Max',
-      'NumericEditField.Decimals',
-      'NumericEditField.Step',
+      'Number.Placeholder',
+      'Number.Min',
+      'Number.Max',
+      'Number.Decimals',
+      'Number.Step',
       'FormatSpecifier',
     ]);
   });
 
-  it('DateEdit', () => {
+  it('DateTime', () => {
     expect(keysOf(new DateTimeConfiguration())).toEqual([
-      'DateEdit.InputMode',
-      'DateEdit.Min',
-      'DateEdit.Max',
+      'DateTime.InputMode',
+      'DateTime.Min',
+      'DateTime.Max',
     ]);
   });
 
@@ -96,27 +96,27 @@ describe('configuration keys', () => {
     ]);
   });
 
-  it('Switch', () => {
-    expect(keysOf(new BooleanConfiguration())).toEqual(['Switch.Default']);
+  it('Boolean', () => {
+    expect(keysOf(new BooleanConfiguration())).toEqual(['Boolean.Default']);
   });
 
-  it('TreeView', () => {
-    expect(keysOf(new TreeViewConfiguration())).toEqual(['TreeView.Multiple', 'TreeView.Nodes']);
+  it('Tree', () => {
+    expect(keysOf(new TreeConfiguration())).toEqual(['Tree.Multiple', 'Tree.Nodes']);
   });
 
-  it('seeds TextEdit.CharLimit with the server default of 256', () => {
+  it('seeds Text.CharLimit with the server default of 256', () => {
     const value = new FormBuilder().group(new TextConfiguration()).value;
-    expect(value['TextEdit.CharLimit']).toBe(256);
+    expect(value['Text.CharLimit']).toBe(256);
   });
 
   it('leaves numeric bounds optional', () => {
     // .controls[key], not .get(key): AbstractControl.get treats '.' as a path separator, so
-    // get('NumericEditField.Min') looks for a *nested group* called NumericEditField and finds null.
-    // Every configuration key here contains a dot, so this distinction is not incidental.
+    // get('Number.Min') looks for a *nested group* called Number and finds null. Every
+    // configuration key here contains a dot, so this distinction is not incidental.
     const group = new FormBuilder().group(new NumberConfiguration());
 
     // The old library made Min and Max required, so no numeric field could be saved without bounds.
-    expect(group.controls['NumericEditField.Min'].valid).toBe(true);
-    expect(group.controls['NumericEditField.Max'].valid).toBe(true);
+    expect(group.controls['Number.Min'].valid).toBe(true);
+    expect(group.controls['Number.Max'].valid).toBe(true);
   });
 });

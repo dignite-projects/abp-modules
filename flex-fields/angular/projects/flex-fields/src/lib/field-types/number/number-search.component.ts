@@ -6,7 +6,7 @@ import { FieldTypeControlBase } from '../field-type-control-base';
 import { NumberConfiguration } from './number-configuration';
 
 /**
- * Filters by a `NumericEdit` field, as a min–max range.
+ * Filters by a `Number` field, as a min–max range.
  *
  * The two visible inputs live in their own form; what actually reaches the query is the single
  * `"min-max"` string written into the field's control, and it is only written once both ends are set.
@@ -43,8 +43,8 @@ export class NumberSearchComponent extends FieldTypeControlBase {
     }
 
     const configuration = this.fieldValue.field.configuration;
-    const configuredMin = this.toNumber(configuration['NumericEditField.Min']);
-    const configuredMax = this.toNumber(configuration['NumericEditField.Max']);
+    const configuredMin = this.toNumber(configuration['Number.Min']);
+    const configuredMax = this.toNumber(configuration['Number.Max']);
 
     let min = this.numberForm.value.min ?? null;
     let max = this.numberForm.value.max ?? null;

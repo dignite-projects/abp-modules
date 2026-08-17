@@ -208,6 +208,14 @@ jobs:
         working-directory: notifications/angular
         run: yarn install --frozen-lockfile
 
+      - name: Lint notifications Angular projects
+        working-directory: notifications/angular
+        run: yarn lint --max-warnings=0
+
+      - name: Run notifications Angular unit tests
+        working-directory: notifications/angular
+        run: yarn test --watch=false
+
       - name: Build notifications Angular library
         working-directory: notifications/angular
         run: yarn build:lib

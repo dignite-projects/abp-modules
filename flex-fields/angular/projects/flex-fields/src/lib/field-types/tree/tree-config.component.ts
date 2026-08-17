@@ -26,11 +26,11 @@ import {
   toTreeNodes,
   toggleExpandedKey,
 } from './tree-node';
-import { TreeViewConfiguration } from './tree-view-configuration';
+import { TreeConfiguration } from './tree-configuration';
 
 let nextCheckboxId = 0;
 
-/** Designer-side editor for a `TreeView` field: builds the node tree the field offers. */
+/** Designer-side editor for a `Tree` field: builds the node tree the field offers. */
 @Component({
   selector: 'ff-tree-config',
   templateUrl: './tree-config.component.html',
@@ -56,7 +56,7 @@ export class TreeConfigComponent extends FieldTypeConfigBase {
   nodeForm?: FormGroup;
 
   get treeNodesControl(): AbstractControl {
-    return this.configuration.controls['TreeView.Nodes'];
+    return this.configuration.controls['Tree.Nodes'];
   }
 
   get keyInput(): FormControl {
@@ -64,18 +64,19 @@ export class TreeConfigComponent extends FieldTypeConfigBase {
   }
 
   protected configurationDefaults(): object {
-    return new TreeViewConfiguration();
+    return new TreeConfiguration();
   }
 
   protected override onConfigurationPatched(): void {
     // A tree field with no nodes offers nothing to pick, so the node list is required.
     this.treeNodesControl?.setValidators([Validators.required, Validators.minLength(1)]);
-    this.nodes = toTreeNodes(this.selectedField?.configuration['TreeView.Nodes']);
+    this.nodes = toTreeNodes(this.selectedField?.configuration['Tree.Nodes']);
     this.syncNodesToForm();
   }
 
   protected override onConfigurationReset(): void {
     this.treeNodesControl?.setValidators([Validators.required, Validators.minLength(1)]);
+    this.treeNodesControl?.updateValueAndValidity();
     this.nodes = [];
   }
 
@@ -123,7 +124,7 @@ export class TreeConfigComponent extends FieldTypeConfigBase {
   }
 
   private get isMultiple(): boolean {
-    return !!this.configuration?.controls['TreeView.Multiple']?.value;
+    return !!this.configuration?.controls['Tree.Multiple']?.value;
   }
 
   /** Switching a multi-select tree back to single leaves at most one default checked. */
@@ -307,9 +308,9 @@ export class TreeConfigComponent extends FieldTypeConfigBase {
     };
   }
 
-  /** Writes the view-model tree back into the stored `TreeView.Nodes` value. */
+  /** Writes the view-model tree back into the stored `Tree.Nodes` value. */
   private syncNodesToForm(): void {
-    this.configuration.patchValue({ 'TreeView.Nodes': toNodeItems(this.nodes) });
+    this.configuration.patchValue({ 'Tree.Nodes': toNodeItems(this.nodes) });
     this.treeNodesControl?.updateValueAndValidity();
   }
 }

@@ -6,7 +6,7 @@ namespace Dignite.Abp.FlexFields.Boolean;
 
 public class BooleanFieldType : FieldTypeBase
 {
-    public const string ControlName = "Switch";
+    public const string ControlName = "Boolean";
 
     public override string Name => ControlName;
 

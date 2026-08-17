@@ -1,8 +1,8 @@
-import { TreeViewNodeItem, normalizeTreeViewNodeItems } from './tree-view-configuration';
+import { TreeNodeItem, normalizeTreeNodeItems } from './tree-configuration';
 
 /**
  * A node in the shape `abp-tree` / `nz-tree-select` want. The stored form is
- * {@link TreeViewNodeItem}; this is the view model, and the two are converted at the edges rather
+ * {@link TreeNodeItem}; this is the view model, and the two are converted at the edges rather
  * than each component reading whichever shape it happens to have.
  */
 export interface TreeNode {
@@ -21,7 +21,7 @@ export interface FlatTreeNode {
 
 /** Stored options → view-model nodes. */
 export function toTreeNodes(nodes: unknown): TreeNode[] {
-  return normalizeTreeViewNodeItems(nodes).map(toTreeNode);
+  return normalizeTreeNodeItems(nodes).map(toTreeNode);
 }
 
 /** Flattens a tree for native select controls while preserving its hierarchy in the label. */
@@ -32,7 +32,7 @@ export function flattenTreeNodes(nodes: TreeNode[], depth = 0): FlatTreeNode[] {
   ]);
 }
 
-function toTreeNode(item: TreeViewNodeItem): TreeNode {
+function toTreeNode(item: TreeNodeItem): TreeNode {
   return {
     title: item.Text,
     key: item.Value,
@@ -43,7 +43,7 @@ function toTreeNode(item: TreeViewNodeItem): TreeNode {
 }
 
 /** View-model nodes → stored options. */
-export function toNodeItems(nodes: TreeNode[]): TreeViewNodeItem[] {
+export function toNodeItems(nodes: TreeNode[]): TreeNodeItem[] {
   return nodes.map(node => ({
     Text: node.title,
     Value: node.key,

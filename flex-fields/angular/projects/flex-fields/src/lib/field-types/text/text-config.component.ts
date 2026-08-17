@@ -7,7 +7,7 @@ import { TextMode } from './text-mode';
 
 let nextRadioId = 0;
 
-/** Designer-side editor for a `TextEdit` field's configuration. */
+/** Designer-side editor for a `Text` field's configuration. */
 @Component({
   selector: 'ff-text-config',
   templateUrl: './text-config.component.html',

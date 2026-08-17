@@ -15,10 +15,10 @@ import { Type } from '@angular/core';
  */
 export interface FieldTypeDefinition {
   /**
-   * Registration key. Must equal the server field type's `Name` — `TextEdit`, `NumericEdit`,
-   * `DateEdit`, `Select`, `Switch`, `TreeView` for the built-ins.
+   * Registration key. Must equal the server field type's `Name` — `Text`, `Number`,
+   * `DateTime`, `Select`, `Boolean`, `Tree` for the built-ins.
    *
-   * These are stored values, not class names. `TextEdit` is served by `TextFieldType` on the server
+   * These are stored values, not class names. `Text` is served by `TextFieldType` on the server
    * and `TextControlComponent` here; renaming the key would orphan every field already bound to it.
    */
   name: string;

@@ -5,7 +5,7 @@
     "FieldNameHelpText": "フィールド名は文字、数字、アンダースコアのみを含み、グローバルに一意である必要があります。",
     "FieldDisplayName": "フィールドラベル",
     "FieldType:Text": "テキスト",
-    "TextEditMode": "テキストボックスモード",
+    "TextMode": "テキストボックスモード",
     "CharLimit": "文字制限",
     "SingleLine": "単一行テキストボックス",
     "MultipleLine": "複数行テキストボックス",

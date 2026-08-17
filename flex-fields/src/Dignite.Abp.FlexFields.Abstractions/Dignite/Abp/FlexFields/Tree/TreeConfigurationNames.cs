@@ -2,6 +2,6 @@ namespace Dignite.Abp.FlexFields.Tree;
 
 public static class TreeConfigurationNames
 {
-    public const string Multiple = "TreeView.Multiple";
-    public const string Nodes = "TreeView.Nodes";
+    public const string Multiple = "Tree.Multiple";
+    public const string Nodes = "Tree.Nodes";
 }

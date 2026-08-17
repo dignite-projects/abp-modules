@@ -1,6 +1,6 @@
 /**
  * What a date field lets the user enter. Mirrors the `DateTimeInputMode` enum on the server — the
- * ordinals are the stored value of `DateEdit.InputMode`.
+ * ordinals are the stored value of `DateTime.InputMode`.
  */
 export enum DateTimeInputMode {
   /** Only a date. */

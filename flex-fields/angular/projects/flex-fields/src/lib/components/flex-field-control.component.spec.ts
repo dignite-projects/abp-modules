@@ -121,12 +121,12 @@ describe('built-in field controls', () => {
   });
 
   for (const fieldTypeName of [
-    'TextEdit',
-    'NumericEdit',
-    'DateEdit',
+    'Text',
+    'Number',
+    'DateTime',
     'Select',
-    'Switch',
-    'TreeView',
+    'Boolean',
+    'Tree',
   ]) {
     it(`creates the ${fieldTypeName} control without a change-detection loop`, () => {
       const field = fieldValue(fieldTypeName);
@@ -148,12 +148,12 @@ describe('built-in field controls', () => {
   it('creates the complete product form in one change-detection pass', () => {
     const fixture = TestBed.createComponent(BuiltInControlsHostComponent);
     fixture.componentInstance.fields = [
-      fieldValue('TextEdit'),
-      fieldValue('NumericEdit'),
-      fieldValue('DateEdit'),
+      fieldValue('Text'),
+      fieldValue('Number'),
+      fieldValue('DateTime'),
       fieldValue('Select'),
-      fieldValue('Switch'),
-      fieldValue('TreeView'),
+      fieldValue('Boolean'),
+      fieldValue('Tree'),
     ].map((field, index) => ({
       ...field,
       field: { ...field.field, id: `${index}`, name: `field${index}` },

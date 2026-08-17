@@ -4,7 +4,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { FieldTypeConfigBase } from '../field-type-config-base';
 import { NumberConfiguration } from './number-configuration';
 
-/** Designer-side editor for a `NumericEdit` field's configuration. */
+/** Designer-side editor for a `Number` field's configuration. */
 @Component({
   selector: 'ff-number-config',
   templateUrl: './number-config.component.html',

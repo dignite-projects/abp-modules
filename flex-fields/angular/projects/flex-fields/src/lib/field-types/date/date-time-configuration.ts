@@ -1,18 +1,15 @@
 import { DateTimeInputMode } from './date-time-input-mode';
 
 /**
- * Configuration of a `DateEdit` field, shaped for `FormBuilder.group()`. Mirrors
+ * Configuration of a `DateTime` field, shaped for `FormBuilder.group()`. Mirrors
  * `DateTimeConfiguration` on the server.
- *
- * The stored keys are `DateEdit.*`, not `DateTime.*` — `DateEdit` is the persisted registration key
- * and the configuration keys are built from it, independent of what the class itself is named.
  */
 export class DateTimeConfiguration {
-  'DateEdit.InputMode': unknown = [DateTimeInputMode.Date];
+  'DateTime.InputMode': unknown = [DateTimeInputMode.Date];
 
-  'DateEdit.Min': unknown = [''];
+  'DateTime.Min': unknown = [''];
 
-  'DateEdit.Max': unknown = [''];
+  'DateTime.Max': unknown = [''];
 }
 
 /** The `<input type>` and date format each input mode uses. */

@@ -29,6 +29,8 @@
 
 **注：持久化的 `FormControlName` 值（如 `"TextEdit"`）、`FormConfiguration` 键字符串属"数据"**，改名归存储迁移那批，不随类名动（或保留为不透明 key）。
 
+**落码后更新（2026-08-17）：** 上述"不透明 key"的搁置到此结束——`ControlName`/`FieldConfigurationDictionary` 键前缀已改为与类名一致（`TextEdit`→`Text`、`NumericEdit`→`Number`、`DateEdit`→`DateTime`、`Switch`→`Boolean`、`TreeView`→`Tree`；`Select` 本就一致），Angular 侧同步。这是一次刻意接受的破坏性变更：任何已按旧 key 落库的字段数据在升级后需要下游自行做数据迁移，内核本身无 DbContext、也不提供该迁移。细节见 [`flex-fields/CLAUDE.md`](../CLAUDE.md) 的"Registration keys and configuration keys are persisted data"一节。
+
 ## 4. 值存储与查询（Y 方案 · 已定）
 - **权威存储** = 宿主上一个"便宜读的值袋子"：自建 `IHasFlexFields` + 专属 `FlexFields` 字典/列，**不用 ABP `ExtraProperties`**。理由 = 与公共 ExtraProperties 大袋子**隔离**（防撞名）+ **平台自持**；`IHasExtraProperties`/`ExtraPropertyDictionary` 属 `Volo.Abp.Data`（非 ObjectExtending），故这是隔离/管道取舍非血缘。代价：自补 EF JSON 转换器 / Mongo 内嵌 / 自己的 `FlexibleEntityDto` / AutoMapper（照抄 ABP）。
 - **派生查询索引** = 类型化 `FlexFieldIndex` 表（Salesforce `MT_Data` + `MT_Indexes` 思路）。已定：①同库多宿主**共表**（`EntityType` 判别键）+ ②写时**同 UoW** 同步。整条读走袋子；按字段查走索引 → EntityId → 过滤宿主。

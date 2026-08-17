@@ -17,7 +17,7 @@ namespace Dignite.Abp.FlexFields.Web;
 public class FlexFieldSearchRendering_Tests : DigniteAbpFlexFieldsWebTestBase
 {
     [Fact]
-    public async Task TextEdit_search_renders_a_single_text_input()
+    public async Task Text_search_renders_a_single_text_input()
     {
         var html = await RenderSearch(TextFieldType.ControlName, new FieldConfigurationDictionary(), "keyword");
 
@@ -26,7 +26,7 @@ public class FlexFieldSearchRendering_Tests : DigniteAbpFlexFieldsWebTestBase
     }
 
     [Fact]
-    public async Task NumericEdit_search_renders_independent_min_and_max_inputs()
+    public async Task Number_search_renders_independent_min_and_max_inputs()
     {
         var html = await RenderSearch(NumberFieldType.ControlName, new FieldConfigurationDictionary(), "price");
 
@@ -35,7 +35,7 @@ public class FlexFieldSearchRendering_Tests : DigniteAbpFlexFieldsWebTestBase
     }
 
     [Fact]
-    public async Task DateEdit_search_renders_a_date_range_using_the_configured_input_type()
+    public async Task DateTime_search_renders_a_date_range_using_the_configured_input_type()
     {
         var configuration = new FieldConfigurationDictionary();
         _ = new DateTimeConfiguration(configuration) { InputMode = DateTimeInputMode.DateTime };
@@ -66,7 +66,7 @@ public class FlexFieldSearchRendering_Tests : DigniteAbpFlexFieldsWebTestBase
     }
 
     [Fact]
-    public async Task Switch_search_renders_a_tristate_not_a_checkbox()
+    public async Task Boolean_search_renders_a_tristate_not_a_checkbox()
     {
         var html = await RenderSearch(BooleanFieldType.ControlName, new FieldConfigurationDictionary(), "active");
 
@@ -76,7 +76,7 @@ public class FlexFieldSearchRendering_Tests : DigniteAbpFlexFieldsWebTestBase
     }
 
     [Fact]
-    public async Task TreeView_search_flattens_nested_nodes_into_one_select()
+    public async Task Tree_search_flattens_nested_nodes_into_one_select()
     {
         var configuration = new FieldConfigurationDictionary();
         _ = new Dignite.Abp.FlexFields.Tree.TreeConfiguration(configuration)

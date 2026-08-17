@@ -34,8 +34,8 @@ public class ProductField : AggregateRoot<Guid>, IFlexField
     public virtual string? Description { get; set; }
 
     /// <summary>
-    /// Registration key of the <c>IFieldType</c> this field is bound to - <c>"TextEdit"</c>,
-    /// <c>"NumericEdit"</c>, <c>"DateEdit"</c>, <c>"Select"</c>, <c>"Switch"</c>, <c>"TreeView"</c> for
+    /// Registration key of the <c>IFieldType</c> this field is bound to - <c>"Text"</c>,
+    /// <c>"Number"</c>, <c>"DateTime"</c>, <c>"Select"</c>, <c>"Boolean"</c>, <c>"Tree"</c> for
     /// the built-in types. This is a stored value, not a class name.
     /// </summary>
     public virtual string FieldTypeName { get; set; } = string.Empty;

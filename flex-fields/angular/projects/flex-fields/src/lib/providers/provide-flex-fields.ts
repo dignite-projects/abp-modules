@@ -11,7 +11,7 @@ import { FLEX_FIELD_TYPES } from '../field-types/field-type.tokens';
  * providers: [provideFlexFields()]
  * ```
  *
- * Extras are registered after the built-ins, so passing a definition named `TextEdit` replaces the
+ * Extras are registered after the built-ins, so passing a definition named `Text` replaces the
  * built-in text field type rather than colliding with it.
  */
 export function provideFlexFields(...fieldTypes: FieldTypeDefinition[]): EnvironmentProviders {

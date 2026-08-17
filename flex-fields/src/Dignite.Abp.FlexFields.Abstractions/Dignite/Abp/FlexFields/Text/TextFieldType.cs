@@ -6,7 +6,7 @@ namespace Dignite.Abp.FlexFields.Text;
 
 public class TextFieldType : FieldTypeBase
 {
-    public const string ControlName = "TextEdit";
+    public const string ControlName = "Text";
 
     public override string Name => ControlName;
 

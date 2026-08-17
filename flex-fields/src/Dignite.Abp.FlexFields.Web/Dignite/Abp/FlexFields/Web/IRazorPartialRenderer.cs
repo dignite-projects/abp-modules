@@ -14,7 +14,7 @@ public interface IRazorPartialRenderer
     /// Renders <paramref name="partialName"/> with <paramref name="model"/>, resolving the view the
     /// same way <c>&lt;partial name="..." /&gt;</c> would: relative to the current controller/page
     /// first, then <c>Views/Shared</c> - so a caller can pass either a bare conventional name (e.g.
-    /// <c>"FlexFields/TextEdit"</c>) or a rooted path (e.g. <c>"~/Views/Shared/Custom.cshtml"</c>).
+    /// <c>"FlexFields/Text"</c>) or a rooted path (e.g. <c>"~/Views/Shared/Custom.cshtml"</c>).
     /// </summary>
     Task<string> RenderAsync<TModel>(string partialName, TModel model);
 }
