@@ -35,3 +35,19 @@
   background: var(--ck-color-base-background);
   border-color: var(--ck-color-base-border);
 }
+
+/* ckeditor5-content.css hard-codes --ck-content-font-color to #000, entirely independent of
+   --ck-color-base-text above - asymmetric with .ck-content's own *background*, which has none of
+   its own and simply inherits whatever --ck-color-base-background resolves to (the rule above is
+   what makes that visible for Basic mode's editable; Full mode gets it unconditionally from
+   ckeditor5's own ".ck-editor__main > .ck-editor__editable" rule). A host that re-themes
+   --ck-color-base-background without also touching --ck-content-font-color ends up with black
+   text on whatever background it just chose - unreadable the moment that background isn't white.
+   Repointing the content token at the same base-text token closes that gap generically, without
+   this package needing to know what a downstream's own theme variables are called.
+   !important: ckeditor5-content.css loads later than this file - bundled with the dynamic
+   import('ckeditor5') in ngOnInit, not the static @import above - so at equal :root specificity,
+   source order would otherwise let its own #000 default win. */
+:root {
+  --ck-content-font-color: var(--ck-color-base-text) !important;
+}

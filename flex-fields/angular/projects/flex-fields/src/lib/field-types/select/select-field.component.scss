@@ -44,8 +44,12 @@
     color: var(--bs-white) !important;
   }
 
+  // !important: ng-zorro's own .ant-select-item rule (color: rgba(0,0,0,.85)) is the same one-class
+  // specificity as this override, and its stylesheet loads lazily on first open - after this
+  // component's styles - so at that tie, source order was letting its light-mode default win for
+  // every option that isn't currently hovered/selected, regardless of theme.
   .ant-select-item {
-    color: var(--bs-body-color);
-    background-color: transparent;
+    color: var(--bs-body-color) !important;
+    background-color: transparent !important;
   }
 }

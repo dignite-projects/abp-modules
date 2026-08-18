@@ -9,3 +9,18 @@
 :host ::ng-deep .ant-tree-node-content-wrapper.ant-tree-node-selected {
   background-color: transparent;
 }
+
+// `@abp/ng.components`' own abp-tree wrapper already sets `.ant-tree { color: inherit }` (see its
+// compiled styles), so node text already tracks whatever text color surrounds this component. It
+// does not touch `.ant-tree`'s own `background: #fff` (ng-zorro's hard-coded default) though, so
+// the tree paints an opaque white box regardless of theme - both here (TreeControlComponent's
+// inline placement, sitting directly in the surrounding page) and one level further in
+// (TreeSearchComponent's dropdown, whose own .ff-tree-picker-menu already sets a themed
+// background). transparent is correct in both: something above this component's own root always
+// already carries the right background, this only has to stop ant-design's default from painting
+// over it.
+// !important for the same reason as the selected-background rule above: equal specificity against
+// a stylesheet that loads after this component's own styles.
+:host ::ng-deep .ant-tree {
+  background: transparent !important;
+}
