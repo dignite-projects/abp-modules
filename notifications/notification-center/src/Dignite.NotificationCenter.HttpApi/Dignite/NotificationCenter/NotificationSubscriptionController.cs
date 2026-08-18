@@ -14,8 +14,8 @@ namespace Dignite.NotificationCenter;
 /// null, an entity-scoped one supplies both. Exposed under <c>/api/notification-center/subscriptions</c>.
 /// Derives from <see cref="NotificationCenterController"/> for the module's localization resource.
 /// </summary>
-[RemoteService(Name = "NotificationCenter")]
-[Area("notification-center")]
+[RemoteService(Name = NotificationCenterRemoteServiceConsts.RemoteServiceName)]
+[Area(NotificationCenterRemoteServiceConsts.ModuleName)]
 [Route("api/notification-center/subscriptions")]
 public class NotificationSubscriptionController : NotificationCenterController, INotificationSubscriptionAppService
 {

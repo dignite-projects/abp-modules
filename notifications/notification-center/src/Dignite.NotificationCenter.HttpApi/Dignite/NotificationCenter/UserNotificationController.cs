@@ -13,8 +13,8 @@ namespace Dignite.NotificationCenter;
 /// subscriptions live on <see cref="NotificationSubscriptionController"/>. Derives from
 /// <see cref="NotificationCenterController"/> for the module's localization resource.
 /// </summary>
-[RemoteService(Name = "NotificationCenter")]
-[Area("notification-center")]
+[RemoteService(Name = NotificationCenterRemoteServiceConsts.RemoteServiceName)]
+[Area(NotificationCenterRemoteServiceConsts.ModuleName)]
 [Route("api/notification-center/notifications")]
 public class UserNotificationController : NotificationCenterController, IUserNotificationAppService
 {

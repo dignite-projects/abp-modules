@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.Http.Client;
 using Volo.Abp.Modularity;
+using Volo.Abp.VirtualFileSystem;
 
 namespace Dignite.NotificationCenter;
 
@@ -12,9 +13,14 @@ public class NotificationCenterHttpApiClientModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
-        context.Services.AddHttpClientProxies(
-            typeof(NotificationCenterApplicationContractsModule).Assembly);
-        // Application.Contracts depends on AbpNotificationsAbstractionsModule, which owns the single global
-        // tolerant NotificationData converter for Core, remote clients, and independently hosted Notifiers.
+        context.Services.AddStaticHttpClientProxies(
+            typeof(NotificationCenterApplicationContractsModule).Assembly,
+            NotificationCenterRemoteServiceConsts.RemoteServiceName
+            );
+
+        Configure<AbpVirtualFileSystemOptions>(options =>
+        {
+            options.FileSets.AddEmbedded<NotificationCenterHttpApiClientModule>();
+        });
     }
 }
