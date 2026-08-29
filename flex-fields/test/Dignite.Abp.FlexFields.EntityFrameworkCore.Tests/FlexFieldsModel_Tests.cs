@@ -67,10 +67,16 @@ public class FlexFieldsModel_Tests : IDisposable
     {
         Property<TestField>(nameof(IFlexField.Name)).GetMaxLength().ShouldBe(FlexFieldConsts.MaxNameLength);
         Property<TestField>(nameof(IFlexField.DisplayName)).GetMaxLength().ShouldBe(FlexFieldConsts.MaxDisplayNameLength);
-        Property<TestField>(nameof(IFlexField.Description)).GetMaxLength().ShouldBe(FlexFieldConsts.MaxDescriptionLength);
         Property<TestField>(nameof(IFlexField.FieldTypeName)).GetMaxLength().ShouldBe(FlexFieldConsts.MaxFieldTypeNameLength);
         Property<TestArticleFlexFieldIndex>(nameof(IFlexFieldIndex.StringValue)).GetMaxLength()
             .ShouldBe(FlexFieldConsts.MaxStringValueLength);
+    }
+
+    [Fact]
+    public void Description_has_no_max_length()
+    {
+        // Free text - sometimes long-form (e.g. used as an AI prompt) - so it's deliberately unbounded.
+        Property<TestField>(nameof(IFlexField.Description)).GetMaxLength().ShouldBeNull();
     }
 
     [Fact]

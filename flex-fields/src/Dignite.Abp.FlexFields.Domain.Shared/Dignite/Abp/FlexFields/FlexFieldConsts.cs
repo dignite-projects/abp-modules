@@ -12,9 +12,6 @@ public static class FlexFieldConsts
     /// <summary>Default value: 128. Max length of <c>IFlexField.DisplayName</c>.</summary>
     public static int MaxDisplayNameLength { get; set; } = 128;
 
-    /// <summary>Default value: 256. Max length of <c>IFlexField.Description</c>.</summary>
-    public static int MaxDescriptionLength { get; set; } = 256;
-
     /// <summary>Default value: 64. Max length of <c>IFlexField.FieldTypeName</c>.</summary>
     public static int MaxFieldTypeNameLength { get; set; } = 64;
 

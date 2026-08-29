@@ -38,7 +38,6 @@ public class CreateProductFieldDto
     [StringLength(128)] // FlexFieldConsts.MaxDisplayNameLength's default
     public string DisplayName { get; set; } = string.Empty;
 
-    [StringLength(256)] // FlexFieldConsts.MaxDescriptionLength's default
     public string? Description { get; set; }
 
     [Required]
@@ -67,7 +66,6 @@ public class UpdateProductFieldDto
     [StringLength(128)] // FlexFieldConsts.MaxDisplayNameLength's default
     public string DisplayName { get; set; } = string.Empty;
 
-    [StringLength(256)] // FlexFieldConsts.MaxDescriptionLength's default
     public string? Description { get; set; }
 
     public Dictionary<string, object?> Configuration { get; set; } = new();

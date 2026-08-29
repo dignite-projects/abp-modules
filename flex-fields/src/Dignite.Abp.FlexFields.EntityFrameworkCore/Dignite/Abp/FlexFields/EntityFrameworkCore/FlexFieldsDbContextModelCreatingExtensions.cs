@@ -48,8 +48,7 @@ public static class FlexFieldsDbContextModelCreatingExtensions
             .HasColumnName(nameof(IFlexField.Name));
         b.Property(f => f.DisplayName).IsRequired().HasMaxLength(FlexFieldConsts.MaxDisplayNameLength)
             .HasColumnName(nameof(IFlexField.DisplayName));
-        b.Property(f => f.Description).HasMaxLength(FlexFieldConsts.MaxDescriptionLength)
-            .HasColumnName(nameof(IFlexField.Description));
+        b.Property(f => f.Description).HasColumnName(nameof(IFlexField.Description));
         b.Property(f => f.FieldTypeName).IsRequired().HasMaxLength(FlexFieldConsts.MaxFieldTypeNameLength)
             .HasColumnName(nameof(IFlexField.FieldTypeName));
         b.Property(f => f.Configuration)
