@@ -1,7 +1,6 @@
 import { Component, Input, OnChanges, Type, ViewChild, ViewContainerRef, inject } from '@angular/core';
 import { FieldTypeResolver } from '../field-types';
 import { FlexFieldValue } from '../models';
-import { setDynamicInputs } from '../utils';
 
 /** Renders the read-only **display** of one flex field's value, whichever type it is. */
 @Component({
@@ -61,12 +60,10 @@ export class FlexFieldViewComponent implements OnChanges {
     // Switch showing "No" is not the same as a Switch showing nothing at all.
     const componentRef = this.fieldRef!.createComponent(componentType);
 
-    setDynamicInputs(componentRef, {
-      type: this.type,
-      value: this.value,
-      fields: this.fields,
-      showInList: this.showInList,
-    });
+    componentRef.setInput('type', this.type);
+    componentRef.setInput('value', this.value);
+    componentRef.setInput('fields', this.fields);
+    componentRef.setInput('showInList', this.showInList);
 
     this.renderedType = componentType;
     this.renderedFields = this.fields;

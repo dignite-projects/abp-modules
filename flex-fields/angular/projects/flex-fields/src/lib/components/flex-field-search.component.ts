@@ -2,7 +2,6 @@ import { Component, Input, OnChanges, Type, ViewChild, ViewContainerRef, inject 
 import { FormGroup } from '@angular/forms';
 import { FieldTypeResolver } from '../field-types';
 import { FlexFieldValue } from '../models';
-import { setDynamicInputs } from '../utils';
 
 /**
  * Renders the **filter** widget for one flex field, whichever type it is.
@@ -71,12 +70,10 @@ export class FlexFieldSearchComponent implements OnChanges {
 
     const componentRef = this.fieldRef!.createComponent(componentType);
 
-    setDynamicInputs(componentRef, {
-      fields: this.fields,
-      parentFieldName: this.parentFieldName,
-      selected: this.selected,
-      entity: this.entity,
-    });
+    componentRef.setInput('fields', this.fields);
+    componentRef.setInput('parentFieldName', this.parentFieldName);
+    componentRef.setInput('selected', this.selected);
+    componentRef.setInput('entity', this.entity);
 
     this.renderedType = componentType;
     this.renderedFields = this.fields;

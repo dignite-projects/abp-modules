@@ -15,25 +15,6 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
-### Fixed
-
-#### flex-fields
-
-- **`FlexFieldConfigComponent` / `FlexFieldControlComponent` / `FlexFieldSearchComponent` /
-  `FlexFieldViewComponent` now reach a per-type component's inherited inputs correctly.** All four
-  dispatched their per-type control/config/search/view component's inputs via
-  `ComponentRef.setInput()`, which silently no-ops — no error, no warning — for an `@Input()` a
-  subclass only *inherits*, as a get/set accessor pair, from `FieldTypeControlBase` /
-  `FieldTypeConfigBase` when that subclass is compiled downstream, in a different compilation unit
-  from a published copy of this library (this repository's own built-in field types and tests never
-  hit it, since everything here compiles together as one program). Confirmed against a real
-  downstream field-type bolt-on: opening an existing field for edit rendered its stored configuration
-  as blank defaults instead of what was saved, and would have re-persisted that emptied-out
-  configuration on the next Save. All four now write inputs as direct property assignments (reaching
-  an inherited setter is then plain JS prototype-chain dispatch, unaffected by Ivy compilation
-  boundaries) via the new internal `setDynamicInputs` helper, with an explicit `markForCheck()` in
-  its place to preserve `setInput()`'s change-detection side effect for an `OnPush` host.
-
 ## [10.0.0-rc.7] - 2026-08-30
 
 > `10.0.0-rc.6` also exists on NuGet.org with identical package contents — that release run failed
