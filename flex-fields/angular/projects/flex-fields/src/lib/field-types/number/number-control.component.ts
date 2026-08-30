@@ -55,7 +55,17 @@ export class NumberControlComponent extends FieldTypeControlBase {
       const [whole] = value.split('.');
       // The old library sliced by `decimalPart.length - 2`, hard-coding the default of 2 decimals, so
       // any field configured with a different precision was truncated to the wrong length.
-      control?.patchValue(decimals > 0 ? `${whole}.${decimalPart.slice(0, decimals)}` : whole);
+      const truncated = decimals > 0 ? `${whole}.${decimalPart.slice(0, decimals)}` : whole;
+
+      // Patch a NUMBER, not the string. Angular's own NumberValueAccessor puts a number in this control
+      // for every other keystroke, so patching a string here made a Number field's value change type the
+      // moment truncation happened to fire — the control's value is a number while you type `1.2`, and a
+      // string as soon as you type `1.234`. A consumer that serializes the form straight to JSON then
+      // sends `"1.23"` where its own contract says number, and only for the values that overflowed the
+      // configured precision, which is what makes it look intermittent.
+      // Non-finite input (an empty or lone-sign `whole`) keeps the raw string rather than becoming 0.
+      const numeric = Number(truncated);
+      control?.patchValue(truncated !== '' && Number.isFinite(numeric) ? numeric : truncated);
       control?.updateValueAndValidity();
     }
   }

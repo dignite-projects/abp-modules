@@ -15,6 +15,18 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Fixed
+
+#### flex-fields
+
+- **`NumberControlComponent` no longer changes its control's value type when it truncates.** Typing more
+  decimal places than `Number.Decimals` allows made `onInput` write the truncated value back as a
+  **string**, while every other keystroke leaves Angular's own `NumberValueAccessor` value — a number — in
+  place. A consumer serializing the form straight to JSON therefore sent `"1.23"` where its contract said
+  number, but only for the values that overflowed the configured precision, which made it look
+  intermittent. The truncated value is now patched as a number; a non-finite result (an empty or
+  lone-sign integer part) still falls back to the raw string rather than silently becoming `0`.
+
 ## [10.0.0-rc.7] - 2026-08-30
 
 > `10.0.0-rc.6` also exists on NuGet.org with identical package contents — that release run failed

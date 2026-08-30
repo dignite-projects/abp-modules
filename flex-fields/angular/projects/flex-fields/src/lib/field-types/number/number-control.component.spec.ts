@@ -95,7 +95,9 @@ describe('NumberControlComponent', () => {
 
     fixture.componentInstance.onInput(inputEvent('1.2345'));
 
-    expect(values.get('price')!.value).toBe('1.23');
+    // A number, not the string '1.23': this control's value must stay the same type the
+    // NumberValueAccessor produces for every non-truncating keystroke.
+    expect(values.get('price')!.value).toBe(1.23);
   });
 
   it('truncates to a whole number when the field allows no decimals', () => {
@@ -109,7 +111,7 @@ describe('NumberControlComponent', () => {
 
     fixture.componentInstance.onInput(inputEvent('7.9'));
 
-    expect(values.get('price')!.value).toBe('7');
+    expect(values.get('price')!.value).toBe(7);
   });
 
   it('does not touch the control when input is within the configured precision', () => {
