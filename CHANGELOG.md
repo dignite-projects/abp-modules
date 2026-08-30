@@ -15,7 +15,12 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
-## [10.0.0-rc.6] - 2026-08-30
+## [10.0.0-rc.7] - 2026-08-30
+
+> `10.0.0-rc.6` also exists on NuGet.org with identical package contents — that release run failed
+> at the npm publishing step (the `NPM_TOKEN` granular access token had no package/scope
+> permissions), so none of the four public Angular packages were ever published under it. Treat
+> rc.7 as the complete release across both registries.
 
 ### Changed
 
