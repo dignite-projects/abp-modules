@@ -11,6 +11,7 @@ import { FormControl, FormGroup } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { FieldTypeResolver } from '../field-types';
 import { FlexFieldData } from '../models';
+import { setDynamicInputs } from '../utils';
 
 /**
  * Renders the designer-side **configuration** editor for whichever field type is currently selected,
@@ -75,13 +76,12 @@ export class FlexFieldConfigComponent implements OnChanges, OnDestroy {
 
     const componentRef = this.fieldRef!.createComponent(fieldType.configComponent);
 
-    // A copy, not the live object: the editor patches stored values into its own form group, and
-    // handing it the original would let an abandoned edit mutate the field the caller still holds.
-    componentRef.setInput(
-      'selected',
-      this.selected ? (structuredClone(this.selected) as FlexFieldData) : this.selected,
-    );
-    componentRef.setInput('type', fieldTypeName);
-    componentRef.setInput('Entity', this.form);
+    setDynamicInputs(componentRef, {
+      // A copy, not the live object: the editor patches stored values into its own form group, and
+      // handing it the original would let an abandoned edit mutate the field the caller still holds.
+      selected: this.selected ? (structuredClone(this.selected) as FlexFieldData) : this.selected,
+      type: fieldTypeName,
+      Entity: this.form,
+    });
   }
 }

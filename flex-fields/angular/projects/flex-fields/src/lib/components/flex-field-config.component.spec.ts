@@ -119,5 +119,33 @@ describe('built-in field config editors', () => {
       expect(() => fixture.detectChanges()).not.toThrow();
       fixture.destroy();
     });
+
+    // Contract coverage beyond "does it throw": every built-in editor extends FieldTypeConfigBase,
+    // whose `Entity`/`type`/`selected` are inherited *setter* @Input()s, reached via setDynamicInputs
+    // rather than ComponentRef.setInput() directly - see that function's own doc comment for why.
+    // This test cannot reproduce the failure setDynamicInputs guards against: that gap is specific to
+    // a subclass of FieldTypeConfigBase compiled downstream, in a *different* compilation unit, from a
+    // published copy of this library - which is not something any test inside this repo's own build can
+    // set up (everything here, built-ins included, compiles together as one program). It was confirmed
+    // directly against a real downstream consumer instead: opening an existing field for edit rendered
+    // its stored configuration as blank defaults, and (unnoticed) Save would have re-persisted that
+    // emptied-out configuration over what was actually stored. This test still earns its place as a
+    // contract check on FlexFieldConfigComponent's dispatch - it would catch a *different* way of
+    // breaking the same handoff, even one this in-repo setup can exercise.
+    it(`restores the ${fieldTypeName} editor's own form group onto the host form`, () => {
+      const form = new FormGroup({ fieldTypeName: new FormControl(fieldTypeName) });
+      const fixture = TestBed.createComponent(FlexFieldConfigComponent);
+      fixture.componentRef.setInput('type', fieldTypeName);
+      fixture.componentRef.setInput('form', form);
+
+      fixture.detectChanges();
+
+      // Every FieldTypeConfigBase subclass's rebuild() does formEntity.setControl('configuration', ...)
+      // as its very first act once Entity/type both land - so this key existing on the *same* form
+      // instance the caller holds is proof the inherited setter actually ran, not just that some
+      // component of the right type was instantiated.
+      expect(form.get('configuration')).toBeTruthy();
+      fixture.destroy();
+    });
   }
 });
