@@ -1,6 +1,6 @@
 {
   "name": "@dignite/ng.notification-center",
-  "version": "10.0.0-rc.7",
+  "version": "10.0.0-rc.8",
   "description": "Angular UI library for the Dignite Notification Center — notification bell, subscriptions management, and ABP-generated API proxies over /api/notifications.",
   "author": "Dignite",
   "license": "LGPL-3.0-only",
