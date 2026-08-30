@@ -15,6 +15,54 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+## [10.0.0-rc.6] - 2026-08-30
+
+### Changed
+
+#### flex-fields
+
+- **Breaking: `IFlexField.Description` no longer has a length cap.** `FlexFieldConsts.MaxDescriptionLength`
+  (256 characters) is removed; the EF Core column now maps to the provider's unbounded text type instead
+  of a fixed-width one. `Description` is sometimes used as free-form prompt text for an AI rather than a
+  short blurb, which routinely exceeded the previous cap. Hosts add their own migration to widen the
+  column next time they touch the model.
+
+#### file-storing
+
+- `Dignite.FileExplorer.HttpApi.Client` now registers `AddStaticHttpClientProxies` instead of the unused
+  dynamic `AddHttpClientProxies` path — the generated `ClientProxies/` code already shipped but wasn't
+  being used.
+
+#### notifications
+
+- `Dignite.NotificationCenter.HttpApi.Client` switches from dynamic to static proxies
+  (`AddStaticHttpClientProxies`), gaining generated `ClientProxies/` code and a new
+  `NotificationCenterRemoteServiceConsts` type (mirroring `FileExplorerRemoteServiceConsts`) so the
+  controllers' `RemoteService`/`Area` names and the client module's `RemoteServiceName` reference one
+  constant instead of matching hardcoded strings by hand.
+
+### Fixed
+
+#### flex-fields
+
+- CKEditor's editable content now themes correctly in dark mode — `--ck-content-font-color` is
+  repointed at the same base-text token the control already sets, instead of inheriting CKEditor 5's
+  own light-mode default.
+- The Select field type's dropdown options are now readable in dark mode — an ng-zorro CSS specificity
+  tie was leaving idle (non-hover, non-selected) options on ng-zorro's own light-mode colors regardless
+  of theme.
+- The Tree field type's picker (inline control and search dropdown) no longer paints an opaque white
+  background in dark mode.
+- `ConfigureAwait.Fody` is now actually applied to the CKEditor and FileExplorer integration projects —
+  see file-storing below for why this matters.
+
+#### file-storing
+
+- `ConfigureAwait.Fody` is now actually applied to the core and file-explorer projects — they were
+  missing the per-project `FodyWeavers.xml` opt-in file the repo-wide convention requires, so
+  `.ConfigureAwait(false)` wasn't being woven into their `await`s. A host running these modules on a
+  `SynchronizationContext` (WPF/WinForms/Blazor Server/classic ASP.NET) could previously deadlock.
+
 ## [10.0.0-rc.5] - 2026-08-17
 
 ### Added
