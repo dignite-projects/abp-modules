@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy, OnInit, ViewEncapsulation, inject } from '@angular/core';
+import { Component, Input, NgZone, OnDestroy, OnInit, ViewEncapsulation, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CoreModule, RestService } from '@abp/ng.core';
 import { AbstractControl, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
@@ -35,6 +35,7 @@ import { CKEditorUploadAdapter } from './ckeditor-upload-adapter';
 })
 export class CKEditorControlComponent extends FieldTypeControlBase implements OnInit, OnDestroy {
   private readonly restService = inject(RestService);
+  private readonly ngZone = inject(NgZone);
 
   /**
    * Whether this usage ever had a real stored value - captured here because
@@ -75,6 +76,12 @@ export class CKEditorControlComponent extends FieldTypeControlBase implements On
     return this.fb.control(seeded, validators);
   }
 
+  // Zone.js does not patch dynamic import() (unlike fetch/XMLHttpRequest/setTimeout), so the
+  // continuation after `await import(...)` runs outside Angular's zone. Assigning editorClass/
+  // editorConfig there without re-entering the zone leaves the view stuck on the template's `Loading`
+  // branch until some unrelated zone-patched event elsewhere on the page happens to trigger a change
+  // detection sweep - the editor is fully ready but never gets painted. ngZone.run() forces the
+  // assignment (and the change detection it triggers) back onto the Angular zone.
   async ngOnInit(): Promise<void> {
     const module = await import('ckeditor5');
     const configuration = this.fieldValue!.field.configuration;
@@ -85,11 +92,13 @@ export class CKEditorControlComponent extends FieldTypeControlBase implements On
     ) as CKEditorContentFormat;
     const containerName = (configuration['CKEditor.ImagesContainerName'] as string) ?? '';
 
-    this.editorClass = resolveEditorClass(module, mode);
-    this.editorConfig = buildEditorConfig(module, {
-      mode,
-      contentFormat,
-      imageUploadEnabled: containerName.length > 0,
+    this.ngZone.run(() => {
+      this.editorClass = resolveEditorClass(module, mode);
+      this.editorConfig = buildEditorConfig(module, {
+        mode,
+        contentFormat,
+        imageUploadEnabled: containerName.length > 0,
+      });
     });
   }
 

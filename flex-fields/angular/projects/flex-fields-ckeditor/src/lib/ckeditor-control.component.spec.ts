@@ -1,3 +1,4 @@
+import { NgZone } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { TestBed } from '@angular/core/testing';
 import { RestService } from '@abp/ng.core';
@@ -6,6 +7,38 @@ import { FlexFieldValue } from '@dignite/ng.flex-fields';
 import type { Editor } from 'ckeditor5';
 import { CKEditorControlComponent } from './ckeditor-control.component';
 import { CKEditorUploadAdapter } from './ckeditor-upload-adapter';
+
+// ngOnInit's own describe block mocks this - plain stand-ins for every plugin class
+// buildEditorConfig/resolveEditorClass reference, none of which that test ever instantiates or
+// inspects (both functions only ever push these into a plugins array or return one directly). Real
+// ckeditor5 stays untouched for every other test in this file.
+vi.mock('ckeditor5', () => {
+  const plugin = {};
+  return {
+    ClassicEditor: plugin,
+    BalloonEditor: plugin,
+    Essentials: plugin,
+    Paragraph: plugin,
+    Heading: plugin,
+    Bold: plugin,
+    Italic: plugin,
+    Underline: plugin,
+    Strikethrough: plugin,
+    Link: plugin,
+    List: plugin,
+    CodeBlock: plugin,
+    BlockQuote: plugin,
+    Table: plugin,
+    TableToolbar: plugin,
+    SourceEditing: plugin,
+    Image: plugin,
+    ImageUpload: plugin,
+    ImageToolbar: plugin,
+    ImageCaption: plugin,
+    ImageStyle: plugin,
+    Markdown: plugin,
+  };
+});
 
 function fieldValue(overrides: Partial<FlexFieldValue> = {}): FlexFieldValue {
   return {
@@ -33,10 +66,10 @@ describe('CKEditorControlComponent', () => {
     });
   });
 
-  // Deliberately never calls fixture.detectChanges() anywhere in this file: that would run ngOnInit(),
-  // which does a real `await import('ckeditor5')` against the actual multi-megabyte package.
-  // createControl() itself fires synchronously off the @Input setters (inherited from
-  // FieldTypeControlBase), so its seeding logic is fully exercised without ever touching ckeditor5.
+  // createControl / onReady below never call fixture.detectChanges(): that would run ngOnInit(),
+  // which is exactly what the dedicated ngOnInit describe block further down exists to exercise in
+  // isolation. createControl() fires synchronously off the @Input setters (inherited from
+  // FieldTypeControlBase), so its seeding logic is fully exercised without ever touching ngOnInit.
   function build(field: FlexFieldValue, selected?: unknown) {
     const values = new FormGroup({});
     const entity = new FormGroup({ flexFields: values });
@@ -112,6 +145,30 @@ describe('CKEditorControlComponent', () => {
       component.onReady(editor);
 
       expect(editor.plugins.get).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('ngOnInit', () => {
+    // Zone.js does not patch dynamic import() - the continuation after `await import('ckeditor5')`
+    // resumes outside Angular's zone, so assigning editorClass/editorConfig there directly never
+    // triggers change detection: the view stays on the template's Loading branch even though the
+    // editor is already fully ready. This guards the fix (wrapping that assignment in ngZone.run())
+    // by asserting on delegation to NgZone rather than on a real CKEditor mount, which needs no
+    // stand-in beyond what ckeditor5 mock already provides at file scope.
+    it('assigns editorClass/editorConfig inside NgZone.run so the async ckeditor5 import can trigger change detection once resolved', async () => {
+      const { fixture } = build(fieldValue());
+      // Spies on the real NgZone rather than replacing it: Angular's own zoneless change-detection
+      // scheduler depends on other members of this service, which a bare { run: ... } stand-in
+      // does not have. vi.spyOn preserves the real implementation, so the app's own scheduling stays
+      // intact - only the call itself is observed.
+      const ngZoneRunSpy = vi.spyOn(TestBed.inject(NgZone), 'run');
+
+      fixture.detectChanges();
+
+      await vi.waitFor(() => expect(ngZoneRunSpy).toHaveBeenCalled());
+
+      expect(fixture.componentInstance.editorClass).not.toBeNull();
+      expect(fixture.componentInstance.editorConfig).not.toBeNull();
     });
   });
 });
