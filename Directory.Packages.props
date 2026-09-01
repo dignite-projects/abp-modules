@@ -112,7 +112,7 @@
   -->
   <ItemGroup Label="CKEditor bolt-on: Markdown/HTML conversion and sanitization (Dignite.Abp.FlexFields.CKEditor.Web only)">
     <PackageVersion Include="Markdig" Version="1.3.2" />
-    <PackageVersion Include="HtmlSanitizer" Version="9.1.982" />
+    <PackageVersion Include="HtmlSanitizer" Version="9.2.1039" />
   </ItemGroup>
 
   <!--
