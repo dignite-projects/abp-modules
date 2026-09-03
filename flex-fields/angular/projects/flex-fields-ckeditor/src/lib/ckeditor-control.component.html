@@ -4,10 +4,10 @@
       <label class="form-label" *ngIf="fieldValue.field.displayName">
         {{ fieldValue.field.displayName }}
       </label>
-      @if (editorClass) {
+      @if (editor(); as e) {
         <ckeditor
-          [editor]="editorClass"
-          [config]="editorConfig"
+          [editor]="e.editorClass"
+          [config]="e.editorConfig"
           [formControlName]="fieldValue.field.name"
           (ready)="onReady($event)"
         />

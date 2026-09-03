@@ -1,4 +1,4 @@
-import { NgZone } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { TestBed } from '@angular/core/testing';
 import { RestService } from '@abp/ng.core';
@@ -40,6 +40,12 @@ vi.mock('ckeditor5', () => {
   };
 });
 
+// Stands in for the real `@ckeditor/ckeditor5-angular` package - `CKEditorControlComponent`'s own
+// `imports: [..., CKEditorModule]` (unmodified, no TestBed.overrideComponent needed) picks up this
+// mock directly, since it imports `CKEditorModule` from this same module specifier. See
+// ckeditor-angular-mock.ts for what it stands in for and why it lives in its own file.
+vi.mock('@ckeditor/ckeditor5-angular', () => import('./ckeditor-angular-mock'));
+
 function fieldValue(overrides: Partial<FlexFieldValue> = {}): FlexFieldValue {
   return {
     field: {
@@ -53,6 +59,24 @@ function fieldValue(overrides: Partial<FlexFieldValue> = {}): FlexFieldValue {
     searchable: false,
     ...overrides,
   };
+}
+
+/**
+ * Reproduces the real consumer shape (`DocumentDetailComponent`, out of this repo): an `OnPush` host
+ * rendering `ff-ckeditor-control` directly, inputs set once before the first `detectChanges()`. This is
+ * what the `ngOnInit` describe block below exercises - see the comment there for why a plain-field
+ * assignment inside the component under an `OnPush` ancestor like this one is invisible to change
+ * detection, and a signal write is not.
+ */
+@Component({
+  selector: 'ff-onpush-host',
+  template: `<ff-ckeditor-control [fields]="fields" [entity]="entity" parentFieldName="flexFields" />`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CKEditorControlComponent],
+})
+class OnPushHostComponent {
+  @Input() fields!: FlexFieldValue;
+  @Input() entity!: FormGroup;
 }
 
 describe('CKEditorControlComponent', () => {
@@ -149,26 +173,47 @@ describe('CKEditorControlComponent', () => {
   });
 
   describe('ngOnInit', () => {
-    // Zone.js does not patch dynamic import() - the continuation after `await import('ckeditor5')`
-    // resumes outside Angular's zone, so assigning editorClass/editorConfig there directly never
-    // triggers change detection: the view stays on the template's Loading branch even though the
-    // editor is already fully ready. This guards the fix (wrapping that assignment in ngZone.run())
-    // by asserting on delegation to NgZone rather than on a real CKEditor mount, which needs no
-    // stand-in beyond what ckeditor5 mock already provides at file scope.
-    it('assigns editorClass/editorConfig inside NgZone.run so the async ckeditor5 import can trigger change detection once resolved', async () => {
-      const { fixture } = build(fieldValue());
-      // Spies on the real NgZone rather than replacing it: Angular's own zoneless change-detection
-      // scheduler depends on other members of this service, which a bare { run: ... } stand-in
-      // does not have. vi.spyOn preserves the real implementation, so the app's own scheduling stays
-      // intact - only the call itself is observed.
-      const ngZoneRunSpy = vi.spyOn(TestBed.inject(NgZone), 'run');
+    // Reproduces the real consumer: this component is always created dynamically
+    // (`ViewContainerRef.createComponent`, see `FlexFieldControlComponent`) inside whatever host
+    // renders it, and that host is `OnPush` in the real consumer (`DocumentDetailComponent`). A tick
+    // that reaches an `OnPush` ancestor nothing has marked dirty skips its subtree entirely, so a plain
+    // field assignment made after `await import('ckeditor5')` resolves (outside Angular's zone) would
+    // never repaint here - the earlier `ngZone.run()` fix only addressed being outside the zone, not
+    // being under an unmarked `OnPush` ancestor, and it stayed stuck on the template's Loading branch.
+    function buildOnPushHost(field: FlexFieldValue) {
+      const values = new FormGroup({});
+      const entity = new FormGroup({ flexFields: values });
+      const fixture = TestBed.createComponent(OnPushHostComponent);
+      fixture.componentRef.setInput('fields', field);
+      fixture.componentRef.setInput('entity', entity);
+      return fixture;
+    }
+
+    it('renders the editor once the lazy ckeditor5 import resolves, with no further input change or DOM event on the OnPush host', async () => {
+      const fixture = buildOnPushHost(fieldValue());
 
       fixture.detectChanges();
 
-      await vi.waitFor(() => expect(ngZoneRunSpy).toHaveBeenCalled());
+      expect(fixture.nativeElement.textContent).toContain('Loading');
+      expect(fixture.nativeElement.querySelector('ckeditor')).toBeNull();
 
-      expect(fixture.componentInstance.editorClass).not.toBeNull();
-      expect(fixture.componentInstance.editorConfig).not.toBeNull();
+      // Polls `detectChanges()` rather than a single call after `whenStable()`: dynamic `import()`'s
+      // continuation is not reliably tracked by the zone's pending-task bookkeeping `whenStable()`
+      // relies on, so a single post-`whenStable()` check can race the still-pending import. Repeated
+      // `detectChanges()` calls stand in for the app's own repeated ticks over time - never an input
+      // change or a DOM event on the host - and the mutation check below confirms this genuinely
+      // distinguishes the fix from the bug rather than papering over it: OnPush means an ancestor tick
+      // that nothing marked dirty skips this subtree regardless of how many times it runs.
+      await vi.waitFor(() => {
+        fixture.detectChanges();
+        expect(fixture.nativeElement.querySelector('ckeditor')).not.toBeNull();
+      });
+
+      expect(fixture.nativeElement.textContent).not.toContain('Loading');
     });
+
+    // The Mode -> editor class / ContentFormat -> plugin mapping itself is already covered by
+    // ckeditor-editor-config.spec.ts; nothing cheap to add here beyond re-asserting DOM presence, which
+    // the test above already does.
   });
 });
