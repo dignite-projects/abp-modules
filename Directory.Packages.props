@@ -70,11 +70,11 @@
     manifest generation for embedded wwwroot content (ABP's AddEmbedded/ManifestEmbeddedFileProvider).
   -->
   <ItemGroup Label="Embedded static and localization resources">
-    <PackageVersion Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.11" />
   </ItemGroup>
 
   <ItemGroup Label="System.Text.Json (only needed for netstandard targets; in-box on net10.0)">
-    <PackageVersion Include="System.Text.Json" Version="10.0.7" />
+    <PackageVersion Include="System.Text.Json" Version="10.0.11" />
   </ItemGroup>
 
   <ItemGroup Label="Microsoft hosting abstractions">
@@ -82,12 +82,12 @@
   </ItemGroup>
 
   <ItemGroup Label="Test stack">
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
-    <PackageVersion Include="xunit" Version="2.9.2" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
-    <PackageVersion Include="Shouldly" Version="4.2.1" />
-    <PackageVersion Include="NSubstitute" Version="5.1.0" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Proxies" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
+    <PackageVersion Include="Shouldly" Version="4.3.0" />
+    <PackageVersion Include="NSubstitute" Version="6.2.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Proxies" Version="10.0.11" />
   </ItemGroup>
 
   <ItemGroup Label="MongoDB integration-test infrastructure (embedded mongod, ABP v10 pattern)">
