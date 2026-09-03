@@ -27,7 +27,7 @@
   <ItemGroup Label="Security overrides for vulnerable transitive dependencies">
     <PackageReference Include="MessagePack" Version="3.1.8" />
     <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
-    <PackageReference Include="Scriban" Version="7.2.2" />
+    <PackageReference Include="Scriban" Version="7.2.7" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" />
   </ItemGroup>
 
