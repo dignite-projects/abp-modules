@@ -182,6 +182,14 @@ jobs:
         working-directory: file-storing/angular
         run: yarn build:lib
 
+      # ng-packagr emits an external for every bare specifier it does not bundle, but never checks
+      # that the external is declared - a library can publish a bundle importing a package its own
+      # package.json does not name, and nothing fails until a consumer builds. The smoke test below
+      # cannot see it: it seeds the throwaway consumer from the demo app's dependency list, so the
+      # undeclared package is already installed.
+      - name: Check file-storing Angular package dependencies
+        run: node ./build/check-angular-package-deps.mjs file-storing/angular/dist/file-explorer
+
       - name: Build file-storing Angular demo
         working-directory: file-storing/angular
         run: yarn build:prod
@@ -219,6 +227,9 @@ jobs:
       - name: Build notifications Angular library
         working-directory: notifications/angular
         run: yarn build:lib
+
+      - name: Check notifications Angular package dependencies
+        run: node ./build/check-angular-package-deps.mjs notifications/angular/dist/notification-center
 
       - name: Build notifications Angular demo
         working-directory: notifications/angular
@@ -261,12 +272,24 @@ jobs:
         working-directory: flex-fields/angular
         run: yarn build:lib
 
+      - name: Check flex-fields Angular package dependencies
+        run: node ./build/check-angular-package-deps.mjs flex-fields/angular/dist/flex-fields
+
       # Must run after "Build flex-fields Angular library" - flex-fields-file-explorer resolves
       # @dignite/ng.flex-fields straight from that library's dist output (see the comment in
       # flex-fields-file-explorer's tsconfig.lib.json for why it can't go through node_modules).
       - name: Build flex-fields-file-explorer Angular library
         working-directory: flex-fields/angular
         run: yarn build:lib:file-explorer
+
+      # Built here only since 10.0.0-rc.12: release.yml has always built and published it, but ci.yml
+      # never did, so a PR breaking the ckeditor adapter stayed green until tag time.
+      - name: Build flex-fields-ckeditor Angular library
+        working-directory: flex-fields/angular
+        run: yarn build:lib:ckeditor
+
+      - name: Check flex-fields adapters Angular package dependencies
+        run: node ./build/check-angular-package-deps.mjs flex-fields/angular/dist/flex-fields-file-explorer flex-fields/angular/dist/flex-fields-ckeditor
 
       - name: Build flex-fields Angular demo
         working-directory: flex-fields/angular
