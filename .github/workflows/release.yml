@@ -3,9 +3,10 @@
 # but tags do not drive the number.
 #
 # Tagged releases are public: NuGet packages go to NuGet.org through Trusted Publishing (GitHub
-# OIDC -> short-lived API key), and four of the five Angular packages go to npm (`next` for a
-# pre-release, `latest` for a stable release) - flex-fields-ckeditor is built and packed like the
-# others but has no npmjs publish step yet, only the GitHub Packages prerelease mirror below.
+# OIDC -> short-lived API key), and all five Angular packages go to npm (`next` for a pre-release,
+# `latest` for a stable release) through npm Trusted Publishing (OIDC) too - no long-lived
+# NPM_TOKEN secret. Each of the five packages has its own Trusted Publisher configured on
+# npmjs.com, scoped to this repo and this workflow file.
 # Pre-release NuGet packages are also mirrored to GitHub Packages under the same @dignite/*
 # names; pre-release Angular packages are mirrored too, but GitHub Packages' npm registry requires
 # the scope to equal the owning org, so those publish under @dignite-projects/* instead of the
@@ -53,6 +54,11 @@ jobs:
             notifications/angular/yarn.lock
             flex-fields/angular/yarn.lock
           registry-url: 'https://registry.npmjs.org'
+
+      # Trusted publishing (OIDC) needs npm >= 11.5.1; Node 22.14.0 (.nvmrc) bundles npm 10.9.x.
+      # Pinned to the 11.x line so a future npm major cannot change publish behaviour unannounced.
+      - name: Upgrade npm for trusted publishing
+        run: npm install -g npm@^11.5.1
 
       - name: Verify tag, NuGet, and npm version lockstep
         id: version
@@ -303,8 +309,8 @@ jobs:
           node ./flex-fields/.github/scripts/smoke-test-file-explorer-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
 
       # No smoke-test-*.mjs script exists yet for this one (the existing scripts hardcode the
-      # @dignite/ng.flex-fields / file-explorer dependency shape) - packed and published like its
-      # siblings, just not install-tested in CI yet.
+      # @dignite/ng.flex-fields / file-explorer dependency shape) - it is now packed and published
+      # to npmjs like its siblings, just not install-tested in CI yet.
       - name: Pack flex-fields-ckeditor Angular library
         shell: pwsh
         working-directory: flex-fields/angular
@@ -388,7 +394,27 @@ jobs:
             tar -xzf "$tarball" -C "$workdir"
             name=$(node -p "require('$workdir/package/package.json').name")
             npm pkg set name="@dignite-projects/${name#@dignite/}" --prefix "$workdir/package"
-            npm publish "$workdir/package" --registry https://npm.pkg.github.com
+            # GitHub Packages refuses to overwrite an existing version, so a re-dispatch at an
+            # unchanged <Version> (which the header comment above explicitly invites) or a re-run
+            # of a failed tag run dies here before ever reaching the npmjs step. Treat "already
+            # published" as a soft skip and let anything else fail.
+            #
+            # Redirect rather than `| tee`: this step's shell is `bash -e` with no pipefail, so a
+            # pipeline's status is tee's (always 0) and a failed publish would report success -
+            # the same class of E401-masking bug that a piped `npm publish | tee` hit in
+            # dignite-projects/vault-extract's release workflow before it added this guard.
+            set +e
+            npm publish "$workdir/package" --registry https://npm.pkg.github.com > /tmp/npm-publish.log 2>&1
+            status=$?
+            set -e
+            cat /tmp/npm-publish.log
+            if [ $status -ne 0 ]; then
+              if grep -qiE 'E409|cannot publish over|previously published' /tmp/npm-publish.log; then
+                echo "::notice::@dignite-projects/${name#@dignite/} is already published at this version; skipping."
+              else
+                exit $status
+              fi
+            fi
           done
 
       - name: Validate NuGet Trusted Publishing identity
@@ -421,15 +447,14 @@ jobs:
               --skip-duplicate
           done
 
+      # Auth is OIDC: npm exchanges this job's GitHub id-token for a short-lived publish token
+      # per package (that's why registry-url was set on actions/setup-node above and why the job
+      # has id-token: write). A package whose Trusted Publisher is missing or misconfigured on
+      # npmjs.com fails loudly at its own `npm publish` line (E404/E401), which is intended; with
+      # `bash -e` the remaining packages are then skipped, same as before.
       - name: Publish tagged Angular packages to npm
         if: startsWith(github.ref, 'refs/tags/v')
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "::error::NPM_TOKEN is required for a tagged public release."
-            exit 1
-          fi
           npm publish ./artifacts/npm/file-storing/*.tgz \
             --access public \
             --tag '${{ steps.channel.outputs.npm-tag }}' \
@@ -443,6 +468,10 @@ jobs:
             --tag '${{ steps.channel.outputs.npm-tag }}' \
             --provenance
           npm publish ./artifacts/npm/flex-fields-file-explorer/*.tgz \
+            --access public \
+            --tag '${{ steps.channel.outputs.npm-tag }}' \
+            --provenance
+          npm publish ./artifacts/npm/flex-fields-ckeditor/*.tgz \
             --access public \
             --tag '${{ steps.channel.outputs.npm-tag }}' \
             --provenance

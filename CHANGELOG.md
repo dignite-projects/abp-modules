@@ -15,6 +15,14 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Changed
+
+- npmjs publishing switched from a long-lived `NPM_TOKEN` secret to npm Trusted Publishing (OIDC);
+  each of the five Angular packages now has its own Trusted Publisher configured on npmjs.com.
+  `@dignite/ng.flex-fields-ckeditor` is published to npmjs on tagged releases for the first time.
+- The GitHub Packages pre-release npm mirror now tolerates re-runs at an unchanged version,
+  treating "already published" as a skip instead of failing the step.
+
 ## [10.0.0-rc.11] - 2026-08-31
 
 ### Fixed
@@ -33,8 +41,11 @@ so it stays clear which part of the repository actually moved.
 
 > `10.0.0-rc.6` also exists on NuGet.org with identical package contents — that release run failed
 > at the npm publishing step (the `NPM_TOKEN` granular access token had no package/scope
-> permissions), so none of the four public Angular packages were ever published under it. Treat
-> rc.7 as the complete release across both registries.
+> permissions), so none of the four public Angular packages were ever published under it. `rc.7`'s
+> own tagged run (and `rc.11`'s) also failed at that step, this time because the replacement token
+> still required a 2FA one-time password — so no `10.0.0-rc.*` Angular package after
+> `@dignite/ng.notification-center@10.0.0-rc.3` reached npmjs from CI. The `rc.11` tarballs are
+> published manually out-of-band, and CI moves to npm Trusted Publishing going forward.
 
 ### Changed
 
