@@ -44,11 +44,18 @@ jobs:
         with:
           dotnet-version: '10.0.302'
 
+      # registry-url is deliberately NOT set here (unlike ci.yml's identical-looking step, this one
+      # would otherwise be fine to add it to): actions/setup-node writes an auth-token placeholder
+      # into a generated .npmrc whenever registry-url is given, and every yarn command below - not
+      # just the `cache: yarn` probe dropped in an earlier fix - eagerly substitutes every env-var
+      # placeholder in yarn's resolved config on every invocation, including a plain `yarn install`,
+      # and throws when NODE_AUTH_TOKEN isn't set. Nothing sets it: npm's OIDC-based Trusted
+      # Publishing (see "Configure npm registry for publishing" below) does not use NODE_AUTH_TOKEN
+      # at all. See CHANGELOG.md's Fixed entry for v10.0.0-rc.13 for the failure history.
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
-          registry-url: 'https://registry.npmjs.org'
 
       # Trusted publishing (OIDC) needs npm >= 11.5.1; Node 22.14.0 (.nvmrc) bundles npm 10.9.x.
       # Pinned to the 11.x line so a future npm major cannot change publish behaviour unannounced.
@@ -355,6 +362,15 @@ jobs:
             artifacts/*.snupkg
             artifacts/npm/**/*.tgz
           if-no-files-found: error
+
+      # registry-url lives here, not on the earlier Setup Node.js step - see the comment there. No
+      # yarn command runs after this point, only npm and dotnet, so it's safe here: this sets
+      # $NPM_CONFIG_USERCONFIG for every remaining step, same as the GitHub Packages push below and
+      # the npmjs Trusted Publishing push further down both already assume.
+      - name: Configure npm registry for publishing
+        uses: actions/setup-node@v7
+        with:
+          registry-url: 'https://registry.npmjs.org'
 
       # Keep the existing authenticated GitHub Packages preview feed for every pre-release trigger.
       - name: Push to GitHub Packages (pre-release)
