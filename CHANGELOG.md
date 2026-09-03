@@ -34,6 +34,11 @@ so it stays clear which part of the repository actually moved.
   after the last yarn command in the job (before the GitHub Packages and npmjs publish steps that
   need it) — so no yarn command ever sees that `.npmrc` in the first place. `ci.yml`'s
   identical-looking "Setup Node.js" step never hit any of this because it never sets `registry-url`.
+- **`release.yml`'s "Publish pre-release Angular packages to GitHub Packages" step had no `--tag`
+  on its `npm publish` call**, and npm refuses to publish a pre-release version (every version this
+  repository has ever shipped so far) without one explicitly stated. Unlike the crash above, this
+  one only broke once the job got far enough to actually reach it. Added the same
+  `--tag '${{ steps.channel.outputs.npm-tag }}'` the sibling npmjs-publishing step already used.
 
 ## [10.0.0-rc.13] - 2026-09-03
 

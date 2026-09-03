@@ -415,7 +415,8 @@ jobs:
             # the same class of E401-masking bug that a piped `npm publish | tee` hit in
             # dignite-projects/vault-extract's release workflow before it added this guard.
             set +e
-            npm publish "$workdir/package" --registry https://npm.pkg.github.com > /tmp/npm-publish.log 2>&1
+            npm publish "$workdir/package" --registry https://npm.pkg.github.com \
+              --tag '${{ steps.channel.outputs.npm-tag }}' > /tmp/npm-publish.log 2>&1
             status=$?
             set -e
             cat /tmp/npm-publish.log
