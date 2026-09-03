@@ -64,13 +64,15 @@
   </ItemGroup>
 
   <!--
-    Microsoft.Extensions.FileProviders.Embedded: file-storing pinned 10.0.9, notifications pinned
-    10.0.7 - merged to the higher 10.0.9 when the two modules' pins were unified. notifications
+    Microsoft.Extensions.FileProviders.Embedded: referenced both here (for the centrally-managed
+    library projects) and inline by all 3 host/demo apps, which opt out of central management -
+    dependabot's per-directory PRs only bump one of those four spots at a time, so keep all four in
+    lockstep by hand or the solution-wide restore hits NU1605 (downgrade) across modules. notifications
     needs this as a direct reference (not just ABP's transitive one) to activate its build-time
     manifest generation for embedded wwwroot content (ABP's AddEmbedded/ManifestEmbeddedFileProvider).
   -->
   <ItemGroup Label="Embedded static and localization resources">
-    <PackageVersion Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.11" />
   </ItemGroup>
 
   <ItemGroup Label="System.Text.Json (only needed for netstandard targets; in-box on net10.0)">
