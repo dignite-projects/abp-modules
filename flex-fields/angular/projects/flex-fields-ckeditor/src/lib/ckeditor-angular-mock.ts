@@ -18,7 +18,9 @@ import { NG_VALUE_ACCESSOR } from '@angular/forms';
  * entanglement with the file that declares it.
  */
 @Component({
+  // eslint-disable-next-line @angular-eslint/component-selector -- mocks the real @ckeditor/ckeditor5-angular <ckeditor> selector
   selector: 'ckeditor',
+  // eslint-disable-next-line @angular-eslint/prefer-standalone -- mirrors the real package's NgModule-based CKEditorModule, see comment above
   standalone: false,
   template: '',
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => CkeditorAngularMockComponent), multi: true }],
