@@ -22,6 +22,9 @@ updates:
         patterns:
           - "Microsoft.*"
           - "System.*"
+      others:
+        patterns:
+          - "*"
     ignore:
       - dependency-name: "Volo.Abp.*"
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
@@ -30,6 +33,17 @@ updates:
     directory: "/file-storing/host/Dignite.FileExplorer.Web.Host"
     schedule:
       interval: monthly
+    groups:
+      abp:
+        patterns:
+          - "Volo.Abp.*"
+      microsoft:
+        patterns:
+          - "Microsoft.*"
+          - "System.*"
+      others:
+        patterns:
+          - "*"
     ignore:
       - dependency-name: "Volo.Abp.*"
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
@@ -42,6 +56,17 @@ updates:
     directory: "/notifications/host/Dignite.NotificationCenter.Web.Host"
     schedule:
       interval: monthly
+    groups:
+      abp:
+        patterns:
+          - "Volo.Abp.*"
+      microsoft:
+        patterns:
+          - "Microsoft.*"
+          - "System.*"
+      others:
+        patterns:
+          - "*"
     ignore:
       - dependency-name: "Volo.Abp.*"
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
@@ -54,6 +79,17 @@ updates:
     directory: "/flex-fields/demo/Dignite.Abp.FlexFields.Demo"
     schedule:
       interval: monthly
+    groups:
+      abp:
+        patterns:
+          - "Volo.Abp.*"
+      microsoft:
+        patterns:
+          - "Microsoft.*"
+          - "System.*"
+      others:
+        patterns:
+          - "*"
     ignore:
       - dependency-name: "Volo.Abp.*"
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
@@ -71,6 +107,12 @@ updates:
         patterns:
           - "@angular/*"
           - "@angular-eslint/*"
+      abp-ng:
+        patterns:
+          - "@abp/ng.*"
+      others:
+        patterns:
+          - "*"
     ignore:
       - dependency-name: "@abp/ng.*"
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
@@ -86,6 +128,12 @@ updates:
         patterns:
           - "@angular/*"
           - "@angular-eslint/*"
+      abp-ng:
+        patterns:
+          - "@abp/ng.*"
+      others:
+        patterns:
+          - "*"
     ignore:
       - dependency-name: "@abp/ng.*"
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
@@ -101,6 +149,12 @@ updates:
         patterns:
           - "@angular/*"
           - "@angular-eslint/*"
+      abp-ng:
+        patterns:
+          - "@abp/ng.*"
+      others:
+        patterns:
+          - "*"
     ignore:
       - dependency-name: "@abp/ng.*"
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
