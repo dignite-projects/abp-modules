@@ -15,6 +15,20 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Every tag-triggered release since the npm Trusted Publishing migration (`v10.0.0-rc.12` and
+  `v10.0.0-rc.13`) crashed at `release.yml`'s very first meaningful step, "Setup Node.js", before
+  the job ever built or published anything.** That step set `registry-url` (needed later for the
+  OIDC-based npm publish steps) alongside `cache: yarn`, and `actions/setup-node@v7` shells out to
+  `yarn cache dir` to resolve the cache path — which eagerly substitutes every env-var placeholder
+  in yarn's resolved config, including the `${NODE_AUTH_TOKEN}` that `registry-url` writes into the
+  generated `.npmrc`. Nothing sets `NODE_AUTH_TOKEN` anymore now that npm publishing is OIDC-based,
+  so the substitution had nothing to substitute and yarn threw, killing the job outright. Nothing
+  was actually published to NuGet.org or npm for either tag. Dropped `cache: yarn` (and its
+  `cache-dependency-path`) from that one step in `release.yml`; `ci.yml`'s identical-looking step
+  never hit this because it doesn't set `registry-url`, so its cache stays as is.
+
 ## [10.0.0-rc.13] - 2026-09-03
 
 ### Added
