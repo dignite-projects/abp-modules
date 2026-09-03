@@ -28,6 +28,10 @@ updates:
     ignore:
       - dependency-name: "Volo.Abp.*"
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
+      - dependency-name: "Volo.Abp.Studio.Client.AspNetCore"
+        versions: [">= 3.0.9"]
+      - dependency-name: "Microsoft.OpenApi"
+        versions: [">= 3.0.0"]
 
   - package-ecosystem: nuget
     directory: "/file-storing/host/Dignite.FileExplorer.Web.Host"
