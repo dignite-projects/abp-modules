@@ -15,6 +15,8 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+## [10.0.0-rc.13] - 2026-09-03
+
 ### Added
 
 - **`build/check-angular-package-deps.mjs`, a CI gate that fails when a built library imports a
