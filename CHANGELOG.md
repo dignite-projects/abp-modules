@@ -18,16 +18,22 @@ so it stays clear which part of the repository actually moved.
 ### Fixed
 
 - **Every tag-triggered release since the npm Trusted Publishing migration (`v10.0.0-rc.12` and
-  `v10.0.0-rc.13`) crashed at `release.yml`'s very first meaningful step, "Setup Node.js", before
-  the job ever built or published anything.** That step set `registry-url` (needed later for the
-  OIDC-based npm publish steps) alongside `cache: yarn`, and `actions/setup-node@v7` shells out to
-  `yarn cache dir` to resolve the cache path — which eagerly substitutes every env-var placeholder
-  in yarn's resolved config, including the `${NODE_AUTH_TOKEN}` that `registry-url` writes into the
-  generated `.npmrc`. Nothing sets `NODE_AUTH_TOKEN` anymore now that npm publishing is OIDC-based,
-  so the substitution had nothing to substitute and yarn threw, killing the job outright. Nothing
-  was actually published to NuGet.org or npm for either tag. Dropped `cache: yarn` (and its
-  `cache-dependency-path`) from that one step in `release.yml`; `ci.yml`'s identical-looking step
-  never hit this because it doesn't set `registry-url`, so its cache stays as is.
+  `v10.0.0-rc.13`, twice for the latter) crashed inside `release.yml` before the job ever published
+  anything to NuGet.org or npm.** The job's "Setup Node.js" step set `registry-url` (needed for the
+  later OIDC-based npm publish steps), which makes `actions/setup-node@v7` write an
+  `//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}` placeholder into a generated `.npmrc`.
+  Nothing in the job has set `NODE_AUTH_TOKEN` since npm publishing became OIDC-based — npm's own
+  Trusted Publishing doesn't use it at all — but Yarn Classic (1.x, used by all three Angular
+  workspaces) eagerly substitutes every env-var placeholder in its resolved config on **every**
+  invocation, not just registry-touching ones, and throws when one is unset. A first fix dropped the
+  `cache: yarn` step option that was triggering this during its internal `yarn cache dir` probe; that
+  only moved the crash to the next yarn command Setup Node's cache change didn't touch — the job's
+  very first real `yarn install` — because the placeholder-bearing `.npmrc` stays active for every
+  step for the rest of the job, not just the one that wrote it. The actual fix moves `registry-url`
+  off the early "Setup Node.js" step entirely, onto a second `actions/setup-node@v7` call added right
+  after the last yarn command in the job (before the GitHub Packages and npmjs publish steps that
+  need it) — so no yarn command ever sees that `.npmrc` in the first place. `ci.yml`'s
+  identical-looking "Setup Node.js" step never hit any of this because it never sets `registry-url`.
 
 ## [10.0.0-rc.13] - 2026-09-03
 
