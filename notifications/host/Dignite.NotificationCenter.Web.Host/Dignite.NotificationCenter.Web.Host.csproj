@@ -98,7 +98,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.Studio.Client.AspNetCore" Version="3.0.6" />
+    <PackageReference Include="Volo.Abp.Studio.Client.AspNetCore" Version="3.0.10" />
   </ItemGroup>
 
   <ItemGroup>
