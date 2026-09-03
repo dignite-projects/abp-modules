@@ -23,6 +23,19 @@ so it stays clear which part of the repository actually moved.
 - The GitHub Packages pre-release npm mirror now tolerates re-runs at an unchanged version,
   treating "already published" as a skip instead of failing the step.
 
+### Fixed
+
+#### flex-fields
+
+- **`CKEditorControlComponent` now follows the host theme, including dark mode.** CKEditor 5 ships a
+  single stock light palette (`--ck-color-base-background`/`-foreground`/`-border`/`-text` in its own
+  `:root`) and every other `--ck-color-*` token derives from those four; the control set none of them,
+  so in a dark-themed host the editor stayed light unless the host added its own bridge (only `site`
+  had one). The control now maps those tokens, plus the two hardcoded toolbar-button hover/active
+  fills, to the host's theme variables — a LeptonX token when present, falling back to the Bootstrap
+  5.3 token every ABP Angular theme ships, then to CKEditor's stock literal — so hosts no longer need
+  a `--ck-color-base-*` bridge of their own.
+
 ## [10.0.0-rc.11] - 2026-08-31
 
 ### Fixed
