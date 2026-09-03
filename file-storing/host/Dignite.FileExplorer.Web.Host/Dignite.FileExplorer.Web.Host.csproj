@@ -25,7 +25,7 @@
   -->
   <ItemGroup Label="Security overrides for vulnerable transitive dependencies">
     <PackageReference Include="MessagePack" Version="3.1.8" />
-    <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
+    <PackageReference Include="Microsoft.OpenApi" Version="2.12.2" />
     <PackageReference Include="Scriban" Version="7.2.7" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
   </ItemGroup>
@@ -103,7 +103,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.Studio.Client.AspNetCore" Version="3.0.7" />
+    <PackageReference Include="Volo.Abp.Studio.Client.AspNetCore" Version="3.0.8" />
   </ItemGroup>
 
   <ItemGroup>
