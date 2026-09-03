@@ -22,21 +22,33 @@ updates:
         patterns:
           - "Microsoft.*"
           - "System.*"
+    ignore:
+      - dependency-name: "Volo.Abp.*"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
 
   - package-ecosystem: nuget
     directory: "/file-storing/host/Dignite.FileExplorer.Web.Host"
     schedule:
       interval: monthly
+    ignore:
+      - dependency-name: "Volo.Abp.*"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
 
   - package-ecosystem: nuget
     directory: "/notifications/host/Dignite.NotificationCenter.Web.Host"
     schedule:
       interval: monthly
+    ignore:
+      - dependency-name: "Volo.Abp.*"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
 
   - package-ecosystem: nuget
     directory: "/flex-fields/demo/Dignite.Abp.FlexFields.Demo"
     schedule:
       interval: monthly
+    ignore:
+      - dependency-name: "Volo.Abp.*"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
 
   - package-ecosystem: npm
     directory: "/file-storing/angular"
@@ -47,6 +59,9 @@ updates:
         patterns:
           - "@angular/*"
           - "@angular-eslint/*"
+    ignore:
+      - dependency-name: "@abp/ng.*"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
 
   - package-ecosystem: npm
     directory: "/notifications/angular"
@@ -57,6 +72,9 @@ updates:
         patterns:
           - "@angular/*"
           - "@angular-eslint/*"
+    ignore:
+      - dependency-name: "@abp/ng.*"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
 
   - package-ecosystem: npm
     directory: "/flex-fields/angular"
@@ -67,3 +85,6 @@ updates:
         patterns:
           - "@angular/*"
           - "@angular-eslint/*"
+    ignore:
+      - dependency-name: "@abp/ng.*"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
