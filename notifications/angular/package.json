@@ -52,7 +52,7 @@
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "eslint": "^8.0.0",
-    "jsdom": "^27.1.0",
+    "jsdom": "^30.0.1",
     "ng-packagr": "^21.2.0",
     "typescript": "~5.9.0",
     "vitest": "^4.0.0"
