@@ -39,6 +39,13 @@ so it stays clear which part of the repository actually moved.
   repository has ever shipped so far) without one explicitly stated. Unlike the crash above, this
   one only broke once the job got far enough to actually reach it. Added the same
   `--tag '${{ steps.channel.outputs.npm-tag }}'` the sibling npmjs-publishing step already used.
+- **The GitHub Packages pre-release step appended its own registry/auth lines to the same
+  `.npmrc` `actions/setup-node`'s `registry-url` wrote for npmjs.org OIDC** (`$NPM_CONFIG_USERCONFIG`,
+  read by "Publish tagged Angular packages to npm" later in the same job) — corrupting npm's parsing
+  of that shared file and breaking OIDC's registry detection there with a garbled `ENEEDAUTH` error
+  quoting both registries concatenated together. The GitHub Packages step now writes its auth to its
+  own scratch file, passed via `--userconfig` on just its own `npm publish` calls, leaving the
+  OIDC-relevant file untouched for the rest of the job.
 
 ## [10.0.0-rc.13] - 2026-09-03
 
