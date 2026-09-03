@@ -24,7 +24,7 @@
       SQLitePCLRaw.bundle_e_sqlite3 2.1.11 -> 2.1.12 (GHSA-2m69-gcr7-jv3q; via Microsoft.EntityFrameworkCore.Sqlite)
   -->
   <ItemGroup Label="Security overrides for vulnerable transitive dependencies">
-    <PackageReference Include="MessagePack" Version="3.1.7" />
+    <PackageReference Include="MessagePack" Version="3.1.8" />
     <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
     <PackageReference Include="Scriban" Version="7.2.6" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
