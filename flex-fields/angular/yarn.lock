@@ -2858,7 +2858,14 @@
   resolved "https://registry.yarnpkg.com/@standard-schema/spec/-/spec-1.1.0.tgz#a79b55dbaf8604812f52d140b2c9ab41bc150bb8"
   integrity sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==
 
-"@swimlane/ngx-datatable@^22.0.0", "@swimlane/ngx-datatable@~22.0.0":
+"@swimlane/ngx-datatable@^25.1.0":
+  version "25.1.0"
+  resolved "https://registry.yarnpkg.com/@swimlane/ngx-datatable/-/ngx-datatable-25.1.0.tgz#37af5a881b872ae967349f3faa972e00f67eb1bf"
+  integrity sha512-hx9vCtetdIPBEcXfdK0SyJEAkwX8v2azeU3EUFKLLQq1tsZnV4V+mOMi5k0JhJ4pO8c05s3z/46ix6qa/bNOLA==
+  dependencies:
+    tslib "^2.0.0"
+
+"@swimlane/ngx-datatable@~22.0.0":
   version "22.0.0"
   resolved "https://registry.yarnpkg.com/@swimlane/ngx-datatable/-/ngx-datatable-22.0.0.tgz#cb36eb0c803eab9868babf69db6ff283802ab59c"
   integrity sha512-NteAxuMHNnXMeRun0qGZNz5ocoRmoypmhJtfvQRpO6umZPDVlf0+GzlEsTSOfqJNrKiYjtaMJ8EP+1lRYxrigw==
