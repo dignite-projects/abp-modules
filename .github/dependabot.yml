@@ -120,6 +120,8 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "@angular-eslint/*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "ng-packagr"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: npm
     directory: "/notifications/angular"
@@ -143,6 +145,8 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "@angular-eslint/*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "ng-packagr"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: npm
     directory: "/flex-fields/angular"
@@ -165,4 +169,6 @@ updates:
       - dependency-name: "@angular/*"
         update-types: ["version-update:semver-major"]
       - dependency-name: "@angular-eslint/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "ng-packagr"
         update-types: ["version-update:semver-major"]
