@@ -35,6 +35,8 @@ updates:
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
       - dependency-name: "Volo.Abp.Studio.Client.AspNetCore"
         versions: [">= 3.0.9"]
+      - dependency-name: "Microsoft.OpenApi"
+        versions: [">= 3.0.0"]
 
   - package-ecosystem: nuget
     directory: "/notifications/host/Dignite.NotificationCenter.Web.Host"
@@ -45,6 +47,8 @@ updates:
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
       - dependency-name: "Volo.Abp.Studio.Client.AspNetCore"
         versions: [">= 3.0.9"]
+      - dependency-name: "Microsoft.OpenApi"
+        versions: [">= 3.0.0"]
 
   - package-ecosystem: nuget
     directory: "/flex-fields/demo/Dignite.Abp.FlexFields.Demo"
@@ -55,6 +59,8 @@ updates:
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
       - dependency-name: "Volo.Abp.Studio.Client.AspNetCore"
         versions: [">= 3.0.9"]
+      - dependency-name: "Microsoft.OpenApi"
+        versions: [">= 3.0.0"]
 
   - package-ecosystem: npm
     directory: "/file-storing/angular"
