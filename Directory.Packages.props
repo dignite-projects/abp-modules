@@ -124,7 +124,7 @@
         Directory.Build.props. Versions match what the ABP Framework itself ships.
   -->
   <ItemGroup Label="Build-time tooling">
-    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
     <PackageVersion Include="Fody" Version="6.9.3" />
     <PackageVersion Include="ConfigureAwait.Fody" Version="3.3.2" />
   </ItemGroup>
