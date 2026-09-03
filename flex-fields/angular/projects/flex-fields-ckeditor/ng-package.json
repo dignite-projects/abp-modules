@@ -4,5 +4,11 @@
   "lib": {
     "entryFile": "src/public-api.ts"
   },
-  "allowedNonPeerDependencies": []
+  "allowedNonPeerDependencies": [
+    "@ckeditor/ckeditor5-angular",
+    "@ckeditor/ckeditor5-integrations-common",
+    "@dignite/ng.flex-fields",
+    "ckeditor5",
+    "marked"
+  ]
 }

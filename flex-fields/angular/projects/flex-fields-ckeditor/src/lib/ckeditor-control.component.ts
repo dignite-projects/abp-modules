@@ -1,4 +1,4 @@
-import { Component, Input, NgZone, OnDestroy, OnInit, ViewEncapsulation, inject } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, ViewEncapsulation, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CoreModule, RestService } from '@abp/ng.core';
 import { AbstractControl, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
@@ -35,7 +35,6 @@ import { CKEditorUploadAdapter } from './ckeditor-upload-adapter';
 })
 export class CKEditorControlComponent extends FieldTypeControlBase implements OnInit, OnDestroy {
   private readonly restService = inject(RestService);
-  private readonly ngZone = inject(NgZone);
 
   /**
    * Whether this usage ever had a real stored value - captured here because
@@ -53,8 +52,12 @@ export class CKEditorControlComponent extends FieldTypeControlBase implements On
     super.selected = value;
   }
 
-  editorClass: EditorRelaxedConstructor | null = null;
-  editorConfig: EditorConfig | null = null;
+  /**
+   * The resolved editor class + config, once the lazy `ckeditor5` import settles. A signal rather than
+   * plain fields - see the comment above {@link ngOnInit} for why a plain-field assignment is invisible
+   * to change detection here.
+   */
+  readonly editor = signal<{ editorClass: EditorRelaxedConstructor; editorConfig: EditorConfig } | null>(null);
 
   protected configurationDefaults(): object {
     return new CKEditorConfiguration();
@@ -76,12 +79,24 @@ export class CKEditorControlComponent extends FieldTypeControlBase implements On
     return this.fb.control(seeded, validators);
   }
 
-  // Zone.js does not patch dynamic import() (unlike fetch/XMLHttpRequest/setTimeout), so the
-  // continuation after `await import(...)` runs outside Angular's zone. Assigning editorClass/
-  // editorConfig there without re-entering the zone leaves the view stuck on the template's `Loading`
-  // branch until some unrelated zone-patched event elsewhere on the page happens to trigger a change
-  // detection sweep - the editor is fully ready but never gets painted. ngZone.run() forces the
-  // assignment (and the change detection it triggers) back onto the Angular zone.
+  // Two separate reasons a plain-field assignment here would never reach the screen, both of which a
+  // signal write covers in one move:
+  //
+  // (a) Zone.js does not patch dynamic import() (unlike fetch/XMLHttpRequest/setTimeout), so the
+  //     continuation after `await import(...)` resumes outside Angular's zone.
+  // (b) This component is always created dynamically (`ViewContainerRef.createComponent`, see
+  //     `FlexFieldControlComponent`) inside whatever host renders it, and that host may run under
+  //     `ChangeDetectionStrategy.OnPush` (it does in the real consumer). A tick that reaches an
+  //     OnPush ancestor which nothing has marked dirty skips its subtree entirely - the assignment
+  //     would sit there, invisible, until some unrelated event elsewhere in that subtree happens to
+  //     mark the ancestor chain dirty.
+  //
+  // Writing a signal instead fixes both: reading `editor()` in the template registers this view as a
+  // reactive consumer, and writing it marks every OnPush ancestor for traversal
+  // (`markAncestorsForTraversal`) regardless of which zone the write happened on. Angular's default
+  // hybrid change-detection scheduler (since v18, `provideZoneChangeDetection()` without
+  // `ignoreChangesOutsideZone`) also still schedules a tick for a signal write made outside the zone,
+  // covering (a) without needing `NgZone.run()` at all.
   async ngOnInit(): Promise<void> {
     const module = await import('ckeditor5');
     const configuration = this.fieldValue!.field.configuration;
@@ -92,13 +107,13 @@ export class CKEditorControlComponent extends FieldTypeControlBase implements On
     ) as CKEditorContentFormat;
     const containerName = (configuration['CKEditor.ImagesContainerName'] as string) ?? '';
 
-    this.ngZone.run(() => {
-      this.editorClass = resolveEditorClass(module, mode);
-      this.editorConfig = buildEditorConfig(module, {
+    this.editor.set({
+      editorClass: resolveEditorClass(module, mode),
+      editorConfig: buildEditorConfig(module, {
         mode,
         contentFormat,
         imageUploadEnabled: containerName.length > 0,
-      });
+      }),
     });
   }
 

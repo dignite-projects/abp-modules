@@ -29,6 +29,7 @@
     "@angular/common": "~21.2.0",
     "@angular/core": "~21.2.0",
     "@angular/forms": "~21.2.0",
+    "@ngx-validate/core": "^0.2.0",
     "ng-zorro-antd": "~21.0.0-next.1",
     "rxjs": "~7.8.0"
   }

@@ -19,6 +19,53 @@
   --ck-z-default: 1100;
 }
 
+/* CKEditor 5 ships no dark-mode palette: ckeditor5.css's own :root block hardcodes the four base
+   tokens below to a fixed light palette (--ck-color-base-background:#fff, -foreground:#fafafa,
+   -border:#ccced1, -text:#333), and every other --ck-color-* token in the editor's theme derives from
+   those four - so remapping just these four (plus the two hardcoded hover/active exceptions below)
+   re-themes the whole editor UI at once. This bridge used to live per-host (e.g. the `site` package's
+   ContentEditorComponent had its own copy) - moved here so every host gets dark-mode support for free,
+   without duplicating it per consumer.
+
+   Fallback chain, most specific first: a LeptonX token when the host happens to be on LeptonX -> a
+   Bootstrap 5.3 token (shipped by every ABP Angular theme - LeptonX, LeptonX Lite, Basic - and already
+   redefined per-theme under [data-bs-theme=dark], so it flips automatically with the host's own
+   dark/light toggle) -> CKEditor's own stock literal, so a non-ABP host, or one that defines neither
+   variable, sees no change at all. This needs no LeptonX-specific knowledge to fall back safely:
+   --bs-* is Bootstrap-universal, not a downstream's private naming.
+
+   - --ck-color-base-background -> --lpx-card-bg / --bs-body-bg: the surface the control itself sits
+     on (Basic mode's editable background; Full mode's editable + toolbar chrome). Card background
+     rather than page background, so the control still reads as a discrete form field instead of
+     blending into the page; white in light mode, matching CKEditor's own stock #fff exactly, so the
+     light-mode look is unchanged from stock.
+   - --ck-color-base-foreground -> --lpx-content-bg / --bs-secondary-bg: the toolbar's own background,
+     one step off the card surface it sits on - CKEditor's stock palette makes the same distinction
+     (#fafafa vs #fff).
+   - --ck-color-base-border / -text -> the same --bs-border-color / --bs-body-color every other
+     Bootstrap-based control on the page already uses, so borders and text match the rest of the host
+     UI in both modes.
+   - The two --ck-color-button-default-*-background tokens are plain hardcoded #f0f0f0-family literals
+     in ckeditor5.css, not var()-derived from any of the four base tokens - remapping the base tokens
+     alone would leave toolbar-button hover/active fills stuck at stock light grey against a dark
+     toolbar. color-mix() off --bs-body-color (rather than a second fixed light/dark pair) gives a
+     hover/active fill that is always a translucent tint of the current text color, correct in both
+     modes without a per-mode value of its own.
+
+   !important on every property: ckeditor5.css's own :root block is only injected once a CKEditor field
+   is first opened (its multi-megabyte payload is dynamic-imported - see
+   CKEditorControlComponent.ngOnInit), i.e. after this stylesheet - at equal :root specificity, source
+   order alone would otherwise let its stock light-mode palette win. Same reasoning as the
+   --ck-content-font-color override further down this file. */
+:root {
+  --ck-color-base-background: var(--lpx-card-bg, var(--bs-body-bg, #fff)) !important;
+  --ck-color-base-foreground: var(--lpx-content-bg, var(--bs-secondary-bg, #fafafa)) !important;
+  --ck-color-base-border: var(--bs-border-color, #ccced1) !important;
+  --ck-color-base-text: var(--bs-body-color, #333) !important;
+  --ck-color-button-default-hover-background: color-mix(in srgb, var(--bs-body-color, #333) 12%, transparent) !important;
+  --ck-color-button-default-active-background: color-mix(in srgb, var(--bs-body-color, #333) 20%, transparent) !important;
+}
+
 /* CKEditor 5's own theme gives every Balloon/Inline-style editable area
    (.ck-editor__editable_inline - the class Basic mode's BalloonEditor uses) a fully transparent
    border and no background by default ("border: 1px solid #0000" in ckeditor5's own CSS) - deliberate,
@@ -43,8 +90,9 @@
    ckeditor5's own ".ck-editor__main > .ck-editor__editable" rule). A host that re-themes
    --ck-color-base-background without also touching --ck-content-font-color ends up with black
    text on whatever background it just chose - unreadable the moment that background isn't white.
-   Repointing the content token at the same base-text token closes that gap generically, without
-   this package needing to know what a downstream's own theme variables are called.
+   Repointing the content token at the same base-text token closes that gap generically, off a token
+   this file already sets above - no further host-specific variable knowledge needed here beyond the
+   Bootstrap/LeptonX fallback chain the dark-theme block above already documents.
    !important: ckeditor5-content.css loads later than this file - bundled with the dynamic
    import('ckeditor5') in ngOnInit, not the static @import above - so at equal :root specificity,
    source order would otherwise let its own #000 default win. */

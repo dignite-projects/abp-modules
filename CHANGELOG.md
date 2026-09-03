@@ -15,6 +15,18 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Added
+
+- **`build/check-angular-package-deps.mjs`, a CI gate that fails when a built library imports a
+  package its own `package.json` does not declare.** ng-packagr marks every bare specifier it does
+  not bundle as an external but never checks that the external is declared, so a library could
+  publish a bundle asking for a package it never named — nothing failed at build time, nothing
+  failed at `npm install`, and the consumer met an unresolvable specifier the first time they built
+  their own app. The existing `smoke-test-angular-package.mjs` cannot see this class of defect: it
+  seeds the throwaway consumer with the demo app's dependency list, so every undeclared package is
+  already installed before the compile it verifies. All five libraries were failing this check when
+  it was written.
+
 ### Changed
 
 - npmjs publishing switched from a long-lived `NPM_TOKEN` secret to npm Trusted Publishing (OIDC);
@@ -22,6 +34,47 @@ so it stays clear which part of the repository actually moved.
   `@dignite/ng.flex-fields-ckeditor` is published to npmjs on tagged releases for the first time.
 - The GitHub Packages pre-release npm mirror now tolerates re-runs at an unchanged version,
   treating "already published" as a skip instead of failing the step.
+- **Dependencies a consumer cannot already have moved from `peerDependencies` to `dependencies`.**
+  Every ABP 10.5 + Angular 21 host is forced to set `legacy-peer-deps` — `@abp/ng.theme.shared`
+  pins `@swimlane/ngx-datatable@~22.0.0`, whose Angular peer range stops at 20 — and under that
+  flag npm does not install peer dependencies at all. A peer the host does not already have is
+  therefore an unresolvable import discovered at the consumer's build, with nothing in
+  `npm install` to warn them. The evidence that the peer model never worked here: all five known
+  consumers (`site`, `vault-extract`, and this repository's own three demo apps) had hand-copied
+  the same peer lists into their own `package.json`, at three different `ng-zorro-antd` ranges.
+  Moved to `dependencies`: `ckeditor5`, `@ckeditor/ckeditor5-angular`, `marked` and
+  `@dignite/ng.flex-fields` in `@dignite/ng.flex-fields-ckeditor`; `@dignite/ng.flex-fields` and
+  `@dignite/ng.file-explorer` in `@dignite/ng.flex-fields-file-explorer`; `@microsoft/signalr` in
+  `@dignite/ng.notification-center`. Packages an ABP Angular host has by construction
+  (`@angular/*`, `rxjs`, `@abp/ng.*`) or through ABP's own dependency tree (`@ngx-validate/core`,
+  `ng-zorro-antd`, `@angular/cdk`, `@ng-bootstrap/ng-bootstrap`, `@swimlane/ngx-datatable`) stay
+  peer dependencies: there the declaration states the tested range without risking a second copy
+  of a singleton in the consumer's tree. Consumers that were carrying those packages by hand can
+  drop them; consumers that were not no longer have to discover them.
+
+### Fixed
+
+- **Every Angular package imported at least one package it did not declare.**
+  `@ngx-validate/core` in `@dignite/ng.flex-fields`, `@dignite/ng.flex-fields-ckeditor` and
+  `@dignite/ng.flex-fields-file-explorer`; `rxjs` in `@dignite/ng.flex-fields-ckeditor` and
+  `@dignite/ng.notification-center`; `@swimlane/ngx-datatable` in `@dignite/ng.file-explorer`; and
+  `@ckeditor/ckeditor5-integrations-common`, whose `EditorRelaxedConstructor` appears in
+  `@dignite/ng.flex-fields-ckeditor`'s published `.d.ts`, so a consumer compiling without
+  `skipLibCheck` needed it resolvable. All now declared; the new dependency check keeps them so.
+- **`flex-fields-ckeditor` was built and published by `release.yml` but never built by `ci.yml`**,
+  so a pull request that broke the CKEditor adapter stayed green until tag time. CI now builds it
+  alongside the other libraries.
+
+#### flex-fields
+
+- **`CKEditorControlComponent` now follows the host theme, including dark mode.** CKEditor 5 ships a
+  single stock light palette (`--ck-color-base-background`/`-foreground`/`-border`/`-text` in its own
+  `:root`) and every other `--ck-color-*` token derives from those four; the control set none of them,
+  so in a dark-themed host the editor stayed light unless the host added its own bridge (only `site`
+  had one). The control now maps those tokens, plus the two hardcoded toolbar-button hover/active
+  fills, to the host's theme variables — a LeptonX token when present, falling back to the Bootstrap
+  5.3 token every ABP Angular theme ships, then to CKEditor's stock literal — so hosts no longer need
+  a `--ck-color-base-*` bridge of their own.
 
 ## [10.0.0-rc.11] - 2026-08-31
 

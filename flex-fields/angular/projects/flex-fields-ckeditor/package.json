@@ -7,6 +7,11 @@
     "url": "git+https://github.com/dignite-projects/abp-modules.git"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-angular": "^11.2.0",
+    "@ckeditor/ckeditor5-integrations-common": "^2.4.0",
+    "@dignite/ng.flex-fields": "^10.0.0-rc.4",
+    "ckeditor5": "^48.0.0",
+    "marked": "^18.0.0",
     "tslib": "^2.0.0"
   },
   "publishConfig": {
@@ -26,9 +31,7 @@
     "@angular/common": "~21.2.0",
     "@angular/core": "~21.2.0",
     "@angular/forms": "~21.2.0",
-    "@dignite/ng.flex-fields": "^10.0.0-rc.4",
-    "@ckeditor/ckeditor5-angular": "^11.2.0",
-    "ckeditor5": "^48.0.0",
-    "marked": "^18.0.0"
+    "@ngx-validate/core": "^0.2.0",
+    "rxjs": "~7.8.0"
   }
 }
