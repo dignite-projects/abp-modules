@@ -47,6 +47,17 @@ so it stays clear which part of the repository actually moved.
   own scratch file, passed via `--userconfig` on just its own `npm publish` calls, leaving the
   OIDC-relevant file untouched for the rest of the job.
 
+#### flex-fields
+
+- **`CKEditorControlComponent`'s theme bridge now resolves against `<body>` as well as `<html>`.** A
+  custom property's `var()` references are resolved against the element the property is declared on,
+  not against wherever it is eventually consumed, so the bridge's `:root` declarations could only
+  ever see theme variables set on `<html>`. A host that marks its dark theme on `<body>` instead —
+  `data-bs-theme="dark"` on the body element, say — left the bridge resolving the light values, and
+  the editor stayed light while the rest of the page went dark. Both blocks are now declared on
+  `:root, body`, so either placement works. Coverage is unchanged: CKEditor's UI, including the
+  balloon/dropdown wrapper it appends directly under `<body>`, is entirely inside the body subtree.
+
 ## [10.0.0-rc.13] - 2026-09-03
 
 ### Added
@@ -103,12 +114,19 @@ so it stays clear which part of the repository actually moved.
 
 - **`CKEditorControlComponent` now follows the host theme, including dark mode.** CKEditor 5 ships a
   single stock light palette (`--ck-color-base-background`/`-foreground`/`-border`/`-text` in its own
-  `:root`) and every other `--ck-color-*` token derives from those four; the control set none of them,
-  so in a dark-themed host the editor stayed light unless the host added its own bridge (only `site`
-  had one). The control now maps those tokens, plus the two hardcoded toolbar-button hover/active
-  fills, to the host's theme variables — a LeptonX token when present, falling back to the Bootstrap
-  5.3 token every ABP Angular theme ships, then to CKEditor's stock literal — so hosts no longer need
-  a `--ck-color-base-*` bridge of their own.
+  `:root`); the control set none of them, so in a dark-themed host the editor stayed light unless the
+  host added its own bridge (only `site` had one). The control now maps those four tokens, plus the
+  two hardcoded toolbar-button hover/active fills, to the host's theme variables — a LeptonX token
+  when present, falling back to the Bootstrap 5.3 token every ABP Angular theme ships, then to
+  CKEditor's stock literal — so a host on full LeptonX (`@volosoft/ngx-lepton-x`) or on a plain
+  Bootstrap 5.3 dark theme no longer needs a `--ck-color-base-*` bridge of its own. Two limits are
+  worth knowing. The editor's main chrome — toolbar, balloon and dropdown panels, list and input
+  surfaces — is `var()`-derived from those four tokens and re-themes with them, but roughly 60 other
+  `--ck-color-*` tokens are hardcoded literals in `ckeditor5.css` and stay light regardless. And
+  LeptonX **Lite** (`@volo/ngx-lepton-x.lite`, which `@abp/ng.theme.lepton-x` wraps) ships no dark
+  theme at all — one fixed look, no theme-switching code in the package — and pins `--lpx-card-bg` to
+  a constant `#ffffff`, so on Lite the editor stays white, matching Lite's own white cards. A host
+  hand-rolling a dark mode on top of Lite has to override `--lpx-card-bg` itself.
 
 ## [10.0.0-rc.11] - 2026-08-31
 
