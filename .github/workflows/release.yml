@@ -513,7 +513,19 @@ jobs:
       # not install cleanly, which is the useful half.
       - name: Verify published packages install as a single copy each
         if: startsWith(github.ref, 'refs/tags/v')
-        run: node ./build/verify-npm-single-copy.mjs '${{ steps.version.outputs.version }}'
+        shell: bash
+        run: |
+          # This step runs yarn (inside verify-npm-single-copy.mjs), and it sits downstream of the
+          # second actions/setup-node above - the one that sets registry-url for the OIDC publish
+          # steps and therefore writes an .npmrc carrying a literal ${NODE_AUTH_TOKEN} placeholder,
+          # exported to every later step as $NPM_CONFIG_USERCONFIG. Yarn Classic substitutes every
+          # env-var placeholder in its resolved config on every invocation and throws when one is
+          # unset, and nothing sets NODE_AUTH_TOKEN (npm Trusted Publishing does not use it). Moving
+          # registry-url past the last yarn command fixed the yarn commands that run *before*
+          # publishing; this one runs after it, so it needs its own empty userconfig. Nothing here
+          # authenticates - it installs published, public packages from npmjs.
+          verify_npmrc="$(mktemp)"
+          NPM_CONFIG_USERCONFIG="$verify_npmrc" node ./build/verify-npm-single-copy.mjs '${{ steps.version.outputs.version }}'
 
       # Extract this version's section from the root CHANGELOG.md
       # as the draft release body.
