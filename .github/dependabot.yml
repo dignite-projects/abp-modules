@@ -129,6 +129,17 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "ng-packagr"
         update-types: ["version-update:semver-major"]
+      # eslint 9+ switched to flat config, a breaking change unrelated to Angular/ABP; needs a
+      # deliberate config migration, not an auto-bump.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      # @angular/compiler-cli's peer range is narrow (e.g. 21.2.19 wants >=5.9 <6.1) - a major
+      # jump breaks the Angular compiler outright.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # ng-zorro-antd's major version tracks Angular's own (22.0.1 requires @angular/core ^22.0.0).
+      - dependency-name: "ng-zorro-antd"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: npm
     directory: "/notifications/angular"
@@ -157,6 +168,14 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "ng-packagr"
         update-types: ["version-update:semver-major"]
+      # eslint 9+ switched to flat config, a breaking change unrelated to Angular/ABP; needs a
+      # deliberate config migration, not an auto-bump.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      # @angular/compiler-cli's peer range is narrow (e.g. 21.2.19 wants >=5.9 <6.1) - a major
+      # jump breaks the Angular compiler outright.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: npm
     directory: "/flex-fields/angular"
@@ -184,4 +203,15 @@ updates:
       - dependency-name: "@angular-devkit/*"
         update-types: ["version-update:semver-major"]
       - dependency-name: "ng-packagr"
+        update-types: ["version-update:semver-major"]
+      # eslint 9+ switched to flat config, a breaking change unrelated to Angular/ABP; needs a
+      # deliberate config migration, not an auto-bump.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      # @angular/compiler-cli's peer range is narrow (e.g. 21.2.19 wants >=5.9 <6.1) - a major
+      # jump breaks the Angular compiler outright.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # ng-zorro-antd's major version tracks Angular's own (22.0.1 requires @angular/core ^22.0.0).
+      - dependency-name: "ng-zorro-antd"
         update-types: ["version-update:semver-major"]
