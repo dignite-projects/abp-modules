@@ -271,18 +271,18 @@
     "@jridgewell/gen-mapping" "^0.3.5"
     "@jridgewell/trace-mapping" "^0.3.24"
 
-"@angular-devkit/architect@0.2102.18", "@angular-devkit/architect@>= 0.2100.0 < 0.2200.0":
-  version "0.2102.18"
-  resolved "https://registry.npmjs.org/@angular-devkit/architect/-/architect-0.2102.18.tgz"
-  integrity sha512-bEkF4ApWa6FJ2+ZyFPdhQr05PgJv/oKwx+3goNRa4lSxzJO+O3KXr0ivTyE5zEJ8l4JdV3h93bsCP54Rk3v7Dw==
+"@angular-devkit/architect@0.2102.22", "@angular-devkit/architect@>= 0.2100.0 < 0.2200.0":
+  version "0.2102.22"
+  resolved "https://registry.yarnpkg.com/@angular-devkit/architect/-/architect-0.2102.22.tgz#52a1dc1708263f624753e7c33ce025635572709f"
+  integrity sha512-7+jlbVdPk1TKqbp8xmsMnRsXsnOilD9NH4OGKu2YtNL9mg0y8aB5ziBqvm7IpeHysyi9ae8XTabajq99ItM9gw==
   dependencies:
-    "@angular-devkit/core" "21.2.18"
+    "@angular-devkit/core" "21.2.22"
     rxjs "7.8.2"
 
-"@angular-devkit/core@21.2.18", "@angular-devkit/core@>= 21.0.0 < 22.0.0", "@angular-devkit/core@~21.2.0":
-  version "21.2.18"
-  resolved "https://registry.npmjs.org/@angular-devkit/core/-/core-21.2.18.tgz"
-  integrity sha512-783AuDmzAjFkOBHey7cx1mXd8CTiMg9LvG+BCxEp8i4EB7cOGYrq3lBzkwhKJq6yYpz7dNgM1QgeLk+NcrFBSA==
+"@angular-devkit/core@21.2.22", "@angular-devkit/core@>= 21.0.0 < 22.0.0", "@angular-devkit/core@~21.2.0":
+  version "21.2.22"
+  resolved "https://registry.yarnpkg.com/@angular-devkit/core/-/core-21.2.22.tgz#1ea67a2e16917b238edf0f7a415253219431a8df"
+  integrity sha512-sJoZr7cGfw3imZaE7caQGUB3XiAMGLtpzEmyTe6LnuixVJbJYZBjlYk9AFoW8RJT5hJN8hIe1MLQdAl23kMlLw==
   dependencies:
     ajv "8.18.0"
     ajv-formats "3.0.1"
@@ -291,76 +291,76 @@
     rxjs "7.8.2"
     source-map "0.7.6"
 
-"@angular-devkit/schematics@21.2.18", "@angular-devkit/schematics@>= 21.0.0 < 22.0.0", "@angular-devkit/schematics@~21.2.0":
-  version "21.2.18"
-  resolved "https://registry.npmjs.org/@angular-devkit/schematics/-/schematics-21.2.18.tgz"
-  integrity sha512-PakHs+Eefx06KORDFyH4wmkIZ/wm4mI4DqhXe4XFuWJOazMQoYJxPmMeby47BD0HhvJN7BskN61CPS8HCAvICg==
+"@angular-devkit/schematics@21.2.22", "@angular-devkit/schematics@>= 21.0.0 < 22.0.0", "@angular-devkit/schematics@~21.2.0":
+  version "21.2.22"
+  resolved "https://registry.yarnpkg.com/@angular-devkit/schematics/-/schematics-21.2.22.tgz#f9d74ea896a6ed3442767262028f253ec576b205"
+  integrity sha512-qhpaXOV4R4Db35bIcgCrJoBMdgTIqipsvG55BVEYtNbVjFxmMWam1nh/OIDTNR54fmpB9/y1LBK1Hm4gVEnAAQ==
   dependencies:
-    "@angular-devkit/core" "21.2.18"
+    "@angular-devkit/core" "21.2.22"
     jsonc-parser "3.3.1"
     magic-string "0.30.21"
     ora "9.3.0"
     rxjs "7.8.2"
 
-"@angular-eslint/builder@~21.2.0":
-  version "21.2.0"
-  resolved "https://registry.npmjs.org/@angular-eslint/builder/-/builder-21.2.0.tgz"
-  integrity sha512-wcp3J9cbrDwSeI/o1D/DSvMQa8zpKjc5WhRGTx33omhWijCfiVNEAiBLWiEx5Sb/dWcoX8yFNWY5jSgFVy9Sjw==
+"@angular-eslint/builder@~21.4.0":
+  version "21.4.0"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/builder/-/builder-21.4.0.tgz#56eb8f44b46555c0d27c17156fe311d206bb13de"
+  integrity sha512-3kgGmrVaCYbLtDjC8g4BmMBbdz4thsOB8/NYly8JtXM8EuDZEk5Pz6VTRpJR02ARprwayraTTmhyvq6OGBlQ9w==
   dependencies:
     "@angular-devkit/architect" ">= 0.2100.0 < 0.2200.0"
     "@angular-devkit/core" ">= 21.0.0 < 22.0.0"
 
-"@angular-eslint/bundled-angular-compiler@21.2.0":
-  version "21.2.0"
-  resolved "https://registry.npmjs.org/@angular-eslint/bundled-angular-compiler/-/bundled-angular-compiler-21.2.0.tgz"
-  integrity sha512-J0DWL+j6t9ItFIyIADvzHGqwDA1qfVJ9bx+oTmJ/Hlo7cUpIRoXpcTXpug0CEEABFH0RfDu6PDG2b0FoZ1+7bg==
+"@angular-eslint/bundled-angular-compiler@21.4.0":
+  version "21.4.0"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/bundled-angular-compiler/-/bundled-angular-compiler-21.4.0.tgz#15a86e7110d4aebee47c0326b9d3d5e96010759c"
+  integrity sha512-/3H4BPbQ1BHJkkrUsfusZtmHc+qiFWBBZ9UDPWah4xZMjflexOK9U4GYeH7nMjcuyqFnIlMMeJJNwNLGt/hmdg==
 
-"@angular-eslint/eslint-plugin-template@21.2.0", "@angular-eslint/eslint-plugin-template@~21.2.0":
-  version "21.2.0"
-  resolved "https://registry.npmjs.org/@angular-eslint/eslint-plugin-template/-/eslint-plugin-template-21.2.0.tgz"
-  integrity sha512-lJ13Dj0DjR6YiceQR0sRbyWzSzOQ6uZPwK9CJUF3wuZjYAUvL1D61zaU9QrVLtf89NVOxv+dYZHDdu3IDeIqbA==
+"@angular-eslint/eslint-plugin-template@21.4.0", "@angular-eslint/eslint-plugin-template@~21.4.0":
+  version "21.4.0"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/eslint-plugin-template/-/eslint-plugin-template-21.4.0.tgz#e1f02d9b31a94b2d4cfee497e5472becc389785c"
+  integrity sha512-sJEHx2WYnvOgPpzP1eHnUdRS06zgKmRxbiIR0JiCcaSen5iv1HlsMieXy//FS9TtNW+abHOy4UtDuGuSPflPFA==
   dependencies:
-    "@angular-eslint/bundled-angular-compiler" "21.2.0"
-    "@angular-eslint/utils" "21.2.0"
+    "@angular-eslint/bundled-angular-compiler" "21.4.0"
+    "@angular-eslint/utils" "21.4.0"
     aria-query "5.3.2"
     axobject-query "4.1.0"
 
-"@angular-eslint/eslint-plugin@21.2.0", "@angular-eslint/eslint-plugin@~21.2.0":
-  version "21.2.0"
-  resolved "https://registry.npmjs.org/@angular-eslint/eslint-plugin/-/eslint-plugin-21.2.0.tgz"
-  integrity sha512-X2Qn2viDsjm91CEMxNrxDH3qkKpp6un0C1F1BW2p/m9J4AUVfOcXwWz9UpHFSHTRQ+YlTJbiH1ZwwAPeKhFaxA==
+"@angular-eslint/eslint-plugin@21.4.0", "@angular-eslint/eslint-plugin@~21.4.0":
+  version "21.4.0"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/eslint-plugin/-/eslint-plugin-21.4.0.tgz#012abaaf163ffbf0a06fac66e4914b80ca68c77b"
+  integrity sha512-mow2DMj+xBvGl5t7jzC34R8YfbHbaGNyCNFzpovtl9qc0JbuqLyg6htmt8xb05f8ZjATOr4nz0ESt6HV4c51hw==
   dependencies:
-    "@angular-eslint/bundled-angular-compiler" "21.2.0"
-    "@angular-eslint/utils" "21.2.0"
+    "@angular-eslint/bundled-angular-compiler" "21.4.0"
+    "@angular-eslint/utils" "21.4.0"
     ts-api-utils "^2.1.0"
 
-"@angular-eslint/schematics@~21.2.0":
-  version "21.2.0"
-  resolved "https://registry.npmjs.org/@angular-eslint/schematics/-/schematics-21.2.0.tgz"
-  integrity sha512-WtT4fPKIUQ/hswy+l2GF/rKOdD+42L3fUzzcwRzNutQbe2tU9SimoSOAsay/ylWEuhIOQTs7ysPB8fUgFQoLpA==
+"@angular-eslint/schematics@~21.4.0":
+  version "21.4.0"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/schematics/-/schematics-21.4.0.tgz#b3ea62021fadcaddcfcc8e84c9a719f383f5628c"
+  integrity sha512-crD6Hfxs7x5bN9FCqTZI7uVSiGvprfCS3MCPOpyIQl87bRr/9aNhnicJ3ROUHv+2A713BgPHIgiCII/bxzrfPw==
   dependencies:
     "@angular-devkit/core" ">= 21.0.0 < 22.0.0"
     "@angular-devkit/schematics" ">= 21.0.0 < 22.0.0"
-    "@angular-eslint/eslint-plugin" "21.2.0"
-    "@angular-eslint/eslint-plugin-template" "21.2.0"
+    "@angular-eslint/eslint-plugin" "21.4.0"
+    "@angular-eslint/eslint-plugin-template" "21.4.0"
     ignore "7.0.5"
-    semver "7.7.3"
+    semver "7.7.4"
     strip-json-comments "3.1.1"
 
-"@angular-eslint/template-parser@~21.2.0":
-  version "21.2.0"
-  resolved "https://registry.npmjs.org/@angular-eslint/template-parser/-/template-parser-21.2.0.tgz"
-  integrity sha512-TCb3qYOC/uXKZCo56cJ6N9sHeWdFhyVqrbbYfFjTi09081T6jllgHDZL5Ms7gOMNY8KywWGGbhxwvzeA0RwTgA==
+"@angular-eslint/template-parser@~21.4.0":
+  version "21.4.0"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/template-parser/-/template-parser-21.4.0.tgz#7f675df2a75469d995aead856ea709b5cc2e6ccd"
+  integrity sha512-BaUSLSyS+43fzDoJkTMkGqNdCXq3fGnUZsfXTmrlZPJf5AYFbgAlAPGZXDJyoNWw43fux+DafdlrlKcYUSgSIw==
   dependencies:
-    "@angular-eslint/bundled-angular-compiler" "21.2.0"
-    eslint-scope "^9.0.0"
+    "@angular-eslint/bundled-angular-compiler" "21.4.0"
+    eslint-scope "9.1.2"
 
-"@angular-eslint/utils@21.2.0":
-  version "21.2.0"
-  resolved "https://registry.npmjs.org/@angular-eslint/utils/-/utils-21.2.0.tgz"
-  integrity sha512-E19/hkuvHoNFvctBkmEiGWpy2bbC6cgbr3GNVrn2nGtbI4jnwnDFCGHv50I4LBfvj0PA9E6TWe73ejJ5qoMJWQ==
+"@angular-eslint/utils@21.4.0":
+  version "21.4.0"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/utils/-/utils-21.4.0.tgz#8c052d99bdc3644a457d5d715501ca1f53b119cb"
+  integrity sha512-7pi+Ga7QmdH5Ig/diau6fR5L4yubgKr9TOjdCg7OeuE/zo0O3osTCNT6JOodzS/iQM1kSCJFDoIBKFeUOttiNw==
   dependencies:
-    "@angular-eslint/bundled-angular-compiler" "21.2.0"
+    "@angular-eslint/bundled-angular-compiler" "21.4.0"
 
 "@angular/animations@~21.2.0":
   version "21.2.17"
@@ -376,13 +376,13 @@
   dependencies:
     tslib "^2.3.0"
 
-"@angular/build@~21.2.0":
-  version "21.2.18"
-  resolved "https://registry.npmjs.org/@angular/build/-/build-21.2.18.tgz"
-  integrity sha512-9Jic0Dud6d0ULPR5SceHV86AzZE42cNWPsbLKrK1dUneaAC44GSVRTmLXcaSX/5Exa3gGjFANQw4qashgxUekQ==
+"@angular/build@~21.2.22":
+  version "21.2.22"
+  resolved "https://registry.yarnpkg.com/@angular/build/-/build-21.2.22.tgz#073cba62110366c80a69ecc982d7a159d51dc8b2"
+  integrity sha512-k1LFvPWHcoM7DZqUB7gVaSDmWKVzo5lTg5JWmBc/sHMObad5VXZ49xPGZogj6/6pao+IgX5kGr1eWTDWPftb6w==
   dependencies:
     "@ampproject/remapping" "2.3.0"
-    "@angular-devkit/architect" "0.2102.18"
+    "@angular-devkit/architect" "0.2102.22"
     "@babel/core" "7.29.7"
     "@babel/helper-annotate-as-pure" "7.27.3"
     "@babel/helper-split-export-declaration" "7.24.7"
@@ -405,7 +405,7 @@
     semver "7.7.4"
     source-map-support "0.5.21"
     tinyglobby "0.2.15"
-    undici "7.28.0"
+    undici "7.29.0"
     vite "7.3.6"
     watchpack "2.5.1"
   optionalDependencies:
@@ -419,18 +419,18 @@
     parse5 "^8.0.0"
     tslib "^2.3.0"
 
-"@angular/cli@~21.2.0":
-  version "21.2.18"
-  resolved "https://registry.npmjs.org/@angular/cli/-/cli-21.2.18.tgz"
-  integrity sha512-WOZF4p0SnrmBpNeiOA2pdp9OBvGnOSLWbGdRLXJykyseIiEn7+N+GZp+ZA1aNZB4SWolpYCZfTYwkpo6Sf/LXg==
+"@angular/cli@~21.2.0", "@angular/cli@~21.2.22":
+  version "21.2.22"
+  resolved "https://registry.yarnpkg.com/@angular/cli/-/cli-21.2.22.tgz#b81e685a3dead4b244795e547e5479e813e8dda4"
+  integrity sha512-LWIcjBSzER15ssr8hWW6fECl7uNdE2RrvqRHkfKXen1BW2oKa0DGH+Mj7D0ywKdDwBQU1lafmYgVThjxxmstXw==
   dependencies:
-    "@angular-devkit/architect" "0.2102.18"
-    "@angular-devkit/core" "21.2.18"
-    "@angular-devkit/schematics" "21.2.18"
+    "@angular-devkit/architect" "0.2102.22"
+    "@angular-devkit/core" "21.2.22"
+    "@angular-devkit/schematics" "21.2.22"
     "@inquirer/prompts" "7.10.1"
     "@listr2/prompt-adapter-inquirer" "3.0.5"
-    "@modelcontextprotocol/sdk" "1.26.0"
-    "@schematics/angular" "21.2.18"
+    "@modelcontextprotocol/sdk" "1.30.0"
+    "@schematics/angular" "21.2.22"
     "@yarnpkg/lockfile" "1.1.0"
     algoliasearch "5.48.1"
     ini "6.0.0"
@@ -443,19 +443,19 @@
     yargs "18.0.0"
     zod "4.3.6"
 
-"@angular/common@~21.2.0":
-  version "21.2.17"
-  resolved "https://registry.npmjs.org/@angular/common/-/common-21.2.17.tgz"
-  integrity sha512-hqAQxRfi5ldFE42suAXRcY+JCANrUh7fuSQ/DtZ7L896id5BT/exuv6dWNBC1PyAfQmRbpD5Pt6/pd+tNLyhDQ==
+"@angular/common@~21.2.22":
+  version "21.2.22"
+  resolved "https://registry.yarnpkg.com/@angular/common/-/common-21.2.22.tgz#91dac9b3923b988b40541f107ea8ab86e4056345"
+  integrity sha512-VWvtZL4xfYmXC56q/1BmtW0San8POAuHOADePJV1Hrjt430QTW5xaXuONZA7ujMs/B3u3PBZEWueKl2JH4LznQ==
   dependencies:
     tslib "^2.3.0"
 
-"@angular/compiler-cli@~21.2.0":
-  version "21.2.17"
-  resolved "https://registry.npmjs.org/@angular/compiler-cli/-/compiler-cli-21.2.17.tgz"
-  integrity sha512-KithZ3b0HBFH0NbUcswBcjpN9y09vLbarMD7qmGWTnGUBk4W8cn4sbT8zJyv9CRKg9ZcuUBeJYKUfUPn/u/5OQ==
+"@angular/compiler-cli@~21.2.22":
+  version "21.2.22"
+  resolved "https://registry.yarnpkg.com/@angular/compiler-cli/-/compiler-cli-21.2.22.tgz#86aed0313ac8b0a332c1fba649f8b1f0fe700268"
+  integrity sha512-lbXXz8e8wCVecHNjb4kXiUPPNSrzZPE7WsQ+nNTEgnMDsFIqWJzmf3FagmNaZ5/wX1G2jnSZFjK4rpacmBIn4Q==
   dependencies:
-    "@babel/core" "7.29.0"
+    "@babel/core" "7.29.7"
     "@jridgewell/sourcemap-codec" "^1.4.14"
     chokidar "^5.0.0"
     convert-source-map "^1.5.1"
@@ -464,39 +464,39 @@
     tslib "^2.3.0"
     yargs "^18.0.0"
 
-"@angular/compiler@~21.2.0":
-  version "21.2.17"
-  resolved "https://registry.npmjs.org/@angular/compiler/-/compiler-21.2.17.tgz"
-  integrity sha512-p+NdjYiwAz9Zmu2yul0LlMXaFjMISVVa24+/MVMoKFeQeI82QE8jDywPlnOSHQHvdCcQVpS7saeEriZzX3JuBQ==
+"@angular/compiler@~21.2.22":
+  version "21.2.22"
+  resolved "https://registry.yarnpkg.com/@angular/compiler/-/compiler-21.2.22.tgz#f408c6a812a50ffbf164eac2b0a8166c140d91de"
+  integrity sha512-3tdHaE30abvVzGSwtjpK/r4i8gqSZ6Q0Xc79XvLSTB3kuo4HYir9uvvc7L4YmhBLfSE64CkJPW+2tLiyz8U8jw==
   dependencies:
     tslib "^2.3.0"
 
-"@angular/core@~21.2.0":
-  version "21.2.17"
-  resolved "https://registry.npmjs.org/@angular/core/-/core-21.2.17.tgz"
-  integrity sha512-wYHpwIdnUnjQFOJJNqRcGx7LS3u64jT+R9L0TnMR/ViBM9dQgGYImlSikkftg2yrFCNo5aKRxhG2LLskQurVdg==
+"@angular/core@~21.2.22":
+  version "21.2.22"
+  resolved "https://registry.yarnpkg.com/@angular/core/-/core-21.2.22.tgz#36b4e7e92acf7e7c6bcad52bf6693a5a3b8b70f4"
+  integrity sha512-2pqDzm3T7/h7QF8XfDziVieEOZqNBM95qNgStM8vmJpFzhJEyLtD89xMQ0e365XcgaTOBEaMCWPswq6OuCIEUQ==
   dependencies:
     tslib "^2.3.0"
 
-"@angular/forms@~21.2.0":
-  version "21.2.17"
-  resolved "https://registry.npmjs.org/@angular/forms/-/forms-21.2.17.tgz"
-  integrity sha512-WKu8XeRSNZo+a+aDDZ3M5OtReF7KYqR/PmZ2l1lSf6N5EEAmc+Ky4aqbRhTL/mTSfHrO4+TDJ4C5A2tFmuwIeA==
+"@angular/forms@~21.2.22":
+  version "21.2.22"
+  resolved "https://registry.yarnpkg.com/@angular/forms/-/forms-21.2.22.tgz#679a497d2659646c137afdc48e14b2695ecb6723"
+  integrity sha512-ogO+VbzAPyjgb0sIXgSET8c9x8ml623kDqUMxXE+W/oCFdDMPx4gom5K6gXtLzd1lVhtHlXBCsFf3UUD734Qvg==
   dependencies:
     "@standard-schema/spec" "^1.0.0"
     tslib "^2.3.0"
 
-"@angular/language-service@~21.2.0":
-  version "21.2.17"
-  resolved "https://registry.npmjs.org/@angular/language-service/-/language-service-21.2.17.tgz"
-  integrity sha512-Pq0V7VBkShQThA6QME2FjZgHLuxFpsioEoppx1i8rHFTGoJuXtBJK8iaArF7XuYaMzMRInUGfMQzsXc2WE+rmg==
+"@angular/language-service@~21.2.22":
+  version "21.2.22"
+  resolved "https://registry.yarnpkg.com/@angular/language-service/-/language-service-21.2.22.tgz#41e28be3364428fb2348356229f61582a4e2560a"
+  integrity sha512-R0JcMnjDdk3fbDXSCeRHHjtHgUhWDjNVHvkKSSxMdPZIvmza2x3L3O3TuuUGtB2dR1a1g468yaltjxmxbGqa+Q==
 
-"@angular/localize@~21.2.0":
-  version "21.2.17"
-  resolved "https://registry.npmjs.org/@angular/localize/-/localize-21.2.17.tgz"
-  integrity sha512-CkiSHyag6W1cc2n8Y3sC4eYSqTqRslORU7DJnelEoJvh/2KM6/BmxxfjDlL6JcZURiiTPgxNjRgpb9zREj3elg==
+"@angular/localize@~21.2.22":
+  version "21.2.22"
+  resolved "https://registry.yarnpkg.com/@angular/localize/-/localize-21.2.22.tgz#abc7738587d1a8bf9ff3225b68f687bae7473f10"
+  integrity sha512-omEVkPaFXAHVxLLBInlb7EDWYczEnGt30HMTBrjxrzcQuBa8wb7HOf01kKvvpn58Ik7wxAItf+NmG9Gkotl5fg==
   dependencies:
-    "@babel/core" "7.29.0"
+    "@babel/core" "7.29.7"
     "@types/babel__core" "7.20.5"
     tinyglobby "^0.2.12"
     yargs "^18.0.0"
@@ -508,17 +508,17 @@
   dependencies:
     tslib "^2.3.0"
 
-"@angular/platform-browser@~21.2.0":
-  version "21.2.17"
-  resolved "https://registry.npmjs.org/@angular/platform-browser/-/platform-browser-21.2.17.tgz"
-  integrity sha512-ROdSliejY37g1EphYmweYdm5cHM8HY3X4tbWt4ubxmhTyYgfN3nxrxfGQ/n7Mz5tDY9VXVLIGDgjLOGYOo4uTQ==
+"@angular/platform-browser@~21.2.22":
+  version "21.2.22"
+  resolved "https://registry.yarnpkg.com/@angular/platform-browser/-/platform-browser-21.2.22.tgz#b858b416be20ba0e39bded32bb78408760d9f9c3"
+  integrity sha512-+SNwcb/Xg4VjSmlaJ4/RyJLTtRKVMF4VBo5H0WD+ICugSMYiyuiP7AHB9nzuQt0TeLcrv4KY364z43LueA/iwA==
   dependencies:
     tslib "^2.3.0"
 
-"@angular/router@~21.2.0":
-  version "21.2.17"
-  resolved "https://registry.npmjs.org/@angular/router/-/router-21.2.17.tgz"
-  integrity sha512-RSCtK5ppAV6y6wfRLHSK2a9Wc/vm8j0wsC+/j9PH9yQmppWFVXDWsg5E39MKOIpnoYVx2+hI6eak6+wYtZTe1A==
+"@angular/router@~21.2.22":
+  version "21.2.22"
+  resolved "https://registry.yarnpkg.com/@angular/router/-/router-21.2.22.tgz#5e83cf35ca46c662e497332e7b71774d48b2fd23"
+  integrity sha512-S3Fl6jWjm4DfkaY6ikDDcd7d8J0BiDNjB3+rFarqD0t58UP/ER6Jv4kamPIAKAV2DfQvCnYE8ks1dY1xFlf7Hg==
   dependencies:
     tslib "^2.3.0"
 
@@ -585,27 +585,6 @@
   resolved "https://registry.npmjs.org/@babel/compat-data/-/compat-data-7.29.7.tgz"
   integrity sha512-locTkQyKvwIEgBzVrn8693ebc97F2U8ZHjbXwDXJ5Fn2TCpNwTlKcaKLkdHop5c/icOFE7qt7Q9JC5hnKNa6Gg==
 
-"@babel/core@7.29.0":
-  version "7.29.0"
-  resolved "https://registry.npmjs.org/@babel/core/-/core-7.29.0.tgz"
-  integrity sha512-CGOfOJqWjg2qW/Mb6zNsDm+u5vFQ8DxXfbM09z69p5Z6+mE1ikP2jUXw+j42Pf1XTYED2Rni5f95npYeuwMDQA==
-  dependencies:
-    "@babel/code-frame" "^7.29.0"
-    "@babel/generator" "^7.29.0"
-    "@babel/helper-compilation-targets" "^7.28.6"
-    "@babel/helper-module-transforms" "^7.28.6"
-    "@babel/helpers" "^7.28.6"
-    "@babel/parser" "^7.29.0"
-    "@babel/template" "^7.28.6"
-    "@babel/traverse" "^7.29.0"
-    "@babel/types" "^7.29.0"
-    "@jridgewell/remapping" "^2.3.5"
-    convert-source-map "^2.0.0"
-    debug "^4.1.0"
-    gensync "^1.0.0-beta.2"
-    json5 "^2.2.3"
-    semver "^6.3.1"
-
 "@babel/core@7.29.7", "@babel/core@^7.23.9":
   version "7.29.7"
   resolved "https://registry.npmjs.org/@babel/core/-/core-7.29.7.tgz"
@@ -627,7 +606,7 @@
     json5 "^2.2.3"
     semver "^6.3.1"
 
-"@babel/generator@^7.29.0", "@babel/generator@^7.29.7":
+"@babel/generator@^7.29.7":
   version "7.29.7"
   resolved "https://registry.npmjs.org/@babel/generator/-/generator-7.29.7.tgz"
   integrity sha512-DkXD5OJQaAQIdZ1bt3UZdEnHAn9Imd3IVBdX03UFe+ony9Ojw5pzr9YVKGDY1jt+Gcn/FnGkNf8r+Vj5NOJWtQ==
@@ -645,7 +624,7 @@
   dependencies:
     "@babel/types" "^7.27.3"
 
-"@babel/helper-compilation-targets@^7.28.6", "@babel/helper-compilation-targets@^7.29.7":
+"@babel/helper-compilation-targets@^7.29.7":
   version "7.29.7"
   resolved "https://registry.npmjs.org/@babel/helper-compilation-targets/-/helper-compilation-targets-7.29.7.tgz"
   integrity sha512-wem6WaBj4NaVYVdNhLPPVacES6ZJ+KBBfSkTMD3YZxbP3rm3Di85tJU5ljaUNhaOynt+Aj0xruhYuzQBt8n71g==
@@ -669,7 +648,7 @@
     "@babel/traverse" "^7.29.7"
     "@babel/types" "^7.29.7"
 
-"@babel/helper-module-transforms@^7.28.6", "@babel/helper-module-transforms@^7.29.7":
+"@babel/helper-module-transforms@^7.29.7":
   version "7.29.7"
   resolved "https://registry.npmjs.org/@babel/helper-module-transforms/-/helper-module-transforms-7.29.7.tgz"
   integrity sha512-UPUVSyXbOh627KiCIGQSgwWzGeBKLkaJ9PJEdrngIwMSzxLR4jS4+f1f1jb7VzBbg8nFLaYotvVPFCTqdrmTAg==
@@ -700,7 +679,7 @@
   resolved "https://registry.npmjs.org/@babel/helper-validator-option/-/helper-validator-option-7.29.7.tgz"
   integrity sha512-N9ZErrD+yW5geCDtBqnOoxmR8+tNKiGuxKlDpuJxfsqpa2dFcexaziGAE/qoHLiDDreVNMupxGmSoNlyvsA3gw==
 
-"@babel/helpers@^7.28.6", "@babel/helpers@^7.29.7":
+"@babel/helpers@^7.29.7":
   version "7.29.7"
   resolved "https://registry.npmjs.org/@babel/helpers/-/helpers-7.29.7.tgz"
   integrity sha512-1k2lAGRMfHTcwuNYcCNUmaUffmQv8KWMfh2iJUUeRlwlwH4FdNG7mfPI10NPfLHJFThE4Tyr4mv7kTNZOiPuBg==
@@ -708,7 +687,7 @@
     "@babel/template" "^7.29.7"
     "@babel/types" "^7.29.7"
 
-"@babel/parser@^7.1.0", "@babel/parser@^7.20.7", "@babel/parser@^7.23.9", "@babel/parser@^7.29.0", "@babel/parser@^7.29.7":
+"@babel/parser@^7.1.0", "@babel/parser@^7.20.7", "@babel/parser@^7.23.9", "@babel/parser@^7.29.7":
   version "7.29.7"
   resolved "https://registry.npmjs.org/@babel/parser/-/parser-7.29.7.tgz"
   integrity sha512-hnORnjP/1P/zFEndoeX+n+t1RwWRJiJpM/jO7FW32Kn9r5+sJB2JWOdYo4L6k78j15eCwY3Gm/7364B1EMwtNg==
@@ -720,7 +699,7 @@
   resolved "https://registry.npmjs.org/@babel/runtime/-/runtime-7.29.7.tgz"
   integrity sha512-Nq8OhGWiZIZGV6hLHoyAKLLcJihP/xFeBMGJoUrxTX2psI8dCifzLhZISFb+VWS3wFMRDmCGw5R+dOySCqPLhw==
 
-"@babel/template@^7.28.6", "@babel/template@^7.29.7":
+"@babel/template@^7.29.7":
   version "7.29.7"
   resolved "https://registry.npmjs.org/@babel/template/-/template-7.29.7.tgz"
   integrity sha512-puq+Gf35oI24FeN11LkoUQFqv9uwNeWpxXZi/Ji3rRIoKAzKnxRaZ+Gkj0vKS9ZCiTESfng1N9LyOyXvo+m+Gg==
@@ -729,7 +708,7 @@
     "@babel/parser" "^7.29.7"
     "@babel/types" "^7.29.7"
 
-"@babel/traverse@^7.29.0", "@babel/traverse@^7.29.7":
+"@babel/traverse@^7.29.7":
   version "7.29.7"
   resolved "https://registry.npmjs.org/@babel/traverse/-/traverse-7.29.7.tgz"
   integrity sha512-EhlfNQtZ+NK22w5BM61ciuiq1m58ed33Wr1Xan//ZRTy6hgjnwyCffRYwzsGXdASJSUJ1guZILsErh1eQcl+zw==
@@ -742,7 +721,7 @@
     "@babel/types" "^7.29.7"
     debug "^4.3.1"
 
-"@babel/types@^7.0.0", "@babel/types@^7.20.7", "@babel/types@^7.24.7", "@babel/types@^7.27.3", "@babel/types@^7.28.2", "@babel/types@^7.29.0", "@babel/types@^7.29.7":
+"@babel/types@^7.0.0", "@babel/types@^7.20.7", "@babel/types@^7.24.7", "@babel/types@^7.27.3", "@babel/types@^7.28.2", "@babel/types@^7.29.7":
   version "7.29.7"
   resolved "https://registry.npmjs.org/@babel/types/-/types-7.29.7.tgz"
   integrity sha512-4zBIxpPzowiZpusoFkyGVwakdRJUyuH5PxQ/PrqghfdFWWasvnCdPfQXHrenDai+gyLARulZjZowCOj6fjT4pA==
@@ -1134,10 +1113,10 @@
   resolved "https://registry.npmjs.org/@harperfast/extended-iterable/-/extended-iterable-1.0.3.tgz"
   integrity sha512-sSAYhQca3rDWtQUHSAPeO7axFIUJOI6hn1gjRC5APVE1a90tuyT8f5WIgRsFhhWA7htNkju2veB9eWL6YHi/Lw==
 
-"@hono/node-server@^1.19.9":
-  version "1.19.17"
-  resolved "https://registry.yarnpkg.com/@hono/node-server/-/node-server-1.19.17.tgz#99bd8625cdbae82652a135c71363cd6322fae483"
-  integrity sha512-dSneS5qhiauZWGDCeK4o695Xd9nUNjviSZCMQrj10eetr8Uln1ucn6bbphOM6UynAMMtNIzZNSpL9vnASJwrPQ==
+"@hono/node-server@^1.19.9 || ^2.0.5":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@hono/node-server/-/node-server-2.1.1.tgz#9cfa8649e9ecbcd48edf505b103002402ea51e70"
+  integrity sha512-ELuehkj5VCBdgEw9zs+ivkKwyzzUCSQuE96YmiPvn1ECBoZCczbFXJLeEGMTYjphP6gydh4pHMqEYPVMYUVgQg==
 
 "@humanwhocodes/config-array@^0.13.0":
   version "0.13.0"
@@ -1402,12 +1381,12 @@
     node-fetch "^2.6.7"
     ws "^7.5.10"
 
-"@modelcontextprotocol/sdk@1.26.0":
-  version "1.26.0"
-  resolved "https://registry.npmjs.org/@modelcontextprotocol/sdk/-/sdk-1.26.0.tgz"
-  integrity sha512-Y5RmPncpiDtTXDbLKswIJzTqu2hyBKxTNsgKqKclDbhIgg1wgtf1fRuvxgTnRfcnxtvvgbIEcqUOzZrJ6iSReg==
+"@modelcontextprotocol/sdk@1.30.0":
+  version "1.30.0"
+  resolved "https://registry.yarnpkg.com/@modelcontextprotocol/sdk/-/sdk-1.30.0.tgz#dfa8a48347ec2d2c0d47917d7dc57f754e37f5ff"
+  integrity sha512-xKd8OIzlqNzcqcNumGAa6g+PW2kjD5vrpcKOnfldAUPP3j7lnqMPwlTXQm8gF+UwH72z0lqaRbjr9hqGz0eITA==
   dependencies:
-    "@hono/node-server" "^1.19.9"
+    "@hono/node-server" "^1.19.9 || ^2.0.5"
     ajv "^8.17.1"
     ajv-formats "^3.0.1"
     content-type "^1.0.5"
@@ -2096,13 +2075,13 @@
   optionalDependencies:
     fsevents "~2.3.2"
 
-"@schematics/angular@21.2.18":
-  version "21.2.18"
-  resolved "https://registry.npmjs.org/@schematics/angular/-/angular-21.2.18.tgz"
-  integrity sha512-XNEWvJSUg/ljLXgGVs7picBOtzVC4abBf2+i/ds9E7GaYYVyH19Mpgk6BOuMHAgRpjPWBAeWiBkTqetiR2Ps5Q==
+"@schematics/angular@21.2.22":
+  version "21.2.22"
+  resolved "https://registry.yarnpkg.com/@schematics/angular/-/angular-21.2.22.tgz#ab4ae2107ce90e696e262de92aa8cec59db15cd9"
+  integrity sha512-8UqPRQNUcVx1crCwmY8ji7+nKuRwGVlAwtpgI88nCAixGgGOBNfp4a77zguvJ+w9ZQVl2Xw8yKrzcrkJFk2xBg==
   dependencies:
-    "@angular-devkit/core" "21.2.18"
-    "@angular-devkit/schematics" "21.2.18"
+    "@angular-devkit/core" "21.2.22"
+    "@angular-devkit/schematics" "21.2.22"
     jsonc-parser "3.3.1"
 
 "@sigstore/bundle@^4.0.0":
@@ -3366,21 +3345,21 @@ escape-string-regexp@^4.0.0:
   resolved "https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-4.0.0.tgz"
   integrity sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==
 
+eslint-scope@9.1.2:
+  version "9.1.2"
+  resolved "https://registry.yarnpkg.com/eslint-scope/-/eslint-scope-9.1.2.tgz#b9de6ace2fab1cff24d2e58d85b74c8fcea39802"
+  integrity sha512-xS90H51cKw0jltxmvmHy2Iai1LIqrfbw57b79w/J7MfvDfkIkFZ+kj6zC3BjtUwh150HsSSdxXZcsuv72miDFQ==
+  dependencies:
+    "@types/esrecurse" "^4.3.1"
+    "@types/estree" "^1.0.8"
+    esrecurse "^4.3.0"
+    estraverse "^5.2.0"
+
 eslint-scope@^7.2.2:
   version "7.2.2"
   resolved "https://registry.npmjs.org/eslint-scope/-/eslint-scope-7.2.2.tgz"
   integrity sha512-dOt21O7lTMhDM+X9mB4GX+DZrZtCUJPL/wlcTqxyrx5IvO0IYtILdtrQGQp+8n5S0gwSVmOf9NQrjMOgfQZlIg==
   dependencies:
-    esrecurse "^4.3.0"
-    estraverse "^5.2.0"
-
-eslint-scope@^9.0.0:
-  version "9.1.2"
-  resolved "https://registry.npmjs.org/eslint-scope/-/eslint-scope-9.1.2.tgz"
-  integrity sha512-xS90H51cKw0jltxmvmHy2Iai1LIqrfbw57b79w/J7MfvDfkIkFZ+kj6zC3BjtUwh150HsSSdxXZcsuv72miDFQ==
-  dependencies:
-    "@types/esrecurse" "^4.3.1"
-    "@types/estree" "^1.0.8"
     esrecurse "^4.3.0"
     estraverse "^5.2.0"
 
@@ -5351,11 +5330,6 @@ saxes@^6.0.0:
   dependencies:
     xmlchars "^2.2.0"
 
-semver@7.7.3:
-  version "7.7.3"
-  resolved "https://registry.npmjs.org/semver/-/semver-7.7.3.tgz"
-  integrity sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==
-
 semver@7.7.4:
   version "7.7.4"
   resolved "https://registry.npmjs.org/semver/-/semver-7.7.4.tgz"
@@ -5820,10 +5794,10 @@ undici-types@~8.3.0:
   resolved "https://registry.npmjs.org/undici-types/-/undici-types-8.3.0.tgz"
   integrity sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ==
 
-undici@7.28.0:
-  version "7.28.0"
-  resolved "https://registry.npmjs.org/undici/-/undici-7.28.0.tgz"
-  integrity sha512-cRZYrTDwWznlnRiPjggAGxZXanty6M8RV1ff8Wm4LWXBp7/IG8v5DnOm74DtUBp9OONpK75YlPnIjQqX0dBDtA==
+undici@7.29.0:
+  version "7.29.0"
+  resolved "https://registry.yarnpkg.com/undici/-/undici-7.29.0.tgz#ae0f6f62e06e057a9cbb7b2b5fde2bb74f791b8f"
+  integrity sha512-IDxfleLmmbSskfWSUATiN1nfn2rDuvnMOqb5CWR92iIfojA0Ud+ulOAAEQ57LPr9rWmsreUyf5lwyao+7GNNVw==
 
 undici@^6.25.0:
   version "6.27.0"
