@@ -215,3 +215,15 @@ updates:
       # ng-zorro-antd's major version tracks Angular's own (22.0.1 requires @angular/core ^22.0.0).
       - dependency-name: "ng-zorro-antd"
         update-types: ["version-update:semver-major"]
+      # @abp/ng.theme.shared (an ABP package, pinned repo-wide to ~10.5.0 - see CLAUDE.md) declares
+      # @swimlane/ngx-datatable ~22.0.0 as a plain dependency, not a peer, and every ABP release up to
+      # the 10.6.0 ceiling this repo allows still pins that same ~22.0.0. Bumping our own copy past it
+      # does not just need template changes: Yarn nests a private 22.0.0 copy under
+      # @abp/ng.theme.shared/node_modules for its own internal use, and the demo app - which imports
+      # both ThemeSharedModule and NgxDatatableModule in the same component - ends up with two
+      # different DatatableComponent declarations that ngtsc cannot reconcile
+      # (NG3004: "Unable to import component DatatableComponent... not exported from
+      # .../@abp/ng.theme.shared/node_modules/@swimlane/ngx-datatable/index.d.ts"). Verified against
+      # 25.1.0. Revisit once @abp/ng.theme.shared itself moves past ~22.0.0.
+      - dependency-name: "@swimlane/ngx-datatable"
+        update-types: ["version-update:semver-major"]
