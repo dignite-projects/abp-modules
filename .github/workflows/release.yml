@@ -78,13 +78,21 @@ jobs:
           VERSION='${{ steps.version.outputs.version }}'
           if [[ "$VERSION" == *-* ]]; then
             echo "channel=prerelease" >> "$GITHUB_OUTPUT"
-            echo "npm-tag=next" >> "$GITHUB_OUTPUT"
             echo "::notice::Version $VERSION is a pre-release."
           else
             echo "channel=stable" >> "$GITHUB_OUTPUT"
-            echo "npm-tag=latest" >> "$GITHUB_OUTPUT"
             echo "::notice::Version $VERSION is stable."
           fi
+
+          # The npm dist-tag is decided separately from the channel above, which still answers only
+          # "is this a pre-release" - for the GitHub Packages mirror and the draft Release's own flag.
+          # `latest` is what a bare `npm install` resolves and what a resolver prefers for any range
+          # that admits it, so a pre-release takes it too for as long as no stable release exists.
+          # See build/resolve-npm-dist-tag.mjs for why that rule retires itself once one does, rather
+          # than needing someone to remember to change it back.
+          NPM_TAG="$(node ./build/resolve-npm-dist-tag.mjs "$VERSION")"
+          echo "npm-tag=$NPM_TAG" >> "$GITHUB_OUTPUT"
+          echo "::notice::Publishing to npm under the '$NPM_TAG' dist-tag."
 
       - name: Restore
         run: dotnet restore Dignite.Abp.Modules.slnx

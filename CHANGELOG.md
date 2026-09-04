@@ -74,6 +74,20 @@ so it stays clear which part of the repository actually moved.
   too. It runs after the npm publish step, since it resolves real versions from npmjs that do not
   exist until then; a failure therefore cannot un-publish anything, it stops the draft GitHub Release
   and reports that the just-published set does not install cleanly.
+- **A pre-release now also takes npm's `latest` dist-tag, for as long as no stable release exists.**
+  `release.yml` published every pre-release under `next` alone and reserved `latest` for a stable
+  version — of which there is none yet on the 10.x line. `latest` was therefore left wherever it
+  happened to land before that convention took hold (`10.0.0-rc.11`, while `10.0.0-rc.13` was the
+  newest published), so a bare `npm install @dignite/ng.flex-fields` handed out a version two releases
+  behind, and Yarn Classic resolved intra-repo ranges backwards onto it — the second of the three
+  conditions behind [#211](https://github.com/dignite-projects/abp-modules/issues/211). The tag had
+  been corrected by hand, but the workflow would have re-created the gap at the next pre-release.
+  `build/resolve-npm-dist-tag.mjs` now decides it: a stable version always takes `latest`, and a
+  pre-release takes it too **only while the registry holds no stable release of these packages**,
+  falling back to `next` from the moment one exists. Reading the registry rather than flipping a flag
+  means the rule retires itself when `10.0.0` ships, instead of silently moving consumers off a stable
+  release onto a later `10.1.0-rc.1`. The `channel` output is unchanged and still means "is this a
+  pre-release" for the GitHub Packages mirror and the draft Release's own flag.
 
 #### flex-fields
 
