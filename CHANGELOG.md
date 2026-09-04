@@ -57,6 +57,44 @@ so it stays clear which part of the repository actually moved.
   the editor stayed light while the rest of the page went dark. Both blocks are now declared on
   `:root, body`, so either placement works. Coverage is unchanged: CKEditor's UI, including the
   balloon/dropdown wrapper it appends directly under `<body>`, is entirely inside the body subtree.
+- **The `Select` and `Tree` field controls’ dropdown panels now follow a dark host.** Both painted
+  their panel with `var(--lpx-content-bg, #fff)`, but `--lpx-content-bg` is a **full** LeptonX token
+  (`@volosoft/ngx-lepton-x`: `#f0f4f7` light, `#121212` dark). LeptonX **Lite** — `@volo/ngx-lepton-x.lite`,
+  which `@abp/ng.theme.lepton-x` wraps — never defines it: it ships 11 `--lpx-*` tokens and this is
+  not one of them. The chain therefore fell straight through to the literal `#fff` and the panel
+  stayed white in every theme, while the options’ own `color: var(--bs-body-color)` did follow the
+  host — light grey text on white, unreadable. Both now fall back to `--bs-secondary-bg` first
+  (`#e9ecef` light, `#343a40` dark in Lite), the Bootstrap 5.3 “one step off the body surface” token
+  that every Bootstrap-based theme defines at `:root` and redefines under `[data-bs-theme=dark]` —
+  the same chain shape `flex-fields-ckeditor` already uses for `--ck-color-base-foreground`. Light
+  mode moves from pure white to `#e9ecef`.
+- **The `Select` field's multi-select tags were near-illegible in a dark host.** ng-zorro hardcodes
+  the tag's entire chrome — `background: #f5f5f5`, `border: 1px solid #f0f0f0`, and
+  `rgba(0, 0, 0, 0.45)` on the remove icon — while the tag's label does follow the host, because this
+  file already sets `color: inherit` on `.ant-select`. The result in dark mode was a light label on a
+  near-white chip with an invisible “×”. All three now map to `--bs-secondary-bg`,
+  `--bs-border-color` and `--bs-secondary-color`.
+
+- **The `Tree` field gave no feedback about which node was selected in single-select mode.**
+  `abp-tree` marks selection with a `.selected` class of its own — it renders
+  `<div [class.selected]="isNodeSelected(node)">` as the node wrapper's direct child — and never binds
+  `nzSelectedKeys`, so ng-zorro's `.ant-tree-node-selected` is never applied at all, and `abp-tree`
+  attaches no styling to `.selected`. Clicking a node therefore changed nothing on screen, and
+  reopening a saved value gave no indication of which node it held. (Multi-select was unaffected: it
+  renders a checkbox per node.) The selected node now takes the same `--lpx-brand` / white treatment
+  as the `Select` field's chosen option. Node hover, which neither package had touched and which
+  ng-zorro paints `#f5f5f5`, now uses `--bs-secondary-bg`.
+
+- **The `Tree` field's search dropdown had a hardcoded `rgba(0, 0, 0, 0.12)` border**, invisible
+  against the dark panel. Now `--bs-border-color`, like every other Bootstrap-based control.
+- **The `Tree` field's node editor (`ff-tree-config`, the “Nodes” panel in field configuration)
+  carried no styles of its own**, so every ng-zorro default came through unmodified — all of it
+  hardcoded light-mode. Hovering a node painted a `#f5f5f5` bar under text that follows the host
+  (`abp-tree` sets `.ant-tree { color: inherit }`), so in a dark host the row went light-on-white and
+  the label disappeared; the post-click “active” node did the same. `.ant-tree`'s own opaque
+  `background: #fff` was there too, which would have shown the whole editor as a white box in a
+  genuinely dark host. Hover and active now use `--bs-secondary-bg` and the tree background is
+  transparent, matching what the `Tree` picker already did.
 
 ## [10.0.0-rc.13] - 2026-09-03
 
