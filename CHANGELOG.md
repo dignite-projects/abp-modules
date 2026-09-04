@@ -15,6 +15,8 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+## [10.0.0-rc.14] - 2026-09-04
+
 ### Fixed
 
 - **Every tag-triggered release since the npm Trusted Publishing migration (`v10.0.0-rc.12` and
