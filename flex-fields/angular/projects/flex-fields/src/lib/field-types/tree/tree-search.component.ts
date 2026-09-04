@@ -50,8 +50,15 @@ import { findTreeNode, toTreeNodes } from './tree-node';
         padding: 0.375rem;
         overflow: auto;
         color: var(--bs-body-color);
-        background-color: var(--lpx-content-bg, #fff);
-        border: 1px solid rgba(0, 0, 0, 0.12);
+        /* --lpx-content-bg is full-LeptonX only; LeptonX Lite never defines it, so this used to
+           fall through to #fff and the panel stayed white in every theme while the color above
+           followed --bs-body-color into light-on-white. --bs-secondary-bg flips with the host.
+           See select-field.component.scss for the same chain and the full reasoning. */
+        background-color: var(--lpx-content-bg, var(--bs-secondary-bg, #fff));
+        /* Hardcoded black at 12% was invisible against the dark panel this rule now paints.
+           --bs-border-color is what every other Bootstrap-based control on the page uses and it
+           flips with the host (#e7e9ec -> #495057 in LeptonX Lite). */
+        border: 1px solid var(--bs-border-color, rgba(0, 0, 0, 0.12));
         border-radius: 0.375rem;
         box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
       }
