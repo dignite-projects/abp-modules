@@ -15,6 +15,22 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Fixed
+
+- **The post-publish "Verify published packages install as a single copy each" step crashed on the
+  same `${NODE_AUTH_TOKEN}` placeholder that had broken every yarn command earlier in the job**, so
+  the `v10.0.0-rc.14` run failed *after* it had already published all 33 NuGet packages and all five
+  Angular packages: the draft GitHub Release was never created, and the single-copy check the step
+  exists for never actually ran. `v10.0.0-rc.13`'s fix moved `actions/setup-node`'s `registry-url`
+  onto a second `setup-node` call placed past the last yarn command in the job - but this step runs
+  *after* publishing, and therefore after that second call, whose generated `.npmrc` stays exported
+  as `$NPM_CONFIG_USERCONFIG` for every remaining step. Yarn Classic expands every env-var
+  placeholder in its resolved config on every invocation and throws when one is unset, and nothing
+  sets `NODE_AUTH_TOKEN` (npm Trusted Publishing does not use it). The step now runs with an empty
+  `NPM_CONFIG_USERCONFIG` of its own, which is all it needs: it installs published, public packages
+  from npmjs and authenticates nothing. Verified by hand against the published `10.0.0-rc.14` set -
+  Yarn Classic resolves exactly one copy of each of the five packages.
+
 ## [10.0.0-rc.14] - 2026-09-04
 
 ### Fixed

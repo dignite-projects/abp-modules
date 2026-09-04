@@ -17,6 +17,14 @@
  * solves. Reading the registry rather than hardcoding a date or a flag means the rule retires itself
  * the moment the first stable ships, with nobody having to remember to come back and change it.
  *
+ * One tag, not two: while a pre-release holds `latest`, `next` is left wherever the previous release
+ * put it. `npm publish` takes a single --tag, and moving a second one afterwards needs
+ * `npm dist-tag add`, which requires a standing credential this workflow deliberately does not have -
+ * npmjs publishing here is OIDC-based, and the short-lived token npm exchanges internally during a
+ * publish is never exposed to another command. So while this rule is in force, `next` has to be
+ * moved by hand if it should track the newest pre-release. The question retires itself along with
+ * the rule: from the first stable release on, pre-releases publish under `next` again.
+ *
  * Usage: node build/resolve-npm-dist-tag.mjs <version>
  */
 
