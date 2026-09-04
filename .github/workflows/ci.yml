@@ -253,9 +253,10 @@ jobs:
           node ./notifications/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
 
       # --- flex-fields Angular (angular/projects/flex-fields) ---
-      # --legacy-peer-deps for the same reason as file-storing: @abp/ng.theme.shared depends on
-      # @swimlane/ngx-datatable, whose Angular peer range stops at 20, so npm will not hoist it beside
-      # Angular 21 without this - and the demo app's global styles import it by top-level path.
+      # Expect unmet-peer warnings from this install: @abp/ng.theme.shared depends on
+      # @swimlane/ngx-datatable, whose Angular peer range stops at 20, and the demo app's global styles
+      # import it by top-level path. yarn reports that as a warning rather than an error, which is why
+      # npm's --legacy-peer-deps workaround is no longer needed here.
       - name: Install flex-fields Angular dependencies
         working-directory: flex-fields/angular
         run: yarn install --frozen-lockfile
