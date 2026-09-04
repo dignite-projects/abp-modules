@@ -77,6 +77,18 @@ so it stays clear which part of the repository actually moved.
 
 #### flex-fields
 
+- **`@dignite/ng.flex-fields`' `ng-zorro-antd` peer range rejected every release after `21.0.x`.** It
+  was `~21.0.0-next.1`, which expands to `>=21.0.0-next.1 <21.1.0-0` — so `21.1.0` and everything
+  since, up to the current `21.3.3`, failed the peer. Under npm 7+ that is an `ERESOLVE` install
+  error rather than a warning; Yarn Classic downgrades it to a warning, which is why it had not
+  surfaced. The range dated from when `21.0.0-next.x` was the newest thing published and was never
+  revisited after `21.0.0` went stable. It is now `^21.0.0`, matching how `.github/dependabot.yml`
+  already reasons about this package (its major tracks Angular's, so majors are ignored and the
+  `21.x` line is meant to be tracked). `flex-fields/angular`'s own dependency moves to `^21.3.3`
+  alongside it, so the workspace develops against a version the library claims to support — it had
+  been pinned to the same capped range and stuck on `21.0.2` while `file-storing/angular` was already
+  on `21.3.3`. See [#220](https://github.com/dignite-projects/abp-modules/issues/220).
+
 - **`CKEditorControlComponent`'s theme bridge now resolves against `<body>` as well as `<html>`.** A
   custom property's `var()` references are resolved against the element the property is declared on,
   not against wherever it is eventually consumed, so the bridge's `:root` declarations could only
