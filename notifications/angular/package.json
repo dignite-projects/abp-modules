@@ -32,7 +32,7 @@
     "@angular/platform-browser": "~21.2.22",
     "@angular/platform-browser-dynamic": "~21.2.0",
     "@angular/router": "~21.2.22",
-    "@microsoft/signalr": "^10.0.0",
+    "@microsoft/signalr": "^10.0.11",
     "rxjs": "~7.8.0",
     "tslib": "^2.0.0",
     "zone.js": "~0.16.2"
@@ -48,13 +48,13 @@
     "@angular/cli": "~21.2.22",
     "@angular/compiler-cli": "~21.2.22",
     "@angular/language-service": "~21.2.22",
-    "@types/node": "^20.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.68.0",
-    "@typescript-eslint/parser": "^7.0.0",
-    "eslint": "^8.0.0",
-    "jsdom": "^27.1.0",
-    "ng-packagr": "^21.2.0",
-    "typescript": "~5.9.0",
+    "@types/node": "^26.4.0",
+    "@typescript-eslint/eslint-plugin": "^8.69.0",
+    "@typescript-eslint/parser": "^8.69.0",
+    "eslint": "^10.9.1",
+    "jsdom": "^30.0.1",
+    "ng-packagr": "^21.2.7",
+    "typescript": "~7.0.2",
     "vitest": "^4.1.11"
   }
 }
