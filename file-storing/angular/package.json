@@ -61,9 +61,5 @@
     "ng-packagr": "^21.2.7",
     "typescript": "~5.9.0",
     "vitest": "^4.1.11"
-  },
-  "overrides": {
-    "@hono/node-server": "^2.0.5",
-    "esbuild": "^0.28.1"
   }
 }
