@@ -111,6 +111,7 @@ updates:
         patterns:
           - "@angular/*"
           - "@angular-eslint/*"
+          - "@angular-devkit/*"
       abp-ng:
         patterns:
           - "@abp/ng.*"
@@ -123,6 +124,8 @@ updates:
       - dependency-name: "@angular/*"
         update-types: ["version-update:semver-major"]
       - dependency-name: "@angular-eslint/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@angular-devkit/*"
         update-types: ["version-update:semver-major"]
       - dependency-name: "ng-packagr"
         update-types: ["version-update:semver-major"]
@@ -136,6 +139,7 @@ updates:
         patterns:
           - "@angular/*"
           - "@angular-eslint/*"
+          - "@angular-devkit/*"
       abp-ng:
         patterns:
           - "@abp/ng.*"
@@ -148,6 +152,8 @@ updates:
       - dependency-name: "@angular/*"
         update-types: ["version-update:semver-major"]
       - dependency-name: "@angular-eslint/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@angular-devkit/*"
         update-types: ["version-update:semver-major"]
       - dependency-name: "ng-packagr"
         update-types: ["version-update:semver-major"]
@@ -161,6 +167,7 @@ updates:
         patterns:
           - "@angular/*"
           - "@angular-eslint/*"
+          - "@angular-devkit/*"
       abp-ng:
         patterns:
           - "@abp/ng.*"
@@ -173,6 +180,8 @@ updates:
       - dependency-name: "@angular/*"
         update-types: ["version-update:semver-major"]
       - dependency-name: "@angular-eslint/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@angular-devkit/*"
         update-types: ["version-update:semver-major"]
       - dependency-name: "ng-packagr"
         update-types: ["version-update:semver-major"]
