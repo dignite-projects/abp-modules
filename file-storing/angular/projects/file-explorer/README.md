@@ -1,128 +1,56 @@
-## ℹ️ Description
+# @dignite/ng.file-explorer
 
-ABP Framework is a complete open-source infrastructure to create modern web applications by following the best practices and conventions of software development. This package is a part of the [ABP Framework](https://abp.io) and contains client-side files. 
-For more information, check out the below links: 
+Angular UI for **[Dignite.FileExplorer](https://github.com/dignite-projects/abp-modules/tree/main/file-storing)** —
+an upload widget, a directory-tree file picker, and the ABP-generated API proxies over
+`/api/file-explorer`.
 
-🔗Official Website: https://abp.io
+> **Angular 21 · ABP 10.5 · LGPL-3.0-only**
 
-🔗Commercial Demo: https://abp.io/demo
+## Install
 
-🔗GitHub Repository: https://github.com/abpframework/abp
+```bash
+npm install @dignite/ng.file-explorer
+```
 
-🔗Official Theme: https://www.LeptonTheme.com
+Register the `/config` secondary entry point once, in your application config, to wire up its
+routes:
 
-🔗Documentation: https://abp.io/docs/latest/
+```ts
+import { provideFileExplorerConfig } from '@dignite/ng.file-explorer/config';
 
-🔗Community: https://abp.io/community/
+export const appConfig: ApplicationConfig = {
+  providers: [provideFileExplorerConfig()],
+};
+```
 
-🔗Blog: https://abp.io/blog/
+## Components
 
-🔗Books: https://abp.io/books
+| Selector | Role |
+|---|---|
+| `fe-file-explorer-upload` | Upload widget for a single blob container |
+| `fe-file-explorer-picker` | Shows the currently selected file(s); opens the modal to add more |
+| `fe-file-explorer-modal` | Directory tree + file table + inline upload, used by the picker |
+| `fe-file-explorer-directory-tree` | Standalone directory navigation tree |
 
-🔗Twitter: https://twitter.com/abpframework
+```html
+<fe-file-explorer-upload
+  [multiple]="false"
+  fileContainerName="SampleContainer"
+  (fileDataChange)="onFileDataChange($event)"
+></fe-file-explorer-upload>
 
-🔗Discord: https://abp.io/community/discord
+<fe-file-explorer-picker
+  [multiple]="true"
+  [selectFormFile]="selectedFileGroup"
+  fileContainerName="SampleContainer"
+  (selectedFileChange)="onSelectedFileChange($event)"
+></fe-file-explorer-picker>
+```
 
-🔗Stackoverflow: https://stackoverflow.com/questions/tagged/abp
+`fileContainerName` has no default — an unconfigured container is a configuration bug, not silently
+treated as any particular one, and must match a blob container configured server-side via
+`Dignite.Abp.FileStoring`.
 
-🔗YouTube: https://www.youtube.com/@Volosoft
+## License
 
-
-## 🤔 Why ABP Platform?
-
-Why should you use the ABP.IO Platform instead of creating a new solution from scratch?
-
-You can find the answer here 👉🏻 [Why ABP Platform?](https://abp.io/docs/latest/others/why-abp-platform)
-
-
-## 🚀 Key Features of the ABP Framework
-
-🟡 Modularity
-
-🟡 Multi-Tenancy
-
-🟡 Bootstrap Tag Helpers
-
-🟡 Dynamic Forms
-
-🟡 Authentication
-
-🟡 Authorization
-
-🟡 Distributed Event Bus
-
-🟡 BLOB Storing
-
-🟡 Text Templating
-
-🟡 Tooling: ABP CLI
-
-🟡 Cross-Cutting Concerns
-
-🟡 Bundling & Minification
-
-🟡 Virtual File System
-
-🟡 Theming
-
-🟡 Background Jobs
-
-🟡 DDD Infrastructure
-
-🟡 Auto REST APIs
-
-🟡 Dynamic Client Proxies
-
-🟡 Multiple Database Providers
-
-🟡 Data filtering
-
-🟡 Test Infrastructure
-
-🟡 Audit Logging
-
-🟡 Object to Object Mapping
-
-🟡 Email & SMS Abstractions
-
-🟡 Localization
-
-🟡 Setting Management
-
-🟡 Extension Methods
-
-🟡 Aspect Oriented Programming
-
-🟡 Dependency Injection
-
-
-## 🧐 How It Works?
-
-The following page explains how you use the ABP.IO Platform as a .NET developer 👉 [How it works?](https://abp.io/how-it-works)
-
-
-### 📘 Supported Database Providers
-
-🔵 Entity Framework Core
-
-🔵 MongoDB
-
-🔵 Dapper
-
-
-### 🎴 Supported UI Frameworks
-
-🔵 Angular
-
-🔵 Razor Pages
-
-🔵 Blazor Web Assembly
-
-🔵 Blazor Server
-
-🔵 MAUI with Blazor Hybrid
-
-
-## 📫 Bug & Support
-
-Support for open-source ABP Framework client-side packages is available at [GitHub Issues](https://github.com/abpframework/abp/issues), and the commercial support is available at [abp.io/support](https://abp.io/support/questions).
+LGPL-3.0-only. See the [repository](https://github.com/dignite-projects/abp-modules).
