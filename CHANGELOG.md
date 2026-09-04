@@ -47,6 +47,34 @@ so it stays clear which part of the repository actually moved.
   own scratch file, passed via `--userconfig` on just its own `npm publish` calls, leaving the
   OIDC-relevant file untouched for the rest of the job.
 
+- **The two Angular adapter packages declared their intra-repo siblings at a stale range, so
+  consumers could end up with two copies of `@dignite/ng.flex-fields` and no working field types.**
+  `flex-fields-ckeditor` and `flex-fields-file-explorer` both still asked for `^10.0.0-rc.4` while
+  every package in the repository shipped `10.0.0-rc.13`. That range admits an older sibling, so a
+  resolver is free to satisfy it with one rather than deduplicating against the copy already at the
+  root — and Yarn Classic does exactly that whenever npm's `latest` tag sits on an older version
+  than the newest published one, which is the case today (`latest` is `10.0.0-rc.11`, `next` is
+  `10.0.0-rc.13`). The result is not wasted bytes: Angular DI keys off object identity and
+  `FLEX_FIELD_TYPES` is a module-scoped `InjectionToken`, so two copies are two distinct DI keys —
+  `provideCKEditorFieldType()` registers into one while `FieldTypeResolver` reads the other, and
+  every field type appears unregistered at runtime with nothing having failed at install or build
+  time. All three ranges now track the release version, and
+  `.github/scripts/verify-version-lockstep.ps1` — already the release's version-lockstep gate —
+  additionally fails the release if any `@dignite/*` dependency or peer dependency of a published
+  Angular package names anything other than the version being released, so this cannot drift again.
+  Note that clearing the duplicate for consumers still on `latest` also needs the `latest` dist-tag
+  moved off `10.0.0-rc.11`. See [#211](https://github.com/dignite-projects/abp-modules/issues/211).
+- **`release.yml` now verifies, after publishing, that a Yarn Classic install of the just-released
+  packages resolves exactly one copy of each.** The packed-tarball smoke tests already in the
+  workflow install with **npm**, which deduplicates; all three Angular workspaces here and every
+  known downstream use **Yarn Classic**, which does not. That gap is what let the duplicate above
+  reach consumers with every existing check passing. `build/verify-npm-single-copy.mjs` closes it by
+  checking the *resolved* outcome rather than the manifests — so a duplicate arriving by some other
+  route (a transitive `@dignite/*` edge, a dist-tag that makes a caret resolve backwards) is caught
+  too. It runs after the npm publish step, since it resolves real versions from npmjs that do not
+  exist until then; a failure therefore cannot un-publish anything, it stops the draft GitHub Release
+  and reports that the just-published set does not install cleanly.
+
 #### flex-fields
 
 - **`CKEditorControlComponent`'s theme bridge now resolves against `<body>` as well as `<html>`.** A
