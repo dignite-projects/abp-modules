@@ -78,13 +78,21 @@ jobs:
           VERSION='${{ steps.version.outputs.version }}'
           if [[ "$VERSION" == *-* ]]; then
             echo "channel=prerelease" >> "$GITHUB_OUTPUT"
-            echo "npm-tag=next" >> "$GITHUB_OUTPUT"
             echo "::notice::Version $VERSION is a pre-release."
           else
             echo "channel=stable" >> "$GITHUB_OUTPUT"
-            echo "npm-tag=latest" >> "$GITHUB_OUTPUT"
             echo "::notice::Version $VERSION is stable."
           fi
+
+          # The npm dist-tag is decided separately from the channel above, which still answers only
+          # "is this a pre-release" - for the GitHub Packages mirror and the draft Release's own flag.
+          # `latest` is what a bare `npm install` resolves and what a resolver prefers for any range
+          # that admits it, so a pre-release takes it too for as long as no stable release exists.
+          # See build/resolve-npm-dist-tag.mjs for why that rule retires itself once one does, rather
+          # than needing someone to remember to change it back.
+          NPM_TAG="$(node ./build/resolve-npm-dist-tag.mjs "$VERSION")"
+          echo "npm-tag=$NPM_TAG" >> "$GITHUB_OUTPUT"
+          echo "::notice::Publishing to npm under the '$NPM_TAG' dist-tag."
 
       - name: Restore
         run: dotnet restore Dignite.Abp.Modules.slnx
@@ -491,6 +499,21 @@ jobs:
             --access public \
             --tag '${{ steps.channel.outputs.npm-tag }}' \
             --provenance
+
+      # Verifying the *resolved* outcome, which no earlier step can see. The packed-tarball smoke
+      # tests above install with npm, which deduplicates; all three Angular workspaces here and every
+      # downstream consumer use Yarn Classic, which does not. That difference is what let issue #211
+      # ship: two copies of @dignite/ng.flex-fields in a consumer's tree are two distinct DI keys for
+      # the module-scoped FLEX_FIELD_TYPES token, so field-type registration silently stopped working
+      # at runtime with nothing failing at install or build time.
+      #
+      # Deliberately after publishing rather than before: it resolves the real versions from npmjs,
+      # which do not exist until the step above has run. A failure here therefore cannot un-publish
+      # anything - it stops the draft GitHub Release and says loudly that the just-published set does
+      # not install cleanly, which is the useful half.
+      - name: Verify published packages install as a single copy each
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: node ./build/verify-npm-single-copy.mjs '${{ steps.version.outputs.version }}'
 
       # Extract this version's section from the root CHANGELOG.md
       # as the draft release body.

@@ -7,8 +7,8 @@
     "url": "git+https://github.com/dignite-projects/abp-modules.git"
   },
   "dependencies": {
-    "@dignite/ng.file-explorer": "^10.0.0-rc.4",
-    "@dignite/ng.flex-fields": "^10.0.0-rc.4",
+    "@dignite/ng.file-explorer": "^10.0.0-rc.13",
+    "@dignite/ng.flex-fields": "^10.0.0-rc.13",
     "tslib": "^2.0.0"
   },
   "publishConfig": {

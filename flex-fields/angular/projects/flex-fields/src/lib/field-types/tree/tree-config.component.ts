@@ -35,6 +35,33 @@ let nextCheckboxId = 0;
   selector: 'ff-tree-config',
   templateUrl: './tree-config.component.html',
   imports: [CoreModule, ThemeSharedModule, ReactiveFormsModule, TreeModule],
+  styles: `
+    /* This component had no styles of its own, so every bit of ng-zorro chrome came through
+       untouched - all of it hardcoded light-mode: .ant-tree paints an opaque background: #fff (a
+       white box in a dark host), and both node hover and the post-click "active" node paint
+       #f5f5f5. Node text, by contrast, follows the host, because @abp/ng.components abp-tree sets
+       .ant-tree { color: inherit } - so a hovered row in a dark host went light-on-white and the
+       label vanished.
+
+       tree-picker-nodes.component.scss documents the same ng-zorro defaults for the field picker.
+       The treatment differs only in what gets painted: the picker highlights its own inline node
+       body, because its template root is a d-inline-flex chip with padding and a corner radius.
+       This tree node template is a plain full-width div, so the wrapper - which abp-tree already
+       stretches to width: 100% - is the surface to paint here, matching the full-row highlight the
+       control has always had, only in a colour that tracks the host.
+
+       !important on the background, as in the picker: ng-zorro tree CSS is a global stylesheet and
+       this keeps the override independent of load order rather than resting on the encapsulation
+       attribute raising specificity. */
+    :host ::ng-deep .ant-tree {
+      background: transparent !important;
+    }
+
+    :host ::ng-deep .ant-tree .ant-tree-node-content-wrapper:hover,
+    :host ::ng-deep .ant-tree .ant-tree-treenode-active .ant-tree-node-content-wrapper {
+      background-color: var(--bs-secondary-bg, #f5f5f5) !important;
+    }
+  `,
 })
 export class TreeConfigComponent extends FieldTypeConfigBase {
   private readonly cdRef = inject(ChangeDetectorRef);

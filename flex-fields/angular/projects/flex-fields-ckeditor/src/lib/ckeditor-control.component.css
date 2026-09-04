@@ -21,11 +21,34 @@
 
 /* CKEditor 5 ships no dark-mode palette: ckeditor5.css's own :root block hardcodes the four base
    tokens below to a fixed light palette (--ck-color-base-background:#fff, -foreground:#fafafa,
-   -border:#ccced1, -text:#333), and every other --ck-color-* token in the editor's theme derives from
-   those four - so remapping just these four (plus the two hardcoded hover/active exceptions below)
-   re-themes the whole editor UI at once. This bridge used to live per-host (e.g. the `site` package's
-   ContentEditorComponent had its own copy) - moved here so every host gets dark-mode support for free,
-   without duplicating it per consumer.
+   -border:#ccced1, -text:#333). Remapping those four re-themes the visible bulk of the editor UI at
+   once, because the main chrome is var()-derived from them: --ck-color-toolbar-background,
+   --ck-color-panel-background, --ck-color-dropdown-panel-background, --ck-color-list-background and
+   --ck-color-input-background are all var(--ck-color-base-background), with the matching -border and
+   -text tokens following the same pattern off -border/-text.
+
+   It is not the whole palette, though. Of the --ck-color-* tokens ckeditor5.css defines, roughly 60
+   are plain hardcoded literals rather than var()-derived, and no amount of remapping here reaches
+   them - --ck-color-input-disabled-background:#f2f2f2, --ck-color-split-button-hover-background:
+   #ebebeb, --ck-color-widget-blurred-border:#dedede, --ck-color-engine-placeholder-text:#707070 and
+   --ck-color-editable-blur-selection:#d9d9d9 among them. They stay light in a dark host. The two
+   --ck-color-button-default-*-background literals mapped below are the two of that group worth
+   fixing here, being the toolbar's own hover/active fills and therefore permanently on screen; the
+   rest sit in states rare enough that pinning them one by one against a moving upstream palette
+   costs more than it buys.
+
+   This bridge used to live per-host (e.g. the `site` package's ContentEditorComponent had its own
+   copy) - moved here so every host gets dark-mode support for free, without duplicating it per
+   consumer.
+
+   Declared on `:root, body`, not `:root` alone, because a custom property's var() references are
+   resolved against the element the property is declared on, not against wherever it is eventually
+   consumed. A host that marks its dark theme on <html> - full LeptonX swapping in dark.css,
+   Bootstrap's usual [data-bs-theme] placement - is seen by the :root copy. A host that marks it on
+   <body> instead is invisible to :root, and only the body copy resolves against the dark values.
+   Declaring both makes either placement work. Coverage is unchanged by the addition: CKEditor's UI,
+   including the balloon/dropdown wrapper it appends directly under <body>, is entirely inside the
+   body subtree, so the body copy reaches every element the :root copy would have.
 
    Fallback chain, most specific first: a LeptonX token when the host happens to be on LeptonX -> a
    Bootstrap 5.3 token (shipped by every ABP Angular theme - LeptonX, LeptonX Lite, Basic - and already
@@ -34,14 +57,26 @@
    variable, sees no change at all. This needs no LeptonX-specific knowledge to fall back safely:
    --bs-* is Bootstrap-universal, not a downstream's private naming.
 
+   The chain assumes that a host defining --lpx-card-bg also redefines it per theme. Full LeptonX
+   (@volosoft/ngx-lepton-x) does: #fff in light.css, #1b1b1b in dark.css, #ffffff in dim.css, one
+   stylesheet swapped in per theme. LeptonX *Lite* (@volo/ngx-lepton-x.lite, which @abp/ng.theme
+   .lepton-x wraps) does not: it declares --lpx-card-bg:#ffffff exactly once, in
+   side-menu/layout-bundle.css, and never again - because Lite ships no dark theme at all, just one
+   fixed look with no theme-switching code anywhere in the package. So on Lite the first link always
+   wins and the editor is always white, which is correct there, since Lite's own cards are white too.
+   A host hand-rolling a dark mode on top of Lite has to override --lpx-card-bg itself: no CSS-level
+   fallback can tell "token that tracks the theme" apart from "token that is a constant".
+
    - --ck-color-base-background -> --lpx-card-bg / --bs-body-bg: the surface the control itself sits
-     on (Basic mode's editable background; Full mode's editable + toolbar chrome). Card background
-     rather than page background, so the control still reads as a discrete form field instead of
-     blending into the page; white in light mode, matching CKEditor's own stock #fff exactly, so the
-     light-mode look is unchanged from stock.
-   - --ck-color-base-foreground -> --lpx-content-bg / --bs-secondary-bg: the toolbar's own background,
-     one step off the card surface it sits on - CKEditor's stock palette makes the same distinction
-     (#fafafa vs #fff).
+     on, and the single most visible token here - Basic mode's editable background, plus Full mode's
+     editable, toolbar, balloon and dropdown chrome. Card background rather than page background, so
+     the control still reads as a discrete form field instead of blending into the page; white in
+     light mode, matching CKEditor's own stock #fff exactly, so the light-mode look is unchanged
+     from stock.
+   - --ck-color-base-foreground -> --lpx-content-bg / --bs-secondary-bg: one step off the card
+     surface, as in CKEditor's stock palette (#fafafa vs #fff). Despite the name it does not drive
+     the toolbar - that is -background above - but the fullscreen wrapper, the raw-html-embed and
+     html-object-embed widget backgrounds, the media-embed placeholder and disabled button fills.
    - --ck-color-base-border / -text -> the same --bs-border-color / --bs-body-color every other
      Bootstrap-based control on the page already uses, so borders and text match the rest of the host
      UI in both modes.
@@ -57,7 +92,8 @@
    CKEditorControlComponent.ngOnInit), i.e. after this stylesheet - at equal :root specificity, source
    order alone would otherwise let its stock light-mode palette win. Same reasoning as the
    --ck-content-font-color override further down this file. */
-:root {
+:root,
+body {
   --ck-color-base-background: var(--lpx-card-bg, var(--bs-body-bg, #fff)) !important;
   --ck-color-base-foreground: var(--lpx-content-bg, var(--bs-secondary-bg, #fafafa)) !important;
   --ck-color-base-border: var(--bs-border-color, #ccced1) !important;
@@ -95,7 +131,9 @@
    Bootstrap/LeptonX fallback chain the dark-theme block above already documents.
    !important: ckeditor5-content.css loads later than this file - bundled with the dynamic
    import('ckeditor5') in ngOnInit, not the static @import above - so at equal :root specificity,
-   source order would otherwise let its own #000 default win. */
-:root {
+   source order would otherwise let its own #000 default win. Declared on the same `:root, body`
+   pair as the block above, for the same reason. */
+:root,
+body {
   --ck-content-font-color: var(--ck-color-base-text) !important;
 }
