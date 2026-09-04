@@ -61,15 +61,24 @@
     color: var(--bs-white) !important;
   }
 
-  .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
-    background-color: var(--lpx-brand);
-    color: var(--bs-white) !important;
-  }
+  // A selected option is deliberately given no colour of its own: it reads exactly like an
+  // unselected one, and ant-design own checkmark (.ant-select-item-option-state) is the indicator.
+  // In a multi-select several options are selected at once, so filling each of their rows competes
+  // with the hover state for attention rather than adding information.
+  //
+  // There used to be a rule here setting --lpx-brand with white text, and it was broken in a way
+  // worth recording. Only its colour half carried !important; the .ant-select-item rule below zeroes
+  // every option background with !important, and !important beats specificity, so the background
+  // never applied while the white text always did. A selected option rendered white-on-panel:
+  // invisible while the panel was still #fff, and merely illegible once it became --bs-secondary-bg.
+  // The hover rule above has !important on both halves, which is why hovering a selected option
+  // looked right and moving off it did not.
 
   // !important: ng-zorro's own .ant-select-item rule (color: rgba(0,0,0,.85)) is the same one-class
   // specificity as this override, and its stylesheet loads lazily on first open - after this
   // component's styles - so at that tie, source order was letting its light-mode default win for
-  // every option that isn't currently hovered/selected, regardless of theme.
+  // every option that is not currently hovered, regardless of theme. It also zeroes the option
+  // background, which is what leaves a selected option reading like any other - see above.
   .ant-select-item {
     color: var(--bs-body-color) !important;
     background-color: transparent !important;
