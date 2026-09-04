@@ -20,6 +20,20 @@
   .ant-select-selection-placeholder {
     color: inherit !important;
   }
+
+  // ng-zorro hardcodes the multiple-select tag's whole chrome - background #f5f5f5, border #f0f0f0,
+  // and rgba(0, 0, 0, 0.45) on the remove icon - none of which tracks the host theme. The tag's
+  // text, on the other hand, does: .ant-select above sets `color: inherit`, so in a dark host the
+  // label went light while the chip stayed near-white, leaving the selected values barely legible
+  // and the x invisible. Mapped to the same --bs-* tokens as the rest of this file.
+  .ant-select-selection-item {
+    background: var(--bs-secondary-bg, #f5f5f5) !important;
+    border-color: var(--bs-border-color, #f0f0f0) !important;
+  }
+
+  .ant-select-selection-item-remove {
+    color: var(--bs-secondary-color, rgba(0, 0, 0, 0.45)) !important;
+  }
 }
 
 // Bootstrap's .form-select padding is intended for native <select> elements.
@@ -30,8 +44,16 @@
 }
 
 ::ng-deep .ff-form-felect-dropdown {
+  // --lpx-content-bg is a full-LeptonX token (@volosoft/ngx-lepton-x: #f0f4f7 light, #121212 dark).
+  // LeptonX *Lite* - @volo/ngx-lepton-x.lite, what @abp/ng.theme.lepton-x wraps - never defines it;
+  // it ships only 11 --lpx-* tokens and this is not one of them, so on a Lite host the chain used to
+  // fall straight through to the literal #fff and the panel stayed white in every theme, while
+  // .ant-select-item below kept following --bs-body-color into light-on-white. --bs-secondary-bg is
+  // the Bootstrap 5.3 "one step off the body surface" token, defined at :root by every Bootstrap
+  // theme and redefined under [data-bs-theme=dark] (#e9ecef -> #343a40 in Lite), so it flips with the
+  // host. Same chain shape as flex-fields-ckeditor's --ck-color-base-foreground, for the same reason.
   .ant-select-dropdown {
-    background: var(--lpx-content-bg, #fff) !important;
+    background: var(--lpx-content-bg, var(--bs-secondary-bg, #fff)) !important;
   }
 
   .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
@@ -39,15 +61,24 @@
     color: var(--bs-white) !important;
   }
 
-  .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
-    background-color: var(--lpx-brand);
-    color: var(--bs-white) !important;
-  }
+  // A selected option is deliberately given no colour of its own: it reads exactly like an
+  // unselected one, and ant-design own checkmark (.ant-select-item-option-state) is the indicator.
+  // In a multi-select several options are selected at once, so filling each of their rows competes
+  // with the hover state for attention rather than adding information.
+  //
+  // There used to be a rule here setting --lpx-brand with white text, and it was broken in a way
+  // worth recording. Only its colour half carried !important; the .ant-select-item rule below zeroes
+  // every option background with !important, and !important beats specificity, so the background
+  // never applied while the white text always did. A selected option rendered white-on-panel:
+  // invisible while the panel was still #fff, and merely illegible once it became --bs-secondary-bg.
+  // The hover rule above has !important on both halves, which is why hovering a selected option
+  // looked right and moving off it did not.
 
   // !important: ng-zorro's own .ant-select-item rule (color: rgba(0,0,0,.85)) is the same one-class
   // specificity as this override, and its stylesheet loads lazily on first open - after this
   // component's styles - so at that tie, source order was letting its light-mode default win for
-  // every option that isn't currently hovered/selected, regardless of theme.
+  // every option that is not currently hovered, regardless of theme. It also zeroes the option
+  // background, which is what leaves a selected option reading like any other - see above.
   .ant-select-item {
     color: var(--bs-body-color) !important;
     background-color: transparent !important;

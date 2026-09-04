@@ -47,6 +47,120 @@ so it stays clear which part of the repository actually moved.
   own scratch file, passed via `--userconfig` on just its own `npm publish` calls, leaving the
   OIDC-relevant file untouched for the rest of the job.
 
+- **The two Angular adapter packages declared their intra-repo siblings at a stale range, so
+  consumers could end up with two copies of `@dignite/ng.flex-fields` and no working field types.**
+  `flex-fields-ckeditor` and `flex-fields-file-explorer` both still asked for `^10.0.0-rc.4` while
+  every package in the repository shipped `10.0.0-rc.13`. That range admits an older sibling, so a
+  resolver is free to satisfy it with one rather than deduplicating against the copy already at the
+  root — and Yarn Classic does exactly that whenever npm's `latest` tag sits on an older version
+  than the newest published one, which is the case today (`latest` is `10.0.0-rc.11`, `next` is
+  `10.0.0-rc.13`). The result is not wasted bytes: Angular DI keys off object identity and
+  `FLEX_FIELD_TYPES` is a module-scoped `InjectionToken`, so two copies are two distinct DI keys —
+  `provideCKEditorFieldType()` registers into one while `FieldTypeResolver` reads the other, and
+  every field type appears unregistered at runtime with nothing having failed at install or build
+  time. All three ranges now track the release version, and
+  `.github/scripts/verify-version-lockstep.ps1` — already the release's version-lockstep gate —
+  additionally fails the release if any `@dignite/*` dependency or peer dependency of a published
+  Angular package names anything other than the version being released, so this cannot drift again.
+  Note that clearing the duplicate for consumers still on `latest` also needs the `latest` dist-tag
+  moved off `10.0.0-rc.11`. See [#211](https://github.com/dignite-projects/abp-modules/issues/211).
+- **`release.yml` now verifies, after publishing, that a Yarn Classic install of the just-released
+  packages resolves exactly one copy of each.** The packed-tarball smoke tests already in the
+  workflow install with **npm**, which deduplicates; all three Angular workspaces here and every
+  known downstream use **Yarn Classic**, which does not. That gap is what let the duplicate above
+  reach consumers with every existing check passing. `build/verify-npm-single-copy.mjs` closes it by
+  checking the *resolved* outcome rather than the manifests — so a duplicate arriving by some other
+  route (a transitive `@dignite/*` edge, a dist-tag that makes a caret resolve backwards) is caught
+  too. It runs after the npm publish step, since it resolves real versions from npmjs that do not
+  exist until then; a failure therefore cannot un-publish anything, it stops the draft GitHub Release
+  and reports that the just-published set does not install cleanly.
+- **A pre-release now also takes npm's `latest` dist-tag, for as long as no stable release exists.**
+  `release.yml` published every pre-release under `next` alone and reserved `latest` for a stable
+  version — of which there is none yet on the 10.x line. `latest` was therefore left wherever it
+  happened to land before that convention took hold (`10.0.0-rc.11`, while `10.0.0-rc.13` was the
+  newest published), so a bare `npm install @dignite/ng.flex-fields` handed out a version two releases
+  behind, and Yarn Classic resolved intra-repo ranges backwards onto it — the second of the three
+  conditions behind [#211](https://github.com/dignite-projects/abp-modules/issues/211). The tag had
+  been corrected by hand, but the workflow would have re-created the gap at the next pre-release.
+  `build/resolve-npm-dist-tag.mjs` now decides it: a stable version always takes `latest`, and a
+  pre-release takes it too **only while the registry holds no stable release of these packages**,
+  falling back to `next` from the moment one exists. Reading the registry rather than flipping a flag
+  means the rule retires itself when `10.0.0` ships, instead of silently moving consumers off a stable
+  release onto a later `10.1.0-rc.1`. The `channel` output is unchanged and still means "is this a
+  pre-release" for the GitHub Packages mirror and the draft Release's own flag.
+
+#### flex-fields
+
+- **`@dignite/ng.flex-fields`' `ng-zorro-antd` peer range rejected every release after `21.0.x`.** It
+  was `~21.0.0-next.1`, which expands to `>=21.0.0-next.1 <21.1.0-0` — so `21.1.0` and everything
+  since, up to the current `21.3.3`, failed the peer. Under npm 7+ that is an `ERESOLVE` install
+  error rather than a warning; Yarn Classic downgrades it to a warning, which is why it had not
+  surfaced. The range dated from when `21.0.0-next.x` was the newest thing published and was never
+  revisited after `21.0.0` went stable. It is now `^21.0.0`, matching how `.github/dependabot.yml`
+  already reasons about this package (its major tracks Angular's, so majors are ignored and the
+  `21.x` line is meant to be tracked). `flex-fields/angular`'s own dependency moves to `^21.3.3`
+  alongside it, so the workspace develops against a version the library claims to support — it had
+  been pinned to the same capped range and stuck on `21.0.2` while `file-storing/angular` was already
+  on `21.3.3`. See [#220](https://github.com/dignite-projects/abp-modules/issues/220).
+
+- **`CKEditorControlComponent`'s theme bridge now resolves against `<body>` as well as `<html>`.** A
+  custom property's `var()` references are resolved against the element the property is declared on,
+  not against wherever it is eventually consumed, so the bridge's `:root` declarations could only
+  ever see theme variables set on `<html>`. A host that marks its dark theme on `<body>` instead —
+  `data-bs-theme="dark"` on the body element, say — left the bridge resolving the light values, and
+  the editor stayed light while the rest of the page went dark. Both blocks are now declared on
+  `:root, body`, so either placement works. Coverage is unchanged: CKEditor's UI, including the
+  balloon/dropdown wrapper it appends directly under `<body>`, is entirely inside the body subtree.
+- **The `Select` and `Tree` field controls’ dropdown panels now follow a dark host.** Both painted
+  their panel with `var(--lpx-content-bg, #fff)`, but `--lpx-content-bg` is a **full** LeptonX token
+  (`@volosoft/ngx-lepton-x`: `#f0f4f7` light, `#121212` dark). LeptonX **Lite** — `@volo/ngx-lepton-x.lite`,
+  which `@abp/ng.theme.lepton-x` wraps — never defines it: it ships 11 `--lpx-*` tokens and this is
+  not one of them. The chain therefore fell straight through to the literal `#fff` and the panel
+  stayed white in every theme, while the options’ own `color: var(--bs-body-color)` did follow the
+  host — light grey text on white, unreadable. Both now fall back to `--bs-secondary-bg` first
+  (`#e9ecef` light, `#343a40` dark in Lite), the Bootstrap 5.3 “one step off the body surface” token
+  that every Bootstrap-based theme defines at `:root` and redefines under `[data-bs-theme=dark]` —
+  the same chain shape `flex-fields-ckeditor` already uses for `--ck-color-base-foreground`. Light
+  mode moves from pure white to `#e9ecef`.
+- **The `Select` field's multi-select tags were near-illegible in a dark host.** ng-zorro hardcodes
+  the tag's entire chrome — `background: #f5f5f5`, `border: 1px solid #f0f0f0`, and
+  `rgba(0, 0, 0, 0.45)` on the remove icon — while the tag's label does follow the host, because this
+  file already sets `color: inherit` on `.ant-select`. The result in dark mode was a light label on a
+  near-white chip with an invisible “×”. All three now map to `--bs-secondary-bg`,
+  `--bs-border-color` and `--bs-secondary-color`.
+
+- **The `Tree` field gave no feedback about which node was selected in single-select mode.**
+  `abp-tree` marks selection with a `.selected` class of its own — it renders
+  `<div [class.selected]="isNodeSelected(node)">` as the node wrapper's direct child — and never binds
+  `nzSelectedKeys`, so ng-zorro's `.ant-tree-node-selected` is never applied at all, and `abp-tree`
+  attaches no styling to `.selected`. Clicking a node therefore changed nothing on screen, and
+  reopening a saved value gave no indication of which node it held. (Multi-select was unaffected: it
+  renders a checkbox per node.) The selected node now takes the same `--lpx-brand` / white treatment
+  as the `Select` field's chosen option. Node hover, which neither package had touched and which
+  ng-zorro paints `#f5f5f5`, now uses `--bs-secondary-bg`.
+
+- **The `Tree` field's search dropdown had a hardcoded `rgba(0, 0, 0, 0.12)` border**, invisible
+  against the dark panel. Now `--bs-border-color`, like every other Bootstrap-based control.
+- **The `Tree` field's node editor (`ff-tree-config`, the “Nodes” panel in field configuration)
+  carried no styles of its own**, so every ng-zorro default came through unmodified — all of it
+  hardcoded light-mode. Hovering a node painted a `#f5f5f5` bar under text that follows the host
+  (`abp-tree` sets `.ant-tree { color: inherit }`), so in a dark host the row went light-on-white and
+  the label disappeared; the post-click “active” node did the same. `.ant-tree`'s own opaque
+  `background: #fff` was there too, which would have shown the whole editor as a white box in a
+  genuinely dark host. Hover and active now use `--bs-secondary-bg` and the tree background is
+  transparent, matching what the `Tree` picker already did.
+
+- **A selected option in the `Select` field's dropdown rendered white text on the panel background
+  once the mouse left it.** The rule meant to give selected options a `--lpx-brand` fill carried
+  `!important` on its colour but not on its background, while the `.ant-select-item` rule below it
+  zeroes every option background with `!important` — and `!important` beats specificity, so the
+  background never applied and the white text always did. It was invisible for as long as the panel
+  was `#fff` and became merely illegible once the panel started following `--bs-secondary-bg`. The
+  hover rule has `!important` on both halves, which is why hovering a selected option looked correct
+  and moving off it did not. Selected options now take no colour of their own and read exactly like
+  unselected ones, with ant-design's own checkmark as the indicator: in a multi-select several
+  options are selected at once, and filling each of their rows competes with the hover state rather
+  than adding information.
 ## [10.0.0-rc.13] - 2026-09-03
 
 ### Added
@@ -103,12 +217,19 @@ so it stays clear which part of the repository actually moved.
 
 - **`CKEditorControlComponent` now follows the host theme, including dark mode.** CKEditor 5 ships a
   single stock light palette (`--ck-color-base-background`/`-foreground`/`-border`/`-text` in its own
-  `:root`) and every other `--ck-color-*` token derives from those four; the control set none of them,
-  so in a dark-themed host the editor stayed light unless the host added its own bridge (only `site`
-  had one). The control now maps those tokens, plus the two hardcoded toolbar-button hover/active
-  fills, to the host's theme variables — a LeptonX token when present, falling back to the Bootstrap
-  5.3 token every ABP Angular theme ships, then to CKEditor's stock literal — so hosts no longer need
-  a `--ck-color-base-*` bridge of their own.
+  `:root`); the control set none of them, so in a dark-themed host the editor stayed light unless the
+  host added its own bridge (only `site` had one). The control now maps those four tokens, plus the
+  two hardcoded toolbar-button hover/active fills, to the host's theme variables — a LeptonX token
+  when present, falling back to the Bootstrap 5.3 token every ABP Angular theme ships, then to
+  CKEditor's stock literal — so a host on full LeptonX (`@volosoft/ngx-lepton-x`) or on a plain
+  Bootstrap 5.3 dark theme no longer needs a `--ck-color-base-*` bridge of its own. Two limits are
+  worth knowing. The editor's main chrome — toolbar, balloon and dropdown panels, list and input
+  surfaces — is `var()`-derived from those four tokens and re-themes with them, but roughly 60 other
+  `--ck-color-*` tokens are hardcoded literals in `ckeditor5.css` and stay light regardless. And
+  LeptonX **Lite** (`@volo/ngx-lepton-x.lite`, which `@abp/ng.theme.lepton-x` wraps) ships no dark
+  theme at all — one fixed look, no theme-switching code in the package — and pins `--lpx-card-bg` to
+  a constant `#ffffff`, so on Lite the editor stays white, matching Lite's own white cards. A host
+  hand-rolling a dark mode on top of Lite has to override `--lpx-card-bg` itself.
 
 ## [10.0.0-rc.11] - 2026-08-31
 
