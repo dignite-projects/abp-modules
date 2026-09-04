@@ -4,10 +4,34 @@
   border-radius: 0.25rem;
 }
 
-// `abp-tree` (ng-zorro) paints its own default background on `[isNodeSelected]` nodes; this picker
-// has no selected-background of its own, so neutralize ng-zorro's too.
-:host ::ng-deep .ant-tree-node-content-wrapper.ant-tree-node-selected {
-  background-color: transparent;
+// ng-zorro paints hardcoded light-mode chrome on tree nodes - #f5f5f5 on hover, #bae7ff on its own
+// .ant-tree-node-selected - neither tracking the host theme. Cleared from the wrapper and re-applied
+// to `.ff-tree-picker-node`, this component's own node body, which already carries the padding and
+// corner radius a highlight should follow.
+:host ::ng-deep .ant-tree-node-content-wrapper,
+:host ::ng-deep .ant-tree-node-content-wrapper:hover {
+  background-color: transparent !important;
+}
+
+// The selected node keys off abp-tree's own `.selected`, NOT ng-zorro's `.ant-tree-node-selected`.
+// abp-tree renders `<div [class.selected]="isNodeSelected(node)">` as the wrapper's direct child and
+// never binds `nzSelectedKeys`, so nz-tree never applies its own selected class at all - styling that
+// one matches nothing, however plausible it looks (abp-tree's compiled styles do zero
+// `.ant-tree-node-selected`, which is exactly what makes it look already handled). abp-tree gives
+// `.selected` no styling of its own, so a single-select tree had no feedback whatsoever about which
+// node was chosen - neither while picking nor when reopening a saved value.
+//
+// Only ever set in single-select mode: `isNodeSelected()` returns false whenever `multiple` is on,
+// where the per-node checkbox is the indicator instead. Same colours as the Select field's own
+// dropdown (select-field.component.scss), so the two field types read as one library.
+:host ::ng-deep .ant-tree-node-content-wrapper > .selected .ff-tree-picker-node {
+  background-color: var(--lpx-brand, var(--bs-primary));
+  color: var(--bs-white, #fff);
+}
+
+// `:not(.selected)` so hovering the selected node does not wash its highlight out.
+:host ::ng-deep .ant-tree-node-content-wrapper:hover > div:not(.selected) .ff-tree-picker-node {
+  background-color: var(--bs-secondary-bg, #f5f5f5);
 }
 
 // `@abp/ng.components`' own abp-tree wrapper already sets `.ant-tree { color: inherit }` (see its
@@ -19,8 +43,8 @@
 // background). transparent is correct in both: something above this component's own root always
 // already carries the right background, this only has to stop ant-design's default from painting
 // over it.
-// !important for the same reason as the selected-background rule above: equal specificity against
-// a stylesheet that loads after this component's own styles.
+// !important for the same reason as the wrapper-clearing rule above: equal specificity against a
+// stylesheet that loads after this component's own styles.
 :host ::ng-deep .ant-tree {
   background: transparent !important;
 }
