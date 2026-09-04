@@ -136,6 +136,17 @@ so it stays clear which part of the repository actually moved.
   genuinely dark host. Hover and active now use `--bs-secondary-bg` and the tree background is
   transparent, matching what the `Tree` picker already did.
 
+- **A selected option in the `Select` field's dropdown rendered white text on the panel background
+  once the mouse left it.** The rule meant to give selected options a `--lpx-brand` fill carried
+  `!important` on its colour but not on its background, while the `.ant-select-item` rule below it
+  zeroes every option background with `!important` — and `!important` beats specificity, so the
+  background never applied and the white text always did. It was invisible for as long as the panel
+  was `#fff` and became merely illegible once the panel started following `--bs-secondary-bg`. The
+  hover rule has `!important` on both halves, which is why hovering a selected option looked correct
+  and moving off it did not. Selected options now take no colour of their own and read exactly like
+  unselected ones, with ant-design's own checkmark as the indicator: in a multi-select several
+  options are selected at once, and filling each of their rows competes with the hover state rather
+  than adding information.
 ## [10.0.0-rc.13] - 2026-09-03
 
 ### Added
