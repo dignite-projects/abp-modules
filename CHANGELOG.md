@@ -31,6 +31,39 @@ so it stays clear which part of the repository actually moved.
   from npmjs and authenticates nothing. Verified by hand against the published `10.0.0-rc.14` set -
   Yarn Classic resolves exactly one copy of each of the five packages.
 
+- **`@dignite/ng.flex-fields` and `@dignite/ng.file-explorer` imported `@abp/ng.components/tree` while
+  declaring `@abp/ng.components` a peer dependency, so on any install that does not resolve peers the
+  package was simply absent and the published bundles carried an import that resolved to nothing.** It
+  surfaced downstream as `Could not resolve "@abp/ng.components/tree"` against both packages' `fesm2022`
+  output while bundling `@dignite/ng.site` - at which point both were already published. A peer
+  dependency is a claim that *the consumer already has this*, and `@abp/ng.components` is not something
+  an ABP Angular host is guaranteed to have: neither `@abp/ng.core` nor `@abp/ng.theme.shared` depends
+  on it, only feature packages such as `@abp/ng.identity` and `@abp/ng.setting-management` do. So a host
+  that used neither had no reason to have it, and `--legacy-peer-deps` - which this repository's own
+  workspaces and every known downstream need, because `@abp/ng.theme.shared`'s `@swimlane/ngx-datatable`
+  caps its Angular peer at 20 - guaranteed it would not be installed even where the peer was declared.
+  It is now a real `dependency` of both packages, listed in each `ng-package.json`'s
+  `allowedNonPeerDependencies` so ng-packagr accepts a bundled non-peer edge as deliberate. The rule
+  this restores: a package belongs in `peerDependencies` only when the consumer is guaranteed to have
+  it already; otherwise it is a `dependency`.
+
+  `ng-zorro-antd` and `@angular/cdk` reach these packages by the same single route - through
+  `@abp/ng.components`, which depends on `ng-zorro-antd`, which depends on `@angular/cdk` - and by that
+  rule they are irregular in the same way. They are **deliberately left as peers**. `@abp/ng.components`
+  pins `ng-zorro-antd` at `~21.0.0-next.1`, that is `<21.1.0`, while these packages declare `^21.0.0`
+  and current hosts run `21.3.3`; there is no version that satisfies both, so a resolver settles it by
+  installing both copies. That is already the state of this repository's own workspaces - `21.3.3` at
+  the root, `21.0.2` nested under `@abp/ng.components` - and it is a consequence of that upstream pin,
+  not of how these packages declare anything. Two copies of ng-zorro are two module-scoped
+  `NZ_CONFIG` / `NzConfigService` injection tokens, the identity split described for
+  `@dignite/ng.flex-fields` in [#211](https://github.com/dignite-projects/abp-modules/issues/211):
+  `provideNzConfig()` and `provideNzI18n()` at the root configure the copy these packages' own controls
+  use, and not the one ABP's `abp-tree` sees. Moving them to `dependencies` would not merge the copies,
+  only move the choice of the root one away from the host - so the host keeps it, and both READMEs now
+  state that these two must be declared by the consumer and what a range wider than `<21.1.0` costs.
+  `@abp/ng.components` had no such conflict - one range, one source - which is what makes moving that
+  one a pure gain.
+
 ## [10.0.0-rc.14] - 2026-09-04
 
 ### Fixed

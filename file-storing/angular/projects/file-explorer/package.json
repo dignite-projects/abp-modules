@@ -7,6 +7,7 @@
     "url": "git+https://github.com/dignite-projects/abp-modules.git"
   },
   "dependencies": {
+    "@abp/ng.components": "~10.5.0",
     "tslib": "^2.0.0"
   },
   "publishConfig": {
@@ -20,7 +21,6 @@
     "angular"
   ],
   "peerDependencies": {
-    "@abp/ng.components": "~10.5.0",
     "@abp/ng.core": "~10.5.0",
     "@abp/ng.theme.shared": "~10.5.0",
     "@angular/cdk": "~21.2.0",

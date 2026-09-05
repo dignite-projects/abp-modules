@@ -23,6 +23,24 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
+### Peer dependencies
+
+`@abp/ng.components` is a **dependency** of this package, not a peer — you do not declare it, and it
+is installed for you. It is deliberately not a peer: an ABP Angular host is not guaranteed to have it
+(neither `@abp/ng.core` nor `@abp/ng.theme.shared` depends on it — only feature packages such as
+`@abp/ng.identity` do), so asking the consumer for it left this package's `@abp/ng.components/tree`
+import resolving to nothing on any install that skips peers, `--legacy-peer-deps` included.
+
+Everything in `peerDependencies` you **must** declare yourself, including `@angular/cdk` (`~21.2.0`),
+which the picker imports directly for drag-and-drop and which no stock ABP host brings in on its own.
+It reaches this package only as `@abp/ng.components` → `ng-zorro-antd` → `@angular/cdk`, and the
+middle link is pinned: `@abp/ng.components` requires `ng-zorro-antd` `~21.0.0-next.1`, i.e. `<21.1.0`.
+If your host also declares `ng-zorro-antd` at a wider range — `^21.0.2`, or the `21.3.3` current hosts
+run — no single version satisfies both, so your package manager installs two: yours at the root and
+`21.0.2` nested under `@abp/ng.components`. Two copies are two module-scoped `NZ_CONFIG` /
+`NzConfigService` injection tokens, so `provideNzConfig()` and `provideNzI18n()` will not reach the
+`abp-tree` inside the directory tree. Pin inside `<21.1.0` if you need a single copy.
+
 ## Components
 
 | Selector | Role |

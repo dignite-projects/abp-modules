@@ -16,6 +16,24 @@ provides the rendering and registry axis that the C# side deliberately has no co
 npm install @dignite/ng.flex-fields
 ```
 
+### Peer dependencies
+
+`@abp/ng.components` is a **dependency** of this package, not a peer — you do not declare it, and it
+is installed for you. It is deliberately not a peer: an ABP Angular host is not guaranteed to have it
+(neither `@abp/ng.core` nor `@abp/ng.theme.shared` depends on it — only feature packages such as
+`@abp/ng.identity` do), so asking the consumer for it left this package's `@abp/ng.components/tree`
+import resolving to nothing on any install that skips peers, `--legacy-peer-deps` included.
+
+Everything in `peerDependencies` you **must** declare yourself. Two are easy to miss because no stock
+ABP host brings them in: `ng-zorro-antd` (`^21.0.0`) and `@angular/cdk` (`~21.2.0`), both imported
+directly by the field controls. Note that `@abp/ng.components` pins `ng-zorro-antd` at
+`~21.0.0-next.1`, i.e. `<21.1.0`. Declaring a wider range — `^21.0.2`, or the `21.3.3` current hosts
+run — is supported and expected, but no single version satisfies both, so your package manager
+installs two: yours at the root and `21.0.2` nested under `@abp/ng.components`. Two copies are two
+module-scoped `NZ_CONFIG` / `NzConfigService` injection tokens, so `provideNzConfig()` and
+`provideNzI18n()` configure the copy these controls use and not the one ABP's `abp-tree` sees. Pin
+inside `<21.1.0` if you need a single copy; otherwise expect `abp-tree` to run on ng-zorro defaults.
+
 ## Field types
 
 Six built-in types, each with up to four role components — **config** (design the field),
