@@ -15,6 +15,54 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Added
+
+#### flex-fields
+
+- **Two new built-in field types, `Matrix` and `Table` — the first *composite* ones, whose
+  configuration declares whole field definitions inline.** `Matrix` is a repeatable list of
+  polymorphic blocks (the admin declares named block types up front, each with its own sub-fields);
+  `Table` is a homogeneous grid over one shared column schema. Both were written and proven in
+  Dignite.Site's `Dignite.FlexFields.Site` and are ported here **with the wire format unchanged** —
+  registration keys `Matrix`/`Table`, configuration keys `Matrix.BlockTypes`/`Table.Columns`, and
+  camelCase `{blockTypeName, values}` / `{values}` value arrays — so fields already stored against
+  the Site implementation keep working as-is. They ship as built-ins rather than a bolt-on package
+  because, unlike `FileExplorer` or `CKEditor`, they depend on nothing outside the kernel's own
+  vocabulary; what made them worth moving is that the two contracts below have to be answerable
+  without knowing either concrete type.
+  - `Dignite.Abp.FlexFields.Abstractions` gains `MatrixFieldType`/`TableFieldType` and their
+    configuration types, plus four kernel contracts they share: **`ICompositeFieldType`**
+    (`GetInlineFields`, so a host can ask "does this type contain other fields, and which" without
+    naming a concrete type — an interface rather than an `IsComposite` bool, because every caller
+    that asks also has to walk those fields), **`INormalizesValue`** (`Normalize`, the canonical wire
+    shape — deliberately *not* folded into `Validate`, which returns only errors and never the parsed
+    value, so a value with the wrong key casing would otherwise validate cleanly and then be stored
+    verbatim and be unreadable to every camelCase reader downstream), **`InlineFieldDefinition`**
+    (one inline field; carries `Required`, which a `FlexFieldData` cannot), and
+    **`CompositeFieldNesting`** (`MaxDepth = 3` and the bounded measurement that enforces it — a
+    configuration is a tree of unbounded depth and every reader of it recurses, so it is capped once
+    on write instead of guarded in each reader).
+  - `Dignite.Abp.FlexFields.Web` gains `Views/Shared/FlexFields/Matrix.cshtml` and `Table.cshtml`,
+    which recurse through the existing `<flex-field-view>` dispatch for each sub-field rather than
+    re-implementing rendering per type. No `Search/` partials: both types have
+    `IndexValueType == null` — a list of composite objects has no typed index column to decompose
+    into — so neither can be marked `Searchable`.
+  - `@dignite/ng.flex-fields` gains the matching config / control / view components
+    (`ff-matrix-config|control|view`, `ff-table-config|control|view`), registered in
+    `BUILT_IN_FIELD_TYPES`, so an existing `provideFlexFields()` call already covers them.
+    `FieldTypeDefinition` gains an optional **`composite`** flag, which Matrix and Table set and the
+    config editors use to stop offering composite types once the nesting limit is reached; the
+    server's `CompositeFieldNesting` remains the authority, that mirror is a courtesy.
+  - Neither contract is invoked by the kernel — a host calls them, and the demo now shows both:
+    `ProductAppService` normalizes the value bag before validating and saving, and
+    `ProductFieldAppService` refuses a too-deeply-nested configuration on create and update.
+  - **Localization moved with them**: the `FieldType:Matrix`/`FieldType:Table`, `Matrix:*`, `Table:*`
+    and `Validate:Matrix:*`/`Validate:Table:*` texts now live in the `FlexFields` resource
+    (`Dignite.Abp.FlexFields.Abstractions`) instead of Site's own `FlexFieldsSite` resource, in all
+    four shipped cultures (`en`, `ja`, `zh-Hans`, `zh-Hant`). Three general validation keys the
+    Angular side's shared error-message helper needs came along with them: **`Validate:MinValue`**,
+    **`Validate:MaxValue`** and **`Validate:MaxLength`**.
+
 ## [10.0.0-rc.15] - 2026-09-05
 
 ### Fixed

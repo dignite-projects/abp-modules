@@ -1,0 +1,54 @@
+<div [formGroup]="entityForm">
+  <div [formGroupName]="parentField">
+    <div class="mb-3">
+      <label class="form-label" *ngIf="fieldValue.field.displayName">
+        {{ fieldValue.field.displayName }}
+      </label>
+      <div [formArrayName]="fieldValue.field.name">
+        <div *ngFor="let block of blocks.controls; let blockIndex = index" [formGroupName]="blockIndex" class="card border" style="margin-bottom: 0.75rem!important">
+          <div class="card-header d-flex align-items-center justify-content-between p-2" (click)="toggleExpanded(block)" style="cursor: pointer;">
+            <span>{{ blockTypeOf(block)?.displayName ?? blockTypeOf(block)?.name }}</span>
+            <div class="d-flex align-items-center">
+              <button type="button" class="btn btn-sm btn-link text-danger p-0" (click)="$event.stopPropagation(); removeBlock(blockIndex)">
+                <i class="fas fa-trash"></i>
+              </button>
+              <i class="fas ms-2" [class.fa-chevron-up]="isExpanded(block)" [class.fa-chevron-down]="!isExpanded(block)"></i>
+            </div>
+          </div>
+          <div class="card-body" [class.d-none]="!isExpanded(block)" style="padding: 0.75rem!important">
+            <ng-container *ngFor="let subField of fieldsOf(block)">
+              <ff-flex-field-control
+                [fields]="subFieldValueOf(subField)"
+                [selected]="selectedValueOf(block, subField)"
+                parentFieldName="values"
+                [entity]="block"
+              ></ff-flex-field-control>
+              <div class="invalid-feedback d-block" *ngIf="subFieldErrorMessage(block, subField) as message">
+                {{ message }}
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+      <div class="btn-group" role="group" *ngIf="blockTypes.length > 0">
+        <button
+          type="button"
+          *ngFor="let blockType of blockTypes"
+          class="btn btn-dark soft btn-sm"
+          (click)="addBlock(blockType)"
+        >
+          <i class="fas fa-plus me-1"></i>{{ blockType.displayName || blockType.name }}
+        </button>
+      </div>
+      <span
+        class="form-text invalid-feedback d-block"
+        *ngIf="blocks.errors?.['required'] && blocks.touched"
+      >
+        {{ 'AbpValidation::ThisFieldIsRequired' | abpLocalization }}
+      </span>
+      <small class="form-text text-muted d-block" *ngIf="fieldValue.field.description">
+        {{ fieldValue.field.description }}
+      </small>
+    </div>
+  </div>
+</div>

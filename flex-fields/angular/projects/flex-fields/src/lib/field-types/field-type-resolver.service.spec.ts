@@ -15,7 +15,7 @@ describe('FieldTypeResolver', () => {
 
     expect(resolver.get('Text').displayNameKey).toBe('FlexFields::FieldType:Text');
     expect(resolver.get('Tree').displayNameKey).toBe('FlexFields::FieldType:Tree');
-    expect(resolver.getAll()).toHaveLength(6);
+    expect(resolver.getAll()).toHaveLength(8);
   });
 
   it('throws on an unregistered key rather than rendering nothing', () => {
@@ -39,7 +39,7 @@ describe('FieldTypeResolver', () => {
     const resolver = TestBed.inject(FieldTypeResolver);
 
     expect(resolver.get('CkEditor')).toEqual(boltOn);
-    expect(resolver.getAll()).toHaveLength(7);
+    expect(resolver.getAll()).toHaveLength(9);
   });
 
   it('lets a separate package register on its own', () => {
@@ -63,6 +63,6 @@ describe('FieldTypeResolver', () => {
 
     expect(resolver.get('Text')).toEqual(replacement);
     // Replaced, not duplicated.
-    expect(resolver.getAll()).toHaveLength(6);
+    expect(resolver.getAll()).toHaveLength(8);
   });
 });

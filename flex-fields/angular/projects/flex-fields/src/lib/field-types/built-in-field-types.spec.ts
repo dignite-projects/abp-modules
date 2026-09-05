@@ -2,22 +2,24 @@ import { FormBuilder } from '@angular/forms';
 import { BUILT_IN_FIELD_TYPES } from './built-in-field-types';
 import { BooleanConfiguration } from './boolean';
 import { DateTimeConfiguration } from './date';
+import { MatrixConfiguration } from './matrix';
 import { NumberConfiguration } from './number';
 import { SelectConfiguration } from './select';
+import { TableConfiguration } from './table';
 import { TextConfiguration } from './text';
 import { TreeConfiguration } from './tree';
 
 /**
  * These are wire-contract tests, not coverage.
  *
- * Every string asserted below is a **stored value** shared with the server: the six registration keys
+ * Every string asserted below is a **stored value** shared with the server: the eight registration keys
  * live in `IFlexFieldData.FieldTypeName`, and the configuration keys are the literal keys of
  * `FieldConfigurationDictionary`. Renaming any of them here — however tidy the new name looks —
  * silently orphans every field already saved under the old one, and nothing else in the build would
  * catch it. If one of these fails, the fix is almost never to update the expectation.
  */
 describe('built-in field types', () => {
-  it('registers exactly the six the server ships, under the server keys', () => {
+  it('registers exactly the eight the server ships, under the server keys', () => {
     expect(BUILT_IN_FIELD_TYPES.map(fieldType => fieldType.name)).toEqual([
       'Text',
       'Number',
@@ -25,6 +27,8 @@ describe('built-in field types', () => {
       'Select',
       'Boolean',
       'Tree',
+      'Matrix',
+      'Table',
     ]);
   });
 
@@ -42,14 +46,26 @@ describe('built-in field types', () => {
     }
   });
 
-  it('has a search component for every type except DateTime', () => {
+  it('has a search component for every type except DateTime, Matrix and Table', () => {
     const withoutSearch = BUILT_IN_FIELD_TYPES.filter(
       fieldType => !fieldType.searchComponent,
     ).map(fieldType => fieldType.name);
 
-    // Tracked gap, not an oversight: the server indexes DateTime and allows six operators on it, so a
-    // date range filter is a real thing to build — it just was never part of what was migrated.
-    expect(withoutSearch).toEqual(['DateTime']);
+    // DateTime is a tracked gap, not an oversight: the server indexes it and allows six operators on
+    // it, so a date range filter is a real thing to build — it just was never part of what was
+    // migrated. Matrix and Table are the opposite — permanent: `IndexValueType` is null for both on
+    // the server, so their values never reach the query index and there is nothing to filter on.
+    expect(withoutSearch).toEqual(['DateTime', 'Matrix', 'Table']);
+  });
+
+  it('marks exactly Matrix and Table as composite', () => {
+    // The flag exists so a composite config editor can stop offering composite types once
+    // CompositeFieldNesting.MaxDepth is reached. Every scalar type must leave it unset.
+    const composite = BUILT_IN_FIELD_TYPES.filter(fieldType => fieldType.composite === true).map(
+      fieldType => fieldType.name,
+    );
+
+    expect(composite).toEqual(['Matrix', 'Table']);
   });
 
   it('cannot be mutated at runtime', () => {
@@ -102,6 +118,14 @@ describe('configuration keys', () => {
 
   it('Tree', () => {
     expect(keysOf(new TreeConfiguration())).toEqual(['Tree.Multiple', 'Tree.Nodes']);
+  });
+
+  it('Matrix', () => {
+    expect(keysOf(new MatrixConfiguration())).toEqual(['Matrix.BlockTypes']);
+  });
+
+  it('Table', () => {
+    expect(keysOf(new TableConfiguration())).toEqual(['Table.Columns']);
   });
 
   it('seeds Text.CharLimit with the server default of 256', () => {

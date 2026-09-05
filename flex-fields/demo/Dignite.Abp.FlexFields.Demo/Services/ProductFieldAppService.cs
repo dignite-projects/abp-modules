@@ -86,12 +86,15 @@ public class ProductFieldAppService : DemoAppService
 
         CheckSearchable(input.FieldTypeName, input.Searchable);
 
+        var configuration = input.Configuration.ToConfiguration();
+        CheckNestingDepth(input.FieldTypeName, configuration);
+
         var field = new ProductField(GuidGenerator.Create(), input.Name, input.DisplayName, input.FieldTypeName)
         {
             Description = input.Description,
             Required = input.Required,
             Searchable = input.Searchable,
-            Configuration = input.Configuration.ToConfiguration(),
+            Configuration = configuration,
         };
 
         await _fieldRepository.InsertAsync(field);
@@ -115,6 +118,9 @@ public class ProductFieldAppService : DemoAppService
         // The field type is fixed at creation, so this checks the stored one against the incoming flag.
         CheckSearchable(field.FieldTypeName, input.Searchable);
 
+        var configuration = input.Configuration.ToConfiguration();
+        CheckNestingDepth(field.FieldTypeName, configuration);
+
         if (!string.Equals(field.Name, input.Name, StringComparison.Ordinal))
         {
             if (await _fieldRepository.NameExistsAsync(input.Name, excludedId: field.Id))
@@ -133,7 +139,7 @@ public class ProductFieldAppService : DemoAppService
         field.DisplayName = input.DisplayName;
         field.Description = input.Description;
         field.Required = input.Required;
-        field.Configuration = input.Configuration.ToConfiguration();
+        field.Configuration = configuration;
         field.Searchable = input.Searchable;
 
         await _fieldRepository.UpdateAsync(field);
@@ -177,6 +183,26 @@ public class ProductFieldAppService : DemoAppService
         {
             throw new BusinessException("Demo:FieldTypeNotSearchable")
                 .WithData("FieldType", _fieldTypeResolver.Get(fieldTypeName).DisplayName);
+        }
+    }
+
+    /// <summary>
+    /// Rejects a configuration that nests composite field types (Matrix, Table) deeper than
+    /// <see cref="CompositeFieldNesting.MaxDepth"/> - see <see cref="CompositeFieldNesting"/> for why the
+    /// tree has to be capped at all, and why the cap belongs on the write path rather than in whatever
+    /// walks the configuration afterwards.
+    /// <para>
+    /// The Angular field designer stops offering composite types once the limit is reached, but that is
+    /// the same kind of courtesy <see cref="CheckSearchable"/>'s counterpart is: the rule has to hold for
+    /// anything that reaches this service another way.
+    /// </para>
+    /// </summary>
+    private void CheckNestingDepth(string fieldTypeName, FieldConfigurationDictionary configuration)
+    {
+        if (CompositeFieldNesting.ExceedsMaxDepth(fieldTypeName, configuration, _fieldTypeResolver.GetAll()))
+        {
+            throw new BusinessException("Demo:FieldNestingTooDeep")
+                .WithData("MaxDepth", CompositeFieldNesting.MaxDepth);
         }
     }
 

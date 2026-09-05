@@ -1,0 +1,30 @@
+@if (showInList) {
+  {{ rows.length === 0 ? '-' : rows.length + ' row(s)' }}
+} @else {
+  <div class="flex-field flex-field-view flex-field-view-table">
+    <span class="flex-field-label" *ngIf="fields?.field?.displayName">{{ fields.field.displayName }}</span>
+    @if (rows.length === 0 || columns.length === 0) {
+      <span class="flex-field-value">-</span>
+    } @else {
+      <table class="flex-field-value flex-field-value-table table">
+        <thead>
+          <tr>
+            <th *ngFor="let column of columns">{{ column.displayName }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of rows">
+            <td *ngFor="let column of columns">
+              <ff-flex-field-view
+                [type]="column.fieldTypeName"
+                [fields]="columnValueOf(column, row)"
+                [value]="row.values[column.name]"
+                [showInList]="true"
+              ></ff-flex-field-view>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    }
+  </div>
+}

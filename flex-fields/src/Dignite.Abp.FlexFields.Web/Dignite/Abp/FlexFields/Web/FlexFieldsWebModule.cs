@@ -7,7 +7,7 @@ namespace Dignite.Abp.FlexFields.Web;
 /// <summary>
 /// Server-side (Razor) display and search rendering for flex fields: the
 /// <c>&lt;flex-field-view&gt;</c>/<c>&lt;flex-field-search&gt;</c> TagHelpers (under
-/// <c>TagHelpers/</c>) and their default views for the six built-in field types (under
+/// <c>TagHelpers/</c>) and their default views for the eight built-in field types (under
 /// <c>Views/Shared/FlexFields/</c>) - the non-Angular counterpart to the Angular library's
 /// <c>&lt;ff-flex-field-view&gt;</c>/<c>&lt;ff-flex-field-search&gt;</c>. No config/control
 /// TagHelpers - this package is display and search only, the same split the Angular library keeps

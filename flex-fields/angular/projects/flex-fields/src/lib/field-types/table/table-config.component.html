@@ -1,0 +1,102 @@
+<form [formGroup]="formEntity">
+  <div formGroupName="configuration">
+    <div class="row g-0 border rounded">
+      <!-- Columns list: click one to configure it on the right, instead of every column's full editor
+           stacking up the page at once. -->
+      <div class="col-4 border-end d-flex flex-column" style="height: 26rem">
+        <div class="flex-grow-1 overflow-auto">
+          <div class="list-group list-group-flush">
+            @for (column of columns.controls; track column; let columnIndex = $index) {
+              <button
+                type="button"
+                class="list-group-item list-group-item-action text-truncate"
+                [class.active]="columnIndex === selectedColumnIndex"
+                (click)="selectColumn(columnIndex)"
+              >
+                <span class="d-block text-truncate">
+                  {{ columnLabel(column) || ('FlexFields::Table:UntitledColumn' | abpLocalization) }}
+                </span>
+                @if (fieldTypeNameOf(column)) {
+                  <small class="d-block" [class.text-muted]="columnIndex !== selectedColumnIndex">
+                    {{ fieldTypeDisplayNameKeyOf(column) | abpLocalization }}
+                  </small>
+                }
+              </button>
+            }
+          </div>
+        </div>
+        <div class="border-top p-2">
+          <button type="button" class="btn btn-dark soft btn-sm w-100" (click)="addColumn()">
+            <i class="fas fa-plus me-1"></i>{{ 'FlexFields::Table:AddColumn' | abpLocalization }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Selected column's detail. -->
+      <div class="col-8 p-3 overflow-auto" style="height: 26rem">
+        @if (selectedColumn; as column) {
+          <div [formGroup]="column">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <h6 class="mb-0">
+                {{ columnLabel(column) || ('FlexFields::Table:UntitledColumn' | abpLocalization) }}
+              </h6>
+              <button
+                type="button"
+                class="btn btn-sm btn-link text-danger p-0"
+                (click)="removeColumn(selectedColumnIndex!)"
+                [title]="'FlexFields::Table:RemoveColumn' | abpLocalization"
+              >
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+            <div class="mb-2">
+              <label class="form-label">{{ 'FlexFields::Table:ColumnDisplayName' | abpLocalization }}</label>
+              <input type="text" class="form-control form-control-sm" formControlName="displayName" />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">{{ 'FlexFields::Table:ColumnName' | abpLocalization }}</label>
+              <input type="text" class="form-control form-control-sm" formControlName="name" />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">{{ 'FlexFields::Table:ColumnDescription' | abpLocalization }}</label>
+              <input type="text" class="form-control form-control-sm" formControlName="description" />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">{{ 'FlexFields::Table:ColumnFieldType' | abpLocalization }}</label>
+              <select class="form-select form-select-sm" formControlName="fieldTypeName">
+                <option value="" disabled>
+                  {{ 'FlexFields::Table:SelectFieldType' | abpLocalization }}
+                </option>
+                @for (fieldType of fieldTypeOptions; track fieldType.name) {
+                  <option [value]="fieldType.name">{{ fieldType.displayNameKey | abpLocalization }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-check mb-2">
+              <input
+                type="checkbox"
+                class="form-check-input"
+                formControlName="required"
+                [id]="instanceId + '-required'"
+              />
+              <label class="form-check-label" [for]="instanceId + '-required'">
+                {{ 'FlexFields::Table:ColumnRequired' | abpLocalization }}
+              </label>
+            </div>
+
+            @if (fieldTypeNameOf(column)) {
+              <hr />
+              <ff-flex-field-config
+                [type]="fieldTypeNameOf(column)"
+                [selected]="columnSeedOf(column)"
+                [form]="column"
+              ></ff-flex-field-config>
+            }
+          </div>
+        } @else {
+          <div class="text-muted">{{ 'FlexFields::Table:NoColumnsHint' | abpLocalization }}</div>
+        }
+      </div>
+    </div>
+  </div>
+</form>

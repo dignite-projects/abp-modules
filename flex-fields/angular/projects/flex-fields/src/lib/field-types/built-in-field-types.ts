@@ -34,6 +34,8 @@ import {
   TreeSearchComponent,
   TreeViewComponent,
 } from './tree';
+import { MatrixConfigComponent, MatrixControlComponent, MatrixViewComponent } from './matrix';
+import { TableConfigComponent, TableControlComponent, TableViewComponent } from './table';
 
 /**
  * The field types this library ships. Each `name` is the value persisted in
@@ -47,6 +49,8 @@ import {
  * | `Select` | `SelectFieldType` | `select/` |
  * | `Boolean` | `BooleanFieldType` | `boolean/` |
  * | `Tree` | `TreeFieldType` | `tree/` |
+ * | `Matrix` | `MatrixFieldType` | `matrix/` |
+ * | `Table` | `TableFieldType` | `table/` |
  *
  * A frozen array, not something to mutate at runtime: contributors register their own types through
  * the `FLEX_FIELD_TYPES` multi-provider instead.
@@ -100,5 +104,25 @@ export const BUILT_IN_FIELD_TYPES: readonly FieldTypeDefinition[] = Object.freez
     controlComponent: TreeControlComponent,
     viewComponent: TreeViewComponent,
     searchComponent: TreeSearchComponent,
+  },
+  {
+    // No search component: `MatrixFieldType.IndexValueType` is null on the server — the value is a
+    // list of composite block objects, not something a filter control could meaningfully query.
+    name: 'Matrix',
+    displayNameKey: 'FlexFields::FieldType:Matrix',
+    configComponent: MatrixConfigComponent,
+    controlComponent: MatrixControlComponent,
+    viewComponent: MatrixViewComponent,
+    composite: true,
+  },
+  {
+    // No search component: `TableFieldType.IndexValueType` is null on the server — the value is a
+    // list of composite row objects, not something a filter control could meaningfully query.
+    name: 'Table',
+    displayNameKey: 'FlexFields::FieldType:Table',
+    configComponent: TableConfigComponent,
+    controlComponent: TableControlComponent,
+    viewComponent: TableViewComponent,
+    composite: true,
   },
 ]);

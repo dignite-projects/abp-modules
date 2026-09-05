@@ -68,7 +68,7 @@
   </div>
 </div>
 
-<abp-modal [(visible)]="isModalOpen" [busy]="isModalBusy" (disappear)="closeModal()">
+<abp-modal [(visible)]="isModalOpen" [busy]="isModalBusy" [options]="{ size: 'xl' }" (disappear)="closeModal()">
   <ng-template #abpHeader>
     <h3>{{ (editingField ? 'AbpUi::Edit' : 'Demo::NewField') | abpLocalization }}</h3>
   </ng-template>

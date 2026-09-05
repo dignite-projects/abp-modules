@@ -4,7 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace />
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
-    <Description>Server-side (Razor) display and search rendering for Dignite.Abp.FlexFields: the &lt;flex-field-view&gt;/&lt;flex-field-search&gt; TagHelpers and default views for the six built-in field types - the non-Angular counterpart to the Angular library's &lt;ff-flex-field-view&gt;/&lt;ff-flex-field-search&gt;. Zero IO: TagHelpers render an already-resolved FlexFieldValue, the same way the kernel has no application service of its own to look one up with. No config/control TagHelpers - display and search only.</Description>
+    <Description>Server-side (Razor) display and search rendering for Dignite.Abp.FlexFields: the &lt;flex-field-view&gt;/&lt;flex-field-search&gt; TagHelpers and default views for the eight built-in field types - the non-Angular counterpart to the Angular library's &lt;ff-flex-field-view&gt;/&lt;ff-flex-field-search&gt;. Zero IO: TagHelpers render an already-resolved FlexFieldValue, the same way the kernel has no application service of its own to look one up with. No config/control TagHelpers - display and search only.</Description>
   </PropertyGroup>
 
   <!-- The Razor SDK's default @(RazorGenerate) glob did not pick up Views/**/*.cshtml on its own in

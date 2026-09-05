@@ -32,7 +32,7 @@ before changing any contract; it records what was rejected and why.
 
 | Project | Responsibility | Depends on |
 |---|---|---|
-| `FlexFields.Abstractions` | `IFieldType`/`FieldTypeBase` + the six built-ins, `IFlexFieldData`, `IHasFlexFields`, `FlexFieldValue`, query vocabulary, localization | ABP Core, Localization |
+| `FlexFields.Abstractions` | `IFieldType`/`FieldTypeBase` + the eight built-ins, `IFlexFieldData`, `IHasFlexFields`, `FlexFieldValue`, query vocabulary, localization, plus the composite-type contracts (`ICompositeFieldType`, `INormalizesValue`, `InlineFieldDefinition`, `CompositeFieldNesting`) | ABP Core, Localization |
 | `FlexFields.Domain.Shared` | `FlexFieldConsts` only | — |
 | `FlexFields.Domain` | `IFlexField` (Entity contract), `IFlexFieldProvider<T>` and the other seams, provider-neutral `FlexFieldValidator`/`FlexFieldValueMigrator` | Abstractions, Domain.Shared, ABP DDD |
 | `FlexFields.EntityFrameworkCore` | `FlexFieldIndexValue` (relational-only), index/repository base classes, model-creating extensions | Domain |
@@ -40,7 +40,7 @@ before changing any contract; it records what was rejected and why.
 | `FlexFields.Web` | `<flex-field-view>`/`<flex-field-search>` TagHelpers + default `.cshtml` per built-in type — SSR counterpart to the Angular library's `<ff-flex-field-view>`/`<ff-flex-field-search>`. No config/control TagHelpers | Abstractions |
 | `FlexFields.Installer` | ABP Studio/Suite install entry point, embeds the module's `.abpmdl` | `Volo.Abp.VirtualFileSystem` |
 
-Bolt-on field types (optional, not part of the six above): `FlexFields.FileExplorer` (the field type
+Bolt-on field types (optional, not part of the eight above): `FlexFields.FileExplorer` (the field type
 itself, references only Abstractions) and `FlexFields.FileExplorer.Web` (its `<flex-field-view>`
 rendering — file name/size/MIME type/link, read straight out of the value the Angular picker already
 denormalized at pick time; no search partial, since `FileExplorerFieldType.IndexValueType` is `null`).
@@ -78,9 +78,55 @@ DbContext of its own to run one.
 | `Select` | `SelectFieldType` | `select/` |
 | `Boolean` | `BooleanFieldType` | `boolean/` |
 | `Tree` | `TreeFieldType` | `tree/` |
+| `Matrix` | `MatrixFieldType` | `matrix/` |
+| `Table` | `TableFieldType` | `table/` |
 
 Renaming any of these again "for consistency" orphans every field already stored under the current
 key. `built-in-field-types.spec.ts` asserts all of them for that reason.
+
+## Composite field types (`Matrix`, `Table`)
+
+Two of the eight built-ins are **composite**: their *configuration* declares further whole field
+definitions inline, so a field definition is a tree rather than a flat record. Ported in from
+Dignite.Site's `Dignite.FlexFields.Site` with the wire format unchanged — the persisted keys are
+`Matrix`/`Table` (registration) and `Matrix.BlockTypes`/`Table.Columns` (configuration), and the values
+stay camelCase `{blockTypeName, values}` / `{values}` arrays. Same rule as the table above: these are
+stored data, not names to tidy.
+
+- **`ICompositeFieldType`** — `GetInlineFields(configuration)`, flattened. An interface rather than an
+  `IsComposite` bool because every caller that cares also has to walk the nested fields; a bool would
+  leave each one switching on the concrete type to reach them.
+- **`InlineFieldDefinition`** — one inline field: a Matrix block type's sub-field, or a Table column.
+  Not a `FlexFieldData`, because it carries `Required` — in the kernel proper that flag belongs to a
+  field's *usage* (`FlexFieldValue.Required`), and an inline field has no usage record to put it in.
+- **`INormalizesValue`** — `Normalize(value)`, the canonical wire shape. Separate from `Validate`
+  because validation answers "is this acceptable" and returns only errors, never the parsed value: a
+  value with the wrong key casing validates fine and is then stored verbatim, unreadable by every
+  camelCase reader downstream.
+- **`CompositeFieldNesting.MaxDepth = 3`** — a top-level field may be composite and so may its
+  sub-fields; what *those* declare must be scalar. `ExceedsMaxDepth` carries its own recursion budget,
+  because it is the first thing to walk an unvetted client configuration.
+
+Both are `IndexValueType == null` (a list of composite objects has no typed index column), so neither
+ships a `Views/Shared/FlexFields/Search/` partial and neither can be marked `Searchable`.
+
+**Neither contract is called by the kernel** — a host calls them, and the demo is the worked example:
+`ProductAppService` runs `INormalizesValue.Normalize` over the bag before validating and saving;
+`ProductFieldAppService` refuses a configuration `CompositeFieldNesting.ExceedsMaxDepth` reports on,
+on both create and update.
+
+On the Angular side the two live in `@dignite/ng.flex-fields` at
+`angular/projects/flex-fields/src/lib/field-types/matrix/` and `table/`, registered in
+`BUILT_IN_FIELD_TYPES` (so `provideFlexFields()` already covers them — no extra provide call), with
+selectors `ff-matrix-config|control|view` and `ff-table-config|control|view`. `FieldTypeDefinition`
+gained a `composite?: boolean` that Matrix and Table set, which the config editors use to stop offering
+composite types at max depth (`MAX_COMPOSITE_NESTING_DEPTH`/`COMPOSITE_NESTING_DEPTH`/`allowsCompositeAt`
+in `field-types/composite-nesting.ts`). That mirror is a courtesy; `CompositeFieldNesting` on the server
+is the authority. The two also share `InlineFieldDefinition`/`normalizeInlineFieldDefinitions`
+(`field-types/inline-field-definition.ts`) — the client-side counterpart of the C# type, plus the
+re-casing a stored *configuration* still needs, since only field *values* go through
+`INormalizesValue` — and `flexFieldErrorMessage` (`utils/flex-field-error-message.ts`), which is what
+the three `Validate:MinValue`/`MaxValue`/`MaxLength` keys were added to the `FlexFields` resource for.
 
 ## The seams
 
@@ -140,14 +186,18 @@ describes, wired to a real feature instead of the test project's throwaway `Test
 - **`Services/ProductFieldAppService.cs`** — field CRUD, demonstrating the ordering
   `IFlexFieldValueMigrator` documents: rename rewrites every product's bag *before* the definition's
   own `Name` changes; delete removes bag values *before* the definition; flipping `Searchable` calls
-  `IFlexFieldIndexManager.RebuildAsync()`.
+  `IFlexFieldIndexManager.RebuildAsync()`. Also the enforcement point for
+  `CompositeFieldNesting.ExceedsMaxDepth`, on create and update alike.
 - **`Services/ProductAppService.cs`** — product CRUD plus `SearchAsync`, POST rather than the GET a
   `Get*`-prefixed name would default to. ABP's conventional controllers derive the URL from the
   *method name* convention, not from an `[HttpPost("...")]` attribute's route template string — a
   method still named `GetListAsync` collides on the same URL as `CreateAsync` no matter what
-  attribute you add. The rename is why it's `SearchAsync`, at `POST /api/app/product/search`.
+  attribute you add. The rename is why it's `SearchAsync`, at `POST /api/app/product/search`. Also
+  where `INormalizesValue.Normalize` runs over the bag, before validating and saving.
 - **`Data/ProductDemoDataSeedContributor.cs`** — seeds one `ProductField` per built-in field type
-  plus the FileExplorer bolt-on, and five products, so a first `dotnet run -- --migrate-database`
+  (including `Table` and `Matrix`, whose values two of the products carry for real) plus the
+  FileExplorer bolt-on and two CKEditor ones — eleven fields — and five products, so a first
+  `dotnet run -- --migrate-database`
   leaves the demo immediately browsable instead of empty. One product's `images` field gets a real
   uploaded file (`FileDescriptorManager.CreateAsync` directly, bypassing the `[Authorize]`-gated app
   service the same way the field/product repositories are used directly elsewhere in this class) into

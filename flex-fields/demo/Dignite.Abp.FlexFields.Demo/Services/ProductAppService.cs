@@ -36,19 +36,22 @@ public class ProductAppService : DemoAppService
     private readonly IFlexFieldValidator<Product> _validator;
     private readonly IFlexFieldIndexManager<Product> _indexManager;
     private readonly IFlexFieldQueryExecutor<Product> _queryExecutor;
+    private readonly IFieldTypeResolver _fieldTypeResolver;
 
     public ProductAppService(
         IRepository<Product, Guid> productRepository,
         IFlexFieldProvider<Product> flexFieldProvider,
         IFlexFieldValidator<Product> validator,
         IFlexFieldIndexManager<Product> indexManager,
-        IFlexFieldQueryExecutor<Product> queryExecutor)
+        IFlexFieldQueryExecutor<Product> queryExecutor,
+        IFieldTypeResolver fieldTypeResolver)
     {
         _productRepository = productRepository;
         _flexFieldProvider = flexFieldProvider;
         _validator = validator;
         _indexManager = indexManager;
         _queryExecutor = queryExecutor;
+        _fieldTypeResolver = fieldTypeResolver;
     }
 
     public virtual async Task<ProductDto> GetAsync(Guid id)
@@ -112,7 +115,7 @@ public class ProductAppService : DemoAppService
     public virtual async Task<ProductDto> CreateAsync(CreateUpdateProductDto input)
     {
         var product = new Product(GuidGenerator.Create(), input.Name);
-        ApplyFlexFields(product, input.FlexFields);
+        await ApplyFlexFieldsAsync(product, input.FlexFields);
 
         await ValidateFlexFieldsAsync(product);
 
@@ -129,7 +132,7 @@ public class ProductAppService : DemoAppService
     {
         var product = await _productRepository.GetAsync(id);
         product.Name = input.Name;
-        ApplyFlexFields(product, input.FlexFields);
+        await ApplyFlexFieldsAsync(product, input.FlexFields);
 
         await ValidateFlexFieldsAsync(product);
 
@@ -151,13 +154,44 @@ public class ProductAppService : DemoAppService
     /// Writes each submitted value through <c>SetField</c> rather than replacing
     /// <see cref="Product.FlexFields"/> wholesale, so a key mapped to <c>null</c> removes that field
     /// instead of storing a null - the same contract <c>FlexFieldDictionaryExtensions.SetField</c>
-    /// documents.
+    /// documents - and then canonicalizes what landed in the bag.
     /// </summary>
-    private static void ApplyFlexFields(Product product, Dictionary<string, object?> values)
+    private async Task ApplyFlexFieldsAsync(Product product, Dictionary<string, object?> values)
     {
         foreach (var (name, value) in values)
         {
             product.SetField(name, value);
+        }
+
+        await NormalizeFlexFieldsAsync(product);
+    }
+
+    /// <summary>
+    /// Rewrites every value whose field type opts into <see cref="INormalizesValue"/> - today the two
+    /// composite built-ins, Matrix and Table - into that type's canonical wire shape, before validation
+    /// and before the bag is persisted.
+    /// <para>
+    /// Why a host has to do this at all: <see cref="IFieldType.Validate"/> parses a composite value
+    /// case-insensitively but returns only errors, never the parsed value, so a structurally valid value
+    /// with the wrong key casing saves without complaint and is then stored exactly as received -
+    /// unreadable by every camelCase reader downstream, the Angular controls included. See
+    /// <see cref="INormalizesValue"/> for the full reasoning, and for why this is deliberately not folded
+    /// into <c>Validate</c>.
+    /// </para>
+    /// <para>
+    /// Resolving the field type can throw for a name no longer registered, but that is not a new failure
+    /// mode here: <see cref="ValidateFlexFieldsAsync"/> runs immediately after and resolves the same names
+    /// through <c>FlexFieldValidator</c> unconditionally already.
+    /// </para>
+    /// </summary>
+    private async Task NormalizeFlexFieldsAsync(Product product)
+    {
+        foreach (var flexField in await _flexFieldProvider.GetFlexFieldsAsync(product))
+        {
+            if (_fieldTypeResolver.Get(flexField.FieldTypeName) is INormalizesValue normalizer)
+            {
+                product.SetField(flexField.Name, normalizer.Normalize(flexField.Value));
+            }
         }
     }
 

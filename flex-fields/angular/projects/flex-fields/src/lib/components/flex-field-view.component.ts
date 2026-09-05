@@ -1,5 +1,5 @@
 import { Component, Input, OnChanges, Type, ViewChild, ViewContainerRef, inject } from '@angular/core';
-import { FieldTypeResolver } from '../field-types';
+import { FieldTypeResolver } from '../field-types/field-type-resolver.service';
 import { FlexFieldValue } from '../models';
 
 /** Renders the read-only **display** of one flex field's value, whichever type it is. */
