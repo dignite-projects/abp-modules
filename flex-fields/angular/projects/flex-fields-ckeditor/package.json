@@ -1,6 +1,6 @@
 {
   "name": "@dignite/ng.flex-fields-ckeditor",
-  "version": "10.0.0-rc.15",
+  "version": "10.0.0-rc.16",
   "homepage": "https://github.com/dignite-projects/abp-modules",
   "repository": {
     "type": "git",
@@ -9,7 +9,7 @@
   "dependencies": {
     "@ckeditor/ckeditor5-angular": "^11.2.0",
     "@ckeditor/ckeditor5-integrations-common": "^2.4.0",
-    "@dignite/ng.flex-fields": "^10.0.0-rc.15",
+    "@dignite/ng.flex-fields": "^10.0.0-rc.16",
     "ckeditor5": "^48.0.0",
     "marked": "^18.0.0",
     "tslib": "^2.0.0"
