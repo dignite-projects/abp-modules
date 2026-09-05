@@ -40,7 +40,7 @@
     "tslib": "^2.0.0",
     "zone.js": "~0.16.2",
     "@angular/cdk": "~21.2.0",
-    "ng-zorro-antd": "^21.3.3",
+    "ng-zorro-antd": "~21.0.2",
     "@swimlane/ngx-datatable": "^22.0.0",
     "bootstrap-icons": "^1.11.3",
     "@ngx-validate/core": "^0.2.0",

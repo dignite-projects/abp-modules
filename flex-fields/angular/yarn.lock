@@ -1506,8 +1506,9 @@
   integrity sha512-kzyuwOAQnXJNLS9PSyrk0CWk35nWJW/zl/6KvnTBMFK65gm7U1/Z5BqjxeapjZCIhQcM/DsrEmcbRwDyXyXK4A==
 
 "@dignite/ng.file-explorer@file:../../file-storing/angular/dist/file-explorer":
-  version "10.0.0-rc.12"
+  version "10.0.0-rc.15"
   dependencies:
+    "@abp/ng.components" "~10.5.0"
     tslib "^2.0.0"
 
 "@emnapi/core@1.11.1":
@@ -6021,18 +6022,7 @@ ng-packagr@^21.2.7:
   optionalDependencies:
     rollup "^4.24.0"
 
-ng-zorro-antd@^21.3.3:
-  version "21.3.3"
-  resolved "https://registry.yarnpkg.com/ng-zorro-antd/-/ng-zorro-antd-21.3.3.tgz#f6be7fe0c942c8dfae1342cd4e330d05db4b73dd"
-  integrity sha512-70zzTqc2MQI9W+uX+OGdXfT1azbum3X/cdJ1orxLY0grz+deKtH2zVW7bQytHiCWdRe9pP4KtdE5xLY6eYKssw==
-  dependencies:
-    "@angular/cdk" "^21.0.0"
-    "@ant-design/icons-angular" "^21.0.0"
-    "@ctrl/tinycolor" "^3.6.0"
-    date-fns "^2.16.1"
-    tslib "^2.3.0"
-
-ng-zorro-antd@~21.0.0-next.1:
+ng-zorro-antd@~21.0.0-next.1, ng-zorro-antd@~21.0.2:
   version "21.0.2"
   resolved "https://registry.yarnpkg.com/ng-zorro-antd/-/ng-zorro-antd-21.0.2.tgz#379fa6a3885154fbbbd2fc75a8f3a5f78827aa29"
   integrity sha512-Nn6x8x3pUXBVTfab1c7BYPqiK8Bp9WLgHbJ6Fja5T9EKeMiCWj4zJOvFRT2JKSnNBGQtxLzHr2KOkehIfhmk/A==

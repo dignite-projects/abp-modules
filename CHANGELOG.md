@@ -35,6 +35,33 @@ so it stays clear which part of the repository actually moved.
   catches what a local tarball cannot, such as a dist-tag pointing at the wrong version, but a
   failure there is no longer the only line of defense.
 
+- **This repository's own `flex-fields/angular` and `file-storing/angular` demo apps were themselves
+  carrying the exact `ng-zorro-antd` duplicate `6f039ef` documented as an accepted cost of
+  `@abp/ng.components` pinning that package at `~21.0.0-next.1` (i.e. `<21.1.0`): `21.3.3` at each
+  workspace root, declared there only for the demo's own use, and `21.0.2` nested under
+  `node_modules/@abp/ng.components/node_modules` - two module-scoped `NZ_CONFIG`/`NzConfigService`
+  tokens, so a root-level `provideNzConfig()`/`provideNzI18n()` never reached the copy
+  `@abp/ng.components`'s own controls (e.g. `abp-tree`) resolve.** That duplication is inherent to
+  `@dignite/ng.flex-fields`'s and `@dignite/ng.file-explorer`'s published `^21.0.0` peer range - a
+  real downstream host may need `21.3.x` for reasons the packages can't rule out, which is why that
+  peer range is untouched - but nothing required these two *demo* apps to actually be such a host:
+  they exist to exercise the published packages, not to prove a wide peer range works. `ng-zorro-antd`
+  is now narrowed to `~21.0.2` in both `flex-fields/angular/package.json` and
+  `file-storing/angular/package.json` - inside `@abp/ng.components`'s ceiling, and the same version
+  that was already nested - which collapses both workspaces back to a single copy. Both demo apps'
+  production builds (`yarn build:prod`) pass unchanged at the older version. A new
+  `build/check-angular-package-duplicates.mjs`, wired into `ci.yml` immediately after each of the
+  three Angular workspaces' `yarn install --frozen-lockfile` steps, generalizes
+  `verify-npm-single-copy.mjs`'s duplicate check from the five `@dignite/*` packages it covers to any
+  bare-or-scoped target list - `ng-zorro-antd` and `@angular/cdk` for now, the latter reaching these
+  same packages by the same `@abp/ng.components` route even though no version conflict currently
+  splits it. `notifications/angular` is checked too even though it declares neither package itself:
+  it depends on `@abp/ng.components`, which pulls both in transitively, so it is exposed to the same
+  failure mode the moment something else in that workspace narrows either range. Like its sibling
+  script, a target that matches nothing installed fails the run rather than passing vacuously - a
+  typo'd target or a check pointed at the wrong `node_modules` is otherwise indistinguishable from a
+  clean tree.
+
 ### Added
 
 #### flex-fields

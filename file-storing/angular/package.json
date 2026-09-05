@@ -40,7 +40,7 @@
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
-    "ng-zorro-antd": "^21.3.3"
+    "ng-zorro-antd": "~21.0.2"
   },
   "devDependencies": {
     "@abp/ng.schematics": "~10.5.0",

@@ -170,6 +170,13 @@ jobs:
         working-directory: file-storing/angular
         run: yarn install --frozen-lockfile
 
+      # @abp/ng.components pins ng-zorro-antd at <21.1.0 while this demo app used to ask for
+      # ^21.3.3 (narrowed to ~21.0.2 for exactly this reason); @angular/cdk reaches the same
+      # package by the same route and carries the same risk. Two copies are two module-scoped
+      # NZ_CONFIG/NzConfigService tokens - see build/check-angular-package-duplicates.mjs.
+      - name: Check file-storing Angular package duplicates
+        run: node ./build/check-angular-package-duplicates.mjs file-storing/angular/node_modules ng-zorro-antd @angular/cdk
+
       - name: Lint file-storing Angular projects
         working-directory: file-storing/angular
         run: yarn lint --max-warnings=0
@@ -216,6 +223,11 @@ jobs:
         working-directory: notifications/angular
         run: yarn install --frozen-lockfile
 
+      # This workspace declares neither package itself, but depends on @abp/ng.components, which
+      # pulls both in transitively - see build/check-angular-package-duplicates.mjs.
+      - name: Check notifications Angular package duplicates
+        run: node ./build/check-angular-package-duplicates.mjs notifications/angular/node_modules ng-zorro-antd @angular/cdk
+
       - name: Lint notifications Angular projects
         working-directory: notifications/angular
         run: yarn lint --max-warnings=0
@@ -260,6 +272,13 @@ jobs:
       - name: Install flex-fields Angular dependencies
         working-directory: flex-fields/angular
         run: yarn install --frozen-lockfile
+
+      # @abp/ng.components pins ng-zorro-antd at <21.1.0 while this demo app used to ask for
+      # ^21.3.3 (narrowed to ~21.0.2 for exactly this reason); @angular/cdk reaches the same
+      # package by the same route and carries the same risk. Two copies are two module-scoped
+      # NZ_CONFIG/NzConfigService tokens - see build/check-angular-package-duplicates.mjs.
+      - name: Check flex-fields Angular package duplicates
+        run: node ./build/check-angular-package-duplicates.mjs flex-fields/angular/node_modules ng-zorro-antd @angular/cdk
 
       - name: Lint flex-fields Angular projects
         working-directory: flex-fields/angular
