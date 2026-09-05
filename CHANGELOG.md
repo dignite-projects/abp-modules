@@ -15,6 +15,8 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+## [10.0.0-rc.15] - 2026-09-05
+
 ### Fixed
 
 - **The post-publish "Verify published packages install as a single copy each" step crashed on the

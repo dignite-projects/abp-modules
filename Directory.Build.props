@@ -13,7 +13,7 @@
          Framework major version targeted in Directory.Packages.props (currently 10.5.0 -> MAJOR =
          10) and must stay >= 10 forever, permanently ahead of the legacy Dignite.FileExplorer.* / Dignite.Abp.Notifications*
          package lines already published on NuGet up to 3.8.2 under these same PackageIds. -->
-    <Version>10.0.0-rc.14</Version>
+    <Version>10.0.0-rc.15</Version>
     <!-- Pinned explicitly and never bumped in lockstep with <Version>: without this the SDK derives
          AssemblyVersion from <Version>, moving it on every release and breaking
          AssemblyQualifiedName-based lookups. notifications/'s NotificationData deserialization
