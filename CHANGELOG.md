@@ -15,6 +15,26 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Fixed
+
+- **The single "install with Yarn Classic and check for a duplicate" verification
+  `build/verify-npm-single-copy.mjs` performs for issue #211 ran only after both Angular publish
+  steps in `release.yml`**, so a real duplicate reaching consumers would be reported only once the
+  damage was already done - the same failure shape `v10.0.0-rc.14`'s own post-publish crash exposed:
+  the check runs at all, but by the time it can fail, everything is already live on npmjs and GitHub
+  Packages, and a failure there can only skip the draft GitHub Release, not stop a bad publish.
+  `verify-npm-single-copy.mjs` now supports two modes. `packed` installs the five tarballs the
+  workflow's own `npm pack` steps already produce, pointing each `@dignite/*` dependency at its
+  tarball with a `file:` path instead of a registry range - Yarn Classic resolves a `file:`
+  dependency's version from the tarball's own `package.json` and reconciles it against every other
+  edge in the graph exactly as it would a registry-resolved copy, so it exercises the same
+  duplicate-vs-dedupe logic without anything published yet. A new "Verify packed Angular packages
+  install as a single copy each" step runs this immediately after the last pack step, with no `if:`
+  guard, so both a `workflow_dispatch` preview build and a tagged release get the real gate.
+  `published` is the previous behavior, kept as a lighter step after the npm publish - it still
+  catches what a local tarball cannot, such as a dist-tag pointing at the wrong version, but a
+  failure there is no longer the only line of defense.
+
 ### Added
 
 #### flex-fields

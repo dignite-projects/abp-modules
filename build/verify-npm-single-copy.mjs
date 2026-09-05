@@ -1,8 +1,16 @@
 /**
- * Installs every published `@dignite/*` Angular package from npmjs with **Yarn Classic** and asserts
- * that each one resolves to exactly one copy, at the expected version.
+ * Installs every `@dignite/*` Angular package with **Yarn Classic** and asserts that each one
+ * resolves to exactly one copy, at the expected version. Two modes share that check:
  *
- * This exists because of the failure mode issue #211 describes, which nothing else in this
+ * - `packed` installs from the tarballs `npm pack` already produced locally, by pointing each
+ *   dependency at its tarball with a `file:` path. This is the real pre-publish gate: it runs before
+ *   either registry has been touched, so a failure here stops the release before anything is live.
+ * - `published` installs the versions actually live on npmjs, after publishing. It stays for what
+ *   `packed` cannot see from a local tarball: a dist-tag pointing at the wrong version, or any other
+ *   resolution difference that only exists against the real registry. See release.yml's own comment
+ *   on that step for why a failure this late is still worth having.
+ *
+ * Both modes exist because of the failure mode issue #211 describes, which nothing else in this
  * repository could see:
  *
  * - The five Angular packages ship in lockstep, and two of them depend on their siblings. If such a
@@ -21,23 +29,45 @@
  * Yarn Classic specifically, because that is what all three Angular workspaces here and every
  * downstream consumer use, while the packed-tarball smoke tests install with npm. npm deduplicates
  * where Yarn Classic does not, so the verification path and the real usage path used to differ in
- * exactly the way that hid this defect.
+ * exactly the way that hid this defect in the first place. `packed` mode still runs that same Yarn
+ * Classic resolution, just against the tarballs themselves rather than the registry: Yarn Classic
+ * resolves a `file:` dependency by reading the tarball's own `package.json.version` and deciding
+ * semver satisfaction and hoisting against every other edge in the graph exactly as it would for a
+ * registry-resolved copy, so it is a faithful stand-in for what happens once these are actually
+ * published — without needing anything published yet.
  *
- * Usage: node build/verify-npm-single-copy.mjs <expected-version>
+ * Usage:
+ *   node build/verify-npm-single-copy.mjs packed [<tarballs-root-directory>]
+ *     Scans <tarballs-root-directory> (default: artifacts/npm) for one `*.tgz` per immediate
+ *     subdirectory — the layout release.yml's pack steps already produce — and installs each by its
+ *     absolute `file:` path. No expected version is needed: each tarball's own package.json is
+ *     ground truth for what "correct" means here.
+ *   node build/verify-npm-single-copy.mjs published <expected-version>
+ *     Installs every package at <expected-version> from npmjs, retrying while the registry catches
+ *     up to a publish this same workflow run just made.
  */
 
 import { execFileSync } from 'node:child_process';
+import { gunzipSync } from 'node:zlib';
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 
-const [, , expectedVersion] = process.argv;
+const [, , mode, ...rest] = process.argv;
 
-if (!expectedVersion) {
-  throw new Error('Usage: node verify-npm-single-copy.mjs <expected-version>');
+const usageError = () => {
+  throw new Error(
+    'Usage:\n' +
+      '  node build/verify-npm-single-copy.mjs packed [<tarballs-root-directory>]\n' +
+      '  node build/verify-npm-single-copy.mjs published <expected-version>',
+  );
+};
+
+if (mode !== 'packed' && mode !== 'published') {
+  usageError();
 }
 
-/** Every package this repository publishes to npmjs, including the two that depend on siblings. */
+/** Every package this repository publishes, including the two that depend on siblings. */
 const packages = [
   '@dignite/ng.file-explorer',
   '@dignite/ng.notification-center',
@@ -55,6 +85,9 @@ const run = (command, args) => {
 
   execFileSync(executable, commandArguments, { cwd: tempRoot, stdio: 'inherit', env: process.env });
 };
+
+/** An absolute path, forward-slashed even on Windows — what Yarn Classic's `file:` protocol expects. */
+const toFileDependency = path => `file:${resolve(path).split(sep).join('/')}`;
 
 /**
  * Every `@dignite/*` package anywhere in the tree, including nested `node_modules`, which is where a
@@ -104,7 +137,157 @@ const collectInstalled = (directory, found = new Map()) => {
   return found;
 };
 
-try {
+/**
+ * Compares the installed tree against what each package's expected version should be (a fixed
+ * version in `published` mode, or each tarball's own version in `packed` mode) and flags anything
+ * that isn't exactly one copy at that version - including a `@dignite/*` package nobody listed,
+ * which is either a dependency that should have been declared, or the duplicate this exists to find.
+ */
+const findProblems = (installed, expectedVersionOf) => {
+  const problems = [];
+
+  for (const name of packages) {
+    const copies = installed.get(name) ?? [];
+    const expectedVersion = expectedVersionOf(name);
+
+    if (copies.length === 0) {
+      problems.push(`${name}: not installed at all.`);
+      continue;
+    }
+
+    if (copies.length > 1) {
+      const detail = copies.map(copy => `${copy.version} at ${copy.path}`).join(', ');
+      problems.push(`${name}: installed ${copies.length} times (${detail}).`);
+      continue;
+    }
+
+    if (copies[0].version !== expectedVersion) {
+      problems.push(`${name}: resolved to ${copies[0].version}, expected ${expectedVersion}.`);
+    }
+  }
+
+  for (const [name, copies] of installed) {
+    if (packages.includes(name)) {
+      continue;
+    }
+    problems.push(`${name}: unexpected @dignite package in the tree (${copies.length} copies).`);
+  }
+
+  return problems;
+};
+
+const reportOrThrow = (problems, description) => {
+  if (problems.length > 0) {
+    throw new Error(
+      `Yarn Classic did not resolve a single copy of every @dignite package (${description}):\n  ${problems.join('\n  ')}\n` +
+        'See https://github.com/dignite-projects/abp-modules/issues/211 for why a duplicate breaks field-type registration silently.',
+    );
+  }
+
+  console.log(
+    `Yarn Classic resolved exactly one copy of each of the ${packages.length} @dignite packages (${description}).`,
+  );
+};
+
+/** Reads `package/package.json` straight out of an npm-pack tarball, without shelling out to `tar`
+ * (Git Bash's MSYS `tar` misparses a Windows drive letter like `D:\...` as a remote-host spec, and
+ * relying on whatever `tar` happens to be first on PATH is exactly the kind of environment-dependent
+ * behaviour this check exists to avoid). npm-pack tarballs are plain gzipped ustar archives with the
+ * manifest as their first, short-named entry, so a minimal single-entry reader is enough. */
+const readTarballManifest = tarballPath => {
+  const tarBuffer = gunzipSync(readFileSync(tarballPath));
+  let offset = 0;
+
+  while (offset + 512 <= tarBuffer.length) {
+    const header = tarBuffer.subarray(offset, offset + 512);
+    if (header.every(byte => byte === 0)) {
+      break; // end-of-archive marker
+    }
+
+    const name = header.subarray(0, 100).toString('utf8').replace(/\0.*$/, '');
+    const size =
+      parseInt(header.subarray(124, 136).toString('utf8').replace(/\0.*$/, '').trim(), 8) || 0;
+    const typeFlag = String.fromCharCode(header[156]);
+    const dataOffset = offset + 512;
+
+    if (name === 'package/package.json' && (typeFlag === '0' || typeFlag === '\0')) {
+      return JSON.parse(tarBuffer.subarray(dataOffset, dataOffset + size).toString('utf8'));
+    }
+
+    offset = dataOffset + Math.ceil(size / 512) * 512;
+  }
+
+  throw new Error(`package/package.json not found inside ${tarballPath} - is this an npm pack tarball?`);
+};
+
+/** One `*.tgz` per immediate subdirectory of `rootDirectory`, keyed by the package name each tarball's
+ * own manifest declares - the layout release.yml's pack steps produce under `artifacts/npm/`. */
+const findPackedTarballs = rootDirectory => {
+  let subdirectories;
+  try {
+    subdirectories = readdirSync(rootDirectory, { withFileTypes: true }).filter(entry =>
+      entry.isDirectory(),
+    );
+  } catch (error) {
+    throw new Error(`Cannot read tarballs directory ${rootDirectory}: ${error.message}`);
+  }
+
+  const byPackage = new Map();
+
+  for (const subdirectory of subdirectories) {
+    const subdirectoryPath = join(rootDirectory, subdirectory.name);
+    const tarballNames = readdirSync(subdirectoryPath).filter(file => file.endsWith('.tgz'));
+
+    if (tarballNames.length !== 1) {
+      throw new Error(`Expected exactly one .tgz in ${subdirectoryPath}, found ${tarballNames.length}.`);
+    }
+
+    const tarballPath = resolve(join(subdirectoryPath, tarballNames[0]));
+    const manifest = readTarballManifest(tarballPath);
+    byPackage.set(manifest.name, { version: manifest.version, path: tarballPath });
+  }
+
+  return byPackage;
+};
+
+const runPackedMode = rootDirectory => {
+  const tarballs = findPackedTarballs(rootDirectory);
+
+  const missing = packages.filter(name => !tarballs.has(name));
+  if (missing.length > 0) {
+    throw new Error(`No packed tarball found under ${rootDirectory} for: ${missing.join(', ')}.`);
+  }
+
+  const unexpected = [...tarballs.keys()].filter(name => !packages.includes(name));
+  if (unexpected.length > 0) {
+    throw new Error(`Found a packed tarball for unexpected package(s): ${unexpected.join(', ')}.`);
+  }
+
+  writeFileSync(
+    join(tempRoot, 'package.json'),
+    `${JSON.stringify(
+      {
+        name: 'dignite-npm-single-copy-check',
+        private: true,
+        dependencies: Object.fromEntries(
+          packages.map(name => [name, toFileDependency(tarballs.get(name).path)]),
+        ),
+      },
+      null,
+      2,
+    )}\n`,
+  );
+
+  // No retry loop here, unlike published mode: these are local files already on disk, so there is no
+  // registry propagation delay to wait out.
+  run('npx', ['--yes', 'yarn@1', 'install', '--ignore-scripts', '--non-interactive', '--no-progress']);
+
+  const installed = collectInstalled(tempRoot);
+  const problems = findProblems(installed, name => tarballs.get(name).version);
+  reportOrThrow(problems, 'each at the version its own packed tarball declares');
+};
+
+const runPublishedMode = expectedVersion => {
   writeFileSync(
     join(tempRoot, 'package.json'),
     `${JSON.stringify(
@@ -141,46 +324,20 @@ try {
   }
 
   const installed = collectInstalled(tempRoot);
-  const problems = [];
+  const problems = findProblems(installed, () => expectedVersion);
+  reportOrThrow(problems, `all at ${expectedVersion}`);
+};
 
-  for (const name of packages) {
-    const copies = installed.get(name) ?? [];
-
-    if (copies.length === 0) {
-      problems.push(`${name}: not installed at all.`);
-      continue;
+try {
+  if (mode === 'packed') {
+    runPackedMode(rest[0] ?? 'artifacts/npm');
+  } else {
+    const expectedVersion = rest[0];
+    if (!expectedVersion) {
+      usageError();
     }
-
-    if (copies.length > 1) {
-      const detail = copies.map(copy => `${copy.version} at ${copy.path}`).join(', ');
-      problems.push(`${name}: installed ${copies.length} times (${detail}).`);
-      continue;
-    }
-
-    if (copies[0].version !== expectedVersion) {
-      problems.push(`${name}: resolved to ${copies[0].version}, expected ${expectedVersion}.`);
-    }
+    runPublishedMode(expectedVersion);
   }
-
-  // A @dignite package pulled in transitively that nobody listed is worth failing on too: it is
-  // either a dependency that should have been declared, or the duplicate this check exists to find.
-  for (const [name, copies] of installed) {
-    if (packages.includes(name)) {
-      continue;
-    }
-    problems.push(`${name}: unexpected @dignite package in the tree (${copies.length} copies).`);
-  }
-
-  if (problems.length > 0) {
-    throw new Error(
-      `Yarn Classic did not resolve a single copy of every @dignite package at ${expectedVersion}:\n  ${problems.join('\n  ')}\n` +
-        'See https://github.com/dignite-projects/abp-modules/issues/211 for why a duplicate breaks field-type registration silently.',
-    );
-  }
-
-  console.log(
-    `Yarn Classic resolved exactly one copy of each of the ${packages.length} @dignite packages, all at ${expectedVersion}.`,
-  );
 } finally {
   rmSync(tempRoot, { recursive: true, force: true });
 }

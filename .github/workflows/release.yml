@@ -329,6 +329,20 @@ jobs:
           npm pack ./dist/flex-fields-ckeditor --pack-destination ../../artifacts/npm/flex-fields-ckeditor
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      # The real pre-publish gate for issue #211: installs the five tarballs the pack steps above
+      # just produced with Yarn Classic, using `file:` dependencies so each package's transitive
+      # `@dignite/*` edges get resolved the same way they would against a registry - a `file:`
+      # dependency's version comes from the tarball's own package.json, and Yarn Classic decides
+      # semver satisfaction and hoisting against that exactly as it would a registry-resolved copy.
+      # That makes it a faithful stand-in for the post-publish check below, without needing anything
+      # published yet, so a duplicate is caught before either registry has been touched rather than
+      # after. Deliberately no `if:` here - it runs on both workflow_dispatch and a tag push, because
+      # a bad resolution is exactly as real on a private GitHub Packages preview build as it is on a
+      # public npmjs release, and this is meant to be a gate, not a tag-only nicety.
+      - name: Verify packed Angular packages install as a single copy each
+        shell: bash
+        run: node ./build/verify-npm-single-copy.mjs packed ./artifacts/npm
+
       # --- file-storing HTTP E2E smoke test (file-explorer's demo host only; notifications has no
       #     equivalent host-level E2E script) ---
       - name: Migrate file-storing host database for HTTP E2E smoke test
@@ -500,17 +514,18 @@ jobs:
             --tag '${{ steps.channel.outputs.npm-tag }}' \
             --provenance
 
-      # Verifying the *resolved* outcome, which no earlier step can see. The packed-tarball smoke
-      # tests above install with npm, which deduplicates; all three Angular workspaces here and every
-      # downstream consumer use Yarn Classic, which does not. That difference is what let issue #211
-      # ship: two copies of @dignite/ng.flex-fields in a consumer's tree are two distinct DI keys for
-      # the module-scoped FLEX_FIELD_TYPES token, so field-type registration silently stopped working
-      # at runtime with nothing failing at install or build time.
+      # The real gate for issue #211 is "Verify packed Angular packages install as a single copy
+      # each", earlier in this job, before either registry was touched. This step is the lighter
+      # second half: it verifies the *published* outcome, which only exists from this point on and
+      # which the packed check structurally cannot see - a dist-tag pointing at the wrong version, or
+      # any other resolution difference that only shows up against the real registry rather than a
+      # local tarball. All three Angular workspaces here and every downstream consumer install with
+      # Yarn Classic, same as the packed check, so this stays a like-for-like comparison against it.
       #
       # Deliberately after publishing rather than before: it resolves the real versions from npmjs,
       # which do not exist until the step above has run. A failure here therefore cannot un-publish
       # anything - it stops the draft GitHub Release and says loudly that the just-published set does
-      # not install cleanly, which is the useful half.
+      # not install cleanly, which is the useful half of what remains once the packed check runs first.
       - name: Verify published packages install as a single copy each
         if: startsWith(github.ref, 'refs/tags/v')
         shell: bash
@@ -525,7 +540,7 @@ jobs:
           # publishing; this one runs after it, so it needs its own empty userconfig. Nothing here
           # authenticates - it installs published, public packages from npmjs.
           verify_npmrc="$(mktemp)"
-          NPM_CONFIG_USERCONFIG="$verify_npmrc" node ./build/verify-npm-single-copy.mjs '${{ steps.version.outputs.version }}'
+          NPM_CONFIG_USERCONFIG="$verify_npmrc" node ./build/verify-npm-single-copy.mjs published '${{ steps.version.outputs.version }}'
 
       # Extract this version's section from the root CHANGELOG.md
       # as the draft release body.
