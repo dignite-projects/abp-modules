@@ -13,7 +13,7 @@ Because releases are lockstep, a version may contain changes to only one module 
 packages are still republished at that version with unchanged content. Entries are grouped by module
 so it stays clear which part of the repository actually moved.
 
-## [Unreleased]
+## [10.0.0-rc.16] - 2026-09-05
 
 ### Fixed
 
