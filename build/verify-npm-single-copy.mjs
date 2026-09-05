@@ -263,15 +263,27 @@ const runPackedMode = rootDirectory => {
     throw new Error(`Found a packed tarball for unexpected package(s): ${unexpected.join(', ')}.`);
   }
 
+  // `resolutions`, not just `dependencies`: a package that depends on a sibling (e.g.
+  // flex-fields-file-explorer on flex-fields) declares that edge as a plain semver range inside its
+  // own packed package.json, not as a `file:` path - it doesn't know at pack time that this check will
+  // ever run. Yarn Classic resolves a `file:` request and a semver-range request for the same package
+  // name as two independent lookups rather than reusing one to satisfy the other, so without an
+  // override it goes to the npm registry for the range - and fails outright for a version that has
+  // never been published there, which is exactly the case this check exists to run before. The
+  // `resolutions` override forces every occurrence of a name in the tree onto the same local tarball
+  // regardless of what range asked for it.
+  const fileDependencies = Object.fromEntries(
+    packages.map(name => [name, toFileDependency(tarballs.get(name).path)]),
+  );
+
   writeFileSync(
     join(tempRoot, 'package.json'),
     `${JSON.stringify(
       {
         name: 'dignite-npm-single-copy-check',
         private: true,
-        dependencies: Object.fromEntries(
-          packages.map(name => [name, toFileDependency(tarballs.get(name).path)]),
-        ),
+        dependencies: fileDependencies,
+        resolutions: fileDependencies,
       },
       null,
       2,

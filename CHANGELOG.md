@@ -35,6 +35,21 @@ so it stays clear which part of the repository actually moved.
   catches what a local tarball cannot, such as a dist-tag pointing at the wrong version, but a
   failure there is no longer the only line of defense.
 
+- **The new `packed` mode above failed outright the first time it ran against a version that had
+  never been published anywhere** (`Couldn't find any versions for "@dignite/ng.file-explorer" that
+  matches "^10.0.0-rc.16"`), because it only pointed the *top-level* dependency at each tarball's
+  `file:` path - a sibling package's *own* packed `package.json` (e.g.
+  `flex-fields-file-explorer` depending on `flex-fields`) still declares that edge as a plain semver
+  range, and Yarn Classic resolves a `file:` request and a semver-range request for the same package
+  name as two independent lookups rather than reusing one to satisfy the other. It went to the npm
+  registry for the range and failed, since nothing at that version exists there yet - exactly the
+  case this check exists to run before. `verify-npm-single-copy.mjs`'s `packed` mode now also sets
+  `resolutions` to the same five `file:` paths, forcing every occurrence of a name in the tree onto
+  the local tarball regardless of what range asked for it. This doesn't weaken the check:
+  `verify-version-lockstep.ps1` already rejects a drifted internal range before this step ever runs,
+  so every internal `@dignite/*` range is already `^<the current version>` by the time `packed` mode
+  installs.
+
 - **This repository's own `flex-fields/angular` and `file-storing/angular` demo apps were themselves
   carrying the exact `ng-zorro-antd` duplicate `6f039ef` documented as an accepted cost of
   `@abp/ng.components` pinning that package at `~21.0.0-next.1` (i.e. `<21.1.0`): `21.3.3` at each
