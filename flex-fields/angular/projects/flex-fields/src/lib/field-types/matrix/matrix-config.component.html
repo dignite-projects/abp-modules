@@ -1,0 +1,153 @@
+<form [formGroup]="formEntity">
+  <div formGroupName="configuration">
+    <div class="row g-0 border rounded">
+      <!-- Block types. -->
+      <div class="col-3 border-end d-flex flex-column" style="height: 26rem">
+        <div class="flex-grow-1 overflow-auto">
+          <div class="list-group list-group-flush">
+            @for (blockType of blockTypes.controls; track blockType; let blockTypeIndex = $index) {
+              <button
+                type="button"
+                class="list-group-item list-group-item-action text-truncate"
+                [class.active]="blockTypeIndex === selectedBlockTypeIndex"
+                (click)="selectBlockType(blockTypeIndex)"
+              >
+                {{ blockTypeLabel(blockType) || ('FlexFields::Matrix:UntitledBlockType' | abpLocalization) }}
+              </button>
+            }
+          </div>
+        </div>
+        <div class="border-top p-2">
+          <button type="button" class="btn btn-dark soft btn-sm w-100" (click)="addBlockType()">
+            <i class="fas fa-plus me-1"></i>{{ 'FlexFields::Matrix:AddBlockType' | abpLocalization }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Selected block type: its own name/displayName, and its own field list. -->
+      <div class="col-3 border-end d-flex flex-column" style="height: 26rem">
+        @if (selectedBlockType; as blockType) {
+          <div class="p-2 border-bottom" [formGroup]="blockType">
+            <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
+              <h6 class="mb-0 text-truncate">
+                {{ blockTypeLabel(blockType) || ('FlexFields::Matrix:UntitledBlockType' | abpLocalization) }}
+              </h6>
+              <button
+                type="button"
+                class="btn btn-sm btn-link text-danger p-0"
+                (click)="removeBlockType(selectedBlockTypeIndex!)"
+                [title]="'FlexFields::Matrix:RemoveBlockType' | abpLocalization"
+              >
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+            <div class="mb-2">
+              <label class="form-label">{{ 'FlexFields::Matrix:BlockTypeDisplayName' | abpLocalization }}</label>
+              <input type="text" class="form-control form-control-sm" formControlName="displayName" />
+            </div>
+            <div>
+              <label class="form-label">{{ 'FlexFields::Matrix:BlockTypeName' | abpLocalization }}</label>
+              <input type="text" class="form-control form-control-sm" formControlName="name" />
+            </div>
+          </div>
+          <div class="flex-grow-1 overflow-auto">
+            <div class="list-group list-group-flush">
+              @for (subField of fieldsOf(blockType).controls; track subField; let fieldIndex = $index) {
+                <button
+                  type="button"
+                  class="list-group-item list-group-item-action text-truncate"
+                  [class.active]="fieldIndex === selectedSubFieldIndex"
+                  (click)="selectSubField(fieldIndex)"
+                >
+                  <span class="d-block text-truncate">
+                    {{ subFieldLabel(subField) || ('FlexFields::Matrix:UntitledField' | abpLocalization) }}
+                  </span>
+                  @if (fieldTypeNameOf(subField)) {
+                    <small class="d-block" [class.text-muted]="fieldIndex !== selectedSubFieldIndex">
+                      {{ fieldTypeDisplayNameKeyOf(subField) | abpLocalization }}
+                    </small>
+                  }
+                </button>
+              }
+            </div>
+          </div>
+          <div class="border-top p-2">
+            <button type="button" class="btn btn-light btn-sm w-100" (click)="addSubField(blockType)">
+              <i class="fas fa-plus-circle me-1"></i>{{ 'FlexFields::Matrix:AddField' | abpLocalization }}
+            </button>
+          </div>
+        } @else {
+          <div class="p-3 text-muted small">
+            {{ 'FlexFields::Matrix:NoBlockTypesHint' | abpLocalization }}
+          </div>
+        }
+      </div>
+
+      <!-- Selected field's detail. -->
+      <div class="col-6 p-3 overflow-auto" style="height: 26rem">
+        @if (selectedSubField; as subField) {
+          <div [formGroup]="subField">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <h6 class="mb-0">
+                {{ subFieldLabel(subField) || ('FlexFields::Matrix:UntitledField' | abpLocalization) }}
+              </h6>
+              <button
+                type="button"
+                class="btn btn-sm btn-link text-danger p-0"
+                (click)="removeSubField(selectedBlockType!, selectedSubFieldIndex!)"
+                [title]="'FlexFields::Matrix:RemoveField' | abpLocalization"
+              >
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+            <div class="mb-2">
+              <label class="form-label">{{ 'FlexFields::Matrix:FieldDisplayName' | abpLocalization }}</label>
+              <input type="text" class="form-control form-control-sm" formControlName="displayName" />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">{{ 'FlexFields::Matrix:FieldName' | abpLocalization }}</label>
+              <input type="text" class="form-control form-control-sm" formControlName="name" />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">{{ 'FlexFields::Matrix:FieldDescription' | abpLocalization }}</label>
+              <input type="text" class="form-control form-control-sm" formControlName="description" />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">{{ 'FlexFields::Matrix:FieldType' | abpLocalization }}</label>
+              <select class="form-select form-select-sm" formControlName="fieldTypeName">
+                <option value="" disabled>
+                  {{ 'FlexFields::Matrix:SelectFieldType' | abpLocalization }}
+                </option>
+                @for (fieldType of fieldTypeOptions; track fieldType.name) {
+                  <option [value]="fieldType.name">{{ fieldType.displayNameKey | abpLocalization }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-check mb-2">
+              <input
+                type="checkbox"
+                class="form-check-input"
+                formControlName="required"
+                [id]="instanceId + '-required'"
+              />
+              <label class="form-check-label" [for]="instanceId + '-required'">
+                {{ 'FlexFields::Matrix:FieldRequired' | abpLocalization }}
+              </label>
+            </div>
+
+            @if (fieldTypeNameOf(subField)) {
+              <hr />
+              <ff-flex-field-config
+                [type]="fieldTypeNameOf(subField)"
+                [selected]="subFieldSeedOf(subField)"
+                [form]="subField"
+              ></ff-flex-field-config>
+            }
+          </div>
+        } @else {
+          <div class="text-muted">{{ 'FlexFields::Matrix:NoFieldSelectedHint' | abpLocalization }}</div>
+        }
+      </div>
+    </div>
+  </div>
+</form>

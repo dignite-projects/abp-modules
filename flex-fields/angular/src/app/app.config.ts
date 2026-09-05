@@ -41,7 +41,7 @@ export const appConfig: ApplicationConfig = {
     provideThemeLeptonX(),
     provideSideMenuLayout(),
     provideLogo(withEnvironmentOptions(environment)),
-    // Registers the six built-in field types' FieldTypeResolver - without this, <ff-flex-field-*>
+    // Registers the eight built-in field types' FieldTypeResolver - without this, <ff-flex-field-*>
     // renders nothing, because the registry it looks the field type up in is empty.
     provideFlexFields(),
     // Bolt-on: the FileExplorer field type, demonstrating a field type registered from outside

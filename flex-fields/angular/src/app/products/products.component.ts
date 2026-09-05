@@ -54,8 +54,8 @@ export class ProductsComponent {
   fields: ProductFieldDto[] = [];
 
   /** The subset with `searchable: true` - drives the filter bar. Excludes `description` (a free-text
-   *  field not worth filtering on in this demo) and never includes DateTime fields, since that field
-   *  type ships no search component in the library. */
+   *  field not worth filtering on in this demo) and never includes DateTime, Matrix or Table fields,
+   *  since none of those ship a search component in the library. */
   get searchableFields(): ProductFieldDto[] {
     return this.fields.filter(f => f.searchable);
   }
@@ -216,7 +216,9 @@ export class ProductsComponent {
    * - `Select` / `Tree`: multi-select, so `In` over the comma-joined selection.
    * - `Boolean`: the native `<select>` in `ff-boolean-search` yields the *strings* `"true"`/`"false"`,
    *   not booleans - a plain `<option [value]>` binding always stringifies.
-   * - `DateTime`: no search component exists for it, so it never contributes a condition.
+   * - `DateTime`, `Matrix`, `Table`: no search component exists for any of them, so they never
+   *   contribute a condition. For the two composites that is permanent - the server's
+   *   `IndexValueType` is null, so their values never reach the query index at all.
    */
   private buildConditions(): FlexFieldQueryConditionDto[] {
     const raw = (this.searchForm.get('flexFieldSearch')?.value ?? {}) as Record<string, unknown>;

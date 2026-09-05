@@ -1,0 +1,24 @@
+@if (showInList) {
+  {{ blocks.length === 0 ? '-' : blocks.length + ' block(s)' }}
+} @else {
+  <div class="flex-field flex-field-view flex-field-view-matrix">
+    <span class="flex-field-label" *ngIf="fields?.field?.displayName">{{ fields.field.displayName }}</span>
+    @if (blocks.length === 0) {
+      <span class="flex-field-value">-</span>
+    } @else {
+      <div class="flex-field-value flex-field-value-matrix">
+        <div class="card mb-2" *ngFor="let block of blocks">
+          <div class="card-header">{{ blockTypeOf(block)?.displayName ?? block.blockTypeName }}</div>
+          <div class="card-body" *ngIf="blockTypeOf(block) as blockType">
+            <ff-flex-field-view
+              *ngFor="let subField of blockType.fields"
+              [type]="subField.fieldTypeName"
+              [fields]="subFieldValueOf(subField, block)"
+              [value]="block.values[subField.name]"
+            ></ff-flex-field-view>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+}

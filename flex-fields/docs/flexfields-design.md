@@ -164,3 +164,24 @@ public interface IFlexFieldRepository<TField> : IBasicRepository<TField, Guid> w
 
 ## 8. 实施顺序
 `rename（A 组，编译器兜底，先做拿干净基座） → 存储机制（Y） → 外挂 field-type（CkEditor/FileExplorer）与 Angular → CMS 切换（另一仓大工程）`。内核无 DDD 可设计（下游 DDD = CMS 现有模型，只改成引用内核契约）。
+
+## 9. 复合字段类型（Matrix / Table，2026-09 从 Dignite.Site 迁入）
+
+`MatrixFieldType`（多种命名块类型的多态重复器）与 `TableFieldType`（单一列结构的同构表格）原生于 Site 仓的 `Dignite.FlexFields.Site`，现作为**内置类型**迁入 `.Abstractions`，与 Text/Number/DateTime/Select/Boolean/Tree 并列。线格式（注册键 `Matrix`/`Table`、配置键 `Matrix.BlockTypes`/`Table.Columns`、值的 camelCase `{blockTypeName, values}`/`{values}`）**一字未改**，属第 3 节"持久化的键即数据"那条规矩的直接应用——已落库的字段升级后照常可读。
+
+**这两类的本质：配置里嵌套字段定义。** 对第 6 节的 `IFieldType` 来说配置是一只不透明的袋子；复合类型第一次让"一个字段的配置里还有字段"成为需要被提问的事实。由此产生两个共享契约与一个共享形状：
+
+- **`ICompositeFieldType`（内核，非外挂包）**：`GetInlineFields(configuration)`，扁平返回。**放内核的理由**是宿主必须能在不认识 `MatrixFieldType`/`TableFieldType` 具体类型的前提下问出"这个类型是不是复合的、它里面声明了什么"——保存字段定义时的深度校验正是这样一个调用点，而定义保存路径归下游、不归字段类型。放进某个外挂包则相反：宿主要么依赖那个包（内核的"约束不拥有"就破了），要么按类型名硬编码（正是这个接口要消灭的耦合）。第三种复合类型（下游自己加的）只要实现它，深度上限与客户端类型选择器自动覆盖，无需注册表。
+- **`INormalizesValue`（内核）**：`Normalize(value)` 返回该类型唯一的规范写入形状。
+- **`InlineFieldDefinition`（内核）**：一个内联字段——Matrix 某块类型的子字段，或 Table 的一列。刻意**不是** `FlexFieldData`：它带 `Required`，而第 6 节里"必填"属于字段的**用法**（`FlexFieldValue.Required`）不属于定义；内联字段没有独立的用法记录来承载这个标志，只能落在定义上。
+
+**规范化为什么与校验分家。** `Validate` 回答"这个值可不可接受"，只返回错误、从不返回解析结果；于是一个键大小写不合规范但结构完好的值能顺利通过校验，然后被宿主**原样**写进袋子，对下游每一个按 camelCase 读的读者（尤其是 Angular 控件）都是静默不可读。把二者合并意味着今后每一次 `Validate` 覆写都得兼职做值变换——所以是两个方法、两次调用，宿主在写入前先 `Normalize` 再 `Validate`（见 demo 的 `ProductAppService`）。
+
+**嵌套为什么在写时封顶、为什么是 3。** 复合类型的配置里嵌着完整的字段定义，而那些定义又能指向复合类型——字段定义因此是一棵深度无界的树。走这棵树的每一个读者都没有自带深度护栏：`InlineFieldValidator` 沿 `Validate` 递归，`.Web` 的 `Matrix.cshtml`/`Table.cshtml` 沿 `flex-field-view` 分发递归，Angular 的设计器与值编辑器沿 `ff-flex-field-config`/`ff-flex-field-control` 递归。它们都不会死循环（配置是内嵌数据不是引用，不成环），但都付出与深度成正比的栈与渲染开销，且在深处都不再可用。**在唯一的写入口封一次，胜过给每个读者各加一道护栏**——这与第 4 节"写时同步索引"是同一种取舍：把代价挪到低频的写侧。`MaxDepth = 3` 的含义是顶层字段可以是复合的、它的子字段/列也可以是，再往下一层必须是标量；`Table > Matrix > Table`（内层 Table 还带列）为 4，拒绝。`ExceedsMaxDepth` 自带递归预算，因为它是第一个走未经审核的客户端配置的方法——没有预算它自己就是它要防的那个栈溢出。内核只提供度量，**执行在宿主**（内核没有字段定义保存路径可挂，见第 2 节）；Angular 侧的 `MAX_COMPOSITE_NESTING_DEPTH` 是提前置灰的礼貌镜像，权威始终是服务端这个常量。
+
+**两者都不可索引**（`IndexValueType == null`）：值是复合对象的列表，不是标量也不是标量列表，第 4 节的类型化索引槽位无从落脚——第 6 节 `IndexValueType` 的注释本来就把 Matrix 举为这一情形的典型。因此两者都不出 `Views/Shared/FlexFields/Search/` 分部视图，也不允许被标 `Searchable`。
+
+**否掉的方案：**
+- **`IFieldType` 上加一个 `IsComposite` 布尔**。凡是关心"是不是复合"的调用方，紧接着都要走内联字段（量深度、递归校验、描述结构）；一个裸布尔只会让每个调用方各自按具体类型 switch 一次去拿那些字段——正是该接口要消除的耦合。
+- **把两个契约放进外挂包**（`FlexFields.Composite` 之类，对照 `FlexFields.FileExplorer` 的先例）。外挂包的判据是"有没有自己的领域依赖"：FileExplorer 依赖 `Dignite.FileExplorer`，所以必须外挂；Matrix/Table 只依赖内核已有的词汇（`FieldConfigurationDictionary`、`FlexFieldDictionary`、`FieldTypeBase`），没有任何外部依赖可隔离。而契约一旦外挂，上面那条"宿主必须能不认识具体类型就提问"的路径立刻断掉。
+- **在 `Validate` 内部顺手把值改写掉**（省掉 `INormalizesValue`）。见上文"分家"一条：会把"返回错误"这个契约悄悄变成"返回错误并且可能改你的值"。

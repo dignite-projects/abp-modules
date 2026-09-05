@@ -36,7 +36,7 @@ inside `<21.1.0` if you need a single copy; otherwise expect `abp-tree` to run o
 
 ## Field types
 
-Six built-in types, each with up to four role components — **config** (design the field),
+Eight built-in types, each with up to four role components — **config** (design the field),
 **control** (edit a value), **view** (display a value) and **search** (filter by it):
 
 | Registration key | Type | Roles |
@@ -47,6 +47,15 @@ Six built-in types, each with up to four role components — **config** (design 
 | `Select` | single or multiple choice | config, control, view, search |
 | `Boolean` | boolean | config, control, view, search |
 | `Tree` | single or multiple selection from a node tree | config, control, view, search |
+| `Matrix` | repeatable list of polymorphic blocks, each block type with its own sub-fields | config, control, view |
+| `Table` | repeatable grid, one shared column schema for every row | config, control, view |
+
+`Matrix` and `Table` are **composite**: their configuration declares further fields, and their config,
+control and view components recurse through `<ff-flex-field-config>` / `<ff-flex-field-control>` /
+`<ff-flex-field-view>` to render them. They ship no search component — the server's
+`IndexValueType` is `null` for both, so there is nothing to filter on. How deep the recursion may go
+is the server's `CompositeFieldNesting.MaxDepth`; the config editors mirror it only so they can stop
+offering composite types once the limit is reached.
 
 The registration keys are the values persisted in `IFlexFieldData.FieldTypeName` on the server.
 They are **data, not class names** — `Text` is served by `TextFieldType` in C# and

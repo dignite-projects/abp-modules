@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Dignite.Abp.FlexFields.Boolean;
 using Dignite.Abp.FlexFields.Date;
+using Dignite.Abp.FlexFields.Matrix;
 using Dignite.Abp.FlexFields.Number;
 using Dignite.Abp.FlexFields.Select;
+using Dignite.Abp.FlexFields.Table;
 using Dignite.Abp.FlexFields.Text;
 using Dignite.Abp.FlexFields.Tree;
 using Shouldly;
@@ -117,6 +119,111 @@ public class FlexFieldViewRendering_Tests : DigniteAbpFlexFieldsWebTestBase
         var html = await Renderer.RenderAsync("FlexFields/" + TreeFieldType.ControlName, new FlexFieldViewModel(value, showInList: false));
 
         html.ShouldContain("Child");
+    }
+
+    /// <summary>
+    /// The composite case: <c>Matrix.cshtml</c> does not render sub-field values itself, it recurses
+    /// through the same <c>&lt;flex-field-view&gt;</c> dispatch one level deeper - so this asserts the
+    /// Text sub-field's own partial actually ran inside the block, not just that the block wrapper was
+    /// emitted.
+    /// </summary>
+    [Fact]
+    public async Task Renders_Matrix_recursing_into_each_blocks_sub_fields()
+    {
+        var configuration = new FieldConfigurationDictionary();
+        _ = new MatrixConfiguration(configuration)
+        {
+            BlockTypes = new List<MatrixBlockType>
+            {
+                new()
+                {
+                    Name = "quote",
+                    DisplayName = "Quote Block",
+                    Fields = new List<InlineFieldDefinition>
+                    {
+                        new() { Name = "text", DisplayName = "Quote Text", FieldTypeName = TextFieldType.ControlName }
+                    }
+                }
+            }
+        };
+        var field = CreateField("Sections", MatrixFieldType.ControlName, configuration);
+        var blocks = new List<MatrixBlockValue>
+        {
+            new()
+            {
+                BlockTypeName = "quote",
+                Values = new FlexFieldDictionary { ["text"] = "Hello from a block" }
+            }
+        };
+        var value = new FlexFieldValue(field, value: blocks);
+
+        var html = await Renderer.RenderAsync("FlexFields/" + MatrixFieldType.ControlName, new FlexFieldViewModel(value, showInList: false));
+
+        html.ShouldContain("data-block-type=\"quote\"");
+        html.ShouldContain("Quote Block");
+        // Only the recursion can have produced these two: the label and the value both come from the
+        // Text partial, which Matrix.cshtml never writes itself.
+        html.ShouldContain("Quote Text");
+        html.ShouldContain("Hello from a block");
+    }
+
+    [Fact]
+    public async Task Renders_Table_as_a_column_header_row_and_one_row_per_value()
+    {
+        var configuration = new FieldConfigurationDictionary();
+        _ = new TableConfiguration(configuration)
+        {
+            Columns = new List<InlineFieldDefinition>
+            {
+                new() { Name = "name", DisplayName = "Spec Name", FieldTypeName = TextFieldType.ControlName },
+                new() { Name = "value", DisplayName = "Spec Value", FieldTypeName = TextFieldType.ControlName }
+            }
+        };
+        var field = CreateField("Specs", TableFieldType.ControlName, configuration);
+        var rows = new List<TableRow>
+        {
+            new() { Values = new FlexFieldDictionary { ["name"] = "Weight", ["value"] = "180 g" } }
+        };
+        var value = new FlexFieldValue(field, value: rows);
+
+        var html = await Renderer.RenderAsync("FlexFields/" + TableFieldType.ControlName, new FlexFieldViewModel(value, showInList: false));
+
+        html.ShouldContain("<th>Spec Name</th>");
+        html.ShouldContain("<th>Spec Value</th>");
+        // Cells render show-in-list, so the sub-field's Text partial emits the bare value with no label
+        // wrapper of its own inside the <td>.
+        html.ShouldContain("Weight");
+        html.ShouldContain("180 g");
+    }
+
+    [Fact]
+    public async Task ShowInList_renders_Matrix_as_a_block_count()
+    {
+        var field = CreateField("Sections", MatrixFieldType.ControlName, new FieldConfigurationDictionary());
+        var blocks = new List<MatrixBlockValue>
+        {
+            new() { BlockTypeName = "quote" },
+            new() { BlockTypeName = "quote" }
+        };
+        var value = new FlexFieldValue(field, value: blocks);
+
+        var html = await Renderer.RenderAsync("FlexFields/" + MatrixFieldType.ControlName, new FlexFieldViewModel(value, showInList: true));
+
+        html.ShouldContain("2 block(s)");
+        html.ShouldNotContain("flex-field-view");
+    }
+
+    [Fact]
+    public async Task ShowInList_renders_Table_as_a_row_count()
+    {
+        var field = CreateField("Specs", TableFieldType.ControlName, new FieldConfigurationDictionary());
+        var rows = new List<TableRow> { new(), new(), new() };
+        var value = new FlexFieldValue(field, value: rows);
+
+        var html = await Renderer.RenderAsync("FlexFields/" + TableFieldType.ControlName, new FlexFieldViewModel(value, showInList: true));
+
+        html.ShouldContain("3 row(s)");
+        html.ShouldNotContain("flex-field-view");
     }
 
     [Fact]

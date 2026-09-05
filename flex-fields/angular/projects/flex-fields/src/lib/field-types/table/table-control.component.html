@@ -1,0 +1,58 @@
+<div [formGroup]="entityForm">
+  <div [formGroupName]="parentField">
+    <div class="mb-3">
+      <label class="form-label" *ngIf="fieldValue.field.displayName">
+        {{ fieldValue.field.displayName }}
+      </label>
+      <div class="table-responsive" [formArrayName]="fieldValue.field.name">
+        <table class="table">
+          <thead>
+            <tr>
+              <th *ngFor="let column of columns">{{ column.displayName }}</th>
+              <th class="text-end">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-link p-0"
+                  (click)="addRow()"
+                  [title]="'FlexFields::Table:AddRow' | abpLocalization"
+                  [attr.aria-label]="'FlexFields::Table:AddRow' | abpLocalization"
+                >
+                  <i class="fas fa-plus"></i>
+                </button>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of rows.controls; let rowIndex = index" [formGroupName]="rowIndex">
+              <td *ngFor="let column of columns">
+                <ff-flex-field-control
+                  [fields]="columnValueOf(column)"
+                  [selected]="selectedValueOf(row, column)"
+                  parentFieldName="values"
+                  [entity]="row"
+                ></ff-flex-field-control>
+                <div class="invalid-feedback d-block" *ngIf="columnErrorMessage(row, column) as message">
+                  {{ message }}
+                </div>
+              </td>
+              <td>
+                <button type="button" class="btn btn-sm btn-link text-danger p-0" (click)="removeRow(rowIndex)">
+                  <i class="fas fa-minus"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <span
+        class="form-text invalid-feedback d-block"
+        *ngIf="rows.errors?.['required'] && rows.touched"
+      >
+        {{ 'AbpValidation::ThisFieldIsRequired' | abpLocalization }}
+      </span>
+      <small class="form-text text-muted d-block" *ngIf="fieldValue.field.description">
+        {{ fieldValue.field.description }}
+      </small>
+    </div>
+  </div>
+</div>

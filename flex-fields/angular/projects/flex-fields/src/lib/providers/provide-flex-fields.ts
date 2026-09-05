@@ -4,7 +4,7 @@ import { FieldTypeDefinition } from '../field-types/field-type-definition';
 import { FLEX_FIELD_TYPES } from '../field-types/field-type.tokens';
 
 /**
- * Registers the six built-in field types, plus any extras you pass. Call once, in your application
+ * Registers the eight built-in field types, plus any extras you pass. Call once, in your application
  * config:
  *
  * ```ts

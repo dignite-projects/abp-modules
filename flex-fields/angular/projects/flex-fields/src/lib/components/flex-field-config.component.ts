@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { FieldTypeResolver } from '../field-types';
+import { FieldTypeResolver } from '../field-types/field-type-resolver.service';
 import { FlexFieldData } from '../models';
 
 /**

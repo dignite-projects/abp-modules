@@ -18,6 +18,7 @@
     "Permission:ProductFields.Delete": "删除",
     "Demo:FieldNameAlreadyExists": "名为“{Name}”的字段已存在。",
     "Demo:FieldTypeNotSearchable": "“{FieldType}”字段类型无法搜索，因此该字段不能设为可搜索。",
+    "Demo:FieldNestingTooDeep": "该配置中复合字段类型的嵌套层数超过了 {MaxDepth} 层。",
     "FieldName": "字段名",
     "FieldDisplayName": "显示名称",
     "FieldDescription": "描述",

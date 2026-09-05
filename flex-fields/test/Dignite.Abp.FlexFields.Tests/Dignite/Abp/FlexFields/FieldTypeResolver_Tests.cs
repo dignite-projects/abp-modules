@@ -33,14 +33,24 @@ public class FieldTypeResolver_Tests : DigniteAbpFlexFieldsTestBase
     }
 
     [Fact]
-    public void Should_Report_Every_Built_In_Field_Type_As_Indexable()
+    public void Should_Report_Every_Scalar_Built_In_As_Indexable_And_Every_Composite_One_As_Not()
     {
-        // All six built-ins have an IndexValueType. This is the counterpart of the Angular library's
-        // "none of the built-ins mirror a null server IndexValueType" assertion - a new built-in arriving
-        // without an index slot should be a deliberate decision, visible as a failure here first.
+        // Being composite is exactly what makes a field type unindexable: its value is a list of
+        // composite objects (blocks/rows), not a scalar or a list of scalars, so there is no typed index
+        // column to decompose it into - see MatrixFieldType's own remarks. Asserting the two halves
+        // against ICompositeFieldType rather than against a name list keeps this honest for a built-in
+        // added later: a new scalar type arriving without an index slot, or a composite one arriving
+        // with one, both fail here first, which is where that decision should be visible.
         foreach (var fieldType in _resolver.GetAll())
         {
-            fieldType.IsIndexable().ShouldBeTrue($"{fieldType.Name} has no IndexValueType");
+            if (fieldType is ICompositeFieldType)
+            {
+                fieldType.IsIndexable().ShouldBeFalse($"{fieldType.Name} is composite but has an IndexValueType");
+            }
+            else
+            {
+                fieldType.IsIndexable().ShouldBeTrue($"{fieldType.Name} has no IndexValueType");
+            }
         }
     }
 }

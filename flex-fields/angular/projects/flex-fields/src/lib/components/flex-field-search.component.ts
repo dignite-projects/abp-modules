@@ -1,6 +1,6 @@
 import { Component, Input, OnChanges, Type, ViewChild, ViewContainerRef, inject } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { FieldTypeResolver } from '../field-types';
+import { FieldTypeResolver } from '../field-types/field-type-resolver.service';
 import { FlexFieldValue } from '../models';
 
 /**

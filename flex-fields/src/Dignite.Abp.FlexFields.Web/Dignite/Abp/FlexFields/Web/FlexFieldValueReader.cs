@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.Json;
+using Dignite.Abp.FlexFields.Matrix;
+using Dignite.Abp.FlexFields.Table;
 
 namespace Dignite.Abp.FlexFields.Web;
 
@@ -116,8 +118,51 @@ internal static class FlexFieldValueReader
         }
     }
 
+    /// <summary>
+    /// Reads a <c>Matrix</c> field's raw value as its list of block instances. The composite counterpart
+    /// of the scalar readers above, and lenient for exactly the same reason:
+    /// <c>MatrixFieldType.ReadBlocks</c> is <c>private</c>, so a view cannot reuse it and gets this
+    /// instead.
+    /// </summary>
+    public static IReadOnlyList<MatrixBlockValue> ReadMatrixBlocks(object? value)
+    {
+        return value switch
+        {
+            null => new List<MatrixBlockValue>(),
+            List<MatrixBlockValue> list => list,
+            JsonElement { ValueKind: JsonValueKind.Null or JsonValueKind.Undefined } => new List<MatrixBlockValue>(),
+            JsonElement { ValueKind: JsonValueKind.Array } element =>
+                element.Deserialize<List<MatrixBlockValue>>(WebOptions) ?? new List<MatrixBlockValue>(),
+            _ => new List<MatrixBlockValue>()
+        };
+    }
+
+    /// <summary>
+    /// Reads a <c>Table</c> field's raw value as its list of rows - see
+    /// <see cref="ReadMatrixBlocks"/>, whose reasoning this mirrors exactly.
+    /// </summary>
+    public static IReadOnlyList<TableRow> ReadTableRows(object? value)
+    {
+        return value switch
+        {
+            null => new List<TableRow>(),
+            List<TableRow> list => list,
+            JsonElement { ValueKind: JsonValueKind.Null or JsonValueKind.Undefined } => new List<TableRow>(),
+            JsonElement { ValueKind: JsonValueKind.Array } element =>
+                element.Deserialize<List<TableRow>>(WebOptions) ?? new List<TableRow>(),
+            _ => new List<TableRow>()
+        };
+    }
+
     private static string ReadJsonElement(JsonElement item)
     {
         return item.ValueKind == JsonValueKind.String ? item.GetString()! : item.ToString();
     }
+
+    /// <summary>
+    /// The same <c>JsonSerializerDefaults.Web</c> options the composite field types themselves read and
+    /// normalize with - the camelCase wire shape <c>INormalizesValue</c> guarantees on write is the one
+    /// these readers have to assume on read.
+    /// </summary>
+    private static readonly JsonSerializerOptions WebOptions = new(JsonSerializerDefaults.Web);
 }

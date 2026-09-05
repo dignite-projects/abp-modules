@@ -18,6 +18,7 @@
     "Permission:ProductFields.Delete": "Delete",
     "Demo:FieldNameAlreadyExists": "A field named '{Name}' already exists.",
     "Demo:FieldTypeNotSearchable": "The '{FieldType}' field type cannot be searched, so this field cannot be marked searchable.",
+    "Demo:FieldNestingTooDeep": "This configuration nests composite field types more than {MaxDepth} levels deep.",
     "FieldName": "Name",
     "FieldDisplayName": "Display Name",
     "FieldDescription": "Description",

@@ -1,0 +1,64 @@
+@using System
+@using System.Linq
+@using Dignite.Abp.FlexFields
+@using Dignite.Abp.FlexFields.Table
+@using Dignite.Abp.FlexFields.Web
+@* See Matrix.cshtml: this project ships no _ViewImports.cshtml. *@
+@addTagHelper *, Dignite.Abp.FlexFields.Web
+@model Dignite.Abp.FlexFields.Web.FlexFieldViewModel
+@{
+    // Same "recurse through the existing <flex-field-view> dispatch" choice as Matrix.cshtml - one
+    // shared column schema instead of several block types, rendered as a literal <table>.
+    var rows = FlexFieldValueReader.ReadTableRows(Model.Field.Value);
+    var configuration = new TableConfiguration(Model.Field.Configuration);
+}
+@if (Model.ShowInList)
+{
+    @(rows.Count == 0 ? "-" : $"{rows.Count} row(s)")
+}
+else
+{
+    <div class="flex-field flex-field-view flex-field-view-table" data-field-type="@Model.Field.FieldTypeName" data-field-name="@Model.Field.Name">
+        <span class="flex-field-label">@Model.Field.DisplayName</span>
+        @if (rows.Count == 0 || configuration.Columns.Count == 0)
+        {
+            <span class="flex-field-value">-</span>
+        }
+        else
+        {
+            <table class="flex-field-value flex-field-value-table">
+                <thead>
+                    <tr>
+                        @foreach (var column in configuration.Columns)
+                        {
+                            <th>@column.DisplayName</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in rows)
+                    {
+                        <tr>
+                            @foreach (var column in configuration.Columns)
+                            {
+                                row.Values.TryGetValue(column.Name, out var cellValue);
+
+                                var cellData = new FlexFieldData(
+                                    Guid.Empty,
+                                    column.Name,
+                                    column.DisplayName,
+                                    column.FieldTypeName,
+                                    column.Description,
+                                    column.Configuration);
+
+                                var cellFieldValue = new FlexFieldValue(cellData, column.Required, searchable: false, cellValue);
+
+                                <td><flex-field-view field="cellFieldValue" show-in-list="true"></flex-field-view></td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+}

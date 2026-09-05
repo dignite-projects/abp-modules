@@ -16,7 +16,7 @@ import { Type } from '@angular/core';
 export interface FieldTypeDefinition {
   /**
    * Registration key. Must equal the server field type's `Name` — `Text`, `Number`,
-   * `DateTime`, `Select`, `Boolean`, `Tree` for the built-ins.
+   * `DateTime`, `Select`, `Boolean`, `Tree`, `Matrix`, `Table` for the built-ins.
    *
    * These are stored values, not class names. `Text` is served by `TextFieldType` on the server
    * and `TextControlComponent` here; renaming the key would orphan every field already bound to it.
@@ -40,4 +40,21 @@ export interface FieldTypeDefinition {
 
   /** Filters by the field. Absent when the type has no meaningful search UI. */
   searchComponent?: Type<unknown>;
+
+  /**
+   * Whether this type's own configuration declares further fields — the client-side counterpart of
+   * the server's `ICompositeFieldType`. `Matrix` and `Table` are the built-ins that set it.
+   *
+   * Declared by the same package that ships the type, so it is not a host-maintained mirror the way a
+   * copy of `IndexValueType` would be — the package that owns `MatrixConfigComponent` is the same one
+   * that knows a Matrix has sub-fields. It is used for exactly one thing: letting a composite config
+   * editor stop *offering* composite types once {@link MAX_COMPOSITE_NESTING_DEPTH} is reached, rather
+   * than letting an admin build a definition the save will reject. The server's
+   * `CompositeFieldNesting` remains the authority and refuses an over-deep definition regardless of
+   * what this says.
+   *
+   * This does not contradict the "rendering only" rule above: whether a config editor recurses is a
+   * client rendering fact, not a server decision restated here.
+   */
+  composite?: boolean;
 }
