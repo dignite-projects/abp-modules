@@ -9,6 +9,7 @@ export * from './lib/ckeditor-control.component';
 export * from './lib/ckeditor-editor-config';
 export * from './lib/ckeditor-field-type';
 export * from './lib/ckeditor-mode';
+export * from './lib/ckeditor-style';
 export * from './lib/ckeditor-upload-adapter';
 export * from './lib/ckeditor-view.component';
 export * from './lib/provide-ckeditor-field-type';

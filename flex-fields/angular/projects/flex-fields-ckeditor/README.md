@@ -15,6 +15,30 @@ need a rich-text field never pay for its dependency weight. Install this package
 npm install @dignite/ng.flex-fields-ckeditor @ckeditor/ckeditor5-angular ckeditor5 marked
 ```
 
+### Styles
+
+CKEditor 5's UI stylesheet is **served by your host under a fixed name** and fetched the first time a
+`CKEditor` field is rendered, rather than compiled into this package. One entry in the `styles` array
+of your `angular.json` build target:
+
+```json
+{ "input": "node_modules/ckeditor5/dist/ckeditor5.css", "inject": false, "bundleName": "ckeditor5" }
+```
+
+It is the `ckeditor5` you just installed: this package's editor JavaScript also comes from your copy,
+at runtime, so declaring the CSS the same way keeps the two halves on one version instead of pinning
+the stylesheet to whatever version this package was built against. `inject: false` is required, not a
+preference — an injected entry is emitted under a content hash in a production build, which no fixed
+name can find; the [core package's README](https://github.com/dignite-projects/abp-modules/blob/main/flex-fields/angular/projects/flex-fields/README.md#styles) has the full explanation,
+and that section's `ng-zorro-antd-*` entries apply on top of this one if you also use the built-in
+field types.
+
+Without the entry the editor's DOM is still built, but CKEditor's layout never arrives, so the field
+renders as blank/collapsed space — and the browser console carries one error naming the file and
+quoting the entry to add. `DISABLE_FLEX_FIELDS_STYLE_LOADING_TOKEN` (from `@dignite/ng.flex-fields`)
+switches the loading off for an application that already bundles this CSS some other way; it is
+family-wide, so `true` silences the sibling packages' bundles too.
+
 ## Usage
 
 Register it alongside the built-ins, in your application config:

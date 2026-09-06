@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NzSelectModule, NzSelectOptionInterface } from 'ng-zorro-antd/select';
 import { AbstractControl, ReactiveFormsModule } from '@angular/forms';
-import { readStringList } from '../../utils';
+import { FlexFieldsStyleLoader, NZ_SELECT_STYLE, readStringList } from '../../utils';
 import { FieldTypeControlBase } from '../field-type-control-base';
 import { SelectConfiguration } from './select-configuration';
 import { SelectListItem, normalizeSelectListItems } from './select-list-item';
@@ -14,10 +14,17 @@ import { SelectListItem, normalizeSelectListItems } from './select-list-item';
   styleUrls: ['./select-field.component.scss'],
   imports: [CommonModule, ReactiveFormsModule, NzSelectModule],
 })
-export class SelectSearchComponent extends FieldTypeControlBase {
+export class SelectSearchComponent extends FieldTypeControlBase implements OnInit {
+  private readonly styleLoader = inject(FlexFieldsStyleLoader);
+
   private optionsSource: unknown;
   private normalizedOptions: SelectListItem[] = [];
   private selectOptions: NzSelectOptionInterface[] = [];
+
+  /** Same `<nz-select>` stylesheet the control component needs; {@link FlexFieldsStyleLoader} loads it once. */
+  ngOnInit(): void {
+    this.styleLoader.load(NZ_SELECT_STYLE);
+  }
 
   get multiple(): boolean {
     return !!this.fieldValue?.field.configuration['Select.Multiple'];

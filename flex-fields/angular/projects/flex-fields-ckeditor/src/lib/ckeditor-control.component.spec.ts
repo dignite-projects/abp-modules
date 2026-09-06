@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { TestBed } from '@angular/core/testing';
-import { RestService } from '@abp/ng.core';
+import { LazyLoadService, RestService } from '@abp/ng.core';
 import { NgxValidateCoreModule } from '@ngx-validate/core';
-import { FlexFieldValue } from '@dignite/ng.flex-fields';
+import { Observable, of } from 'rxjs';
+import { DISABLE_FLEX_FIELDS_STYLE_LOADING_TOKEN, FlexFieldValue } from '@dignite/ng.flex-fields';
 import type { Editor } from 'ckeditor5';
+import { CKEDITOR5_STYLE } from './ckeditor-style';
 import { CKEditorControlComponent } from './ckeditor-control.component';
 import { CKEditorUploadAdapter } from './ckeditor-upload-adapter';
 
@@ -79,13 +81,29 @@ class OnPushHostComponent {
   @Input() entity!: FormGroup;
 }
 
+/** Records what would have been appended to `<head>` - the same stub style-loader.service.spec.ts uses. */
+class LazyLoadServiceStub {
+  readonly paths: string[] = [];
+
+  load(strategy: { path: string }): Observable<Event> {
+    this.paths.push(strategy.path);
+    return of(new CustomEvent('load'));
+  }
+}
+
 describe('CKEditorControlComponent', () => {
   beforeEach(() => {
     // @ngx-validate/core's validation directive attaches to any [formGroupName]/[formControlName]
     // element and needs its blueprints token even though TestBed.createComponent() never runs CD here
     // - view creation alone is enough to construct it.
+    //
+    // ckeditor5.css is the host application's to serve; no fixture has that bundle, and the load
+    // itself is exercised in the `style loading` block below, which opts back in.
     TestBed.configureTestingModule({
-      providers: [{ provide: RestService, useValue: {} }],
+      providers: [
+        { provide: RestService, useValue: {} },
+        { provide: DISABLE_FLEX_FIELDS_STYLE_LOADING_TOKEN, useValue: true },
+      ],
       imports: [NgxValidateCoreModule.forRoot()],
     });
   });
@@ -215,5 +233,40 @@ describe('CKEditorControlComponent', () => {
     // The Mode -> editor class / ContentFormat -> plugin mapping itself is already covered by
     // ckeditor-editor-config.spec.ts; nothing cheap to add here beyond re-asserting DOM presence, which
     // the test above already does.
+  });
+
+  describe('style loading', () => {
+    let lazyLoadService: LazyLoadServiceStub;
+
+    // Configured after the outer beforeEach, so these providers come later in the testing module's
+    // provider list and win for both tokens: style loading goes back on, and the append is recorded
+    // instead of really reaching <head>.
+    beforeEach(() => {
+      lazyLoadService = new LazyLoadServiceStub();
+      TestBed.configureTestingModule({
+        providers: [
+          { provide: LazyLoadService, useValue: lazyLoadService },
+          { provide: DISABLE_FLEX_FIELDS_STYLE_LOADING_TOKEN, useValue: false },
+        ],
+      });
+    });
+
+    it('asks the host for its ckeditor5.css bundle at init', () => {
+      const { fixture } = build(fieldValue());
+
+      fixture.detectChanges();
+
+      // The literal file name rather than `${CKEDITOR5_STYLE.bundleName}.css`: it is the contract with
+      // the host's angular.json entry, so a rename has to fail here instead of following the constant.
+      expect(lazyLoadService.paths).toEqual(['ckeditor5.css']);
+    });
+
+    it('describes the exact angular.json entry a host has to declare', () => {
+      // Quoted verbatim by this package's README and by the demo's angular.json.
+      expect(CKEDITOR5_STYLE).toEqual({
+        bundleName: 'ckeditor5',
+        input: 'node_modules/ckeditor5/dist/ckeditor5.css',
+      });
+    });
   });
 });

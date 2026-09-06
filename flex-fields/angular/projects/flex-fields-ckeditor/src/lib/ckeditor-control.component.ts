@@ -5,7 +5,8 @@ import { AbstractControl, ReactiveFormsModule, ValidatorFn, Validators } from '@
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import type { EditorRelaxedConstructor } from '@ckeditor/ckeditor5-integrations-common';
 import type { Editor, EditorConfig } from 'ckeditor5';
-import { FieldTypeControlBase } from '@dignite/ng.flex-fields';
+import { FieldTypeControlBase, FlexFieldsStyleLoader } from '@dignite/ng.flex-fields';
+import { CKEDITOR5_STYLE } from './ckeditor-style';
 import { CKEditorContentFormat } from './ckeditor-content-format';
 import { CKEditorMode } from './ckeditor-mode';
 import { buildEditorConfig, resolveEditorClass } from './ckeditor-editor-config';
@@ -28,13 +29,15 @@ import { CKEditorUploadAdapter } from './ckeditor-upload-adapter';
   styleUrl: './ckeditor-control.component.css',
   // CKEditor 5 attaches its balloons/dropdowns to elements outside this component's own template
   // subtree (typically appended near document.body), which Angular's default per-component style
-  // scoping (view encapsulation) would not reach - the imported ckeditor5.css must apply globally
-  // for the editor to render with any layout at all. See ckeditor-control.component.css.
+  // scoping (view encapsulation) would not reach - this file's own theming rules have to apply
+  // globally to reach them. (ckeditor5.css itself is no longer part of these styles: it arrives as a
+  // <link> the host serves, see ngOnInit.) See ckeditor-control.component.css.
   encapsulation: ViewEncapsulation.None,
   imports: [CommonModule, CoreModule, ReactiveFormsModule, CKEditorModule],
 })
 export class CKEditorControlComponent extends FieldTypeControlBase implements OnInit, OnDestroy {
   private readonly restService = inject(RestService);
+  private readonly styleLoader = inject(FlexFieldsStyleLoader);
 
   /**
    * Whether this usage ever had a real stored value - captured here because
@@ -98,6 +101,10 @@ export class CKEditorControlComponent extends FieldTypeControlBase implements On
   // `ignoreChangesOutsideZone`) also still schedules a tick for a signal write made outside the zone,
   // covering (a) without needing `NgZone.run()` at all.
   async ngOnInit(): Promise<void> {
+    // Before the import, not after: the request for the host's ckeditor5.css bundle then goes out in
+    // parallel with the editor's own multi-megabyte chunk instead of queueing behind it.
+    this.styleLoader.load(CKEDITOR5_STYLE);
+
     const module = await import('ckeditor5');
     const configuration = this.fieldValue!.field.configuration;
 

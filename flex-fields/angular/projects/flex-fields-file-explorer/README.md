@@ -16,6 +16,18 @@ package only if you do.
 npm install @dignite/ng.flex-fields-file-explorer @dignite/ng.file-explorer
 ```
 
+### Styles
+
+This package declares no stylesheet of its own. It renders `@dignite/ng.file-explorer`'s picker,
+whose `ngx-datatable` CSS every ABP Angular host already bundles — the three
+`@swimlane/ngx-datatable` entries the ABP startup template puts in `angular.json` — and whose
+`<abp-tree>` loads `ng-zorro-antd-tree.css` itself, by bundle name.
+
+So the `ng-zorro-antd-tree` entry described in the
+[core package's README](https://github.com/dignite-projects/abp-modules/blob/main/flex-fields/angular/projects/flex-fields/README.md#styles) is the one thing to check here; it is the
+same entry the `Tree` field types already need, so a host that has flex-fields' built-in types
+working has nothing to add for this package.
+
 ## Usage
 
 Register it alongside the built-ins, in your application config:
