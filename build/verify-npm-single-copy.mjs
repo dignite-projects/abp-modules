@@ -43,8 +43,9 @@
  *     absolute `file:` path. No expected version is needed: each tarball's own package.json is
  *     ground truth for what "correct" means here.
  *   node build/verify-npm-single-copy.mjs published <expected-version>
- *     Installs every package at <expected-version> from npmjs, retrying while the registry catches
- *     up to a publish this same workflow run just made.
+ *     Waits for the registry to actually serve <expected-version> of every package - a publish this
+ *     same workflow run just made is accepted well before it is served - then installs them all and
+ *     checks the resolved tree.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -250,6 +251,118 @@ const findPackedTarballs = rootDirectory => {
   return byPackage;
 };
 
+const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
+
+/** Same win32 `cmd /c` wrapping as `run`, but capturing stdout instead of inheriting it. */
+const capture = (command, args) => {
+  const executable = process.platform === 'win32' ? (process.env.ComSpec ?? 'cmd.exe') : command;
+  const commandArguments =
+    process.platform === 'win32' ? ['/d', '/s', '/c', command, ...args] : args;
+
+  return execFileSync(executable, commandArguments, {
+    cwd: tempRoot,
+    encoding: 'utf8',
+    env: process.env,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  }).trim();
+};
+
+/** Whatever registry yarn is going to resolve against, rather than a hard-coded npmjs URL - the
+ * release step that runs this points npm at an empty userconfig, so the two agree either way. */
+const registryBaseUrl = () => {
+  let configured = '';
+  try {
+    configured = capture('npm', ['config', 'get', 'registry']);
+  } catch {
+    configured = '';
+  }
+
+  const url = configured && configured !== 'undefined' ? configured : 'https://registry.npmjs.org/';
+  return url.endsWith('/') ? url : `${url}/`;
+};
+
+/** Asks the registry directly whether a version is in a package's packument yet. A 404 means the
+ * package - or, for a first-ever publish, anything under that name - is not being served yet, which
+ * is a "not ready", not an error. */
+const registryServesVersion = async (registry, name, version) => {
+  const response = await fetch(`${registry}${name.replace('/', '%2f')}`, {
+    // The abbreviated packument: the same `versions` map a resolver reads, a fraction of the bytes.
+    headers: { accept: 'application/vnd.npm.install-v1+json', 'cache-control': 'no-cache' },
+    signal: AbortSignal.timeout(15_000),
+  });
+
+  if (response.status === 404) {
+    return false;
+  }
+
+  if (!response.ok) {
+    throw new Error(`registry returned ${response.status} ${response.statusText}`);
+  }
+
+  const packument = await response.json();
+  return Boolean(packument.versions?.[version]);
+};
+
+/**
+ * Blocks until the registry actually serves `expectedVersion` of every package.
+ *
+ * npmjs records a publish asynchronously: `npm publish` returns as soon as the tarball is accepted -
+ * printing "Your package is being processed and may take a few minutes to become available" - and the
+ * version only enters the packument a resolver reads some time after that. On `v10.0.0-rc.16` the gap
+ * was 126 seconds for `@dignite/ng.flex-fields` alone: `npm publish` printed
+ * `+ @dignite/ng.flex-fields@10.0.0-rc.16` at 00:23:04Z, npmjs stamped the version 00:25:10Z, and the
+ * five `yarn install` retries this used to rely on gave up at 00:24:59Z - twelve seconds early. That
+ * failed the release for a race rather than for a duplicate, after every package was already public,
+ * and left the GitHub Release uncreated because it is a later step in the same job.
+ *
+ * Retrying `yarn install` is the wrong instrument for this: yarn aborts on the first name it cannot
+ * resolve, so its exit code cannot distinguish "one of five is still propagating" from "the published
+ * set is broken", and each attempt burns a full resolution pass before sleeping. Waiting on the
+ * registry itself makes that distinction structural - past this point, a `yarn install` failure is
+ * about resolution, which is the only thing this check is qualified to judge.
+ */
+const waitForPublishedVersions = async expectedVersion => {
+  const registry = registryBaseUrl();
+  const timeoutSeconds = Number(process.env.DIGNITE_NPM_PROPAGATION_TIMEOUT_SECONDS ?? 900);
+  const pollSeconds = 10;
+  const deadline = Date.now() + timeoutSeconds * 1000;
+  const pending = new Set(packages);
+
+  console.log(
+    `Waiting up to ${timeoutSeconds}s for ${registry} to serve ${expectedVersion} of all ${packages.length} @dignite packages.`,
+  );
+
+  for (;;) {
+    for (const name of [...pending]) {
+      try {
+        if (await registryServesVersion(registry, name, expectedVersion)) {
+          pending.delete(name);
+          console.log(`  serving ${name}@${expectedVersion}`);
+        }
+      } catch (error) {
+        console.log(`  ${name}: registry lookup failed (${error.message}); will ask again.`);
+      }
+    }
+
+    if (pending.size === 0) {
+      console.log(`All ${packages.length} packages are being served at ${expectedVersion}.`);
+      return;
+    }
+
+    if (Date.now() >= deadline) {
+      throw new Error(
+        `${registry} still does not serve ${expectedVersion} of: ${[...pending].sort().join(', ')} - ` +
+          `${timeoutSeconds}s after this run published them.\n` +
+          'This is registry propagation, not the duplicate this check looks for, and nothing needs ' +
+          're-publishing: re-run this step once npmjs has caught up, and raise ' +
+          'DIGNITE_NPM_PROPAGATION_TIMEOUT_SECONDS if it keeps timing out.',
+      );
+    }
+
+    await sleep(pollSeconds * 1000);
+  }
+};
+
 const runPackedMode = rootDirectory => {
   const tarballs = findPackedTarballs(rootDirectory);
 
@@ -299,7 +412,7 @@ const runPackedMode = rootDirectory => {
   reportOrThrow(problems, 'each at the version its own packed tarball declares');
 };
 
-const runPublishedMode = expectedVersion => {
+const runPublishedMode = async expectedVersion => {
   writeFileSync(
     join(tempRoot, 'package.json'),
     `${JSON.stringify(
@@ -315,10 +428,14 @@ const runPublishedMode = expectedVersion => {
     )}\n`,
   );
 
+  await waitForPublishedVersions(expectedVersion);
+
   // --ignore-scripts: nothing here is built or run, only resolved. --non-interactive so a prompt
-  // cannot hang the release job. Retried because npmjs needs a moment to serve a version that this
-  // same workflow run has only just published.
-  const attempts = 5;
+  // cannot hang the release job. The handful of retries left is for a genuine transient - a CDN edge
+  // lagging the packument the wait above just read, a dropped connection - and no longer for
+  // propagation, which is now waited out explicitly against the registry. A real duplicate fails
+  // identically on every attempt, so retrying this few times cannot hide one.
+  const attempts = 3;
   for (let attempt = 1; ; attempt++) {
     try {
       run('npx', ['--yes', 'yarn@1', 'install', '--ignore-scripts', '--non-interactive', '--no-progress']);
@@ -328,10 +445,8 @@ const runPublishedMode = expectedVersion => {
         throw error;
       }
       const delaySeconds = attempt * 10;
-      console.log(
-        `yarn install failed (attempt ${attempt}/${attempts}); retrying in ${delaySeconds}s in case npmjs has not served the new version yet.`,
-      );
-      execFileSync(process.execPath, ['-e', `setTimeout(() => {}, ${delaySeconds * 1000})`]);
+      console.log(`yarn install failed (attempt ${attempt}/${attempts}); retrying in ${delaySeconds}s.`);
+      await sleep(delaySeconds * 1000);
     }
   }
 
@@ -348,7 +463,7 @@ try {
     if (!expectedVersion) {
       usageError();
     }
-    runPublishedMode(expectedVersion);
+    await runPublishedMode(expectedVersion);
   }
 } finally {
   rmSync(tempRoot, { recursive: true, force: true });

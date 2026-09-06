@@ -13,6 +13,35 @@ Because releases are lockstep, a version may contain changes to only one module 
 packages are still republished at that version with unchanged content. Entries are grouped by module
 so it stays clear which part of the repository actually moved.
 
+## [Unreleased]
+
+### Fixed
+
+- **A tagged release could fail *after* publishing everything, purely because npmjs had not finished
+  serving what it had just accepted.** `v10.0.0-rc.16` pushed all the NuGet packages and all five
+  Angular packages successfully, then failed at "Verify published packages install as a single copy
+  each" with `Couldn't find any versions for "@dignite/ng.flex-fields" that matches "^10.0.0-rc.16"` -
+  and because "Create draft GitHub Release" is a later step in the same job, the release was left
+  half-cut: every package public, no GitHub Release, no release notes, no attached artifacts. npmjs
+  records a publish asynchronously: `npm publish` returns as soon as the tarball is accepted, printing
+  "Your package is being processed and may take a few minutes to become available", while the version
+  enters the packument a resolver reads some time later. For `@dignite/ng.flex-fields` that gap was
+  126 seconds - `npm publish` printed `+ @dignite/ng.flex-fields@10.0.0-rc.16` at 00:23:04Z, npmjs's
+  own timestamp for the version is 00:25:10Z - and `verify-npm-single-copy.mjs`'s `published` mode
+  gave up at 00:24:59Z, twelve seconds early: five `yarn install` attempts spaced 10/20/30/40s apart,
+  roughly 100 seconds of budget against a window npm itself describes in minutes. Enlarging that
+  budget would not have been the fix, because retrying `yarn install` is the wrong instrument for
+  this: yarn aborts on the first name it cannot resolve, so its exit code cannot distinguish "one of
+  five is still propagating" from "the published set is broken", and each attempt spends a full
+  resolution pass to learn nothing. `published` mode now polls the registry's own abbreviated
+  packument for each of the five packages until every one serves the expected version - 15 minutes by
+  default, `DIGNITE_NPM_PROPAGATION_TIMEOUT_SECONDS` to override - logging each package as it appears,
+  and installs only then. Past that point a `yarn install` failure is about resolution, which is the
+  only thing this check is qualified to judge; the three retries left are for a genuine transient such
+  as a CDN edge lagging the packument just read, and a real duplicate fails identically on every
+  attempt, so it cannot be retried away. A propagation timeout now says so in those words, to stop a
+  future reader from re-diagnosing it as the duplicate of issue #211.
+
 ## [10.0.0-rc.16] - 2026-09-05
 
 ### Fixed
