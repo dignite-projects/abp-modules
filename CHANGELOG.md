@@ -42,6 +42,44 @@ so it stays clear which part of the repository actually moved.
   attempt, so it cannot be retried away. A propagation timeout now says so in those words, to stop a
   future reader from re-diagnosing it as the duplicate of issue #211.
 
+### Added
+
+#### flex-fields
+
+- **The `Select` field types now load their `ng-zorro-antd` stylesheet themselves, by bundle name,
+  exactly the way `abp-tree` loads its own.** ng-zorro-antd ships no component styles, so `<nz-select>`
+  had been rendering against whatever antd CSS a host happened to have declared. `SelectControlComponent`
+  and `SelectSearchComponent` now ask for `ng-zorro-antd-select.css` once per application at init; a
+  host serves it with a single `angular.json` `styles` entry —
+  `node_modules/ng-zorro-antd/select/style/index.min.css`, `inject: false`,
+  `bundleName: "ng-zorro-antd-select"` — and can switch the loading off with the new
+  `DISABLE_FLEX_FIELDS_STYLE_LOADING_TOKEN` when it bundles that CSS another way. A host that has not
+  declared the entry now gets one console error naming the missing file and quoting the entry to add,
+  rather than a silently unstyled control. Shipping an aggregated stylesheet inside the package was
+  considered and rejected on two counts: ng-zorro-antd declares `less` before `style` in its
+  `./<component>/style/*` export, so a bare `@import 'ng-zorro-antd/select/style/index.min.css'`
+  resolves to a non-existent `index.min.css.less` under the Angular CLI's stylesheet bundler, and
+  freezing a copy of a peer dependency's CSS into this package's release cycle is not an acceptable
+  substitute. The demo's dead `ng-zorro-antd-tree-select` entry went with it — nothing renders
+  `nz-tree-select`. See the package README's new "Styles" section for the host-side contract. (#232)
+- **`@dignite/ng.flex-fields-ckeditor` loads CKEditor 5's stylesheet the same way, through the same
+  loader.** `FlexFieldsStyleLoader` is shared across the package family; each package declares its own
+  bundle constant. The bolt-on used to `@import 'ckeditor5/ckeditor5.css'` from its control
+  component's stylesheet, which ng-packagr inlined at build time: 241 KB of third-party CSS compiled
+  into the published `fesm2022` bundle (471 KB, 522 `.ck-editor` rules) and, because a host registers
+  the field type in its application config, shipped in that host's *initial* bundle whether or not a
+  rich-text field was ever opened — while pinning the CSS to whatever `ckeditor5` version the package
+  was built against, though the editor's own JavaScript comes from the host's installed copy via
+  `await import('ckeditor5')`. `CKEditorControlComponent` now asks for the host's `ckeditor5` bundle at
+  init: one `angular.json` `styles` entry — `node_modules/ckeditor5/dist/ckeditor5.css`,
+  `inject: false`, `bundleName: "ckeditor5"`, exported as `CKEDITOR5_STYLE`. The bolt-on's bundle drops
+  to 36 KB and this repo's demo from a 2.20 MB initial bundle to 1.98 MB (483 kB to 455 kB
+  transferred), back under the 2 MB budget the build had been warning about. A host that has not
+  declared the entry gets one console error naming the file and quoting the entry, instead of an editor
+  that silently renders as blank/collapsed space. `DISABLE_FLEX_FIELDS_STYLE_LOADING_TOKEN` is
+  family-wide: `true` silences every bundle loaded through this service, in every
+  `@dignite/ng.flex-fields*` package. (#232)
+
 ## [10.0.0-rc.16] - 2026-09-05
 
 ### Fixed

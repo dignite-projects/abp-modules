@@ -1,22 +1,44 @@
-/* CKEditor 5's own UI framework CSS. Without this, the toolbar/editable DOM CKEditor builds at
-   runtime is completely unstyled and typically renders as blank/collapsed space - no console error,
-   since nothing is actually broken, it just has no visual layout. Component-scoped rather than
-   pushed onto every consumer's global styles.css, which is easy to forget (this is a fix for exactly
-   that oversight) - see the ViewEncapsulation.None on this component's @Component decorator, required
-   because CKEditor attaches balloons/dropdowns outside this component's own template subtree, where
-   Angular's default per-component style scoping would not reach them. */
-@import 'ckeditor5/ckeditor5.css';
+/* CKEditor 5's own UI framework CSS is deliberately NOT part of this file. It used to be - an
+   `@import 'ckeditor5/ckeditor5.css'` on this line - and ng-packagr inlined it at build time, so
+   241 KB of third-party CSS was compiled into this package's JavaScript (a 471 KB fesm bundle
+   carrying 522 .ck-editor rules) and, because a host registers the field type in its application
+   config, shipped in that host's initial bundle whether or not a rich-text field was ever opened. It
+   also pinned the CSS to whatever ckeditor5 version this package was built against, while the editor
+   itself comes from the host's own installed copy via `await import('ckeditor5')` at runtime.
 
-/* CKEditor 5's balloon/dropdown panels (InlineEditor's floating toolbar, link/table pickers, etc.)
-   attach to a wrapper appended directly under <body> (see the import's own comment) and default to
-   z-index 1000 (--ck-z-default: 1, --ck-z-panel: default + 999). ng-bootstrap's modal window sits at
-   1055 - higher - so any of those panels opened while a CKEditor is inside an <abp-modal> or similar
-   ng-bootstrap dialog render fully in-DOM and CSS-"visible", but painted underneath the modal, i.e.
-   invisible to the user despite every element reporting visible/opacity:1. Raising the base above any
-   Bootstrap-derived dialog z-index (Bootstrap's own scale tops out at 1080) fixes every derived panel
-   at once; harmless when no modal is present since there is nothing competing for the stacking order. */
+   The host now serves that file under the fixed bundle name `ckeditor5` and
+   CKEditorControlComponent.ngOnInit asks for it by name - see CKEDITOR5_STYLE, the
+   FlexFieldsStyleLoader it goes through, and this package's README for the single angular.json entry
+   a host adds. A host that forgets the entry gets one console error naming the file and quoting the
+   entry; the editor's DOM is still built, it just renders as blank/collapsed space until the
+   stylesheet arrives.
+
+   What remains here is this package's own theming on top of that CSS. It stays unscoped
+   (ViewEncapsulation.None on the component - CKEditor attaches balloons/dropdowns outside this
+   component's template subtree, where per-component style scoping would not reach them), and every
+   rule below had to survive the ordering reversal the move caused: ckeditor5.css used to be the
+   first thing in this stylesheet and therefore lost every equal-specificity tie to the rules under
+   it; it now arrives as a <link> appended to <head> after Angular has inserted these styles, so at
+   equal specificity it wins instead. Each !important below names the upstream declaration it exists
+   to outrank. */
+
+/* CKEditor 5's balloon/dropdown panels (BalloonEditor's floating toolbar, link/table pickers, etc.)
+   attach to a wrapper appended directly under <body> and default to z-index 1000 (--ck-z-default: 1,
+   --ck-z-panel: default + 999). ng-bootstrap's modal window sits at 1055 - higher - so any of those
+   panels opened while a CKEditor is inside an <abp-modal> or similar ng-bootstrap dialog render fully
+   in-DOM and CSS-"visible", but painted underneath the modal, i.e. invisible to the user despite every
+   element reporting visible/opacity:1. Raising the base above any Bootstrap-derived dialog z-index
+   (Bootstrap's own scale tops out at 1080) fixes every derived panel at once; harmless when no modal
+   is present since there is nothing competing for the stacking order.
+
+   !important: ckeditor5.css sets `--ck-z-default: 1` on a bare `:root` of its own - the same selector
+   at the same specificity - and now arrives after this stylesheet, so without it the stock 1 wins and
+   every panel goes back to painting under the modal. The only other upstream declaration of this
+   token is `html.ck-fullscreen, body.ck-fullscreen`, which this !important would also outrank; that
+   rule belongs to CKEditor's Fullscreen plugin, which buildEditorConfig never registers, so it cannot
+   apply here - a fork that adds that plugin has to revisit this line. */
 :root {
-  --ck-z-default: 1100;
+  --ck-z-default: 1100 !important;
 }
 
 /* CKEditor 5 ships no dark-mode palette: ckeditor5.css's own :root block hardcodes the four base
@@ -87,10 +109,9 @@
      hover/active fill that is always a translucent tint of the current text color, correct in both
      modes without a per-mode value of its own.
 
-   !important on every property: ckeditor5.css's own :root block is only injected once a CKEditor field
-   is first opened (its multi-megabyte payload is dynamic-imported - see
-   CKEditorControlComponent.ngOnInit), i.e. after this stylesheet - at equal :root specificity, source
-   order alone would otherwise let its stock light-mode palette win. Same reasoning as the
+   !important on every property: ckeditor5.css declares all six of these tokens on a bare `:root` of
+   its own - the same specificity as this block's `:root` half - and now arrives after this
+   stylesheet, so source order alone would let its stock light-mode palette win. Same reasoning as the
    --ck-content-font-color override further down this file. */
 :root,
 body {
@@ -113,13 +134,37 @@ body {
    sets a real border/background unconditionally, focused or not. Reusing those same custom properties
    here (rather than hardcoding colors) keeps Basic and Full visually consistent and both track
    whatever theme is active. Unscoped like the z-index override above, for the same reason
-   (ViewEncapsulation.None - this file is already global by design). */
+   (ViewEncapsulation.None - this file is already global by design).
+
+   No !important on the background: nothing upstream sets background or background-color on
+   .ck.ck-editor__editable_inline itself, so there is no equal-specificity tie for source order to
+   decide. The one higher-specificity background rule that reaches an editable,
+   ".ck.ck-editor__main > .ck-editor__editable", is Full-mode-only and resolves to the very same
+   var(--ck-color-base-background) this line does - it won before the move and still wins, to no
+   visible difference. */
 .ck.ck-editor__editable_inline {
   background: var(--ck-color-base-background);
-  border-color: var(--ck-color-base-border);
 }
 
-/* ckeditor5-content.css hard-codes --ck-content-font-color to #000, entirely independent of
+/* The border half of the rule above, deliberately split out and narrowed to the unfocused state.
+
+   It needs to outrank ckeditor5.css's own ".ck.ck-editor__editable_inline { border: 1px solid #0000 }"
+   - identical specificity, and the shorthand resets border-color, so after the move it would silently
+   win and put the invisible border back. It must NOT outrank
+   ".ck.ck-editor__editable:not(.ck-editor__nested-editable).ck-focused { border: var(--ck-focus-ring) }",
+   which is how a focused editable (Basic and Full alike) gets its blue focus ring: a blanket
+   `border-color: … !important` at this specificity would beat that rule too and flatten the focus ring
+   to a plain grey border. `:not(.ck-focused)` is the right narrowing rather than a workaround - this
+   rule was always about the unfocused state, which is the one that reads as blank space - and it also
+   makes the declaration outrank the upstream shorthand on specificity alone, with !important left in
+   as the same belt-and-braces the tokens above use. The only other unfocused-editable border-color
+   upstream, ".ck.ck-editor__main > .ck-editor__editable:not(.ck-focused)", resolves to the same
+   var(--ck-color-base-border) as this line, so outranking it changes nothing visible. */
+.ck.ck-editor__editable_inline:not(.ck-focused) {
+  border-color: var(--ck-color-base-border) !important;
+}
+
+/* ckeditor5.css hard-codes --ck-content-font-color to #000, entirely independent of
    --ck-color-base-text above - asymmetric with .ck-content's own *background*, which has none of
    its own and simply inherits whatever --ck-color-base-background resolves to (the rule above is
    what makes that visible for Basic mode's editable; Full mode gets it unconditionally from
@@ -129,9 +174,13 @@ body {
    Repointing the content token at the same base-text token closes that gap generically, off a token
    this file already sets above - no further host-specific variable knowledge needed here beyond the
    Bootstrap/LeptonX fallback chain the dark-theme block above already documents.
-   !important: ckeditor5-content.css loads later than this file - bundled with the dynamic
-   import('ckeditor5') in ngOnInit, not the static @import above - so at equal :root specificity,
-   source order would otherwise let its own #000 default win. Declared on the same `:root, body`
+
+   The .ck-content rules come from the same host-served ckeditor5.css as everything else: the dist
+   ships ckeditor5-editor.css and ckeditor5-content.css separately, but ckeditor5.css is the two
+   concatenated, and dist/ckeditor5.js imports no CSS at all - so nothing about .ck-content ever
+   arrived with the dynamic import('ckeditor5'), contrary to what this comment used to claim. That one
+   file, appended to <head> after Angular has inserted these styles, is what !important is for here:
+   at equal :root specificity its own #000 would otherwise win. Declared on the same `:root, body`
    pair as the block above, for the same reason. */
 :root,
 body {

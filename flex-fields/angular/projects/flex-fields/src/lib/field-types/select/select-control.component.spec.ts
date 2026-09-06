@@ -1,6 +1,7 @@
 import { FormGroup, Validators } from '@angular/forms';
 import { TestBed } from '@angular/core/testing';
 import { FlexFieldValue } from '../../models';
+import { DISABLE_FLEX_FIELDS_STYLE_LOADING_TOKEN } from '../../utils';
 import { SelectControlComponent } from './select-control.component';
 
 const OPTIONS = [
@@ -38,6 +39,14 @@ function render(field: FlexFieldValue, selected?: unknown) {
 }
 
 describe('SelectControlComponent', () => {
+  // The ng-zorro-antd stylesheet is the host application's to serve; a fixture has no such bundle,
+  // and the load is exercised in style-loader.service.spec.ts instead.
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [{ provide: DISABLE_FLEX_FIELDS_STYLE_LOADING_TOKEN, useValue: true }],
+    });
+  });
+
   it('renders a native select in single mode', () => {
     const { fixture } = render(fieldValue());
     expect(fixture.nativeElement.querySelector('select')).toBeTruthy();

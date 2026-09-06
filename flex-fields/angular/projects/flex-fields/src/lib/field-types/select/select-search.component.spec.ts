@@ -1,6 +1,7 @@
 import { FormGroup, Validators } from '@angular/forms';
 import { TestBed } from '@angular/core/testing';
 import { FlexFieldValue } from '../../models';
+import { DISABLE_FLEX_FIELDS_STYLE_LOADING_TOKEN } from '../../utils';
 import { SelectSearchComponent } from './select-search.component';
 
 const OPTIONS = [
@@ -38,6 +39,13 @@ function render(field: FlexFieldValue, selected?: unknown) {
 }
 
 describe('SelectSearchComponent', () => {
+  // See select-control.component.spec.ts: no fixture has an ng-zorro-antd style bundle to fetch.
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [{ provide: DISABLE_FLEX_FIELDS_STYLE_LOADING_TOKEN, useValue: true }],
+    });
+  });
+
   it('uses the stored value in single mode', () => {
     const { values } = render(fieldValue(), 'red');
     expect(values.get('color')!.value).toBe('red');
