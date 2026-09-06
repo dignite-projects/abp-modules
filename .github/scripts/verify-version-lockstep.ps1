@@ -22,16 +22,19 @@ $angularPackages = @(
 )
 
 # Every package above ships from this repository at one lockstep version, so a dependency between
-# any two of them must name that same version. Left to drift, an adapter goes on declaring a range
-# wide enough to admit an older sibling -- "^10.0.0-rc.4" long after everything ships 10.0.0-rc.13,
-# say -- and a consumer's resolver is free to satisfy it with that older sibling rather than
+# any two of them must pin that exact version -- never a "^" range. These packages can never diverge
+# from each other (they always release together, at the same version, from the same commit), so there
+# is no second, still-compatible version a range would ever need to admit. What a range used to buy
+# instead was risk: one wide enough to admit an older sibling -- "^10.0.0-rc.4" long after everything
+# ships 10.0.0-rc.13, say -- lets a consumer's resolver satisfy it with that older sibling rather than
 # deduplicating against the copy already at the root. That is not a wasted-bytes problem. Angular DI
 # keys off object identity, and FLEX_FIELD_TYPES is a module-scoped InjectionToken, so two copies of
 # @dignite/ng.flex-fields are two distinct DI keys: provideCKEditorFieldType() registers into one
 # while FieldTypeResolver reads the other, and every field type looks unregistered at runtime with
 # nothing having failed at install or build time. Yarn Classic reaches exactly that resolution
 # whenever npm's latest tag sits on an older version than the newest published one. See issue #211.
-$expectedRange = "^$dotnetVersion"
+# An exact pin removes the range entirely, so there is nothing left for a resolver to misjudge.
+$expectedVersionString = $dotnetVersion
 
 foreach ($relativePath in $angularPackages) {
     $packagePath = Join-Path $repositoryRoot $relativePath
@@ -51,8 +54,8 @@ foreach ($relativePath in $angularPackages) {
                 continue
             }
 
-            if ($dependency.Value -ne $expectedRange) {
-                throw "Angular package '$($package.name)' ($relativePath) declares $section '$($dependency.Name)': '$($dependency.Value)', but a dependency on another package from this repository must track the release version ('$expectedRange'). See issue #211."
+            if ($dependency.Value -ne $expectedVersionString) {
+                throw "Angular package '$($package.name)' ($relativePath) declares $section '$($dependency.Name)': '$($dependency.Value)', but a dependency on another package from this repository must pin the exact release version ('$expectedVersionString'), not a range. See issue #211."
             }
         }
     }
