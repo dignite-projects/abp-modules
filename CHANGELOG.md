@@ -80,6 +80,23 @@ so it stays clear which part of the repository actually moved.
   family-wide: `true` silences every bundle loaded through this service, in every
   `@dignite/ng.flex-fields*` package. (#232)
 
+### Fixed
+
+#### flex-fields
+
+- **`DateTimeViewComponent`, the read-only view for `DateTime` fields, ignored the field's
+  `DateTime.InputMode` configuration and always rendered `value | shortDateTime`.** A field configured
+  for `InputMode = Date` or `InputMode = Month` therefore showed a spurious time part in every
+  read-only context — a bare field, or a `Table` column rendered through `ff-table-view`, which
+  dispatches to this same component via `ff-flex-field-view`. The edit-mode counterpart,
+  `DateTimeControlComponent`, already read `configuration['DateTime.InputMode']`, looked up the
+  matching Angular `DatePipe` format string in `DATE_INPUT_MODE_FORMATS`, and formatted with it — the
+  view component never did the same lookup despite receiving the same `field.configuration` on its
+  `fields` input. `DateTimeViewComponent` now performs that lookup itself, injecting `DatePipe` the
+  same way, and falls back to the `shortDateTime` pipe only when no `fields` input is bound or the
+  configured mode isn't in the table, so existing usages that never pass `field.configuration` keep
+  rendering exactly as before.
+
 ## [10.0.0-rc.16] - 2026-09-05
 
 ### Fixed
