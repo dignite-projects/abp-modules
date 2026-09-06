@@ -7,18 +7,29 @@
   </PropertyGroup>
 
   <!--
-    Security pins for vulnerable transitive dependencies. Microsoft.EntityFrameworkCore.Sqlite
-    (via Volo.Abp.EntityFrameworkCore.Sqlite 10.5.0) still bundles SQLitePCLRaw 2.1.11, which
-    ships a SQLite older than 3.50.2 (GHSA-2m69-gcr7-jv3q / CVE-2025-6965). 2.1.12 is the first
-    build past that advisory; pin the whole family so they stay on one version. Remove once the
-    EF Core SQLite provider rolls its bundle forward on its own. (Carried over from
-    abp-file-storing; abp-notifications had no equivalent pin.)
+    Security pins for vulnerable transitive dependencies. Each entry lifts a package that the ABP /
+    EF Core graph resolves transitively to its first patched release; drop it once upstream rolls
+    forward past the advisory on its own. The 3 demo hosts opt out of central package management and
+    carry their own inline copies of these pins - keep the two sets in sync.
+
+    SQLitePCLRaw: Microsoft.EntityFrameworkCore.Sqlite (via Volo.Abp.EntityFrameworkCore.Sqlite
+    10.5.0) still bundles SQLitePCLRaw 2.1.11, which ships a SQLite older than 3.50.2
+    (GHSA-2m69-gcr7-jv3q / CVE-2025-6965). 2.1.12 is the first build past that advisory; pin the
+    whole family so they stay on one version. Only ever reaches test projects and the hosts, never a
+    packable library. (Carried over from abp-file-storing; abp-notifications had no equivalent pin.)
+
+    Scriban: Volo.Abp.TextTemplating.Scriban 10.5.0 resolves Scriban 7.2.1, which carries a
+    high-severity advisory (GHSA-7jvp-hj45-2f2m). Unlike the SQLitePCLRaw pin this one does reach a
+    packable library - Volo.Abp.Emailing -> Dignite.Abp.Notifications.Emailing - so transitive
+    pinning promotes Scriban into that package's published dependency list. That is the intent:
+    consumers resolve the patched version too. 7.2.7 is what the 3 hosts already pin inline.
   -->
   <ItemGroup Label="Security-patched transitive dependencies">
     <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" />
     <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
     <PackageVersion Include="SQLitePCLRaw.core" Version="2.1.12" />
     <PackageVersion Include="SQLitePCLRaw.provider.e_sqlite3" Version="2.1.12" />
+    <PackageVersion Include="Scriban" Version="7.2.7" />
   </ItemGroup>
 
   <ItemGroup Label="ABP 10.5.0">
