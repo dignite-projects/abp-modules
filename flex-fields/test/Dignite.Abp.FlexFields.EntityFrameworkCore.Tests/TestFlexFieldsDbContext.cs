@@ -8,7 +8,8 @@ namespace Dignite.Abp.FlexFields.EntityFrameworkCore;
 /// <summary>
 /// Plays the role of a downstream host's own DbContext (e.g. a CMS's <c>CmsDbContext</c>). It owns the
 /// tables, the keys, the foreign keys, the indexes and the migrations; it calls the kernel's
-/// <see cref="EntityTypeBuilder{TEntity}"/> extensions from inside builder blocks it opened itself -
+/// <see cref="Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{TEntity}"/> extensions
+/// from inside builder blocks it opened itself -
 /// the same posture ABP's Identity/CmsKit take with <c>ConfigureAbpUser()</c>.
 /// <para>
 /// <see cref="ReplaceDbContextAttribute"/> is what makes <c>IDbContextProvider&lt;T&gt;</c> resolve the

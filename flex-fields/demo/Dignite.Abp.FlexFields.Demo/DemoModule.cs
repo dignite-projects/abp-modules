@@ -48,7 +48,6 @@ using Volo.Abp.MultiTenancy;
 using Volo.Abp.PermissionManagement;
 using Volo.Abp.PermissionManagement.HttpApi;
 using Volo.Abp.PermissionManagement.Identity;
-using Volo.Abp.SettingManagement;
 using Volo.Abp.Swashbuckle;
 using Volo.Abp.UI.Navigation.Urls;
 using Volo.Abp.Validation.Localization;
@@ -519,10 +518,15 @@ public class DemoModule : AbpModule
         app.UseAuthentication();
         app.UseAbpOpenIddictValidation();
 
+        // IsMultiTenant is a deliberate on/off toggle (ABP template convention, see its declaration
+        // above) - flipping it back to true makes this branch reachable again, so it stays rather
+        // than being deleted as dead code.
+#pragma warning disable CS0162
         if (IsMultiTenant)
         {
             app.UseMultiTenancy();
         }
+#pragma warning restore CS0162
 
         app.UseUnitOfWork();
         app.UseDynamicClaims();

@@ -7,9 +7,9 @@ namespace Dignite.Abp.FileStoring;
 public class ContainerNameValidator : ITransientDependency
 {
     private const string DefaultContainerName = "default";
-    private readonly IBlobContainerConfigurationProvider _configurationProvider;
+    private readonly IBlobContainerConfigurationProvider? _configurationProvider;
 
-    public ContainerNameValidator(IBlobContainerConfigurationProvider configurationProvider = null)
+    public ContainerNameValidator(IBlobContainerConfigurationProvider? configurationProvider = null)
     {
         _configurationProvider = configurationProvider;
     }

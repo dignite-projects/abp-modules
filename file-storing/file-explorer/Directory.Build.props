@@ -1,0 +1,19 @@
+<Project>
+
+  <!-- MSBuild imports only the NEAREST Directory.Build.props per project and stops walking up, so
+       this file must explicitly import file-storing/Directory.Build.props to inherit the shared
+       settings from there and the repo root. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <!-- file-explorer predates the repo-wide <Nullable>enable</Nullable> (added 2026-07-24) and has
+       never been annotated for it: every one of its ~110 CS86xx warnings is pre-existing code the
+       flow-analysis pass now has an opinion about, not a new bug. `annotations` keeps `?` legal
+       (file-storing/core already uses it, e.g. ContainerNameValidator) without the flow-analysis
+       warnings on code nobody has audited for nullability yet. Scoped to this subtree only -
+       file-storing/core and file-storing/host stay on the repo-wide `enable`. Annotate file-explorer
+       properly and drop this override if it's ever worth the effort. -->
+  <PropertyGroup>
+    <Nullable>annotations</Nullable>
+  </PropertyGroup>
+
+</Project>

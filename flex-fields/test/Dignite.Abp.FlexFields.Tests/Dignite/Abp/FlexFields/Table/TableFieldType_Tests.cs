@@ -68,7 +68,7 @@ public class TableFieldType_Tests : DigniteAbpFlexFieldsTestBase
         error.MemberNames.ShouldBe(new[] { field.Name });
         // Localization really resolved - not left as the raw key.
         error.ErrorMessage.ShouldNotBe("Validate:Required");
-        error.ErrorMessage.ShouldContain(field.DisplayName);
+        error.ErrorMessage!.ShouldContain(field.DisplayName);
     }
 
     [Fact]
@@ -95,9 +95,9 @@ public class TableFieldType_Tests : DigniteAbpFlexFieldsTestBase
         error.ErrorMessage.ShouldNotBe("Validate:Table:RowError");
         // "{0}: row {1}, column '{2}': {3}" - the field label, the 1-based row index, the column's own
         // label, and the inner Required message the Text field type produced.
-        error.ErrorMessage.ShouldContain(field.DisplayName);
-        error.ErrorMessage.ShouldContain("1");
-        error.ErrorMessage.ShouldContain("Spec Name");
+        error.ErrorMessage!.ShouldContain(field.DisplayName);
+        error.ErrorMessage!.ShouldContain("1");
+        error.ErrorMessage!.ShouldContain("Spec Name");
     }
 
     /// <summary>
@@ -121,7 +121,7 @@ public class TableFieldType_Tests : DigniteAbpFlexFieldsTestBase
 
         var error = _fieldType.Validate(new FieldValidationArgs(field)).ShouldHaveSingleItem();
 
-        error.ErrorMessage.ShouldContain("NoSuchFieldType");
+        error.ErrorMessage!.ShouldContain("NoSuchFieldType");
     }
 
     /// <summary>One required Text column, <c>name</c>.</summary>

@@ -21,7 +21,7 @@ public static class FieldConfigurationDictionaryExtensions
                ?? defaultValue;
     }
 
-    public static TConfiguration GetConfiguration<TConfiguration>(this FieldConfigurationDictionary source, string name, TConfiguration defaultValue = default)
+    public static TConfiguration GetConfiguration<TConfiguration>(this FieldConfigurationDictionary source, string name, TConfiguration defaultValue = default!)
     {
         var value = source.GetConfiguration(name);
         if (value == null)
@@ -73,7 +73,7 @@ public static class FieldConfigurationDictionaryExtensions
             }
 
             return JsonSerializer.Deserialize<TConfiguration>(
-                JsonSerializer.Serialize(value), new JsonSerializerOptions(JsonSerializerDefaults.Web));
+                JsonSerializer.Serialize(value), new JsonSerializerOptions(JsonSerializerDefaults.Web)) ?? defaultValue;
         }
 
     }
@@ -83,7 +83,7 @@ public static class FieldConfigurationDictionaryExtensions
         string name,
         TConfiguration value)
     {
-        source[name] = value;
+        source[name] = value!;
     }
 
     public static void RemoveConfiguration(this FieldConfigurationDictionary source, string name)

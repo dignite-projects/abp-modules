@@ -31,10 +31,14 @@ public static class FlexFieldEntityPager
     /// Applies <paramref name="process"/> to every entity, calling <paramref name="flushPage"/> at the end of
     /// any page it reported a change on, and returns how many entities it changed.
     /// </summary>
+    /// <param name="provider">Supplies the pages of host entities to walk.</param>
+    /// <param name="pageSize">How many entities to request per page.</param>
     /// <param name="process">
     /// Handles one entity and reports whether it changed anything. Returning <c>false</c> for a whole page
     /// skips that page's flush entirely, so an operation that is already a no-op costs only its reads.
     /// </param>
+    /// <param name="flushPage">Persists whatever <paramref name="process"/> changed on the current page.</param>
+    /// <param name="cancellationToken">Cancels the walk between entities and between pages.</param>
     public static async Task<int> ForEachPageAsync<TEntity>(
         IFlexFieldProvider<TEntity> provider,
         int pageSize,

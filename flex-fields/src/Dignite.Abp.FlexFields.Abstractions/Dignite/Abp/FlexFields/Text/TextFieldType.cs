@@ -19,9 +19,10 @@ public class TextFieldType : FieldTypeBase
         var configuration = new TextConfiguration(args.Field.Configuration);
         var errors = new List<ValidationResult>();
 
-        if (args.Field.Value != null && !args.Field.Value.ToString().IsNullOrWhiteSpace())
+        var textValue = args.Field.Value?.ToString();
+        if (!textValue.IsNullOrWhiteSpace())
         {
-            if (configuration.CharLimit < args.Field.Value.ToString().Length)
+            if (configuration.CharLimit < textValue.Length)
             {
                 errors.Add(
                     new ValidationResult(

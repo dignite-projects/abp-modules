@@ -78,8 +78,8 @@ public class OpenIddictDataSeedContributor : OpenIddictDataSeedContributorBase, 
                     "Impersonation"
                 },
                 scopes: commonScopes,
-                redirectUris: new List<string> { appClientRootUrl },
-                postLogoutRedirectUris: new List<string> { appClientRootUrl }
+                redirectUris: new List<string> { appClientRootUrl! },
+                postLogoutRedirectUris: new List<string> { appClientRootUrl! }
             );
         }
 
@@ -87,7 +87,7 @@ public class OpenIddictDataSeedContributor : OpenIddictDataSeedContributorBase, 
         var swaggerClientId = configurationSection["Host_Swagger:ClientId"];
         if (!swaggerClientId.IsNullOrWhiteSpace())
         {
-            var swaggerRootUrl = configurationSection["Host_Swagger:RootUrl"].TrimEnd('/');
+            var swaggerRootUrl = configurationSection["Host_Swagger:RootUrl"]!.TrimEnd('/');
 
             await CreateOrUpdateApplicationAsync(
                 applicationType: OpenIddictConstants.ApplicationTypes.Web,

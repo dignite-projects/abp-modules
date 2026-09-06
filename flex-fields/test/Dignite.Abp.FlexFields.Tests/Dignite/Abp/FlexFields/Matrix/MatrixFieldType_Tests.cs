@@ -89,7 +89,7 @@ public class MatrixFieldType_Tests : DigniteAbpFlexFieldsTestBase
         error.MemberNames.ShouldBe(new[] { field.Name });
         // Localization really resolved - not left as the raw key.
         error.ErrorMessage.ShouldNotBe("Validate:Required");
-        error.ErrorMessage.ShouldContain(field.DisplayName);
+        error.ErrorMessage!.ShouldContain(field.DisplayName);
     }
 
     [Fact]
@@ -116,7 +116,7 @@ public class MatrixFieldType_Tests : DigniteAbpFlexFieldsTestBase
         var error = _fieldType.Validate(new FieldValidationArgs(field)).ShouldHaveSingleItem();
 
         error.MemberNames.ShouldBe(new[] { field.Name });
-        error.ErrorMessage.ShouldContain("gone");
+        error.ErrorMessage!.ShouldContain("gone");
     }
 
     /// <summary>
@@ -139,9 +139,9 @@ public class MatrixFieldType_Tests : DigniteAbpFlexFieldsTestBase
         error.ErrorMessage.ShouldNotBe("Validate:Matrix:SubFieldError");
         // "{0}: block {1}, field '{2}': {3}" - the field label, the 1-based block index, the sub-field's
         // own label, and the inner Required message the Text field type produced.
-        error.ErrorMessage.ShouldContain(field.DisplayName);
-        error.ErrorMessage.ShouldContain("1");
-        error.ErrorMessage.ShouldContain("Quote Text");
+        error.ErrorMessage!.ShouldContain(field.DisplayName);
+        error.ErrorMessage!.ShouldContain("1");
+        error.ErrorMessage!.ShouldContain("Quote Text");
     }
 
     /// <summary>
@@ -177,7 +177,7 @@ public class MatrixFieldType_Tests : DigniteAbpFlexFieldsTestBase
 
         var error = _fieldType.Validate(new FieldValidationArgs(field)).ShouldHaveSingleItem();
 
-        error.ErrorMessage.ShouldContain("NoSuchFieldType");
+        error.ErrorMessage!.ShouldContain("NoSuchFieldType");
     }
 
     /// <summary>One block type, <c>quote</c>, with one required Text sub-field.</summary>

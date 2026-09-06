@@ -26,11 +26,11 @@ public class ContainerNameValidator_Tests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void Validate_Should_Reject_Invalid_Container_Name(string name)
+    public void Validate_Should_Reject_Invalid_Container_Name(string? name)
     {
         var validator = new ContainerNameValidator();
 
-        Should.Throw<ArgumentException>(() => validator.Validate(name));
+        Should.Throw<ArgumentException>(() => validator.Validate(name!));
     }
 
     [Fact]

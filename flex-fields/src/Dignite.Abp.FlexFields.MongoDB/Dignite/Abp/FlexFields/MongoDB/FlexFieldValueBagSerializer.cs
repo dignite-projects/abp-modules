@@ -85,10 +85,10 @@ public class FlexFieldBagValueSerializer : SerializerBase<object>
     /// widening what first-party code may construct, not what a caller may cause to be reconstructed from
     /// stored BSON. The driver's own default <see cref="ObjectSerializer.DefaultAllowedTypes"/> hardening
     /// against a caller-chosen discriminator remains meaningful for a <c>Dictionary&lt;string, object&gt;</c>
-    /// value nested inside one of those graphs (see <see cref="FlexFieldBagValueSerializer_Tests"/>): a
-    /// dictionary is written as its own discriminated <c>{_t, _v}</c> wrapper, so a caller-supplied key
-    /// named <c>"_t"</c> lands inside the wrapper's <c>_v</c> as inert data, never as the wrapper's own
-    /// discriminator.
+    /// value nested inside one of those graphs (see <c>FlexFieldBagValueSerializer_Tests</c> in the MongoDB
+    /// test project - not referenceable from here via <c>cref</c>): a dictionary is written as its own
+    /// discriminated <c>{_t, _v}</c> wrapper, so a caller-supplied key named <c>"_t"</c> lands inside the
+    /// wrapper's <c>_v</c> as inert data, never as the wrapper's own discriminator.
     /// </summary>
     private readonly IBsonSerializer<object> _fallback = new ObjectSerializer(
         BsonSerializer.LookupDiscriminatorConvention(typeof(object)),
@@ -207,7 +207,12 @@ public class FlexFieldBagValueSerializer : SerializerBase<object>
         }
     }
 
+    // SerializerBase<object>.Deserialize predates nullable annotations, so its declared return type is the
+    // unannotated `object` - but BsonType.Null genuinely deserializes to null below, and every caller in this
+    // codebase already treats a flex field value as nullable. `object?` here is more accurate than the base.
+#pragma warning disable CS8764 // Nullability of return type doesn't match overridden member (possibly because of nullability attributes).
     public override object? Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
+#pragma warning restore CS8764
     {
         var reader = context.Reader;
 

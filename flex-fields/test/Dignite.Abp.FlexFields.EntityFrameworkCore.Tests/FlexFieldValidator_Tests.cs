@@ -74,7 +74,7 @@ public class FlexFieldValidator_Tests : FlexFieldsEntityFrameworkCoreTestBase
 
         var error = (await Validator.ValidateAsync(article)).ShouldHaveSingleItem();
         error.MemberNames.ShouldBe(new[] { "Title" });
-        error.ErrorMessage.ShouldContain("5");
+        error.ErrorMessage!.ShouldContain("5");
     }
 
     [Fact]
