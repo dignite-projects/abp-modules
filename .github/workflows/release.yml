@@ -3,9 +3,10 @@
 # but tags do not drive the number.
 #
 # Tagged releases are public: NuGet packages go to NuGet.org through Trusted Publishing (GitHub
-# OIDC -> short-lived API key), and all five Angular packages go to npm (`next` for a pre-release,
-# `latest` for a stable release) through npm Trusted Publishing (OIDC) too - no long-lived
-# NPM_TOKEN secret. Each of the five packages has its own Trusted Publisher configured on
+# OIDC -> short-lived API key), and all five Angular packages go to npm through npm Trusted
+# Publishing (OIDC) too - no long-lived NPM_TOKEN secret. The npm dist-tag is `latest` for a stable
+# release, and for a pre-release too until the first stable release exists, `next` after that - see
+# build/resolve-npm-dist-tag.mjs. Each of the five packages has its own Trusted Publisher configured on
 # npmjs.com, scoped to this repo and this workflow file.
 # Pre-release NuGet packages are also mirrored to GitHub Packages under the same @dignite/*
 # names; pre-release Angular packages are mirrored too, but GitHub Packages' npm registry requires
