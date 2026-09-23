@@ -13,7 +13,7 @@ Because releases are lockstep, a version may contain changes to only one module 
 packages are still republished at that version with unchanged content. Entries are grouped by module
 so it stays clear which part of the repository actually moved.
 
-## [Unreleased]
+## [10.0.0-rc.17] - 2026-09-23
 
 ### Fixed
 
@@ -41,6 +41,35 @@ so it stays clear which part of the repository actually moved.
   as a CDN edge lagging the packument just read, and a real duplicate fails identically on every
   attempt, so it cannot be retried away. A propagation timeout now says so in those words, to stop a
   future reader from re-diagnosing it as the duplicate of issue #211.
+
+#### flex-fields
+
+- **`@dignite/ng.flex-fields-ckeditor` and `@dignite/ng.flex-fields-file-explorer` now depend on their
+  sibling packages at the exact release version instead of a `^` range.** Both declared
+  `@dignite/ng.flex-fields` (and the file-explorer bolt-on also `@dignite/ng.file-explorer`) as
+  `^10.0.0-rc.16`. Every `@dignite/ng.*` package ships from this repository at one lockstep version,
+  from the same commit, so a range could never admit a second compatible version — only an *older*
+  published sibling, which is exactly what Yarn Classic picks whenever npm's `latest` tag trails the
+  newest version. That leaves two copies of `@dignite/ng.flex-fields` in a host, and because Angular DI
+  keys off object identity, the module-scoped `FLEX_FIELD_TYPES` token becomes two distinct keys:
+  `provideCKEditorFieldType()` registers into one while `FieldTypeResolver` reads the other, so every
+  field type looks unregistered at runtime with nothing failing at install or build time. That is the
+  actual root cause of issue #211, which the single-copy checks in `release.yml` had only been
+  detecting. A host must now install every `@dignite/ng.*` package at the same version — which it
+  already had to for them to work together. `verify-version-lockstep.ps1` requires the exact version
+  for any `@dignite/*` dependency, so CI rejects a range reintroduced here.
+- **`DateTimeViewComponent`, the read-only view for `DateTime` fields, ignored the field's
+  `DateTime.InputMode` configuration and always rendered `value | shortDateTime`.** A field configured
+  for `InputMode = Date` or `InputMode = Month` therefore showed a spurious time part in every
+  read-only context — a bare field, or a `Table` column rendered through `ff-table-view`, which
+  dispatches to this same component via `ff-flex-field-view`. The edit-mode counterpart,
+  `DateTimeControlComponent`, already read `configuration['DateTime.InputMode']`, looked up the
+  matching Angular `DatePipe` format string in `DATE_INPUT_MODE_FORMATS`, and formatted with it — the
+  view component never did the same lookup despite receiving the same `field.configuration` on its
+  `fields` input. `DateTimeViewComponent` now performs that lookup itself, injecting `DatePipe` the
+  same way, and falls back to the `shortDateTime` pipe only when no `fields` input is bound or the
+  configured mode isn't in the table, so existing usages that never pass `field.configuration` keep
+  rendering exactly as before.
 
 ### Added
 
@@ -80,22 +109,17 @@ so it stays clear which part of the repository actually moved.
   family-wide: `true` silences every bundle loaded through this service, in every
   `@dignite/ng.flex-fields*` package. (#232)
 
-### Fixed
+### Security
 
-#### flex-fields
+#### notifications
 
-- **`DateTimeViewComponent`, the read-only view for `DateTime` fields, ignored the field's
-  `DateTime.InputMode` configuration and always rendered `value | shortDateTime`.** A field configured
-  for `InputMode = Date` or `InputMode = Month` therefore showed a spurious time part in every
-  read-only context — a bare field, or a `Table` column rendered through `ff-table-view`, which
-  dispatches to this same component via `ff-flex-field-view`. The edit-mode counterpart,
-  `DateTimeControlComponent`, already read `configuration['DateTime.InputMode']`, looked up the
-  matching Angular `DatePipe` format string in `DATE_INPUT_MODE_FORMATS`, and formatted with it — the
-  view component never did the same lookup despite receiving the same `field.configuration` on its
-  `fields` input. `DateTimeViewComponent` now performs that lookup itself, injecting `DatePipe` the
-  same way, and falls back to the `shortDateTime` pipe only when no `fields` input is bound or the
-  configured mode isn't in the table, so existing usages that never pass `field.configuration` keep
-  rendering exactly as before.
+- **`Dignite.Abp.Notifications.Emailing` now requires Scriban `>= 7.2.7`, lifting the vulnerable 7.2.1
+  that ABP 10.5.0 resolves.** The package reaches Scriban through `Volo.Abp.Emailing` →
+  `Volo.Abp.TextTemplating.Scriban` 10.5.0, which resolves Scriban 7.2.1 — affected by the
+  high-severity advisory GHSA-7jvp-hj45-2f2m. The root `Directory.Packages.props` now pins Scriban
+  7.2.7, and central transitive pinning promotes it into this package's own published dependency list,
+  so consumers restoring `Dignite.Abp.Notifications.Emailing` resolve the patched version too, not just
+  this repository's builds. The pin goes once ABP rolls forward past the advisory on its own.
 
 ## [10.0.0-rc.16] - 2026-09-05
 
