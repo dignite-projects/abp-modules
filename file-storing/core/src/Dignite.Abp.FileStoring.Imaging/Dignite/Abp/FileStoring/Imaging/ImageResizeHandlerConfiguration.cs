@@ -18,16 +18,24 @@ public class ImageResizeHandlerConfiguration
         _containerConfiguration = containerConfiguration;
     }
 
+    /// <summary>
+    /// Maximum width of the stored image. 0 (the default) leaves the width unconstrained.
+    /// At least one of <see cref="ImageWidth"/> and <see cref="ImageHeight"/> must be set.
+    /// </summary>
     public int ImageWidth
     {
         get => _containerConfiguration.GetConfigurationOrDefault<int>(ImageResizeHandlerConfigurationNames.ImageWidth);
-        set => _containerConfiguration.SetConfiguration(ImageResizeHandlerConfigurationNames.ImageWidth, value);
+        set => SetNonNegative(ImageResizeHandlerConfigurationNames.ImageWidth, value, nameof(ImageWidth));
     }
 
+    /// <summary>
+    /// Maximum height of the stored image. 0 (the default) leaves the height unconstrained.
+    /// At least one of <see cref="ImageWidth"/> and <see cref="ImageHeight"/> must be set.
+    /// </summary>
     public int ImageHeight
     {
         get => _containerConfiguration.GetConfigurationOrDefault<int>(ImageResizeHandlerConfigurationNames.ImageHeight);
-        set => _containerConfiguration.SetConfiguration(ImageResizeHandlerConfigurationNames.ImageHeight, value);
+        set => SetNonNegative(ImageResizeHandlerConfigurationNames.ImageHeight, value, nameof(ImageHeight));
     }
 
     public bool ImageSizeMustBeLargerThanPreset
@@ -72,6 +80,16 @@ public class ImageResizeHandlerConfiguration
     {
         get => _containerConfiguration.GetConfigurationOrDefault(ImageResizeHandlerConfigurationNames.DecodeTimeoutSeconds, DefaultDecodeTimeoutSeconds);
         set => SetPositive(ImageResizeHandlerConfigurationNames.DecodeTimeoutSeconds, value, nameof(DecodeTimeoutSeconds));
+    }
+
+    private void SetNonNegative(string name, int value, string parameterName)
+    {
+        if (value < 0)
+        {
+            throw new ArgumentOutOfRangeException(parameterName, value, "The value must not be negative.");
+        }
+
+        _containerConfiguration.SetConfiguration(name, value);
     }
 
     private void SetPositive(string name, int value, string parameterName)
