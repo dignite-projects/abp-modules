@@ -1,5 +1,6 @@
 using System;
 using Dignite.Abp.FileStoring;
+using Volo.Abp;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.Collections;
 
@@ -23,7 +24,15 @@ public static class BlobContainerConfigurationExtensions
 
         if (blobProcessHandlers.TryAdd<ImageResizeHandler>())
         {
-            configureAction(new ImageResizeHandlerConfiguration(containerConfiguration));
+            var configuration = new ImageResizeHandlerConfiguration(containerConfiguration);
+            configureAction(configuration);
+
+            if (configuration.ImageWidth <= 0 && configuration.ImageHeight <= 0)
+            {
+                throw new AbpException(
+                    $"{nameof(ImageResizeHandler)} requires {nameof(ImageResizeHandlerConfiguration.ImageWidth)}, " +
+                    $"{nameof(ImageResizeHandlerConfiguration.ImageHeight)}, or both to be greater than zero.");
+            }
 
             containerConfiguration.SetConfiguration(
                 BlobContainerConfigurationNames.FileHandlers,

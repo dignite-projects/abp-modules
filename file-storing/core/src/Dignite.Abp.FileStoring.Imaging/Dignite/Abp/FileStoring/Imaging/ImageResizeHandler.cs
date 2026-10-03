@@ -83,7 +83,10 @@ public class ImageResizeHandler : IFileHandler, ITransientDependency
                     );
                 }
 
-                if (image.Width > configuration.ImageWidth || image.Height > configuration.ImageHeight)
+                // A preset of 0 leaves that dimension unconstrained (ABP's ImageResizeArgs convention).
+                // Only resize when a constrained dimension is exceeded, so ResizeMode.Max never upscales.
+                if (configuration.ImageWidth > 0 && image.Width > configuration.ImageWidth ||
+                    configuration.ImageHeight > 0 && image.Height > configuration.ImageHeight)
                 {
                     var resizeResult = await _imageResizer.ResizeAsync(
                         context.BlobStream,
