@@ -14,6 +14,28 @@ Because releases are lockstep, a version may contain changes to only one module 
 packages are still republished at that version with unchanged content. Entries are grouped by module
 so it stays clear which part of the repository actually moved.
 
+## [Unreleased]
+
+### Fixed
+
+#### aspnetcore-mcp
+
+- **A tool call's changes are now saved before its result is returned.** The only unit of work an MCP
+  request had was the one `AbpUnitOfWorkMiddleware` completes after the whole pipeline - by which time
+  the SDK had already written the tool's result to the response. A save that then failed (a unique index,
+  a concurrency conflict) could not become an error result: the middleware threw into a started
+  response and the client's connection was cut off. `AbpMcpUnitOfWorkFilter` now gives each tool call,
+  resource read and prompt the unit-of-work handling `AbpUowActionFilter` gives an MVC action: it takes
+  over the reserved unit of work, saves before returning, and rolls back on failure, so a failed save
+  comes back as the call's structured error. Found by an end-to-end run against the Site host, where
+  re-uploading a file whose earlier copy had been deleted hit `FileExplorer`'s MD5 unique index.
+- **Failures reported as tool results are logged.** `McpToolErrorFilter` turns every exception into an
+  error result, so nothing further up ever saw it: an unexpected failure reached the client as "an
+  internal error occurred" and left no trace on the server. It now logs and notifies exactly as
+  `AbpExceptionHandlingMiddleware` does for the HTTP API - level from the exception (business and
+  validation errors as warnings), `ExcludeExceptionFromLoggerSelectors` honoured, `IExceptionNotifier`
+  called.
+
 ## [10.0.0-rc.18] - 2026-10-04
 
 ### Added

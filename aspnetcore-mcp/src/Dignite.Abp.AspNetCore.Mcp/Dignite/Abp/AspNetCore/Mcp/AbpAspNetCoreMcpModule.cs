@@ -1,5 +1,6 @@
 using Dignite.Abp.AspNetCore.Mcp.Authentication;
 using Dignite.Abp.AspNetCore.Mcp.Errors;
+using Dignite.Abp.AspNetCore.Mcp.Uow;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,7 +29,8 @@ namespace Dignite.Abp.AspNetCore.Mcp;
 /// <para>
 /// <b>The transport is stateless Streamable HTTP</b> (the SDK default as of the <c>2026-07-28</c>
 /// protocol revision), so every MCP request is an ordinary HTTP request through the host's ordinary
-/// pipeline: authentication, tenant resolution and the unit of work have all happened before a tool runs.
+/// pipeline: authentication and tenant resolution have happened, and a unit of work has been reserved,
+/// before a tool runs.
 /// </para>
 /// </summary>
 [DependsOn(typeof(AbpAspNetCoreModule))]
@@ -50,8 +52,15 @@ public class AbpAspNetCoreMcpModule : AbpModule
             // [Authorize(MyPermissions.X)] works as-is. Called here and nowhere else: unlike the SDK's
             // other registrations it is not idempotent, and a second call runs every check twice.
             .AddAuthorizationFilters()
-            // One place turns an exception into a result a model can act on - see McpToolErrorFilter.
-            .WithRequestFilters(filters => filters.AddCallToolFilter(McpToolErrorFilter.CallToolFilter));
+            .WithRequestFilters(filters => filters
+                // One place turns an exception into a result a model can act on - see McpToolErrorFilter.
+                // Added first, so it is the outer of the two and also sees a failed save below.
+                .AddCallToolFilter(McpToolErrorFilter.CallToolFilter)
+                // Saves each call's changes before its result is written, as AbpUowActionFilter does for
+                // an MVC action - see AbpMcpUnitOfWorkFilter.
+                .AddCallToolFilter(AbpMcpUnitOfWorkFilter.CallToolFilter)
+                .AddReadResourceFilter(AbpMcpUnitOfWorkFilter.ReadResourceFilter)
+                .AddGetPromptFilter(AbpMcpUnitOfWorkFilter.GetPromptFilter));
 
         // ServerInfo and ServerInstructions, read from AbpMcpServerOptions once the container is built - so a
         // host sets them with a plain Configure<AbpMcpServerOptions>, no PreConfigure needed. A singleton:

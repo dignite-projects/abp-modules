@@ -1,7 +1,11 @@
 using System;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -36,14 +40,9 @@ public static class McpToolErrorFilter
 
     /// <summary>
     /// Wraps every tool invocation. Registered once, by <see cref="AbpAspNetCoreMcpModule"/>, so no tool
-    /// carries error-shaping code of its own.
-    /// <para>
-    /// <b>Note what this deliberately does not attempt.</b> A failed tool call can still leave a partially
-    /// applied write behind: ABP's <c>AuditingInterceptor</c> calls <c>SaveChangesAsync</c> from a
-    /// <c>finally</c> on the way out of a failed application-service call, so the flush has already
-    /// happened by the time this runs. That is framework behaviour shared with the HTTP API - an MVC action
-    /// failing persists exactly as much - so rolling back here would be theatre.
-    /// </para>
+    /// carries error-shaping code of its own. It wraps <see cref="Uow.AbpMcpUnitOfWorkFilter"/> too, so a
+    /// save that fails once the tool itself has returned is reported the same way, after that filter has
+    /// rolled the call back.
     /// </summary>
     public static McpRequestHandler<CallToolRequestParams, CallToolResult> CallToolFilter(
         McpRequestHandler<CallToolRequestParams, CallToolResult> next)
@@ -64,9 +63,39 @@ public static class McpToolErrorFilter
             //   input mid-call (MRTR), and converting it would break that flow.
             catch (Exception exception) when (exception is not (OperationCanceledException or McpProtocolException or InputRequiredException))
             {
+                await LogAsync(exception, request.Services);
                 return Create(exception, request.Services);
             }
         };
+    }
+
+    /// <summary>
+    /// Logs and notifies exactly as <c>AbpExceptionHandlingMiddleware</c> does for the HTTP API. The
+    /// exception is turned into a result here, so nothing further up ever sees it: without this an
+    /// unexpected failure would reach the client as "an internal error occurred" and leave no trace at
+    /// all on the server. <c>LogException</c> takes the level from the exception itself, so a business or
+    /// validation error is logged as a warning, as it is over HTTP.
+    /// </summary>
+    private static async Task LogAsync(Exception exception, IServiceProvider? services)
+    {
+        if (services == null)
+        {
+            return;
+        }
+
+        var exceptionHandlingOptions = services.GetService<IOptions<AbpExceptionHandlingOptions>>()?.Value;
+        if (exceptionHandlingOptions?.ShouldLogException(exception) != false)
+        {
+            var logger = services.GetService<ILoggerFactory>()?.CreateLogger(typeof(McpToolErrorFilter).FullName!)
+                         ?? NullLogger.Instance;
+            logger.LogException(exception);
+        }
+
+        var notifier = services.GetService<IExceptionNotifier>();
+        if (notifier != null)
+        {
+            await notifier.NotifyAsync(new ExceptionNotificationContext(exception));
+        }
     }
 
     public static CallToolResult Create(Exception exception, IServiceProvider? services)
