@@ -1,7 +1,8 @@
 # Changelog
 
 All notable changes to the packages released from this repository — the `file-storing/`,
-`notifications/` and `flex-fields/` modules — are documented in this file.
+`notifications/` and `flex-fields/` modules, and the shared `aspnetcore-mcp/` tree — are documented in
+this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) — with two deviations from the
@@ -13,7 +14,7 @@ Because releases are lockstep, a version may contain changes to only one module 
 packages are still republished at that version with unchanged content. Entries are grouped by module
 so it stays clear which part of the repository actually moved.
 
-## [Unreleased]
+## [10.0.0-rc.18] - 2026-10-04
 
 ### Added
 
