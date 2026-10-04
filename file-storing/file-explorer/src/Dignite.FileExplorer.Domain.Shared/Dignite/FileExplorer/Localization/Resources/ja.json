@@ -8,6 +8,7 @@
     "Dignite.FileExplorer:Directory:0005": "サブディレクトリへの移動は禁止されています！",
     "Dignite.FileExplorer:Directory:0006": "ディレクトリが空でないため、削除できません！",
     "Dignite.FileExplorer:Directory:0007": "ディレクトリにファイルが含まれているため、削除できません！",
+    "Dignite.FileExplorer:Directory:0008": "ディレクトリはユーザーに属するため、この操作にはクライアント資格情報ではなくサインイン済みのユーザーが必要です。",
     "Dignite.FileExplorer:File:0001": "セル名は適用されません！",
     "Dignite.FileExplorer:File:0002": "セル名は利用できません！",
     "Dignite.FileExplorer:File:0003": "画像サイズが小さすぎます！",

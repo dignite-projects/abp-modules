@@ -76,6 +76,10 @@ public class FileDescriptorAppService : ApplicationService, IFileDescriptorAppSe
         var tempFileDescriptor = new FileDescriptor(GuidGenerator.Create(), input.ContainerName, string.Empty, string.Empty, string.Empty, input.CellName, input.DirectoryId, input.EntityId, CurrentTenant.Id);
         await AuthorizationService.CheckAsync(tempFileDescriptor, CommonOperations.Create);
 
+        // The same check a move gets in UpdateAsync, before anything is stored: the new file is created by
+        // the current user in the current tenant, so the directory must be theirs, there, in this container.
+        await EnsureDirectoryFitsAsync(input.DirectoryId, input.ContainerName, CurrentUser.Id, CurrentTenant.Id, cancellationToken);
+
         // formal start of file creation
         var fileDescriptor = await _fileManager.CreateAsync(
             input.ContainerName,
@@ -111,20 +115,7 @@ public class FileDescriptorAppService : ApplicationService, IFileDescriptorAppSe
 
         await AuthorizationService.CheckAsync(entity, CommonOperations.Update);
 
-        if (entity.DirectoryId.HasValue)
-        {
-            var directory = await _directoryRepository.FindAsync(
-                entity.DirectoryId.Value,
-                false,
-                cancellationToken);
-            if (directory == null ||
-                !directory.ContainerName.Equals(entity.ContainerName, StringComparison.CurrentCultureIgnoreCase) ||
-                directory.CreatorId != entity.CreatorId ||
-                directory.TenantId != entity.TenantId)
-            {
-                throw new BusinessException(FileExplorerErrorCodes.Directories.DirectoryNotExist);
-            }
-        }
+        await EnsureDirectoryFitsAsync(entity.DirectoryId, entity.ContainerName, entity.CreatorId, entity.TenantId, cancellationToken);
 
         await _fileManager.ValidateAsync(entity);
         await _fileRepository.UpdateAsync(entity, cancellationToken: cancellationToken);
@@ -191,6 +182,14 @@ public class FileDescriptorAppService : ApplicationService, IFileDescriptorAppSe
         _containerNameValidator.Validate(input.ContainerName);
         if (!await AuthorizationService.IsGrantedAsync(FileExplorerPermissions.Files.Management))
         {
+            // "Only your own files" needs a user to own them. A caller authenticated without one - a
+            // client-credentials token - owns nothing, and must get nothing: leaving CreatorId null here
+            // would make the repository skip the owner filter and list every user's files.
+            if (!CurrentUser.Id.HasValue)
+            {
+                return new PagedResultDto<FileDescriptorDto>(0, new List<FileDescriptorDto>());
+            }
+
             input.CreatorId = CurrentUser.Id;
         }
         var count = await _fileRepository.GetCountAsync(
@@ -365,6 +364,33 @@ public class FileDescriptorAppService : ApplicationService, IFileDescriptorAppSe
             }
         }
         return null;
+    }
+
+    /// <summary>
+    /// A file may only sit in a directory that exists and shares its container, owner and tenant - for a new
+    /// file as much as for a moved one. Anything else is reported as a directory that does not exist, so the
+    /// check reveals nothing about other users' directories.
+    /// </summary>
+    private async Task EnsureDirectoryFitsAsync(
+        Guid? directoryId,
+        string containerName,
+        Guid? creatorId,
+        Guid? tenantId,
+        CancellationToken cancellationToken)
+    {
+        if (!directoryId.HasValue)
+        {
+            return;
+        }
+
+        var directory = await _directoryRepository.FindAsync(directoryId.Value, false, cancellationToken);
+        if (directory == null ||
+            !directory.ContainerName.Equals(containerName, StringComparison.CurrentCultureIgnoreCase) ||
+            directory.CreatorId != creatorId ||
+            directory.TenantId != tenantId)
+        {
+            throw new BusinessException(FileExplorerErrorCodes.Directories.DirectoryNotExist);
+        }
     }
 
     private static async Task<ImageInfo> IdentifyImageAsync(Stream stream)

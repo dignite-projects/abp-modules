@@ -8,6 +8,7 @@
     "Dignite.FileExplorer:Directory:0005": "Moving to subdirectories is prohibited!",
     "Dignite.FileExplorer:Directory:0006": "The directory is not empty and cannot be deleted!",
     "Dignite.FileExplorer:Directory:0007": "The directory contains files and cannot be deleted!",
+    "Dignite.FileExplorer:Directory:0008": "Directories belong to a user, so this operation needs a signed-in user rather than a client credential.",
     "Dignite.FileExplorer:File:0001": "Cell Name Not Applicable!",
     "Dignite.FileExplorer:File:0002": "Cell name not available!",
     "Dignite.FileExplorer:File:0003": "The image size is too small!",
