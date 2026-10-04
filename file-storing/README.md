@@ -13,9 +13,35 @@ The layout is:
 - `core/src/Dignite.Abp.FileStoring`: file upload infrastructure on top of ABP Blob Storing.
 - `core/src/Dignite.Abp.FileStoring.Imaging`: optional upload-time image processing.
 - `file-explorer/src/Dignite.FileExplorer.*`: DDD file explorer backend.
+- `file-explorer/src/Dignite.FileExplorer.Mcp`: optional MCP tools over the file explorer, for AI clients.
 - `angular/projects/file-explorer`: Angular UI package.
 
 `dignite-abp` is treated as a frozen source repository and is not modified by this extraction.
+
+## MCP tools (`Dignite.FileExplorer.Mcp`)
+
+Optional. Depend on `FileExplorerMcpModule` to let an AI client use the file explorer through the
+application's MCP server (see [`aspnetcore-mcp/`](../aspnetcore-mcp/README.md)). Its tools are named
+`file_explorer_*`: list containers, list/create directories, list/get/upload/update/delete files. Every
+call goes through the file explorer application services, so each container's own authorization
+configuration applies exactly as it does over HTTP.
+
+**Nothing is exposed until the host lists it.** Blob containers cannot be enumerated, and which ones an
+AI client should touch is a deployment decision:
+
+```csharp
+Configure<FileExplorerMcpOptions>(options =>
+{
+    options.Containers.Add("site-images", "Images used in site content.");
+    options.MaxUploadSize = 5 * 1024 * 1024; // the default
+});
+```
+
+Uploads travel as base64 inside a JSON-RPC message, so they suit small files only. The module raises the
+MCP endpoint's request-body limit just enough for `MaxUploadSize`, so a larger request is refused before it
+is read; the container's own size limit applies when it is stricter. File
+URLs in tool results point at the HTTP API's file endpoint (`FileExplorerRemoteServiceConsts.FilesRoutePrefix`),
+so the host also needs `FileExplorerHttpApiModule` for them to resolve.
 
 ## Host secrets
 

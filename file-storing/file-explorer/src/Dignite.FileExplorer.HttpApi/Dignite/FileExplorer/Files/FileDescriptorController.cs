@@ -12,10 +12,9 @@ namespace Dignite.FileExplorer.Files;
 
 [Area(FileExplorerRemoteServiceConsts.ModuleName)]
 [RemoteService(Name = FileExplorerRemoteServiceConsts.RemoteServiceName)]
-[Route(RoutePrefix)]
+[Route(FileExplorerRemoteServiceConsts.FilesRoutePrefix)]
 public class FileDescriptorController : AbpController, IFileDescriptorAppService
 {
-    private const string RoutePrefix = "api/file-explorer/files";
     private readonly IFileDescriptorAppService _fileAppService;
 
     public FileDescriptorController(
@@ -111,6 +110,6 @@ public class FileDescriptorController : AbpController, IFileDescriptorAppService
 
     private string GetFileUrl(FileDescriptorDto file)
     {
-        return $"{Request.Scheme}://{Request.Host.Value}/{RoutePrefix}/{file.ContainerName}/{file.BlobName}?__tenant={file.TenantId}";
+        return $"{Request.Scheme}://{Request.Host.Value}/{FileExplorerRemoteServiceConsts.FilesRoutePrefix}/{file.ContainerName}/{file.BlobName}?__tenant={file.TenantId}";
     }
 }

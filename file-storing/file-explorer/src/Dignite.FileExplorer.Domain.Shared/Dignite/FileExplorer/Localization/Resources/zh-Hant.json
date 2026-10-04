@@ -8,6 +8,7 @@
     "Dignite.FileExplorer:Directory:0005": "禁止移動至子目錄！",
     "Dignite.FileExplorer:Directory:0006": "目錄不是空的，無法刪除！",
     "Dignite.FileExplorer:Directory:0007": "目錄包含檔案，無法刪除！",
+    "Dignite.FileExplorer:Directory:0008": "目錄歸屬於使用者，此操作需要已登入的使用者，不能使用用戶端憑證。",
     "Dignite.FileExplorer:File:0001": "儲存格名稱不適用！",
     "Dignite.FileExplorer:File:0002": "儲存格名稱不可用！",
     "Dignite.FileExplorer:File:0003": "圖片尺寸太小！",

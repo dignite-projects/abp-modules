@@ -1,7 +1,8 @@
 # Dignite ABP Modules — monorepo guide
 
 Three independently installable **ABP Framework** module trees, developed together and released in
-lockstep.
+lockstep, plus one shared, domain-agnostic infrastructure tree (`aspnetcore-mcp/`) that modules here
+and in other repositories depend on.
 
 ## Repository-wide invariants
 
@@ -23,6 +24,15 @@ These are the things most likely to be broken by an otherwise reasonable-looking
      than a shared tree with a single dependent. There is no longer a home in this repo for
      cross-module ASP.NET Core/Razor infrastructure — if a genuine second consumer shows up, judge
      fresh whether a shared tree is actually worth it rather than reflexively recreating one.
+   - `aspnetcore-mcp/` (`Dignite.Abp.AspNetCore.Mcp`) is such a judged-fresh shared tree, and it is
+     not a fourth module: it hosts the one MCP server an application can have and carries no domain
+     model. It passed the test the Razor tree failed because every piece of it is needed by every
+     MCP-contributing module — `Dignite.FileExplorer.Mcp` here, `Dignite.Site.Mcp` and
+     `Dignite.Vault.Extract.Mcp` in their own repositories — and duplicating it is exactly how two of
+     them had already drifted apart (see its README). The direction is one-way: a module's `*.Mcp`
+     project may reference `aspnetcore-mcp/`; `aspnetcore-mcp/` never references a module. Each
+     contributing module claims its own MCP namespace (tool-name prefix + resource URI scheme) via
+     `AddAbpMcpModule`, and the server refuses to start on any overlap.
 
 3. **Library package versions live in the root `Directory.Packages.props`**, never inline in a
    library `.csproj`. The demo hosts (`file-storing/host/`, `notifications/host/`,

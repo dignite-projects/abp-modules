@@ -8,6 +8,7 @@
     "Dignite.FileExplorer:Directory:0005": "禁止移动到子目录！",
     "Dignite.FileExplorer:Directory:0006": "目录不为空，无法删除！",
     "Dignite.FileExplorer:Directory:0007": "目录包含文件，无法删除！",
+    "Dignite.FileExplorer:Directory:0008": "目录归属于用户，此操作需要已登录的用户，不能使用客户端凭据。",
     "Dignite.FileExplorer:File:0001": "单元格名称不适用！",
     "Dignite.FileExplorer:File:0002": "单元格名称不可用！",
     "Dignite.FileExplorer:File:0003": "图片尺寸过小！",

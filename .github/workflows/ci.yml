@@ -77,6 +77,11 @@ jobs:
       - name: Build
         run: dotnet build Dignite.Abp.Modules.slnx --no-restore --configuration Release
 
+      # --- aspnetcore-mcp tests ---
+      # The shared MCP server module. Its tests boot a real host and drive /mcp with the SDK's own client.
+      - name: Run AspNetCore Mcp tests
+        run: dotnet test aspnetcore-mcp/test/Dignite.Abp.AspNetCore.Mcp.Tests/Dignite.Abp.AspNetCore.Mcp.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/aspnetcore-mcp
+
       # --- file-storing tests ---
       # Coverage from every file-storing test project below lands under coverage/file-storing so it
       # can be uploaded to Codecov under its own "file-storing" flag (see the upload step after the
@@ -112,6 +117,9 @@ jobs:
 
       - name: Run update authorization tests
         run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.Update.Tests/Dignite.FileExplorer.Update.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/file-storing
+
+      - name: Run FileExplorer MCP tools tests
+        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.Mcp.Tests/Dignite.FileExplorer.Mcp.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/file-storing
 
       # --- notifications tests ---
       # Dignite.NotificationCenter.TestBase is IsTestProject=false (shared scenarios, no runner) -
@@ -149,7 +157,8 @@ jobs:
           if-no-files-found: error
 
       # Projects with IsPackable=false (all three demo hosts + test projects) are skipped automatically.
-      # All 33 packable NuGet projects across the three module trees are produced.
+      # Every packable project in the aggregate solution is produced - deliberately not counted here, a
+      # number in this comment had already drifted (it said 33 while 38 were being packed).
       - name: Pack NuGet packages
         run: dotnet pack Dignite.Abp.Modules.slnx --no-build --configuration Release --output ./artifacts-ci/nuget
 
@@ -164,6 +173,10 @@ jobs:
       - name: Smoke-test flex-fields NuGet packages
         shell: pwsh
         run: ./flex-fields/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}'
+
+      - name: Smoke-test aspnetcore-mcp NuGet packages
+        shell: pwsh
+        run: ./aspnetcore-mcp/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}'
 
       # --- file-storing Angular (angular/projects/file-explorer) ---
       - name: Install file-storing Angular dependencies

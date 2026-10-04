@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Volo.Abp.Authorization;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Threading;
 using Volo.Abp.Uow;
@@ -27,6 +28,7 @@ public class DirectoryDescriptorAppService : FileExplorerAppService, IDirectoryD
     public async Task<DirectoryDescriptorDto> CreateAsync(CreateDirectoryInput input)
     {
         var cancellationToken = RequestCancellationToken;
+        var userId = GetCurrentUserId();
         var resource = new DirectoryDescriptor(
             GuidGenerator.Create(),
             input.ContainerName,
@@ -35,12 +37,12 @@ public class DirectoryDescriptorAppService : FileExplorerAppService, IDirectoryD
             0,
             CurrentTenant.Id)
         {
-            CreatorId = CurrentUser.Id
+            CreatorId = userId
         };
         await AuthorizationService.CheckAsync(resource, CommonOperations.Create);
 
         var entity = await _directoryManager.CreateAsync(
-            CurrentUser.Id.Value,
+            userId,
             input.ContainerName,
             input.Name,
             input.ParentId,
@@ -73,7 +75,7 @@ public class DirectoryDescriptorAppService : FileExplorerAppService, IDirectoryD
     public async Task<PagedResultDto<DirectoryDescriptorInfoDto>> GetListAsync(GetDirectoriesInput input)
     {
         var result = await _directoryRepository.GetAllByUserAsync(
-            CurrentUser.Id.Value,
+            GetCurrentUserId(),
             input.ContainerName,
             RequestCancellationToken);
         var dtoList = ObjectMapper.Map<List<DirectoryDescriptor>, List<DirectoryDescriptorInfoDto>>(result);
@@ -93,6 +95,15 @@ public class DirectoryDescriptorAppService : FileExplorerAppService, IDirectoryD
         }
         entity = await _directoryManager.MoveAsync(entity, input.ParentId, input.Order, cancellationToken);
         return ObjectMapper.Map<DirectoryDescriptor, DirectoryDescriptorDto>(entity);
+    }
+
+    /// <summary>
+    /// Directories are per user. A caller authenticated without one - a client-credentials token - has no
+    /// directories to list or own, and is refused with that reason instead of a null dereference.
+    /// </summary>
+    private Guid GetCurrentUserId()
+    {
+        return CurrentUser.Id ?? throw new AbpAuthorizationException(code: FileExplorerErrorCodes.Directories.UserRequired);
     }
 
     [Authorize]

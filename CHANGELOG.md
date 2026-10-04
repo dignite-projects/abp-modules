@@ -13,6 +13,73 @@ Because releases are lockstep, a version may contain changes to only one module 
 packages are still republished at that version with unchanged content. Entries are grouped by module
 so it stays clear which part of the repository actually moved.
 
+## [Unreleased]
+
+### Added
+
+#### aspnetcore-mcp
+
+- **New top-level tree `aspnetcore-mcp/`, package `Dignite.Abp.AspNetCore.Mcp`.** Hosts the one
+  Model Context Protocol server an ABP application can have and lets any number of modules contribute
+  tools, resources and prompts to it. The C# MCP SDK keeps one server per service container, so
+  everything that exists once per server - transport, the `/mcp` endpoint, ABP-permission filtering,
+  one structured error envelope, server info and instructions - now lives here instead of in whichever
+  feature module happened to configure it first. Each contributor claims a namespace with
+  `AddAbpMcpModule(name, …)` (tool/prompt prefix `{name}_`, resource URI scheme), and the server
+  refuses to start on any overlap: the SDK otherwise keeps the first of two same-named tools and drops
+  the other silently. Tool classes are resolved from ABP's container on every call, so
+  `[Dependency(ReplaceServices = true)]` works for them, which the SDK's own `WithTools<T>()` does not
+  allow. The endpoint authorizes against the default policy and `AddAbpMcpAuthenticationDiscovery`
+  takes over only the 401 challenge (RFC 9728), so ABP's dynamic claims are not discarded on MCP
+  requests. Not a fourth module: it carries no domain model, and depending on it is not the
+  cross-module reference the "three modules never reference each other" invariant guards against.
+  Modules with dynamic resources contribute to `resources/list` through `IAbpMcpResourceListContributor`
+  instead of the SDK's single `WithListResourcesHandler` slot. The endpoint carries a request-body limit
+  (`AbpMcpServerOptions.MaxRequestBodySize`, 4 MB by default) that routing applies before the body is read,
+  since a tool can only check its arguments once the whole request is already buffered.
+  `AddAbpMcpAuthenticationDiscovery` wraps the host's `IAuthorizationMiddlewareResultHandler` with its
+  lifetime intact and fails startup if a later registration replaces the wrapper; a second call only
+  replaces the metadata, and the MCP scheme no longer forwards authentication to a `Bearer` scheme the host
+  may not have (the SDK's default). Primitives registered outside any module can be admitted with
+  `AbpMcpServerOptions.AllowUnownedPrimitives`, for third-party tool libraries.
+
+#### file-storing
+
+- **New package `Dignite.FileExplorer.Mcp`**: `file_explorer_*` MCP tools over the file explorer -
+  list containers, list/create directories, list/get/upload/update/delete files - each calling the
+  existing application services. Only containers the host lists in `FileExplorerMcpOptions.Containers`
+  are reachable. Uploads are base64 and capped by `FileExplorerMcpOptions.MaxUploadSize` (5 MB); the module
+  raises the MCP endpoint's request-body limit just enough to fit that, so a larger request is refused before
+  it is read. A file looked up by id answers "not found" alike when it is missing, unreadable to the caller,
+  or in a container not exposed to MCP, so probing ids reveals nothing. A listed container that cannot be
+  read is left out of `file_explorer_list_containers` (and logged) instead of failing it for the others.
+
+### Fixed
+
+#### file-storing
+
+- **`FileDescriptorAppService.GetListAsync` listed every user's files to a caller with no user id.** Without
+  `Files.Management` it narrows the list to `CreatorId = CurrentUser.Id` - but for a principal authenticated
+  without a user (a client-credentials token) that is `null`, and the repository reads a `null` creator as
+  "no owner filter", returning all files in the container. Such a caller owns no files, so it now gets an
+  empty list. Reachable over the REST API and, now, through `file_explorer_list_files`.
+- **`DirectoryDescriptorAppService.GetListAsync`/`CreateAsync` threw a null dereference for a caller with no
+  user id** (`CurrentUser.Id.Value`). Directories are per user, so such a caller is now refused with an
+  authorization error carrying the new, localized code `Dignite.FileExplorer:Directory:0008`.
+- **`FileDescriptorAppService.CreateAsync` accepted any `DirectoryId`.** Moving a file (`UpdateAsync`) already
+  required the directory to exist and share the file's container, owner and tenant; creating one checked
+  nothing, so a new file could be filed under another user's or another container's directory, or a directory
+  that does not exist. Creation now applies the same check, before anything is written to blob storage, and
+  answers `Dignite.FileExplorer:Directory:0002` (directory does not exist) like a move does.
+
+### Changed
+
+#### file-storing
+
+- The file route prefix moved from a private constant on `FileDescriptorController` to
+  `FileExplorerRemoteServiceConsts.FilesRoutePrefix`, so the HTTP API and the MCP tools build file URLs
+  from one definition. The route itself is unchanged.
+
 ## [10.0.0-rc.17] - 2026-09-23
 
 ### Fixed
