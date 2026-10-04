@@ -26,7 +26,7 @@ hubs; feature modules only supply them):
 
 | | Owns | Never touches |
 |---|---|---|
-| **`AbpAspNetCoreMcpModule`** (this package) | The server, stateless Streamable HTTP transport, the `/mcp` endpoint, ABP-permission filtering of list results, one structured error envelope, server info, composed instructions, startup validation, optional RFC 9728 discovery | Any business concept |
+| **`AbpAspNetCoreMcpModule`** (this package) | The server, stateless Streamable HTTP transport, the `/mcp` endpoint, ABP-permission filtering of list results, a unit of work per call, one structured error envelope, server info, composed instructions, startup validation, optional RFC 9728 discovery | Any business concept |
 | **A feature module's `*.Mcp` project** | Its tool/resource/prompt classes, its namespace, its section of the instructions | Server info, transport, endpoint, global filters, server-wide `With*Handler` slots |
 | **The host** | Deployment: route, server name, the bearer scheme, discovery metadata, rate limiting | MCP server code |
 
@@ -145,3 +145,20 @@ The SDK's own exceptions keep the SDK's semantics: an `McpException`'s message i
 written (ABP's converter would replace it with a generic one), while `McpProtocolException` (a
 protocol-level failure, such as an unknown tool) and `InputRequiredException` (a tool asking the client for
 more input mid-call) are not converted at all.
+
+Every exception reported this way is also logged - and passed to `IExceptionNotifier` - exactly as
+ABP's `AbpExceptionHandlingMiddleware` does for the HTTP API, honouring
+`AbpExceptionHandlingOptions.ExcludeExceptionFromLoggerSelectors`. The client of an unexpected failure
+is only told that an internal error occurred, so the log is where its cause is found.
+
+## Unit of work
+
+Each tool call, resource read and prompt runs in the unit of work an MVC action would get from ABP's
+`AbpUowActionFilter`: it takes over the one `UseUnitOfWork()` reserved for the request (or begins its
+own, in a host without that middleware), saves the changes before the result is returned, and rolls
+back if the call fails. Without it the request's changes would only be saved once the whole pipeline
+had returned - after the SDK had already written the result - so a save that fails on a unique index
+or a concurrency conflict would cut off the client's connection instead of coming back as the call's
+error. Tool calls are transactional by default, as a POST would be; resource reads and prompts are not,
+as a GET would not be (`AbpUnitOfWorkDefaultOptions` decides either way). As for an MVC action,
+committing the transaction itself stays with the middleware at the end of the request.

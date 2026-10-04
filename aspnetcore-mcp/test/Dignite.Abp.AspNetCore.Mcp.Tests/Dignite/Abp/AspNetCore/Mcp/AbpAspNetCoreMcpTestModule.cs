@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Volo.Abp;
 using Volo.Abp.AspNetCore.TestBase;
 using Volo.Abp.Authorization.Permissions;
@@ -43,8 +44,12 @@ public class AbpAspNetCoreMcpTestModule : AbpModule
             options.Instructions = HostInstructions;
         });
 
+        context.Services.AddSingleton<TestLoggerProvider>();
+        context.Services.AddSingleton<ILoggerProvider>(serviceProvider => serviceProvider.GetRequiredService<TestLoggerProvider>());
+
         context.Services.AddAbpMcpModule("test", mcp => mcp
             .AddTools<TestTools>()
+            .AddTools<TestUnitOfWorkTools>()
             .AddResources<TestResources>()
             .AddResourceListContributor<TestResourceListContributor>()
             .AddInstructions(ModuleInstructions));
@@ -56,6 +61,10 @@ public class AbpAspNetCoreMcpTestModule : AbpModule
 
         app.UseRouting();
         app.UseAuthentication();
+
+        // As every ABP host does: reserves the request's unit of work, completed once the pipeline returns -
+        // after the MCP response has been written, which is what the unit-of-work filter has to work around.
+        app.UseUnitOfWork();
 
         // Stands in for ABP's UseDynamicClaims(): after authentication, refresh the principal with claims
         // the token itself does not carry. If the MCP endpoint re-authenticated through a named scheme,

@@ -24,7 +24,7 @@ namespace Dignite.Abp.AspNetCore.Mcp;
 /// The server end to end: a real MCP client over HTTP, through the full ABP pipeline - authentication,
 /// a dynamic-claims stand-in, authorization, the mapped endpoint.
 /// </summary>
-public class AbpMcpServer_Tests : AbpWebApplicationFactoryIntegratedTest<Program>
+public class AbpMcpServer_Tests : AbpMcpIntegratedTestBase
 {
     [Fact]
     public async Task Should_Challenge_An_Unauthenticated_Request_With_Resource_Metadata()
@@ -190,38 +190,5 @@ public class AbpMcpServer_Tests : AbpWebApplicationFactoryIntegratedTest<Program
             .Single(candidate => candidate.Metadata.GetMetadata<AbpMcpEndpointMetadata>() != null);
 
         endpoint.Metadata.GetMetadata<IRequestSizeLimitMetadata>()!.MaxRequestBodySize.ShouldBe(4 * 1024 * 1024);
-    }
-
-    private async Task<McpClient> ConnectAsync(string? permissions = null, string? dynamicPermission = null)
-    {
-        var headers = new Dictionary<string, string>
-        {
-            [TestAuthenticationHandler.UserHeader] = Guid.NewGuid().ToString()
-        };
-        if (permissions != null)
-        {
-            headers[TestAuthenticationHandler.PermissionsHeader] = permissions;
-        }
-        if (dynamicPermission != null)
-        {
-            headers[TestAuthenticationHandler.DynamicPermissionHeader] = dynamicPermission;
-        }
-
-        var transport = new HttpClientTransport(
-            new HttpClientTransportOptions
-            {
-                Endpoint = new Uri(Client.BaseAddress!, "/mcp"),
-                TransportMode = HttpTransportMode.StreamableHttp,
-                AdditionalHeaders = headers
-            },
-            Client);
-
-        return await McpClient.CreateAsync(transport);
-    }
-
-    private static JsonElement GetError(CallToolResult result)
-    {
-        result.StructuredContent.ShouldNotBeNull();
-        return result.StructuredContent!.Value.GetProperty("error");
     }
 }
