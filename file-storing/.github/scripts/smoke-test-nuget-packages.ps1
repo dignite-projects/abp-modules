@@ -20,6 +20,7 @@ $packageIds = @(
     'Dignite.FileExplorer.MongoDB',
     'Dignite.FileExplorer.HttpApi',
     'Dignite.FileExplorer.HttpApi.Client',
+    'Dignite.FileExplorer.Mcp',
     'Dignite.FileExplorer.Installer'
 )
 
@@ -74,6 +75,7 @@ public static class PackageSurface
         typeof(Dignite.FileExplorer.MongoDB.FileExplorerMongoDbModule),
         typeof(Dignite.FileExplorer.FileExplorerHttpApiModule),
         typeof(Dignite.FileExplorer.FileExplorerHttpApiClientModule),
+        typeof(Dignite.FileExplorer.FileExplorerMcpModule),
         typeof(Dignite.FileExplorer.FileExplorerInstallerModule)
     ];
 }

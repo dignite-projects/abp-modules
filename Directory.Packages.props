@@ -43,6 +43,8 @@
     <PackageVersion Include="Volo.Abp.Ddd.Application.Contracts" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.Authorization" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.Authorization.Abstractions" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.TestBase" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore.Mvc" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.Http.Client" Version="10.5.0" />
@@ -92,6 +94,16 @@
 
   <ItemGroup Label="Microsoft hosting abstractions">
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.11" />
+  </ItemGroup>
+
+  <!--
+    The official C# Model Context Protocol SDK (Apache-2.0), used by aspnetcore-mcp/ and by every
+    module's *.Mcp project through it. Every MCP-contributing module in one host shares one server, so
+    they must all agree on this version: it is pinned here once rather than per tree. Its only
+    transitive dependencies are Microsoft.Extensions.* 10.0.x and Microsoft.Extensions.AI.Abstractions.
+  -->
+  <ItemGroup Label="Model Context Protocol">
+    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.1.0" />
   </ItemGroup>
 
   <ItemGroup Label="Test stack">

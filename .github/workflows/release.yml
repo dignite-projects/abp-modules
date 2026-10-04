@@ -120,6 +120,10 @@ jobs:
       - name: Build
         run: dotnet build Dignite.Abp.Modules.slnx --no-restore --configuration Release
 
+      # --- aspnetcore-mcp tests ---
+      - name: Run AspNetCore Mcp tests
+        run: dotnet test aspnetcore-mcp/test/Dignite.Abp.AspNetCore.Mcp.Tests/Dignite.Abp.AspNetCore.Mcp.Tests.csproj --no-build --configuration Release --verbosity normal
+
       # --- file-storing tests ---
       - name: Run FileStoring (core) tests
         run: dotnet test file-storing/core/test/Dignite.Abp.FileStoring.Tests/Dignite.Abp.FileStoring.Tests.csproj --no-build --configuration Release --verbosity normal
@@ -148,6 +152,9 @@ jobs:
       - name: Run update authorization tests
         run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.Update.Tests/Dignite.FileExplorer.Update.Tests.csproj --no-build --configuration Release --verbosity normal
 
+      - name: Run FileExplorer MCP tools tests
+        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.Mcp.Tests/Dignite.FileExplorer.Mcp.Tests.csproj --no-build --configuration Release --verbosity normal
+
       # --- notifications tests ---
       - name: Run Notifications (core) tests
         run: dotnet test notifications/core/test/Dignite.Abp.Notifications.Tests/Dignite.Abp.Notifications.Tests.csproj --no-build --configuration Release --verbosity normal
@@ -169,7 +176,8 @@ jobs:
         run: dotnet test flex-fields/test/Dignite.Abp.FlexFields.MongoDB.Tests/Dignite.Abp.FlexFields.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal
 
       # Projects with IsPackable=false (all three demo hosts + test projects) are skipped automatically.
-      # All 33 packable NuGet projects across the three module trees are produced.
+      # Every packable project in the aggregate solution is produced - deliberately not counted here, a
+      # number in this comment had already drifted (it said 33 while 38 were being packed).
       - name: Pack NuGet packages
         run: dotnet pack Dignite.Abp.Modules.slnx --no-build --configuration Release -o ./artifacts
 
@@ -184,6 +192,10 @@ jobs:
       - name: Smoke-test flex-fields NuGet packages
         shell: pwsh
         run: ./flex-fields/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts '${{ steps.version.outputs.version }}'
+
+      - name: Smoke-test aspnetcore-mcp NuGet packages
+        shell: pwsh
+        run: ./aspnetcore-mcp/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts '${{ steps.version.outputs.version }}'
 
       # --- file-storing Angular ---
       - name: Install file-storing Angular dependencies

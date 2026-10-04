@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>Hosts one Model Context Protocol (MCP) server inside an ABP Framework application and lets any number of ABP modules contribute tools, resources and prompts to it. Owns everything that exists once per server - Streamable HTTP transport, the /mcp endpoint, ABP-permission filtering of tools/list, one structured error envelope, server info and composed instructions - and enforces that each contributing module stays inside its own name prefix and resource URI scheme, failing at startup on any collision. Domain-agnostic - not owned by, and does not reference, any module in this repository.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The official C# MCP SDK. Its server-side DI and HTTP transport; MCP's attribute model
+         ([McpServerTool] and friends) flows to contributing modules transitively from here. -->
+    <PackageReference Include="ModelContextProtocol.AspNetCore" />
+    <!-- AbpEndpointRouterOptions (how /mcp is mapped without this module owning any middleware order)
+         and IExceptionToErrorInfoConverter (how a failed tool call is turned into a structured result). -->
+    <PackageReference Include="Volo.Abp.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Dignite.Abp.AspNetCore.Mcp.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -10,8 +10,10 @@ developed together in one repository and released in lockstep.
 | [`file-storing/`](file-storing/) | An extensible **file-upload framework** layered on ABP BlobStoring (per-container `IFileHandler` pipeline: size limits, type checking, image resizing), plus an optional DDD **File Explorer** backend (directory tree, persisted file metadata, REST API) and an Angular UI library. | [README](file-storing/README.md) |
 | [`notifications/`](notifications/) | An extensible, event-driven **notification framework** with pluggable channel notifiers (SignalR, email), plus an optional **Notification Center** (persistent inbox, subscriptions, read/unread state, REST API) with MVC and Angular UI libraries. | [README](notifications/README.md) |
 | [`flex-fields/`](flex-fields/) | Runtime-defined (**"flex"**) fields — a constraint kernel supplying field types, configuration, validation, a per-entity value bag and a derived query index, with EF Core and MongoDB providers, plus an Angular UI library. It owns no domain model: each consuming application defines its own fields. | [README](flex-fields/README.md) |
+| [`aspnetcore-mcp/`](aspnetcore-mcp/) | Shared infrastructure, not a module: hosts the one **MCP (Model Context Protocol) server** an ABP application can have, and lets each module contribute AI-callable tools to it inside its own namespace (`Dignite.FileExplorer.Mcp` does, for files). | [README](aspnetcore-mcp/README.md) |
 
-Each module is **independently installable** — no module references another. They share this
+Each module is **independently installable** — no module references another; a module's optional
+`*.Mcp` package depends only on the shared `aspnetcore-mcp/` tree. They share this
 repository for development and release, not at runtime. Every package keeps the PackageId it has
 always had; moving into a subdirectory changed nothing for consumers.
 
@@ -44,6 +46,7 @@ abp-modules/
 ├── global.json  NuGet.Config  .nvmrc
 ├── Dignite.Abp.Modules.slnx     # aggregate solution (every module)
 ├── .github/workflows/           # one build+test workflow, one lockstep release workflow
+├── aspnetcore-mcp/              # shared MCP server infrastructure (no domain model)
 ├── file-storing/
 │   ├── Dignite.FileExplorer.slnx         # focused solution for this module alone
 │   ├── core/  file-explorer/             # the published class libraries

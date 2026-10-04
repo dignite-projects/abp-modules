@@ -101,12 +101,20 @@
       "path": "file-explorer/src/Dignite.FileExplorer.HttpApi/Dignite.FileExplorer.HttpApi.abppkg",
       "folder": "file-explorer/src"
     },
+    "Dignite.FileExplorer.Mcp": {
+      "path": "file-explorer/src/Dignite.FileExplorer.Mcp/Dignite.FileExplorer.Mcp.abppkg",
+      "folder": "file-explorer/src"
+    },
     "Dignite.FileExplorer.MongoDB": {
       "path": "file-explorer/src/Dignite.FileExplorer.MongoDB/Dignite.FileExplorer.MongoDB.abppkg",
       "folder": "file-explorer/src"
     },
     "Dignite.FileExplorer.Update.Tests": {
       "path": "file-explorer/test/Dignite.FileExplorer.Update.Tests/Dignite.FileExplorer.Update.Tests.abppkg",
+      "folder": "file-explorer/test"
+    },
+    "Dignite.FileExplorer.Mcp.Tests": {
+      "path": "file-explorer/test/Dignite.FileExplorer.Mcp.Tests/Dignite.FileExplorer.Mcp.Tests.abppkg",
       "folder": "file-explorer/test"
     },
     "Dignite.FileExplorer.Authorization.Tests": {
