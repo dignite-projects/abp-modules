@@ -114,7 +114,7 @@ constructor injection).
 
 ## 3. Notifiers are plugins — depend on `Abstractions`, not Core or Center
 
-A Notifier (SignalR, Email, future WebPush/FCM/SMS/Webhook) references
+A Notifier (SignalR, Email, Push, future WebPush/SMS/Webhook) references
 `Dignite.Abp.Notifications.Abstractions` and its own channel SDK — nothing else in this repo. It
 implements `INotificationNotifier` and handles one `NotificationDeliveryRequestedEto` through cancellation-aware
 `DeliverAsync`; Core's internal handler owns distributed transport adaptation. A Notifier should not need
@@ -126,6 +126,12 @@ single `ProjectReference`, to `Abstractions`. Don't reintroduce one. Host-specif
 identity lookups belong in a separate integration package, as `Notifications.Emailing.Identity` does
 for ABP Identity. Everything a Notifier needs about the notification — including the entity it
 concerns (`EntityTypeName` / `EntityId`) — rides on the ETO.
+
+The Push notifier has one more level of the same shape. A push *provider* (`Notifications.Push.Expo`, a
+future FCM/APNs one) is a plugin of the Push notifier, not a channel of its own: it references
+`Notifications.Push` and its service's client, nothing else. Where the devices come from is
+`IPushDeviceStore`, implemented outside the notifier — by the host, or by an integration package over the
+Notification Center's device registry — exactly as an email address comes from a resolver.
 
 ## 4. Delivery is best-effort, single-recipient, and cancellation-aware
 

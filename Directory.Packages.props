@@ -96,6 +96,10 @@
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.11" />
   </ItemGroup>
 
+  <ItemGroup Label="HttpClient factory (notifications push providers)">
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.11" />
+  </ItemGroup>
+
   <!--
     The official C# Model Context Protocol SDK (Apache-2.0), used by aspnetcore-mcp/ and by every
     module's *.Mcp project through it. Every MCP-contributing module in one host shares one server, so

@@ -29,6 +29,8 @@
     <ProjectReference Include="..\..\src\Dignite.Abp.Notifications.SignalR\Dignite.Abp.Notifications.SignalR.csproj" />
     <ProjectReference Include="..\..\src\Dignite.Abp.Notifications.Emailing\Dignite.Abp.Notifications.Emailing.csproj" />
     <ProjectReference Include="..\..\src\Dignite.Abp.Notifications.Emailing.Identity\Dignite.Abp.Notifications.Emailing.Identity.csproj" />
+    <ProjectReference Include="..\..\src\Dignite.Abp.Notifications.Push\Dignite.Abp.Notifications.Push.csproj" />
+    <ProjectReference Include="..\..\src\Dignite.Abp.Notifications.Push.Expo\Dignite.Abp.Notifications.Push.Expo.csproj" />
   </ItemGroup>
 
 </Project>
