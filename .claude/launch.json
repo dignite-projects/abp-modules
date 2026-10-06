@@ -21,6 +21,13 @@
       "url": "https://localhost:44390"
     },
     {
+      "name": "notifications-host",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "notifications/host/Dignite.NotificationCenter.Web.Host"],
+      "port": 44380,
+      "url": "https://localhost:44380"
+    },
+    {
       "name": "flex-fields-demo-host",
       "runtimeExecutable": "dotnet",
       "runtimeArgs": ["run", "--project", "flex-fields/demo/Dignite.Abp.FlexFields.Demo"],

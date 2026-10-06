@@ -35,14 +35,14 @@ public class NotificationChannelRouting_Tests
     public void UseChannels_requires_at_least_one_channel()
     {
         Should.Throw<ArgumentException>(() =>
-            new NotificationDefinition("test", new FixedLocalizableString("Test")).UseChannels());
+            new NotificationDefinition("Test", "test", new FixedLocalizableString("Test")).UseChannels());
     }
 
     [Fact]
     public void UseChannels_rejects_blank_channel_names()
     {
         Should.Throw<ArgumentException>(() =>
-            new NotificationDefinition("test", new FixedLocalizableString("Test")).UseChannels("SignalR", " "));
+            new NotificationDefinition("Test", "test", new FixedLocalizableString("Test")).UseChannels("SignalR", " "));
     }
 
     [Fact]
@@ -70,7 +70,7 @@ public class NotificationChannelRouting_Tests
         var eventBus = Substitute.For<IDistributedEventBus>();
 
         definitionManager.Get("test").Returns(
-            new NotificationDefinition("test", new FixedLocalizableString("Test"))
+            new NotificationDefinition("Test", "test", new FixedLocalizableString("Test"))
                 .UseChannels(EmailNotifier.ChannelName, SignalRNotifier.ChannelName));
         definitionManager.IsAvailableAsync("test", Arg.Any<Guid>()).Returns(true);
 

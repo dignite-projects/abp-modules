@@ -19,8 +19,8 @@ public class NotificationSubscriptionManagerTests
         clock.Now.Returns(DateTime.UtcNow);
 
         var userId = Guid.NewGuid();
-        var d1 = new NotificationDefinition("n1", new FixedLocalizableString("n1"));
-        var d2 = new NotificationDefinition("n2", new FixedLocalizableString("n2"));
+        var d1 = new NotificationDefinition("Test", "n1", new FixedLocalizableString("n1"));
+        var d2 = new NotificationDefinition("Test", "n2", new FixedLocalizableString("n2"));
         definitionManager.GetAllAvailableAsync(userId)
             .Returns((IReadOnlyList<NotificationDefinition>)new List<NotificationDefinition> { d1, d2 });
 
@@ -50,7 +50,7 @@ public class NotificationSubscriptionManagerTests
         clock.Now.Returns(DateTime.UtcNow);
 
         var userId = Guid.NewGuid();
-        var definition = new NotificationDefinition("order.shipped", new FixedLocalizableString("Order shipped"));
+        var definition = new NotificationDefinition("Test", "order.shipped", new FixedLocalizableString("Order shipped"));
         definitionManager.GetAllAvailableAsync(userId)
             .Returns((IReadOnlyList<NotificationDefinition>)new List<NotificationDefinition> { definition });
         store.IsSubscribedAsync(userId, "order.shipped", null, null).Returns(false);

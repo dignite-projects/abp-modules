@@ -185,6 +185,7 @@ public class DefaultNotificationDistributor :
         {
             UserId = userId,
             NotificationId = notification.Id,
+            NotificationName = notification.NotificationName,
             State = UserNotificationState.Unread,
             CreationTime = notification.CreationTime,
             TenantId = notification.TenantId

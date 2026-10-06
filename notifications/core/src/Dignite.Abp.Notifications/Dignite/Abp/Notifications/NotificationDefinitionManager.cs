@@ -21,7 +21,7 @@ public class NotificationDefinitionManager : INotificationDefinitionManager, ISi
 
     protected IServiceScopeFactory ServiceScopeFactory { get; }
 
-    private readonly Lazy<IDictionary<string, NotificationDefinition>> _definitions;
+    private readonly Lazy<DefinitionSnapshot> _snapshot;
 
     public NotificationDefinitionManager(
         IOptions<NotificationDefinitionRegistration> registration,
@@ -29,7 +29,7 @@ public class NotificationDefinitionManager : INotificationDefinitionManager, ISi
     {
         Registration = registration.Value;
         ServiceScopeFactory = serviceScopeFactory;
-        _definitions = new Lazy<IDictionary<string, NotificationDefinition>>(CreateDefinitions, isThreadSafe: true);
+        _snapshot = new Lazy<DefinitionSnapshot>(() => new DefinitionSnapshot(CreateGroups()), isThreadSafe: true);
     }
 
     public NotificationDefinition Get(string name)
@@ -39,12 +39,22 @@ public class NotificationDefinitionManager : INotificationDefinitionManager, ISi
 
     public NotificationDefinition? GetOrNull(string name)
     {
-        return _definitions.Value.TryGetValue(name, out var definition) ? definition : null;
+        return _snapshot.Value.Definitions.TryGetValue(name, out var definition) ? definition : null;
     }
 
     public IReadOnlyList<NotificationDefinition> GetAll()
     {
-        return _definitions.Value.Values.ToList();
+        return _snapshot.Value.OrderedDefinitions;
+    }
+
+    public IReadOnlyList<NotificationGroupDefinition> GetGroups()
+    {
+        return _snapshot.Value.Groups;
+    }
+
+    public NotificationGroupDefinition? GetGroupOrNull(string name)
+    {
+        return _snapshot.Value.GroupsByName.TryGetValue(name, out var group) ? group : null;
     }
 
     public virtual async Task<bool> IsAvailableAsync(string name, Guid userId)
@@ -102,7 +112,11 @@ public class NotificationDefinitionManager : INotificationDefinitionManager, ISi
         return result;
     }
 
-    protected virtual IDictionary<string, NotificationDefinition> CreateDefinitions()
+    /// <summary>
+    /// Builds the groups (and through them, the definitions) once. Overrides can populate their own
+    /// <see cref="NotificationDefinitionContext"/> and return its <see cref="NotificationDefinitionContext.Groups"/>.
+    /// </summary>
+    protected virtual IReadOnlyList<NotificationGroupDefinition> CreateGroups()
     {
         var context = new NotificationDefinitionContext();
 
@@ -116,6 +130,25 @@ public class NotificationDefinitionManager : INotificationDefinitionManager, ISi
             }
         }
 
-        return context.Definitions;
+        return context.Groups;
+    }
+
+    private sealed class DefinitionSnapshot
+    {
+        public IReadOnlyList<NotificationGroupDefinition> Groups { get; }
+
+        public IReadOnlyDictionary<string, NotificationGroupDefinition> GroupsByName { get; }
+
+        public IReadOnlyList<NotificationDefinition> OrderedDefinitions { get; }
+
+        public IReadOnlyDictionary<string, NotificationDefinition> Definitions { get; }
+
+        public DefinitionSnapshot(IReadOnlyList<NotificationGroupDefinition> groups)
+        {
+            Groups = groups.ToList();
+            GroupsByName = Groups.ToDictionary(group => group.Name, StringComparer.Ordinal);
+            OrderedDefinitions = Groups.SelectMany(group => group.Notifications).ToList();
+            Definitions = OrderedDefinitions.ToDictionary(definition => definition.Name, StringComparer.Ordinal);
+        }
     }
 }

@@ -38,6 +38,13 @@ public class UserNotificationController : NotificationCenterController, IUserNot
         return UserNotificationAppService.GetUnreadCountAsync();
     }
 
+    [HttpGet]
+    [Route("groups")]
+    public virtual Task<ListResultDto<UserNotificationGroupDto>> GetGroupsAsync()
+    {
+        return UserNotificationAppService.GetGroupsAsync();
+    }
+
     [HttpPost]
     [Route("{notificationId}/mark-as-read")]
     public virtual Task MarkAsReadAsync(Guid notificationId)

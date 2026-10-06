@@ -72,7 +72,7 @@ public class DefaultNotificationDistributorTests
         var eventBus = Substitute.For<IDistributedEventBus>();
         var notificationName = $"batch-{Guid.NewGuid():N}";
         definitionManager.Get(notificationName).Returns(
-            new NotificationDefinition(notificationName, new FixedLocalizableString("Batch")).UseChannels("Test"));
+            new NotificationDefinition("Test", notificationName, new FixedLocalizableString("Batch")).UseChannels("Test"));
         definitionManager.IsAvailableAsync(notificationName, Arg.Any<Guid>()).Returns(true);
 
         var writeBatches = new List<Guid[]>();
@@ -274,7 +274,7 @@ public class DefaultNotificationDistributorTests
         var store = Substitute.For<INotificationStore>();
         var definitionManager = Substitute.For<INotificationDefinitionManager>();
         var eventBus = Substitute.For<IDistributedEventBus>();
-        definitionManager.Get("test").Returns(new NotificationDefinition("test", new FixedLocalizableString("Test")));
+        definitionManager.Get("test").Returns(new NotificationDefinition("Test", "test", new FixedLocalizableString("Test")));
         definitionManager.IsAvailableAsync("test", Arg.Any<Guid>()).Returns(true);
 
         var userId = Guid.NewGuid();
@@ -297,7 +297,7 @@ public class DefaultNotificationDistributorTests
         var store = new NullNotificationStore();
         var definitionManager = Substitute.For<INotificationDefinitionManager>();
         var eventBus = Substitute.For<IDistributedEventBus>();
-        definitionManager.Get("test").Returns(new NotificationDefinition("test", new FixedLocalizableString("Test")));
+        definitionManager.Get("test").Returns(new NotificationDefinition("Test", "test", new FixedLocalizableString("Test")));
 
         var distributor = CreateDistributor(store, definitionManager, eventBus);
         var notification = new NotificationInfo { Id = Guid.NewGuid(), NotificationName = "test" };
@@ -451,6 +451,6 @@ public class DefaultNotificationDistributorTests
 
     private static NotificationDefinition DefinitionWithChannels()
     {
-        return new NotificationDefinition("test", new FixedLocalizableString("Test")).UseChannels("Test");
+        return new NotificationDefinition("Test", "test", new FixedLocalizableString("Test")).UseChannels("Test");
     }
 }

@@ -12,14 +12,12 @@ public class DemoNotificationDefinitionProvider : NotificationDefinitionProvider
 {
     public override void Define(INotificationDefinitionContext context)
     {
-        context.Add(new NotificationDefinition(
-            "Demo.OrderShipped",
-            new FixedLocalizableString("Order shipped"))
-            .UseChannels(SignalRNotifier.ChannelName));
+        var orders = context.AddGroup("Demo.Orders", new FixedLocalizableString("Orders"));
+        orders.AddNotification("Demo.OrderShipped", new FixedLocalizableString("Order shipped"))
+            .UseChannels(SignalRNotifier.ChannelName);
 
-        context.Add(new NotificationDefinition(
-            "Demo.Announcement",
-            new FixedLocalizableString("Announcement"))
-            .UseChannels(SignalRNotifier.ChannelName));
+        var system = context.AddGroup("Demo.System", new FixedLocalizableString("System"));
+        system.AddNotification("Demo.Announcement", new FixedLocalizableString("Announcement"))
+            .UseChannels(SignalRNotifier.ChannelName);
     }
 }

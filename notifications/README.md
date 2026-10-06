@@ -200,6 +200,36 @@ public class MyHostDbContext : AbpDbContext<MyHostDbContext>, INotificationCente
 
 Then add a migration in your host and update the database, exactly as for any other ABP module.
 
+### Upgrading to notification groups
+
+Notification groups are a breaking change for definition providers and add one column to the inbox table:
+
+1. **Definition providers**: replace every `context.Add(new NotificationDefinition(name, displayName))` with
+   `context.AddGroup(groupName, groupDisplayName).AddNotification(name, displayName)`. The top-level `Add` and the
+   public `NotificationDefinition` constructor are gone. A custom `NotificationDefinitionManager` that overrode
+   `CreateDefinitions()` now overrides `CreateGroups()`; `INotificationDefinitionManager` gained `GetGroups()` and
+   `GetGroupOrNull(name)`.
+2. **Inbox rows**: `UserNotification` gains a required `NotificationName` (a copy of the notification's definition
+   name), so the inbox can be filtered and counted by group with single-table indexed queries on both providers.
+   `INotificationStore` implementations must populate it from `UserNotificationInfo.NotificationName` and implement
+   the new name filters and `GetUnreadCountsByNotificationNameAsync`.
+
+Existing EF Core databases need a host migration that adds the column, backfills it from the notification row, and
+then adds the new `(TenantId, UserId, NotificationName, State, CreationTime)` index. Add the column as nullable (or
+with a temporary default), run the backfill, then make it required:
+
+```sql
+UPDATE un
+SET un.NotificationName = n.NotificationName
+FROM NotifUserNotifications un
+JOIN NotifNotifications n ON n.Id = un.NotificationId;  -- default "Notif" prefix; adjust prefix, schema and SQL dialect
+```
+
+Inbox rows whose notification row is already gone are never returned by the inbox; delete them before making the
+column required. MongoDB needs the same backfill (set each `NotifUserNotifications` document's `NotificationName`
+from its `NotifNotifications` document) before the new index is relied on; documents without the field simply never
+match a group filter.
+
 ### Upgrading subscription identity indexes
 
 Subscription identity is the tuple `(TenantId, UserId, NotificationName, EntityTypeName?, EntityId?)`.
@@ -434,27 +464,35 @@ distributed-event deserialization, and HTTP server/client converters all go thro
 MVC and Angular libraries render the placeholder as a generic unsupported-notification message and do not display
 its raw diagnostic JSON. Writing an unregistered CLR type still throws — that fail-fast is unconditional.
 
-**3. Register the notification definition** through an `INotificationDefinitionProvider` — its name,
-display text, optional feature/permission gating, and explicit channel routing:
+**3. Register the notification definition** through an `INotificationDefinitionProvider` — its group, name,
+display text, optional feature/permission gating, and explicit channel routing. Like ABP permissions, every
+definition belongs to a **group** (e.g. "Orders"), which is how the inbox and the subscription settings categorize
+notifications:
 
 ```csharp
 public class ShopNotificationDefinitionProvider : NotificationDefinitionProvider
 {
     public override void Define(INotificationDefinitionContext context)
     {
-        context.Add(new NotificationDefinition(
-            "Demo.OrderShipped",
-            new FixedLocalizableString("Order shipped"))
-            .UseChannels(SignalRNotifier.ChannelName));
+        var orders = context.AddGroup("Demo.Orders", new FixedLocalizableString("Orders"));
+
+        orders.AddNotification("Demo.OrderShipped", new FixedLocalizableString("Order shipped"))
+            .UseChannels(SignalRNotifier.ChannelName);
     }
 }
 ```
 
-Definition names use ordinal, case-sensitive comparison. Every duplicate name is a startup error, and the error
-identifies both provider types; an equivalent-looking second definition is not treated as idempotent because
-definitions are mutable after construction. Provider types are convention-discovered across modules; registering
-the same provider type more than once is idempotent and the provider executes once. Empty and whitespace-only
-definition names are rejected by the constructor.
+Group and definition names use ordinal, case-sensitive comparison. Every duplicate group name and every duplicate
+definition name — across all groups, not just within one — is a startup error, and the error identifies both
+provider types; an equivalent-looking second definition is not treated as idempotent because definitions are
+mutable after construction. To add definitions to a group another module created, use
+`context.GetGroupOrNull(name)` instead of `AddGroup`. Provider types are convention-discovered across modules;
+registering the same provider type more than once is idempotent and the provider executes once. Empty and
+whitespace-only names are rejected immediately.
+
+A group is definition-time metadata only: it is never persisted, so moving a definition to another group needs no
+data migration. Stored notifications whose definition no longer exists fall into a synthetic "Other" inbox group
+(`NotificationCenterConsts.OtherGroupName`), so they stay listable and deletable.
 
 An explicitly empty `userIds` array remains a true no-op and returns before definition resolution.
 
@@ -624,14 +662,14 @@ but no SignalR, Email, Web Push, or other notifier event is published. This keep
 notifier from accidentally fanning out existing notification types to a new channel:
 
 ```csharp
-context.Add(new NotificationDefinition("Demo.OrderShipped", new FixedLocalizableString("Order shipped"))
-    .UseChannels(SignalRNotifier.ChannelName, EmailNotifier.ChannelName));
+orders.AddNotification("Demo.OrderShipped", new FixedLocalizableString("Order shipped"))
+    .UseChannels(SignalRNotifier.ChannelName, EmailNotifier.ChannelName);
 ```
 
 For inbox-only Notification Center entries, omit `UseChannels(...)`:
 
 ```csharp
-context.Add(new NotificationDefinition("Demo.AuditLog", new FixedLocalizableString("Audit log")));
+system.AddNotification("Demo.AuditLog", new FixedLocalizableString("Audit log"));
 ```
 
 In stateless forwarding mode (`NullNotificationStore`, no NotificationCenter installed), an inbox-only
@@ -645,8 +683,9 @@ Two controllers expose the current user's notification center under `/api/notifi
 
 | Method & route | Purpose |
 |---|---|
-| `GET /api/notification-center/notifications` | List the caller's notifications (paged; filter by state / date) |
+| `GET /api/notification-center/notifications` | List the caller's notifications (paged; filter by state / date / `groupName`) |
 | `GET /api/notification-center/notifications/unread-count` | Unread notification count (for the bell badge) |
+| `GET /api/notification-center/notifications/groups` | The caller's inbox groups with per-group unread counts (for inbox tabs) |
 | `POST /api/notification-center/notifications/{id}/mark-as-read` | Mark one notification read |
 | `POST /api/notification-center/notifications/mark-all-as-read` | Mark all read |
 | `DELETE /api/notification-center/notifications/{id}` | Delete one |
@@ -657,6 +696,13 @@ Two controllers expose the current user's notification center under `/api/notifi
 
 All endpoints are scoped to the authenticated caller. Use `...HttpApi.Client` for a typed C# proxy, or the
 ABP-generated Angular services.
+
+`GET notifications/groups` lists groups in definition order. A group appears when the caller can currently receive
+one of its definitions or still has unread notifications in it; the "Other" group appears only while the caller has
+notifications whose definition no longer exists. Each `UserNotificationDto` and `NotificationSubscriptionDto` also
+carries its `groupName` and localized `groupDisplayName`. The per-group unread counts come from one grouped query over
+the caller's unread rows (plus one count for "Other" when it has no unread rows), so this endpoint is meant for the
+inbox page; the bell badge keeps using `unread-count`.
 
 The subscribe/unsubscribe request contains `notificationName` plus optional `entityTypeName` and `entityId`; the
 two entity fields must be supplied together (a definition-wide subscription omits both). `GET subscriptions`

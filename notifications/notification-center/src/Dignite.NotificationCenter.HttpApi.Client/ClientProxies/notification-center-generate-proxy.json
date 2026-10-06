@@ -26,7 +26,9 @@
                   "returnValue": {
                     "type": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.NotificationCenter.NotificationSubscriptionDto>",
                     "typeSimple": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.NotificationCenter.NotificationSubscriptionDto>",
-                    "summary": null
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
                   }
                 },
                 {
@@ -47,7 +49,9 @@
                   "returnValue": {
                     "type": "System.Void",
                     "typeSimple": "System.Void",
-                    "summary": null
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
                   }
                 },
                 {
@@ -68,7 +72,9 @@
                   "returnValue": {
                     "type": "System.Void",
                     "typeSimple": "System.Void",
-                    "summary": null
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
                   }
                 }
               ]
@@ -86,7 +92,9 @@
               "returnValue": {
                 "type": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.NotificationCenter.NotificationSubscriptionDto>",
                 "typeSimple": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.NotificationCenter.NotificationSubscriptionDto>",
-                "summary": null
+                "summary": null,
+                "contentTypes": null,
+                "isRemoteStream": false
               },
               "allowAnonymous": null,
               "authorizeDatas": [],
@@ -135,7 +143,9 @@
               "returnValue": {
                 "type": "System.Void",
                 "typeSimple": "System.Void",
-                "summary": null
+                "summary": null,
+                "contentTypes": null,
+                "isRemoteStream": false
               },
               "allowAnonymous": null,
               "authorizeDatas": [],
@@ -214,7 +224,9 @@
               "returnValue": {
                 "type": "System.Void",
                 "typeSimple": "System.Void",
-                "summary": null
+                "summary": null,
+                "contentTypes": null,
+                "isRemoteStream": false
               },
               "allowAnonymous": null,
               "authorizeDatas": [],
@@ -260,7 +272,9 @@
                   "returnValue": {
                     "type": "Volo.Abp.Application.Dtos.PagedResultDto<Dignite.NotificationCenter.UserNotificationDto>",
                     "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<Dignite.NotificationCenter.UserNotificationDto>",
-                    "summary": null
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
                   }
                 },
                 {
@@ -269,7 +283,20 @@
                   "returnValue": {
                     "type": "System.Int32",
                     "typeSimple": "number",
-                    "summary": null
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "GetGroupsAsync",
+                  "parametersOnMethod": [],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.NotificationCenter.UserNotificationGroupDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.NotificationCenter.UserNotificationGroupDto>",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
                   }
                 },
                 {
@@ -290,7 +317,9 @@
                   "returnValue": {
                     "type": "System.Void",
                     "typeSimple": "System.Void",
-                    "summary": null
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
                   }
                 },
                 {
@@ -299,7 +328,9 @@
                   "returnValue": {
                     "type": "System.Void",
                     "typeSimple": "System.Void",
-                    "summary": null
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
                   }
                 },
                 {
@@ -320,7 +351,9 @@
                   "returnValue": {
                     "type": "System.Void",
                     "typeSimple": "System.Void",
-                    "summary": null
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
                   }
                 },
                 {
@@ -329,7 +362,9 @@
                   "returnValue": {
                     "type": "System.Void",
                     "typeSimple": "System.Void",
-                    "summary": null
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
                   }
                 }
               ]
@@ -362,6 +397,21 @@
                   "jsonName": null,
                   "type": "Dignite.Abp.Notifications.UserNotificationState?",
                   "typeSimple": "enum?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "GroupName",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
@@ -435,7 +485,9 @@
               "returnValue": {
                 "type": "Volo.Abp.Application.Dtos.PagedResultDto<Dignite.NotificationCenter.UserNotificationDto>",
                 "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<Dignite.NotificationCenter.UserNotificationDto>",
-                "summary": null
+                "summary": null,
+                "contentTypes": null,
+                "isRemoteStream": false
               },
               "allowAnonymous": null,
               "authorizeDatas": [],
@@ -456,7 +508,32 @@
               "returnValue": {
                 "type": "System.Int32",
                 "typeSimple": "number",
-                "summary": null
+                "summary": null,
+                "contentTypes": null,
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.NotificationCenter.IUserNotificationAppService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "GetGroupsAsync": {
+              "uniqueName": "GetGroupsAsync",
+              "name": "GetGroupsAsync",
+              "httpMethod": "GET",
+              "url": "api/notification-center/notifications/groups",
+              "supportedVersions": [],
+              "parametersOnMethod": [],
+              "parameters": [],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.NotificationCenter.UserNotificationGroupDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.NotificationCenter.UserNotificationGroupDto>",
+                "summary": null,
+                "contentTypes": null,
+                "isRemoteStream": false
               },
               "allowAnonymous": null,
               "authorizeDatas": [],
@@ -505,7 +582,9 @@
               "returnValue": {
                 "type": "System.Void",
                 "typeSimple": "System.Void",
-                "summary": null
+                "summary": null,
+                "contentTypes": null,
+                "isRemoteStream": false
               },
               "allowAnonymous": null,
               "authorizeDatas": [],
@@ -526,7 +605,9 @@
               "returnValue": {
                 "type": "System.Void",
                 "typeSimple": "System.Void",
-                "summary": null
+                "summary": null,
+                "contentTypes": null,
+                "isRemoteStream": false
               },
               "allowAnonymous": null,
               "authorizeDatas": [],
@@ -575,7 +656,9 @@
               "returnValue": {
                 "type": "System.Void",
                 "typeSimple": "System.Void",
-                "summary": null
+                "summary": null,
+                "contentTypes": null,
+                "isRemoteStream": false
               },
               "allowAnonymous": null,
               "authorizeDatas": [],
@@ -596,7 +679,9 @@
               "returnValue": {
                 "type": "System.Void",
                 "typeSimple": "System.Void",
-                "summary": null
+                "summary": null,
+                "contentTypes": null,
+                "isRemoteStream": false
               },
               "allowAnonymous": null,
               "authorizeDatas": [],

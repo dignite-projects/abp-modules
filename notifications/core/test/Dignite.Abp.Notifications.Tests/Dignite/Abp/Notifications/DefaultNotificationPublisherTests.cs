@@ -30,6 +30,7 @@ public class DefaultNotificationPublisherTests
     {
         _definitionManager.Get(Arg.Any<string>()).Returns(call =>
             new NotificationDefinition(
+                "Test",
                 call.Arg<string>(),
                 new FixedLocalizableString(call.Arg<string>())));
     }
@@ -224,7 +225,7 @@ public class DefaultNotificationPublisherTests
         {
             var definitionManager = Substitute.For<INotificationDefinitionManager>();
             definitionManager.Get("test")
-                .Returns(new NotificationDefinition("test", new FixedLocalizableString("Test")).UseChannels("Test"));
+                .Returns(new NotificationDefinition("Test", "test", new FixedLocalizableString("Test")).UseChannels("Test"));
             definitionManager.IsAvailableAsync("test", Arg.Any<Guid>()).Returns(true);
 
             Store.When(x => x.InsertNotificationAsync(Arg.Any<NotificationInfo>()))

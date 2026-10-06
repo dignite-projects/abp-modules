@@ -95,6 +95,12 @@ public interface INotificationStore
         DateTime? endDate = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Gets a page of the user's inbox, newest first. <paramref name="notificationNames"/> keeps only rows of those
+    /// definitions; <paramref name="excludedNotificationNames"/> drops rows of those definitions (used for rows whose
+    /// definition no longer exists). Both match the inbox row's notification name using the database's string
+    /// comparison, so definition names that differ only by case are not distinguished on case-insensitive collations.
+    /// </summary>
     Task<List<UserNotificationWithNotification>> GetUserNotificationsAsync(
         Guid userId,
         UserNotificationState? state = null,
@@ -102,12 +108,25 @@ public interface INotificationStore
         int maxResultCount = int.MaxValue,
         DateTime? startDate = null,
         DateTime? endDate = null,
+        IReadOnlyCollection<string>? notificationNames = null,
+        IReadOnlyCollection<string>? excludedNotificationNames = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Counts the user's inbox rows using the same filters as <see cref="GetUserNotificationsAsync"/>.</summary>
     Task<int> GetUserNotificationCountAsync(
         Guid userId,
         UserNotificationState? state = null,
         DateTime? startDate = null,
         DateTime? endDate = null,
+        IReadOnlyCollection<string>? notificationNames = null,
+        IReadOnlyCollection<string>? excludedNotificationNames = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the user's unread inbox row count per notification name, in a single grouped query. Names with no unread
+    /// rows are omitted.
+    /// </summary>
+    Task<Dictionary<string, int>> GetUnreadCountsByNotificationNameAsync(
+        Guid userId,
         CancellationToken cancellationToken = default);
 }

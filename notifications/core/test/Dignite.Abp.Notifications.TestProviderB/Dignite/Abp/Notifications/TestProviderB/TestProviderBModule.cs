@@ -12,8 +12,8 @@ public class TestProviderBDefinitionProvider : NotificationDefinitionProvider
 {
     public override void Define(INotificationDefinitionContext context)
     {
-        context.Add(new NotificationDefinition(
+        context.AddGroup("Test.ProviderB").AddNotification(
             "Test.CrossModuleDuplicate",
-            new FixedLocalizableString("Provider B")));
+            new FixedLocalizableString("Provider B"));
     }
 }

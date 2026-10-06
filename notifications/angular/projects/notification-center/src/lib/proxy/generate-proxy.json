@@ -3687,6 +3687,15 @@
                   }
                 },
                 {
+                  "name": "GetGroupsAsync",
+                  "parametersOnMethod": [],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.NotificationCenter.UserNotificationGroupDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.NotificationCenter.UserNotificationGroupDto>",
+                    "summary": null
+                  }
+                },
+                {
                   "name": "MarkAsReadAsync",
                   "parametersOnMethod": [
                     {
@@ -3787,6 +3796,21 @@
                 },
                 {
                   "nameOnMethod": "input",
+                  "name": "GroupName",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "input",
                   "name": "StartDate",
                   "jsonName": null,
                   "type": "System.DateTime?",
@@ -3870,6 +3894,27 @@
               "returnValue": {
                 "type": "System.Int32",
                 "typeSimple": "number",
+                "summary": null
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.NotificationCenter.IUserNotificationAppService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "GetGroupsAsync": {
+              "uniqueName": "GetGroupsAsync",
+              "name": "GetGroupsAsync",
+              "httpMethod": "GET",
+              "url": "api/notification-center/notifications/groups",
+              "supportedVersions": [],
+              "parametersOnMethod": [],
+              "parameters": [],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.NotificationCenter.UserNotificationGroupDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.NotificationCenter.UserNotificationGroupDto>",
                 "summary": null
               },
               "allowAnonymous": null,
@@ -5733,6 +5778,75 @@
     }
   },
   "types": {
+    "Dignite.Abp.Notifications.NotificationData": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "ExtensionData",
+          "jsonName": null,
+          "type": "{System.String:System.Text.Json.JsonElement}",
+          "typeSimple": "{string:System.Text.Json.JsonElement}",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true,
+          "summary": null,
+          "description": null,
+          "displayName": null
+        }
+      ],
+      "summary": null,
+      "remarks": null,
+      "description": null,
+      "displayName": null
+    },
+    "Dignite.Abp.Notifications.NotificationSeverity": {
+      "baseType": "System.Enum",
+      "isEnum": true,
+      "enumNames": [
+        "Info",
+        "Success",
+        "Warn",
+        "Error"
+      ],
+      "enumValues": [
+        0,
+        10,
+        20,
+        30
+      ],
+      "genericArguments": null,
+      "properties": null,
+      "summary": null,
+      "remarks": null,
+      "description": null,
+      "displayName": null
+    },
+    "Dignite.Abp.Notifications.UserNotificationState": {
+      "baseType": "System.Enum",
+      "isEnum": true,
+      "enumNames": [
+        "Unread",
+        "Read"
+      ],
+      "enumValues": [
+        0,
+        1
+      ],
+      "genericArguments": null,
+      "properties": null,
+      "summary": null,
+      "remarks": null,
+      "description": null,
+      "displayName": null
+    },
     "Dignite.NotificationCenter.GetUserNotificationListInput": {
       "baseType": "Volo.Abp.Application.Dtos.PagedResultRequestDto",
       "isEnum": false,
@@ -5745,6 +5859,22 @@
           "jsonName": null,
           "type": "Dignite.Abp.Notifications.UserNotificationState?",
           "typeSimple": "enum?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true,
+          "summary": null,
+          "description": null,
+          "displayName": null
+        },
+        {
+          "name": "GroupName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -5813,6 +5943,38 @@
           "maximum": null,
           "regex": null,
           "isNullable": false,
+          "summary": null,
+          "description": null,
+          "displayName": null
+        },
+        {
+          "name": "GroupName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false,
+          "summary": null,
+          "description": null,
+          "displayName": null
+        },
+        {
+          "name": "GroupDisplayName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true,
           "summary": null,
           "description": null,
           "displayName": null
@@ -6036,6 +6198,38 @@
           "displayName": null
         },
         {
+          "name": "GroupName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false,
+          "summary": null,
+          "description": null,
+          "displayName": null
+        },
+        {
+          "name": "GroupDisplayName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true,
+          "summary": null,
+          "description": null,
+          "displayName": null
+        },
+        {
           "name": "Data",
           "jsonName": null,
           "type": "Dignite.Abp.Notifications.NotificationData",
@@ -6137,7 +6331,7 @@
       "description": null,
       "displayName": null
     },
-    "Dignite.Abp.Notifications.NotificationData": {
+    "Dignite.NotificationCenter.UserNotificationGroupDto": {
       "baseType": null,
       "isEnum": false,
       "enumNames": null,
@@ -6145,62 +6339,54 @@
       "genericArguments": null,
       "properties": [
         {
-          "name": "ExtensionData",
+          "name": "Name",
           "jsonName": null,
-          "type": "{System.String:System.Text.Json.JsonElement}",
-          "typeSimple": "{string:System.Text.Json.JsonElement}",
+          "type": "System.String",
+          "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null,
-          "isNullable": true,
+          "isNullable": false,
+          "summary": null,
+          "description": null,
+          "displayName": null
+        },
+        {
+          "name": "DisplayName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false,
+          "summary": null,
+          "description": null,
+          "displayName": null
+        },
+        {
+          "name": "UnreadCount",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false,
           "summary": null,
           "description": null,
           "displayName": null
         }
       ],
-      "summary": null,
-      "remarks": null,
-      "description": null,
-      "displayName": null
-    },
-    "Dignite.Abp.Notifications.NotificationSeverity": {
-      "baseType": "System.Enum",
-      "isEnum": true,
-      "enumNames": [
-        "Info",
-        "Success",
-        "Warn",
-        "Error"
-      ],
-      "enumValues": [
-        0,
-        10,
-        20,
-        30
-      ],
-      "genericArguments": null,
-      "properties": null,
-      "summary": null,
-      "remarks": null,
-      "description": null,
-      "displayName": null
-    },
-    "Dignite.Abp.Notifications.UserNotificationState": {
-      "baseType": "System.Enum",
-      "isEnum": true,
-      "enumNames": [
-        "Unread",
-        "Read"
-      ],
-      "enumValues": [
-        0,
-        1
-      ],
-      "genericArguments": null,
-      "properties": null,
       "summary": null,
       "remarks": null,
       "description": null,

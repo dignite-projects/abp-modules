@@ -113,27 +113,108 @@ public class NotificationRegistration_Tests
     public void Definition_names_are_ordinal_case_sensitive_and_every_exact_repeat_is_rejected()
     {
         var context = new NotificationDefinitionContext();
-        context.Add(NewDefinition("Test.Definition"));
-        context.Add(NewDefinition("test.definition"));
+        var group = context.AddGroup("Test.Group");
+        AddDefinition(group, "Test.Definition");
+        AddDefinition(group, "test.definition");
 
         context.GetOrNull("Test.Definition").ShouldNotBeNull();
         context.GetOrNull("test.definition").ShouldNotBeNull();
         context.GetOrNull("TEST.DEFINITION").ShouldBeNull();
 
         var exception = Should.Throw<InvalidOperationException>(() =>
-            context.Add(NewDefinition("Test.Definition")));
+            AddDefinition(group, "Test.Definition"));
         exception.Message.ShouldContain("Test.Definition");
         exception.Message.ShouldContain("<direct registration>");
+    }
+
+    [Fact]
+    public void Definition_names_are_unique_across_groups()
+    {
+        var context = new NotificationDefinitionContext();
+        AddDefinition(context.AddGroup("Test.First"), "Test.Shared");
+
+        var exception = Should.Throw<InvalidOperationException>(() =>
+            AddDefinition(context.AddGroup("Test.Second"), "Test.Shared"));
+        exception.Message.ShouldContain("Test.Shared");
+        context.GetGroupOrNull("Test.Second")!.Notifications.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Group_names_are_ordinal_case_sensitive_and_every_repeat_is_rejected()
+    {
+        var context = new NotificationDefinitionContext();
+        context.AddGroup("Test.Group");
+        context.AddGroup("test.group");
+
+        context.GetGroupOrNull("Test.Group").ShouldNotBeNull();
+        context.GetGroupOrNull("test.group").ShouldNotBeNull();
+        context.GetGroupOrNull("TEST.GROUP").ShouldBeNull();
+
+        var exception = Should.Throw<InvalidOperationException>(() => context.AddGroup("Test.Group"));
+        exception.Message.ShouldContain("Test.Group");
+        exception.Message.ShouldContain("<direct registration>");
+    }
+
+    [Fact]
+    public void Definitions_record_their_group_and_keep_registration_order()
+    {
+        var context = new NotificationDefinitionContext();
+        var group = context.AddGroup("Test.Orders", new FixedLocalizableString("Orders"));
+        AddDefinition(group, "Test.Order.Shipped");
+        AddDefinition(group, "Test.Order.Paid");
+        AddDefinition(context.GetGroupOrNull("Test.Orders")!, "Test.Order.Cancelled");
+
+        group.Notifications.Select(definition => definition.Name)
+            .ShouldBe(new[] { "Test.Order.Shipped", "Test.Order.Paid", "Test.Order.Cancelled" });
+        group.Notifications.ShouldAllBe(definition => definition.GroupName == "Test.Orders");
+        group.GetNotificationOrNull("Test.Order.Paid").ShouldNotBeNull();
+        group.DisplayName.ShouldBeOfType<FixedLocalizableString>().Value.ShouldBe("Orders");
+        context.AddGroup("Test.Unnamed").DisplayName.ShouldBeOfType<FixedLocalizableString>().Value
+            .ShouldBe("Test.Unnamed");
     }
 
     [Theory]
     [InlineData("")]
     [InlineData(" ")]
     [InlineData("\t")]
-    public void Definition_name_rejects_empty_or_whitespace_values_immediately(string name)
+    public void Definition_and_group_names_reject_empty_or_whitespace_values_immediately(string name)
     {
+        var context = new NotificationDefinitionContext();
+        Should.Throw<ArgumentException>(() => context.AddGroup(name));
         Should.Throw<ArgumentException>(() =>
-            new NotificationDefinition(name, new FixedLocalizableString("Invalid")));
+            context.AddGroup("Test.Group").AddNotification(name, new FixedLocalizableString("Invalid")));
+    }
+
+    [Fact]
+    public async Task Duplicate_group_providers_fail_host_start()
+    {
+        var exception = await Should.ThrowAsync<InvalidOperationException>(
+            () => StartHostAsync<DuplicateGroupsStartupModule>());
+
+        exception.Message.ShouldContain("Test.DuplicateGroup");
+        exception.Message.ShouldContain(typeof(DuplicateGroupDefinitionProviderA).FullName!);
+        exception.Message.ShouldContain(typeof(DuplicateGroupDefinitionProviderB).FullName!);
+    }
+
+    [Fact]
+    public async Task Definition_manager_exposes_groups_in_registration_order()
+    {
+        using var host = BuildHost<GroupedDefinitionsStartupModule>();
+        await host.StartAsync();
+        var definitionManager = host.Services.GetRequiredService<INotificationDefinitionManager>();
+
+        // The test assembly's convention-discovered provider contributes its own group as well.
+        definitionManager.GetGroups().Select(group => group.Name)
+            .Where(name => name != TestNotificationDefinitionProvider.GroupName)
+            .ShouldBe(new[] { "Test.Orders", "Test.System" });
+        definitionManager.GetGroupOrNull("Test.System")!.Notifications.Single().Name.ShouldBe("Test.Announcement");
+        definitionManager.GetGroupOrNull("test.system").ShouldBeNull();
+        definitionManager.GetAll().Select(definition => definition.Name)
+            .Where(name => definitionManager.Get(name).GroupName != TestNotificationDefinitionProvider.GroupName)
+            .ShouldBe(new[] { "Test.Order.Shipped", "Test.Order.Paid", "Test.Announcement" });
+        definitionManager.Get("Test.Order.Paid").GroupName.ShouldBe("Test.Orders");
+
+        await host.StopAsync();
     }
 
     [Fact]
@@ -260,9 +341,9 @@ public class NotificationRegistration_Tests
         await host.StopAsync();
     }
 
-    private static NotificationDefinition NewDefinition(string name)
+    private static NotificationDefinition AddDefinition(NotificationGroupDefinition group, string name)
     {
-        return new NotificationDefinition(name, new FixedLocalizableString(name));
+        return group.AddNotification(name, new FixedLocalizableString(name));
     }
 
     private static async Task StartHostAsync<TStartupModule>() where TStartupModule : IAbpModule
@@ -328,9 +409,9 @@ internal sealed class ProviderDependencyDefinitionProvider : INotificationDefini
         _registration.ShouldNotBeNull();
         _definitionManager.ShouldNotBeNull();
         _registration.DefinitionProviders.Count(type => type == typeof(ProviderDependencyDefinitionProvider)).ShouldBe(1);
-        context.Add(new NotificationDefinition(
+        context.AddGroup("Test.ProviderDependencies").AddNotification(
             "Test.ProviderDependencies",
-            new FixedLocalizableString("Provider dependencies")));
+            new FixedLocalizableString("Provider dependencies"));
     }
 }
 
@@ -344,15 +425,68 @@ internal sealed class CustomNotificationDefinitionManager : NotificationDefiniti
     {
     }
 
-    protected override IDictionary<string, NotificationDefinition> CreateDefinitions()
+    protected override IReadOnlyList<NotificationGroupDefinition> CreateGroups()
     {
-        var definition = new NotificationDefinition(
+        var context = new NotificationDefinitionContext();
+        context.AddGroup("Test.CustomManager").AddNotification(
             "Test.CustomManager",
             new FixedLocalizableString("Custom manager"));
-        return new Dictionary<string, NotificationDefinition>(StringComparer.Ordinal)
+        return context.Groups;
+    }
+}
+
+internal sealed class DuplicateGroupDefinitionProviderA : INotificationDefinitionProvider
+{
+    public void Define(INotificationDefinitionContext context)
+    {
+        context.AddGroup("Test.DuplicateGroup");
+    }
+}
+
+internal sealed class DuplicateGroupDefinitionProviderB : INotificationDefinitionProvider
+{
+    public void Define(INotificationDefinitionContext context)
+    {
+        context.AddGroup("Test.DuplicateGroup");
+    }
+}
+
+internal sealed class GroupedDefinitionProvider : INotificationDefinitionProvider
+{
+    public void Define(INotificationDefinitionContext context)
+    {
+        context.AddGroup("Test.Orders")
+            .AddNotification("Test.Order.Shipped", new FixedLocalizableString("Shipped"));
+        context.AddGroup("Test.System")
+            .AddNotification("Test.Announcement", new FixedLocalizableString("Announcement"));
+        context.GetGroupOrNull("Test.Orders")!
+            .AddNotification("Test.Order.Paid", new FixedLocalizableString("Paid"));
+    }
+}
+
+[DependsOn(typeof(AbpNotificationsModule))]
+public class DuplicateGroupsStartupModule : AbpModule
+{
+    public override void ConfigureServices(ServiceConfigurationContext context)
+    {
+        context.Services.AddTransient<DuplicateGroupDefinitionProviderA>();
+        context.Services.AddTransient<DuplicateGroupDefinitionProviderB>();
+        Configure<NotificationDefinitionRegistration>(options =>
         {
-            [definition.Name] = definition
-        };
+            options.DefinitionProviders.Add(typeof(DuplicateGroupDefinitionProviderA));
+            options.DefinitionProviders.Add(typeof(DuplicateGroupDefinitionProviderB));
+        });
+    }
+}
+
+[DependsOn(typeof(AbpNotificationsModule))]
+public class GroupedDefinitionsStartupModule : AbpModule
+{
+    public override void ConfigureServices(ServiceConfigurationContext context)
+    {
+        context.Services.AddTransient<GroupedDefinitionProvider>();
+        Configure<NotificationDefinitionRegistration>(options =>
+            options.DefinitionProviders.Add(typeof(GroupedDefinitionProvider)));
     }
 }
 

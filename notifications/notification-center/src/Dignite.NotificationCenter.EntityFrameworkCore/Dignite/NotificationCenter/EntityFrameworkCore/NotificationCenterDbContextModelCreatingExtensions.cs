@@ -32,8 +32,12 @@ public static class NotificationCenterDbContextModelCreatingExtensions
             b.ToTable(NotificationCenterDbProperties.DbTablePrefix + "UserNotifications", NotificationCenterDbProperties.DbSchema);
             b.ConfigureByConvention();
 
+            b.Property(x => x.NotificationName).IsRequired().HasMaxLength(NotificationCenterConsts.MaxNotificationNameLength);
+
             // The real inbox query: a user's notifications filtered by state and ordered by time (fixes problem D).
             b.HasIndex(x => new { x.TenantId, x.UserId, x.State, x.CreationTime });
+            // A user's inbox filtered by definition/group, and the per-definition unread counts.
+            b.HasIndex(x => new { x.TenantId, x.UserId, x.NotificationName, x.State, x.CreationTime });
             // Retention cleanup deletes old read inbox rows without loading unrelated users.
             b.HasIndex(x => new { x.TenantId, x.State, x.CreationTime });
             b.HasIndex(x => new { x.State, x.CreationTime });
