@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dignite.Abp.Notifications.Push;
@@ -12,8 +13,9 @@ namespace Dignite.NotificationCenter.Push;
 /// </summary>
 /// <remarks>
 /// Runs under the ambient tenant: ABP's event bus has already entered the notification's tenant before the notifier
-/// asks, so the registry's tenant filter scopes the lookup. Override <see cref="IsActiveAsync"/> to stop pushing to
-/// devices by a rule of the host's — <c>Dignite.NotificationCenter.Push.Identity</c> does it for ended login sessions.
+/// asks, so the registry's tenant filter scopes the lookup. Override <see cref="FindInactiveAsync"/> to stop pushing
+/// to devices by a rule of the host's — <c>Dignite.NotificationCenter.Push.Identity</c> does it for ended login
+/// sessions.
 /// </remarks>
 [Dependency(ReplaceServices = true)]
 [ExposeServices(typeof(IPushDeviceStore), typeof(NotificationCenterPushDeviceStore))]
@@ -30,20 +32,23 @@ public class NotificationCenterPushDeviceStore : IPushDeviceStore, ITransientDep
         Guid userId,
         CancellationToken cancellationToken = default)
     {
-        var targets = new List<PushTarget>();
-        foreach (var device in await PushDeviceManager.GetListAsync(userId, cancellationToken))
+        var devices = await PushDeviceManager.GetListAsync(userId, cancellationToken);
+        if (devices.Count == 0)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            if (!await IsActiveAsync(device, cancellationToken))
-            {
-                await PushDeviceManager.RemoveAsync(device, cancellationToken);
-                continue;
-            }
-
-            targets.Add(new PushTarget(device.Provider, device.Token, device.CultureName));
+            return Array.Empty<PushTarget>();
         }
 
-        return targets;
+        var inactive = await FindInactiveAsync(userId, devices, cancellationToken);
+        foreach (var device in inactive)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await PushDeviceManager.RemoveAsync(device, cancellationToken);
+        }
+
+        return devices
+            .Except(inactive)
+            .Select(device => new PushTarget(device.Provider, device.Token, device.CultureName))
+            .ToList();
     }
 
     public virtual Task RemoveAsync(string provider, string token, CancellationToken cancellationToken = default)
@@ -52,10 +57,14 @@ public class NotificationCenterPushDeviceStore : IPushDeviceStore, ITransientDep
     }
 
     /// <summary>
-    /// Whether the device should still be pushed to. A device found inactive is forgotten, not just skipped.
+    /// The devices of <paramref name="userId"/> that should no longer be pushed to; they are forgotten, not just
+    /// skipped. Gets all of the user's devices at once so an override can judge them with one query.
     /// </summary>
-    protected virtual Task<bool> IsActiveAsync(PushDevice device, CancellationToken cancellationToken)
+    protected virtual Task<IReadOnlyCollection<PushDevice>> FindInactiveAsync(
+        Guid userId,
+        IReadOnlyList<PushDevice> devices,
+        CancellationToken cancellationToken)
     {
-        return Task.FromResult(true);
+        return Task.FromResult<IReadOnlyCollection<PushDevice>>(Array.Empty<PushDevice>());
     }
 }

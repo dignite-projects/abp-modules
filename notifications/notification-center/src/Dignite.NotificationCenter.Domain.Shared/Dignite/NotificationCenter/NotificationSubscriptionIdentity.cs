@@ -20,7 +20,7 @@ public static class NotificationSubscriptionIdentity
 
     public static string GetNotificationNameKey(string notificationName)
     {
-        return ComputeHash("N", CheckRequiredLength(
+        return NotificationCenterIdentityKey.Compute("N", CheckRequiredLength(
             notificationName,
             nameof(notificationName),
             NotificationCenterConsts.MaxNotificationNameLength));
@@ -30,7 +30,7 @@ public static class NotificationSubscriptionIdentity
     {
         if (entityTypeName == null && entityId == null)
         {
-            return ComputeHash("D");
+            return NotificationCenterIdentityKey.Compute("D");
         }
 
         if (entityTypeName == null || entityId == null)
@@ -48,7 +48,7 @@ public static class NotificationSubscriptionIdentity
             nameof(entityId),
             NotificationCenterConsts.MaxEntityIdLength);
 
-        return ComputeHash("E", checkedEntityTypeName, checkedEntityId);
+        return NotificationCenterIdentityKey.Compute("E", checkedEntityTypeName, checkedEntityId);
     }
 
     private static string CheckRequiredLength(string value, string parameterName, int maxLength)
@@ -66,10 +66,5 @@ public static class NotificationSubscriptionIdentity
         }
 
         return value;
-    }
-
-    private static string ComputeHash(params string[] parts)
-    {
-        return NotificationCenterIdentityKey.Compute(parts);
     }
 }

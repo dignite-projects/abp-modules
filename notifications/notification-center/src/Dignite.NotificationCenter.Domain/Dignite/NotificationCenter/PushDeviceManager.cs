@@ -99,7 +99,7 @@ public class PushDeviceManager : ITransientDependency
             }
         }
 
-        await TrimAsync(userId, cancellationToken);
+        await TrimAsync(userId, device.Id, cancellationToken);
         return device;
     }
 
@@ -124,7 +124,11 @@ public class PushDeviceManager : ITransientDependency
     public virtual async Task<List<PushDevice>> GetListAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var devices = await Repository.GetListAsync(d => d.UserId == userId, cancellationToken: cancellationToken);
-        return devices.OrderByDescending(d => d.LastSeenTime).ToList();
+        return devices
+            .OrderByDescending(d => d.LastSeenTime)
+            .ThenByDescending(d => d.CreationTime)
+            .ThenBy(d => d.Id)
+            .ToList();
     }
 
     /// <summary>Forgets a device a push provider reported dead. An unknown device is not an error.</summary>
@@ -148,16 +152,22 @@ public class PushDeviceManager : ITransientDependency
         return Repository.FindAsync(d => d.TokenKey == tokenKey, cancellationToken: cancellationToken);
     }
 
-    /// <summary>Keeps at most <see cref="PushDeviceOptions.MaxDevicesPerUser"/>, dropping the least recently seen.</summary>
-    protected virtual async Task TrimAsync(Guid userId, CancellationToken cancellationToken)
+    /// <summary>
+    /// Keeps at most <see cref="PushDeviceOptions.MaxDevicesPerUser"/>, dropping the least recently seen — never the
+    /// device just registered, whatever the timestamps say (two registrations can land in the same tick, and MongoDB
+    /// keeps only milliseconds).
+    /// </summary>
+    protected virtual async Task TrimAsync(Guid userId, Guid registeredDeviceId, CancellationToken cancellationToken)
     {
         var max = Math.Max(1, Options.MaxDevicesPerUser);
-        var devices = await GetListAsync(userId, cancellationToken);
-        if (devices.Count <= max)
+        var others = (await GetListAsync(userId, cancellationToken))
+            .Where(d => d.Id != registeredDeviceId)
+            .ToList();
+        if (others.Count < max)
         {
             return;
         }
 
-        await Repository.DeleteManyAsync(devices.Skip(max), autoSave: true, cancellationToken: cancellationToken);
+        await Repository.DeleteManyAsync(others.Skip(max - 1), autoSave: true, cancellationToken: cancellationToken);
     }
 }

@@ -14,12 +14,16 @@ using Microsoft.Extensions.Options;
 using NSubstitute;
 using Shouldly;
 using Volo.Abp.Data;
+using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Guids;
 using Volo.Abp.Identity;
 using Volo.Abp.Localization;
 using Volo.Abp.Modularity;
 using Volo.Abp.MultiTenancy;
 using Volo.Abp.Security.Claims;
+using Volo.Abp.Timing;
+using Volo.Abp.Uow;
 using Xunit;
 
 namespace Dignite.NotificationCenter;
@@ -255,8 +259,13 @@ public abstract class PushDevice_Tests<TStartupModule> : NotificationCenterTestB
         await RegisterAsync(_user1, "ExponentPushToken[ended-session]", sessionId: "ended");
         await RegisterAsync(_user1, "ExponentPushToken[no-session]");
         var sessions = Substitute.For<IIdentitySessionRepository>();
-        sessions.ExistAsync("live", Arg.Any<CancellationToken>()).Returns(true);
-        sessions.ExistAsync("ended", Arg.Any<CancellationToken>()).Returns(false);
+        sessions.GetListAsync(
+                Arg.Any<string>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Is<Guid?>(id => id == _user1),
+                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new List<IdentitySession>
+            {
+                new(Guid.NewGuid(), "live", "Mobile", "test", _user1, null, "app", "127.0.0.1", DateTime.UtcNow)
+            });
         var store = new IdentitySessionPushDeviceStore(GetRequiredService<PushDeviceManager>(), sessions);
 
         var targets = await GetTargetsAsync(store, _user1);
@@ -267,6 +276,78 @@ public abstract class PushDevice_Tests<TStartupModule> : NotificationCenterTestB
             "ExponentPushToken[no-session]"
         });
         (await GetAllDevicesAsync()).ShouldNotContain(device => device.Token == "ExponentPushToken[ended-session]");
+        // One session query for all of the user's devices, not one per device.
+        await sessions.Received(1).GetListAsync(
+            Arg.Any<string>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<Guid?>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await sessions.DidNotReceiveWithAnyArgs().ExistAsync(default(string)!, default);
+    }
+
+    [Fact]
+    public async Task A_registration_that_loses_a_race_for_a_new_token_is_retried_and_refreshes_the_winner()
+    {
+        var manager = new RacingPushDeviceManager(this, competitorUserId: _user2);
+        var appService = new PushDeviceAppService(manager)
+        {
+            LazyServiceProvider = GetRequiredService<IAbpLazyServiceProvider>()
+        };
+
+        using (GetRequiredService<ICurrentPrincipalAccessor>().Change(new ClaimsPrincipal(new ClaimsIdentity(
+                   new[] { new Claim(AbpClaimTypes.UserId, _user1.ToString()) }, "Test"))))
+        {
+            await appService.RegisterAsync(new PushDeviceInput { Provider = Expo, Token = "ExponentPushToken[raced]" });
+        }
+
+        manager.Attempts.ShouldBe(2);
+        var device = (await GetAllDevicesAsync()).ShouldHaveSingleItem();
+        device.UserId.ShouldBe(_user1);
+    }
+
+    /// <summary>
+    /// Stands in for two concurrent first registrations of one token: on the first attempt a competing request
+    /// commits the row and this one fails, as an insert hitting the unique token index would.
+    /// </summary>
+    private sealed class RacingPushDeviceManager : PushDeviceManager
+    {
+        private readonly PushDevice_Tests<TStartupModule> _test;
+        private readonly Guid _competitorUserId;
+
+        public int Attempts { get; private set; }
+
+        public RacingPushDeviceManager(PushDevice_Tests<TStartupModule> test, Guid competitorUserId)
+            : base(
+                test.GetRequiredService<IRepository<PushDevice, Guid>>(),
+                test.GetRequiredService<IDataFilter>(),
+                test.GetRequiredService<ICurrentTenant>(),
+                test.GetRequiredService<IGuidGenerator>(),
+                test.GetRequiredService<IClock>(),
+                test.GetRequiredService<IOptions<PushDeviceOptions>>())
+        {
+            _test = test;
+            _competitorUserId = competitorUserId;
+        }
+
+        public override async Task<PushDevice> RegisterAsync(
+            Guid userId,
+            string provider,
+            string token,
+            string? cultureName,
+            string? sessionId,
+            CancellationToken cancellationToken = default)
+        {
+            if (++Attempts == 1)
+            {
+                using (var competitor = _test.GetRequiredService<IUnitOfWorkManager>().Begin(requiresNew: true))
+                {
+                    await base.RegisterAsync(_competitorUserId, provider, token, cultureName, null, cancellationToken);
+                    await competitor.CompleteAsync();
+                }
+
+                throw new InvalidOperationException("Simulated unique token index violation.");
+            }
+
+            return await base.RegisterAsync(userId, provider, token, cultureName, sessionId, cancellationToken);
+        }
     }
 
     private sealed class RecordingProvider : IPushProvider

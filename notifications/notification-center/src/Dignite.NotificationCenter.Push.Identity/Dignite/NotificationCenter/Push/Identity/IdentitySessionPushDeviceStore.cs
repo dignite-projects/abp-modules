@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dignite.Abp.Notifications.Push;
@@ -35,10 +38,24 @@ public class IdentitySessionPushDeviceStore : NotificationCenterPushDeviceStore
         SessionRepository = sessionRepository;
     }
 
-    protected override async Task<bool> IsActiveAsync(PushDevice device, CancellationToken cancellationToken)
+    protected override async Task<IReadOnlyCollection<PushDevice>> FindInactiveAsync(
+        Guid userId,
+        IReadOnlyList<PushDevice> devices,
+        CancellationToken cancellationToken)
     {
         // Registered without a session (no session_id claim): nothing to judge by.
-        return device.SessionId == null
-            || await SessionRepository.ExistAsync(device.SessionId, cancellationToken);
+        if (devices.All(device => device.SessionId == null))
+        {
+            return Array.Empty<PushDevice>();
+        }
+
+        // One query for the user's live sessions, however many devices they have.
+        var liveSessionIds = (await SessionRepository.GetListAsync(userId: userId, cancellationToken: cancellationToken))
+            .Select(session => session.SessionId)
+            .ToHashSet(StringComparer.Ordinal);
+
+        return devices
+            .Where(device => device.SessionId != null && !liveSessionIds.Contains(device.SessionId))
+            .ToList();
     }
 }

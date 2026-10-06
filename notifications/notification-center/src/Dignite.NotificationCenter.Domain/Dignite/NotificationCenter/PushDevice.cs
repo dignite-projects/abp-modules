@@ -58,7 +58,7 @@ public class PushDevice : BasicAggregateRoot<Guid>, IMultiTenant
         Token = Check.NotNullOrWhiteSpace(token, nameof(token), PushDeviceConsts.MaxTokenLength);
         TokenKey = PushDeviceIdentity.GetTokenKey(provider, token);
         CreationTime = now;
-        Bind(userId, cultureName, sessionId, now, tenantId);
+        SetBinding(userId, cultureName, sessionId, now, tenantId);
     }
 
     /// <summary>
@@ -66,6 +66,12 @@ public class PushDevice : BasicAggregateRoot<Guid>, IMultiTenant
     /// with the app's current language and login session.
     /// </summary>
     public virtual void Bind(Guid userId, string? cultureName, string? sessionId, DateTime now, Guid? tenantId)
+    {
+        SetBinding(userId, cultureName, sessionId, now, tenantId);
+    }
+
+    // Non-virtual so the constructor never runs a derived override against a half-constructed instance.
+    private void SetBinding(Guid userId, string? cultureName, string? sessionId, DateTime now, Guid? tenantId)
     {
         if (userId == Guid.Empty)
         {
