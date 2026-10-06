@@ -1,11 +1,12 @@
 import { AuthService, LocalizationPipe } from '@abp/ng.core';
 import { Component, inject } from '@angular/core';
+import { DemoNotificationsComponent } from '../notifications/demo-notifications.component';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
-  imports: [LocalizationPipe]
+  imports: [LocalizationPipe, DemoNotificationsComponent]
 })
 export class HomeComponent {
   private authService = inject(AuthService);

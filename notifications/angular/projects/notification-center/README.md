@@ -16,8 +16,8 @@ The npm package version stays in lockstep with the repository's NuGet package ve
 
 | Import | Contents |
 |---|---|
-| `@dignite/ng.notification-center` | `NotificationBellComponent` (`<abp-notification-bell>`), `NotificationSubscriptionsComponent`, and the ABP-generated inbox + subscription API proxies (`UserNotificationService`, `NotificationSubscriptionService`) + DTOs/enums. |
-| `@dignite/ng.notification-center/config` | `provideNotificationCenterConfig()` — registers the navigation-menu entry into the host — plus the `eNotificationCenterRouteNames` route-name enum. Call the provider once in `app.config.ts`. |
+| `@dignite/ng.notification-center` | `NotificationBellComponent` (`<abp-notification-bell>`), `NotificationSubscriptionsComponent`, the inbox page (`NotificationInboxComponent` + `createRoutes()`), and the ABP-generated inbox + subscription API proxies (`UserNotificationService`, `NotificationSubscriptionService`) + DTOs/enums. |
+| `@dignite/ng.notification-center/config` | `provideNotificationCenterConfig()` — registers the toolbar bell, the subscriptions settings tab and the (menu-hidden) `/notifications` route into the host — plus the `eNotificationCenterRouteNames` route-name enum. Call the provider once in `app.config.ts`. |
 
 ## Usage
 
@@ -46,6 +46,25 @@ provideNotificationCenterConfig({
   },
 });
 ```
+
+### Inbox page
+
+The inbox lists the user's notifications under group tabs with unread counts, with an all/unread filter,
+paging, per-item delete, "mark all as read" and "clear read". Clicking an item marks it read and follows its
+entity link; the item stays listed. Mount its lazy routes at `/notifications` — the path the config package
+registers, hidden from the main menu because the page is reached from the bell:
+
+```ts
+// app.routes.ts
+{
+  path: 'notifications',
+  loadChildren: () => import('@dignite/ng.notification-center').then(c => c.createRoutes()),
+},
+```
+
+Replace the page through ABP's `ReplaceableComponentsService` with the
+`eNotificationCenterComponents.Notifications` key. After the page marks or deletes notifications it emits
+`NotificationCenterEventsService.inboxChanged$`, which the bell uses to refresh its badge.
 
 Use the subscriptions component in a page:
 

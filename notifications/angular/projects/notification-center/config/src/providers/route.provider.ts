@@ -17,6 +17,8 @@ export function configureRoutes() {
       iconClass: 'fas fa-bell',
       order: 2,
       layout: eLayoutType.application,
+      // The inbox is reached from the bell, not the main menu; the route stays registered for its title/breadcrumb.
+      invisible: true,
     },
   ]);
 }

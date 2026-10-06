@@ -3,7 +3,7 @@ import { RestService } from '@abp/ng.core';
 import { RouterLink } from '@angular/router';
 
 /**
- * Demo page consuming the @dignite/ng.notification-center library components against the host API.
+ * Demo publisher shown on the home page: drives the @dignite/ng.notification-center library against the host API.
  * The toolbar bell is registered globally by provideNotificationCenterConfig() and refreshes from SignalR.
  * The "Send order shipped notification" button publishes explicitly to the current user (bypasses
  * subscriptions, always arrives) with the host's Demo.OrderShipped payload so the bell uses a custom
@@ -13,16 +13,18 @@ import { RouterLink } from '@angular/router';
  * Subscriptions tab.
  */
 @Component({
-  selector: 'app-notifications',
+  selector: 'app-demo-notifications',
   standalone: true,
   imports: [RouterLink],
   template: `
-    <div class="container py-4">
-      <h2 class="mb-3">Notifications</h2>
+    <div class="card mb-3">
+      <div class="card-body">
+      <h4 class="mb-3">Notification Center demo</h4>
       <p class="text-muted">
         The toolbar bell shows your unread count and recent notifications, updated in real time over SignalR.
         Click below to publish an order notification to yourself and watch the toolbar bell render its custom
-        notification template instantly.
+        notification template instantly. Open <a routerLink="/notifications">the inbox page</a> to browse
+        everything you received, grouped by notification group.
       </p>
       <button type="button" class="btn btn-primary" (click)="publishOrderShipped()">
         Send order shipped notification
@@ -41,10 +43,11 @@ import { RouterLink } from '@angular/router';
       @if (publishToSubscribersResult) {
         <span class="ms-2 text-muted">{{ publishToSubscribersResult }}</span>
       }
+      </div>
     </div>
   `,
 })
-export class NotificationsComponent {
+export class DemoNotificationsComponent {
   publishToSubscribersResult = '';
 
   private restService = inject(RestService);
