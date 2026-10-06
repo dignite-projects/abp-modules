@@ -178,10 +178,23 @@
         });
     }
 
+    // Re-reads the unread count from the inbox API. A push is only a prompt: incrementing the server-rendered count
+    // would count twice a notification whose push lands after the page rendered it, and would never recover pushes
+    // missed while disconnected. Background refresh, so failures stay silent instead of raising ABP's error dialog.
+    function refreshBadgeCount() {
+        if (!badgeEl()) {
+            return;
+        }
+
+        inboxApi().getUnreadCount({ abpHandleError: false }).then(function (count) {
+            setBadgeCount(count);
+        });
+    }
+
     // ---- real-time receive over ABP SignalR (optional, degrades gracefully) ----
     // The server-side Notifier (Dignite.Abp.Notifications.SignalR) pushes a per-recipient NotificationPayload
     // (recipient list already stripped, per notifications-invariants §4) via the strongly-typed client method
-    // "ReceiveNotification". We only nudge the unread badge + flag the bell here; the authoritative, fully
+    // "ReceiveNotification". We only refresh the unread badge + flag the bell here; the authoritative, fully
     // rendered list (localized display name, custom per-type view components, entity links) is server-rendered
     // on the next open/refresh — so we never duplicate server rendering (or its localization) on the client.
     function connectSignalR() {
@@ -200,12 +213,14 @@
             .build();
 
         connection.on('ReceiveNotification', function () {
-            setBadgeCount(getBadgeCount() + 1);
+            refreshBadgeCount();
             if (bell) {
                 bell.classList.add('dignite-notification-pulse');
                 setTimeout(function () { bell.classList.remove('dignite-notification-pulse'); }, 1000);
             }
         });
+
+        connection.onreconnected(refreshBadgeCount);
 
         connection.start().catch(function (err) {
             if (window.console) {
