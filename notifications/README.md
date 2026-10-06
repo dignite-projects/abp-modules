@@ -60,13 +60,15 @@ Core:
 | Package | Purpose |
 |---|---|
 | `Dignite.NotificationCenter.Domain.Shared` | Enums / constants (`NotificationSeverity`, `UserNotificationState`). |
-| `Dignite.NotificationCenter.Domain` | Aggregates: `Notification`, `UserNotification`, `NotificationSubscription`. |
-| `Dignite.NotificationCenter.Application` / `.Application.Contracts` | Inbox / subscription app service + DTOs. |
+| `Dignite.NotificationCenter.Domain` | Aggregates: `Notification`, `UserNotification`, `NotificationSubscription`, `PushDevice`. |
+| `Dignite.NotificationCenter.Application` / `.Application.Contracts` | Inbox / subscription / push device app services + DTOs. |
 | `Dignite.NotificationCenter.HttpApi` | REST controllers at `/api/notification-center`. |
 | `Dignite.NotificationCenter.HttpApi.Client` | C# client proxies for remote consumers. |
 | `Dignite.NotificationCenter.EntityFrameworkCore` | `INotificationStore` on EF Core (+ `NotificationCenterDbContext`). |
 | `Dignite.NotificationCenter.MongoDB` | `INotificationStore` on MongoDB. |
 | `Dignite.NotificationCenter.Web` | MVC UI: notification-bell view component + subscriptions page. |
+| `Dignite.NotificationCenter.Push` | Serves the Push notifier's devices from the `PushDevice` registry. |
+| `Dignite.NotificationCenter.Push.Identity` | Optional: stops pushing to a device once its ABP Identity login session has ended. |
 | `notification-center` (Angular, `angular/projects/`) | Angular UI: proxy service + bell & subscriptions components. |
 
 > Core never references the Notification Center — the two trees are independently installable, and
@@ -541,7 +543,10 @@ the transport adapter, so a channel plugin does not implement an event-handler i
   chosen per device: each registered device names the `IPushProvider` that issued its token
   (`Dignite.Abp.Notifications.Push.Expo` ships the Expo Push Service provider), so a definition only ever
   says `UseChannels("Push")`. Devices come from an `IPushDeviceStore`; the base package registers a null
-  store, so nothing is sent (and a warning is logged) until a real one replaces it. Content is built once
+  store, so nothing is sent (and a warning is logged) until a real one replaces it — with the Notification
+  Center, install `Dignite.NotificationCenter.Push` to serve devices from its `PushDevice` registry (see
+  [Push devices](#push-devices-notification-center)); without it, implement the store over your own device
+  storage. Content is built once
   per device culture by an `INotificationPushContentProvider` chain that mirrors the email one (built-in
   fallbacks for `MessageNotificationData` and `LocalizableMessageNotificationData`); every message also
   carries `notificationId`, `notificationName`, `entityTypeName` and `entityId` as silent data so a tapped
@@ -668,10 +673,55 @@ In stateless forwarding mode (`NullNotificationStore`, no NotificationCenter ins
 definition has nowhere to persist; publishing it fails fast. Configure at least one external channel in
 that mode.
 
+## Push devices (Notification Center)
+
+The Notification Center keeps a registry of the phones each user can be pushed to — one `PushDevice` per
+app installation, identified by the token its push provider issued. Install `Dignite.NotificationCenter.Push`
+(next to `Dignite.Abp.Notifications.Push` and a provider such as `.Push.Expo`) and the Push notifier reads
+devices from it:
+
+```csharp
+[DependsOn(
+    typeof(AbpNotificationsPushExpoModule),        // the Push channel + the Expo provider
+    typeof(NotificationCenterPushModule)           // devices from the PushDevice registry
+    // typeof(NotificationCenterPushIdentityModule) // optional: push follows the ABP login session
+)]
+public class MyHostModule : AbpModule { }
+```
+
+```csharp
+Configure<ExpoPushOptions>(options =>
+{
+    options.AccessToken = configuration["Expo:AccessToken"]; // secret configuration, never source control
+});
+```
+
+The app drives the registry through two calls (see [REST API](#rest-api-notification-center)):
+
+- **Register** on every launch, after sign-in, and when the user changes the app language. The device's
+  language is the request culture — send `Accept-Language` — and its login session the caller's `session_id`
+  claim, if the host issues one. A token already registered to someone else, in any tenant, moves to the
+  caller: whoever signed in last on a phone is the one it gets pushes for.
+- **Unregister** at sign-out, *before* revoking the access token — the call needs it. It only ever removes
+  the caller's own device.
+
+A user keeps at most `PushDeviceOptions.MaxDevicesPerUser` devices (default 10); registering one more forgets
+the device seen least recently. Together with dead-device reports from the provider this bounds the registry —
+there is no cleanup worker. The token key is unique across tenants, so a phone moving to another tenant stops
+receiving the previous tenant's pushes; with a database per tenant that cannot be enforced across databases,
+and the guarantee rests on unregistering at sign-out.
+
+`Dignite.NotificationCenter.Push.Identity` makes push follow the ABP login session: a device registered
+under a session that no longer exists (signed out, revoked, ended by the concurrent-login rule, cleaned up as
+inactive) is forgotten instead of pushed to — which also covers sign-outs the app could not report. It needs a
+host that maintains `IdentitySession` rows and issues the `session_id` claim, i.e. ABP Identity Pro's session
+management; elsewhere devices carry no session and the package does nothing.
+
 ## REST API (Notification Center)
 
-Two controllers expose the current user's notification center under `/api/notification-center`:
-`UserNotificationController` (the inbox) and `NotificationSubscriptionController` (subscriptions).
+Three controllers expose the current user's notification center under `/api/notification-center`:
+`UserNotificationController` (the inbox), `NotificationSubscriptionController` (subscriptions) and
+`PushDeviceController` (push devices).
 
 | Method & route | Purpose |
 |---|---|
@@ -685,6 +735,8 @@ Two controllers expose the current user's notification center under `/api/notifi
 | `GET /api/notification-center/subscriptions` | List the caller's subscriptions |
 | `POST /api/notification-center/subscriptions` | Subscribe to the definition-wide or exact entity scope in the JSON body |
 | `DELETE /api/notification-center/subscriptions` | Unsubscribe only the definition-wide or exact entity scope in the query |
+| `POST /api/notification-center/push-devices/register` | Register (or refresh) the caller's device: `{ provider, token }` in the body |
+| `POST /api/notification-center/push-devices/unregister` | Forget the caller's device: `{ provider, token }` in the body |
 
 All endpoints are scoped to the authenticated caller. Use `...HttpApi.Client` for a typed C# proxy, or the
 ABP-generated Angular services.

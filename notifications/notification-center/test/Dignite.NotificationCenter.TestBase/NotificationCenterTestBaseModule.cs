@@ -1,4 +1,5 @@
 using Dignite.Abp.Notifications;
+using Dignite.NotificationCenter.Push;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp;
 using Volo.Abp.Autofac;
@@ -15,6 +16,7 @@ namespace Dignite.NotificationCenter;
 /// </summary>
 [DependsOn(
     typeof(NotificationCenterApplicationModule),
+    typeof(NotificationCenterPushModule),
     typeof(AbpAutofacModule),
     typeof(AbpTestBaseModule)
     )]

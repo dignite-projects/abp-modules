@@ -238,6 +238,176 @@
             }
           }
         },
+        "Dignite.NotificationCenter.PushDeviceController": {
+          "controllerName": "PushDevice",
+          "controllerGroupName": "PushDevice",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "Dignite.NotificationCenter.PushDeviceController",
+          "summary": null,
+          "remarks": null,
+          "description": null,
+          "displayName": null,
+          "interfaces": [
+            {
+              "type": "Dignite.NotificationCenter.IPushDeviceAppService",
+              "name": "IPushDeviceAppService",
+              "methods": [
+                {
+                  "name": "RegisterAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "Dignite.NotificationCenter.PushDeviceInput, Dignite.NotificationCenter.Application.Contracts",
+                      "type": "Dignite.NotificationCenter.PushDeviceInput",
+                      "typeSimple": "Dignite.NotificationCenter.PushDeviceInput",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "UnregisterAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "Dignite.NotificationCenter.PushDeviceInput, Dignite.NotificationCenter.Application.Contracts",
+                      "type": "Dignite.NotificationCenter.PushDeviceInput",
+                      "typeSimple": "Dignite.NotificationCenter.PushDeviceInput",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "RegisterAsyncByInput": {
+              "uniqueName": "RegisterAsyncByInput",
+              "name": "RegisterAsync",
+              "httpMethod": "POST",
+              "url": "api/notification-center/push-devices/register",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "Dignite.NotificationCenter.PushDeviceInput, Dignite.NotificationCenter.Application.Contracts",
+                  "type": "Dignite.NotificationCenter.PushDeviceInput",
+                  "typeSimple": "Dignite.NotificationCenter.PushDeviceInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "Dignite.NotificationCenter.PushDeviceInput",
+                  "typeSimple": "Dignite.NotificationCenter.PushDeviceInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void",
+                "summary": null,
+                "contentTypes": null,
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.NotificationCenter.IPushDeviceAppService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "UnregisterAsyncByInput": {
+              "uniqueName": "UnregisterAsyncByInput",
+              "name": "UnregisterAsync",
+              "httpMethod": "POST",
+              "url": "api/notification-center/push-devices/unregister",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "Dignite.NotificationCenter.PushDeviceInput, Dignite.NotificationCenter.Application.Contracts",
+                  "type": "Dignite.NotificationCenter.PushDeviceInput",
+                  "typeSimple": "Dignite.NotificationCenter.PushDeviceInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "Dignite.NotificationCenter.PushDeviceInput",
+                  "typeSimple": "Dignite.NotificationCenter.PushDeviceInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void",
+                "summary": null,
+                "contentTypes": null,
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.NotificationCenter.IPushDeviceAppService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            }
+          }
+        },
         "Dignite.NotificationCenter.UserNotificationController": {
           "controllerName": "UserNotification",
           "controllerGroupName": "UserNotification",

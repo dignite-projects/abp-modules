@@ -1,7 +1,4 @@
 using System;
-using System.Globalization;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Dignite.NotificationCenter;
 
@@ -23,7 +20,7 @@ public static class NotificationSubscriptionIdentity
 
     public static string GetNotificationNameKey(string notificationName)
     {
-        return ComputeHash("N", CheckRequiredLength(
+        return NotificationCenterIdentityKey.Compute("N", CheckRequiredLength(
             notificationName,
             nameof(notificationName),
             NotificationCenterConsts.MaxNotificationNameLength));
@@ -33,7 +30,7 @@ public static class NotificationSubscriptionIdentity
     {
         if (entityTypeName == null && entityId == null)
         {
-            return ComputeHash("D");
+            return NotificationCenterIdentityKey.Compute("D");
         }
 
         if (entityTypeName == null || entityId == null)
@@ -51,7 +48,7 @@ public static class NotificationSubscriptionIdentity
             nameof(entityId),
             NotificationCenterConsts.MaxEntityIdLength);
 
-        return ComputeHash("E", checkedEntityTypeName, checkedEntityId);
+        return NotificationCenterIdentityKey.Compute("E", checkedEntityTypeName, checkedEntityId);
     }
 
     private static string CheckRequiredLength(string value, string parameterName, int maxLength)
@@ -69,26 +66,5 @@ public static class NotificationSubscriptionIdentity
         }
 
         return value;
-    }
-
-    private static string ComputeHash(params string[] parts)
-    {
-        var canonical = new StringBuilder();
-        foreach (var part in parts)
-        {
-            canonical.Append(part.Length.ToString(CultureInfo.InvariantCulture));
-            canonical.Append(':');
-            canonical.Append(part);
-        }
-
-        using var sha256 = SHA256.Create();
-        var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(canonical.ToString()));
-        var result = new StringBuilder(NotificationCenterConsts.SubscriptionIdentityKeyLength);
-        foreach (var value in bytes)
-        {
-            result.Append(value.ToString("x2", CultureInfo.InvariantCulture));
-        }
-
-        return result.ToString();
     }
 }

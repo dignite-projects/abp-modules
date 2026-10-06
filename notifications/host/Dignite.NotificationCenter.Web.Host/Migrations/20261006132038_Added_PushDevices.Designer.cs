@@ -3,6 +3,7 @@ using System;
 using Dignite.NotificationCenter.Web.Host.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Volo.Abp.EntityFrameworkCore;
 
@@ -11,9 +12,11 @@ using Volo.Abp.EntityFrameworkCore;
 namespace Dignite.NotificationCenter.Web.Host.Migrations
 {
     [DbContext(typeof(HostDbContext))]
-    partial class HostDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261006132038_Added_PushDevices")]
+    partial class Added_PushDevices
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

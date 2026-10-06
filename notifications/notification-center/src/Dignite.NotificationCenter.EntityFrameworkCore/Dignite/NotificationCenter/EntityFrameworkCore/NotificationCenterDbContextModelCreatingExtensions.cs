@@ -67,5 +67,23 @@ public static class NotificationCenterDbContextModelCreatingExtensions
             // A user's own subscriptions.
             b.HasIndex(x => new { x.TenantKey, x.UserId, x.NotificationNameKey });
         });
+
+        builder.Entity<PushDevice>(b =>
+        {
+            b.ToTable(NotificationCenterDbProperties.DbTablePrefix + "PushDevices", NotificationCenterDbProperties.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(x => x.Provider).IsRequired().HasMaxLength(PushDeviceConsts.MaxProviderLength);
+            b.Property(x => x.Token).IsRequired().HasMaxLength(PushDeviceConsts.MaxTokenLength);
+            b.Property(x => x.TokenKey).IsRequired().IsUnicode(false).IsFixedLength()
+                .HasMaxLength(PushDeviceConsts.TokenKeyLength);
+            b.Property(x => x.CultureName).HasMaxLength(PushDeviceConsts.MaxCultureNameLength);
+            b.Property(x => x.SessionId).HasMaxLength(PushDeviceConsts.MaxSessionIdLength);
+
+            // One registration per device across every tenant: a token identifies a physical device.
+            b.HasIndex(x => x.TokenKey).IsUnique();
+            // A user's devices, read on every push delivery.
+            b.HasIndex(x => new { x.TenantId, x.UserId });
+        });
     }
 }

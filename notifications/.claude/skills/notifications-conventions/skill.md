@@ -1,6 +1,6 @@
 ---
 name: notifications-conventions
-description: How the Dignite.Abp.Notifications module applies ABP — the three BasicAggregateRoot aggregates with no custom repository interfaces, INotificationStore as the query seam, hand-written MapToDto (no Mapperly/AutoMapper), explicit HttpApi controllers, the two-layer authorization model with INotificationPermissionChecker, the NotificationDeliveryRequestedEto distributed event, the distribution background job, tenant handling, and read-time localization. Read when writing or reviewing code under notifications/ and the generic abp-* skill doesn't say what THIS module does.
+description: How the Dignite.Abp.Notifications module applies ABP — the four BasicAggregateRoot aggregates with no custom repository interfaces, INotificationStore as the query seam, hand-written MapToDto (no Mapperly/AutoMapper), explicit HttpApi controllers, the two-layer authorization model with INotificationPermissionChecker, the NotificationDeliveryRequestedEto distributed event, the distribution background job, tenant handling, and read-time localization. Read when writing or reviewing code under notifications/ and the generic abp-* skill doesn't say what THIS module does.
 ---
 
 # notifications — Module Conventions
@@ -15,9 +15,9 @@ description: How the Dignite.Abp.Notifications module applies ABP — the three 
 > Note this module deliberately differs from `file-storing` on repositories, object mapping, controllers, and
 > distributed-event posture — don't cross-apply the other module's conventions.
 
-## The three aggregates deviate from the generic template — on purpose
+## The four aggregates deviate from the generic template — on purpose
 
-`Notification`, `UserNotification`, and `NotificationSubscription` deviate in ways that are **intentional —
+`Notification`, `UserNotification`, `NotificationSubscription`, and `PushDevice` deviate in ways that are **intentional —
 follow them, don't "fix" them back to the generic pattern**:
 
 - They inherit `BasicAggregateRoot<Guid>` (not `AggregateRoot<Guid>` or `AuditedAggregateRoot<Guid>`) and
@@ -62,7 +62,7 @@ multi-insert.
 
 | Base class | Used by |
 |---|---|
-| `BasicAggregateRoot<TKey>` | All three `NotificationCenter.Domain` entities |
+| `BasicAggregateRoot<TKey>` | All four `NotificationCenter.Domain` entities |
 | Domain services (plain) | `NotificationDefinitionManager`, `UserNotificationManager`, `NotificationSubscriptionManager` |
 
 `NotificationStore : INotificationStore, ITransientDependency` inherits **no** ABP base class, so it correctly
