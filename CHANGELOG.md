@@ -50,6 +50,9 @@ so it stays clear which part of the repository actually moved.
 - `NotificationCultureResolver` (Abstractions) now holds the recipient-culture fallback that
   `EmailNotifier.ResolveCulture` used to implement privately, so the email and push notifiers share it;
   `EmailNotifier` switches cultures with ABP's `CultureHelper.Use`. Behaviour is unchanged.
+- `LocalizableMessageNotificationData.Localize(IStringLocalizerFactory)` (Abstractions) is now the one
+  rendering rule for localizable messages; the email and push content providers and the MVC inbox view
+  component call it instead of each carrying a copy. Output is unchanged.
 - **Schema change: every EF Core host needs a migration** for the new `{prefix}PushDevices` table (hosts own
   their migrations; this module ships none). Hosts that implement `INotificationCenterDbContext` or
   `INotificationCenterMongoDbContext` themselves must also add the new `PushDevices` property.
