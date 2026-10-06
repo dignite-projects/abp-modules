@@ -68,6 +68,47 @@ public class ExpoPushProvider_Tests
     }
 
     [Fact]
+    public async Task A_batch_that_cannot_be_sent_fails_alone_and_keeps_the_earlier_batches_results()
+    {
+        var requestCount = 0;
+        var handler = new FakeExpoHandler
+        {
+            Respond = body =>
+            {
+                if (++requestCount == 2)
+                {
+                    throw new HttpRequestException("connection reset");
+                }
+
+                var tickets = string.Join(",", Enumerable.Repeat(
+                    """{"status":"error","details":{"error":"DeviceNotRegistered"}}""",
+                    body.RootElement.GetArrayLength()));
+                return Json(HttpStatusCode.OK, $$"""{"data":[{{tickets}}]}""");
+            }
+        };
+        var provider = CreateProvider(handler, new ExpoPushOptions());
+        var messages = Enumerable.Range(0, 150).Select(index => Message($"ExponentPushToken[{index}]")).ToList();
+
+        var results = await provider.SendAsync(messages);
+
+        results.Count.ShouldBe(150);
+        results.Take(100).ShouldAllBe(result => result.Status == PushSendStatus.TokenInvalid);
+        results.Skip(100).ShouldAllBe(result =>
+            result.Status == PushSendStatus.Failed && result.Error == nameof(HttpRequestException));
+    }
+
+    [Fact]
+    public async Task Keeps_the_path_of_a_proxy_base_address()
+    {
+        var handler = new FakeExpoHandler();
+        var provider = CreateProvider(handler, new ExpoPushOptions { BaseAddress = "https://gateway.example.com/expo" });
+
+        await provider.SendAsync(new[] { Message("ExponentPushToken[a]") });
+
+        handler.Requests.Single().Uri.ShouldBe(new Uri("https://gateway.example.com/expo/--/api/v2/push/send"));
+    }
+
+    [Fact]
     public async Task Maps_each_ticket_to_its_message_by_position()
     {
         var handler = new FakeExpoHandler

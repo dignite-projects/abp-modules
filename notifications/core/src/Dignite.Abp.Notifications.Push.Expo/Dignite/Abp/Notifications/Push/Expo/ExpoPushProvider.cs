@@ -25,8 +25,11 @@ namespace Dignite.Abp.Notifications.Push.Expo;
 /// death shows only on the receipt stays registered until the device store's own bounds remove it.
 /// </para>
 /// <para>
-/// A failed HTTP exchange or a request-level error marks the whole batch <see cref="PushSendStatus.Failed"/> and is
-/// not retried; a network failure throws.
+/// Messages go out in batches of <see cref="MaxMessagesPerRequest"/>, each judged on its own: a failed HTTP exchange,
+/// a request-level error, or a batch that cannot be sent at all (network failure, timeout) marks that batch
+/// <see cref="PushSendStatus.Failed"/> — with the exception type as the error, never its message — and the remaining
+/// batches still go out, so dead devices reported by the batches that did get through are still removed. Nothing is
+/// retried. Only cancellation of the caller's token propagates.
 /// </para>
 /// </remarks>
 [ExposeServices(typeof(IPushProvider), typeof(ExpoPushProvider))]
@@ -42,7 +45,8 @@ public class ExpoPushProvider : IPushProvider, ITransientDependency
 
     public const string DeviceNotRegisteredError = "DeviceNotRegistered";
 
-    private const string SendPath = "/--/api/v2/push/send";
+    /// <summary>Relative, so a <see cref="ExpoPushOptions.BaseAddress"/> with a path (a proxy) keeps it.</summary>
+    private const string SendPath = "--/api/v2/push/send";
 
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
@@ -70,7 +74,16 @@ public class ExpoPushProvider : IPushProvider, ITransientDependency
         {
             cancellationToken.ThrowIfCancellationRequested();
             var chunk = messages.Skip(offset).Take(MaxMessagesPerRequest).ToList();
-            results.AddRange(await SendChunkAsync(chunk, cancellationToken));
+            try
+            {
+                results.AddRange(await SendChunkAsync(chunk, cancellationToken));
+            }
+            catch (Exception exception) when (
+                exception is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
+            {
+                // Includes HttpClient's own timeout, which surfaces as a TaskCanceledException.
+                results.AddRange(FailAll(chunk, exception.GetType().Name));
+            }
         }
 
         return results;
@@ -80,7 +93,7 @@ public class ExpoPushProvider : IPushProvider, ITransientDependency
         IReadOnlyList<PushMessage> chunk,
         CancellationToken cancellationToken)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Post, new Uri(new Uri(Options.BaseAddress), SendPath))
+        using var request = new HttpRequestMessage(HttpMethod.Post, GetSendUri())
         {
             Content = JsonContent.Create(chunk.Select(ToWireMessage).ToList(), options: SerializerOptions)
         };
@@ -129,6 +142,14 @@ public class ExpoPushProvider : IPushProvider, ITransientDependency
         return string.Equals(error, DeviceNotRegisteredError, StringComparison.Ordinal)
             ? PushSendResult.TokenInvalid(message.Token, error)
             : PushSendResult.Failed(message.Token, error ?? "Unknown");
+    }
+
+    protected virtual Uri GetSendUri()
+    {
+        var baseAddress = Options.BaseAddress.EndsWith("/", StringComparison.Ordinal)
+            ? Options.BaseAddress
+            : Options.BaseAddress + "/";
+        return new Uri(new Uri(baseAddress), SendPath);
     }
 
     private ExpoPushRequestMessage ToWireMessage(PushMessage message)

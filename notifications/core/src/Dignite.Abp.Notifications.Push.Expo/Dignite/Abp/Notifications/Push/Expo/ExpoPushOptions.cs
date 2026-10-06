@@ -4,7 +4,9 @@ public class ExpoPushOptions
 {
     public const string DefaultBaseAddress = "https://exp.host";
 
-    /// <summary>The Expo push service origin. Only tests and proxies change this.</summary>
+    /// <summary>
+    /// The Expo push service origin. Only tests and proxies change this; a path (a proxy prefix) is kept.
+    /// </summary>
     public string BaseAddress { get; set; } = DefaultBaseAddress;
 
     /// <summary>

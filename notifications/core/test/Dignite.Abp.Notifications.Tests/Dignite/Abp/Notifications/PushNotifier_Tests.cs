@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Dignite.Abp.Notifications.Push;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Shouldly;
@@ -221,10 +222,73 @@ public class PushNotifier_Tests
     }
 
     [Fact]
-    public void Two_providers_cannot_claim_the_same_name()
+    public async Task Two_providers_claiming_the_same_name_fail_push_deliveries_but_not_construction()
     {
-        Should.Throw<InvalidOperationException>(
-            () => CreateNotifier(new FakeDeviceStore(), new FakeProvider("Expo"), new FakeProvider("EXPO")));
+        // Core's handler builds every channel's notifier for every event: throwing here would break email and SignalR.
+        var first = new FakeProvider("Expo");
+        var notifier = CreateNotifier(
+            new FakeDeviceStore(new PushTarget("Expo", "phone")),
+            first,
+            new FakeProvider("EXPO"));
+
+        var exception = await Should.ThrowAsync<InvalidOperationException>(
+            () => notifier.DeliverAsync(CreateRequest()));
+
+        exception.Message.ShouldContain("both claim the name");
+        first.Sent.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Removes_a_dead_device_under_the_provider_name_it_was_stored_with()
+    {
+        var store = new FakeDeviceStore(new PushTarget("expo", "dead"));
+        var provider = new FakeProvider("Expo")
+        {
+            Respond = message => PushSendResult.TokenInvalid(message.Token, "DeviceNotRegistered")
+        };
+
+        await CreateNotifier(store, provider).DeliverAsync(CreateRequest());
+
+        store.Removed.ShouldBe(new[] { ("expo", "dead") });
+    }
+
+    [Fact]
+    public async Task A_failure_removing_dead_devices_does_not_stop_the_other_providers()
+    {
+        var store = new FakeDeviceStore(new PushTarget("Expo", "dead"), new PushTarget("Fcm", "f1"))
+        {
+            RemoveFailure = new InvalidOperationException("db down")
+        };
+        var expo = new FakeProvider("Expo")
+        {
+            Respond = message => PushSendResult.TokenInvalid(message.Token, "DeviceNotRegistered")
+        };
+        var fcm = new FakeProvider("Fcm");
+
+        await Should.ThrowAsync<InvalidOperationException>(
+            () => CreateNotifier(store, expo, fcm).DeliverAsync(CreateRequest()));
+
+        fcm.Sent.Select(message => message.Token).ShouldBe(new[] { "f1" });
+    }
+
+    [Fact]
+    public async Task Logs_which_provider_failed_without_the_exception_message()
+    {
+        var logger = new ListLogger<PushNotifier>();
+        var notifier = new PushNotifier(
+            new FakeDeviceStore(new PushTarget("Expo", "e1")),
+            new IPushProvider[] { new FakeProvider("Expo") { Throw = new InvalidOperationException("secret detail") } },
+            CreateDefaultBuilder(),
+            DataSerializer,
+            logger,
+            Options.Create(new NotificationPushOptions()));
+
+        await Should.ThrowAsync<InvalidOperationException>(() => notifier.DeliverAsync(CreateRequest()));
+
+        var entry = logger.Messages.ShouldHaveSingleItem();
+        entry.ShouldContain("'Expo'");
+        entry.ShouldContain(typeof(InvalidOperationException).FullName!);
+        entry.ShouldNotContain("secret detail");
     }
 
     [Fact]
@@ -299,6 +363,8 @@ public class PushNotifier_Tests
 
         public List<(string Provider, string Token)> Removed { get; } = new();
 
+        public Exception? RemoveFailure { get; init; }
+
         public FakeDeviceStore(params PushTarget[] targets)
         {
             _targets = targets;
@@ -311,6 +377,11 @@ public class PushNotifier_Tests
 
         public Task RemoveAsync(string provider, string token, CancellationToken cancellationToken = default)
         {
+            if (RemoveFailure != null)
+            {
+                throw RemoveFailure;
+            }
+
             Removed.Add((provider, token));
             return Task.CompletedTask;
         }
@@ -343,6 +414,28 @@ public class PushNotifier_Tests
 
             Sent.AddRange(messages);
             return Task.FromResult<IReadOnlyList<PushSendResult>>(messages.Select(Respond).ToList());
+        }
+    }
+
+    private sealed class ListLogger<T> : ILogger<T>
+    {
+        public List<string> Messages { get; } = new();
+
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Warning;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            if (IsEnabled(logLevel))
+            {
+                Messages.Add(formatter(state, exception) + (exception == null ? string.Empty : " " + exception.Message));
+            }
         }
     }
 

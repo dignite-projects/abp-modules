@@ -20,8 +20,13 @@ namespace Dignite.Abp.Notifications.Push;
 /// </summary>
 /// <remarks>
 /// Delivery is best-effort: no retry and no delivery state. Content is built once per device culture. A device a
-/// provider reports dead is removed from the store; one provider failing does not stop the others, and its exception
-/// is rethrown once every provider has been tried so Core's delivery handler logs it.
+/// provider reports dead is removed from the store; one provider failing — or failing to have its dead devices
+/// removed — does not stop the others. Each failure is logged here with its provider (exception type only, never the
+/// message, like Core's handler), and rethrown once every provider has been tried so the delivery counts as failed.
+/// <para>
+/// The constructor never throws: Core's delivery handler builds every channel's notifier for every event, so a push
+/// misconfiguration found here must fail push deliveries only, not email or SignalR ones.
+/// </para>
 /// </remarks>
 [ExposeServices(
     typeof(INotificationNotifier),
@@ -37,6 +42,11 @@ public class PushNotifier :
     protected IPushDeviceStore DeviceStore { get; }
 
     protected IReadOnlyDictionary<string, IPushProvider> Providers { get; }
+
+    /// <summary>
+    /// Set when two registered providers claim the same name; every push delivery then fails with this message.
+    /// </summary>
+    protected string? ProviderConfigurationError { get; }
 
     protected INotificationPushBuilder PushBuilder { get; }
 
@@ -65,9 +75,10 @@ public class PushNotifier :
         {
             if (byName.TryGetValue(provider.Name, out var existing))
             {
-                throw new InvalidOperationException(
+                ProviderConfigurationError ??=
                     $"Push providers '{existing.GetType().FullName}' and '{provider.GetType().FullName}' both claim the "
-                    + $"name '{provider.Name}'. Each {nameof(IPushProvider)} needs a distinct name.");
+                    + $"name '{provider.Name}'. Each {nameof(IPushProvider)} needs a distinct name.";
+                continue;
             }
 
             byName[provider.Name] = provider;
@@ -84,6 +95,11 @@ public class PushNotifier :
         {
             throw new InvalidOperationException(
                 $"The {nameof(PushNotifier)} cannot deliver channel '{request.Channel}'.");
+        }
+
+        if (ProviderConfigurationError != null)
+        {
+            throw new InvalidOperationException(ProviderConfigurationError);
         }
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -185,6 +201,7 @@ public class PushNotifier :
         foreach (var providerGroup in messages.GroupBy(item => item.Target.Provider, StringComparer.OrdinalIgnoreCase))
         {
             cancellationToken.ThrowIfCancellationRequested();
+            var items = providerGroup.ToList();
 
             if (!Providers.TryGetValue(providerGroup.Key, out var provider))
             {
@@ -192,17 +209,15 @@ public class PushNotifier :
                     "No push provider named '{Provider}' is registered; skipping {DeviceCount} device(s) for "
                     + "notification '{NotificationName}'.",
                     providerGroup.Key,
-                    providerGroup.Count(),
+                    items.Count,
                     notification.NotificationName);
                 continue;
             }
 
-            IReadOnlyList<PushSendResult> results;
             try
             {
-                results = await provider.SendAsync(
-                    providerGroup.Select(item => item.Message).ToList(),
-                    cancellationToken);
+                var results = await provider.SendAsync(items.Select(item => item.Message).ToList(), cancellationToken);
+                await HandleResultsAsync(notification, provider.Name, items, results, cancellationToken);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -210,11 +225,18 @@ public class PushNotifier :
             }
             catch (Exception exception)
             {
+                // Exception type only: a provider's message may echo request details, and Core's handler keeps the
+                // same rule. The provider name is what an operator needs to find the failing integration.
+                Logger.LogWarning(
+                    "Push provider '{Provider}' failed with {ExceptionType} while delivering to {DeviceCount} "
+                    + "device(s) for notification '{NotificationName}' ({NotificationId}).",
+                    provider.Name,
+                    exception.GetType().FullName,
+                    items.Count,
+                    notification.NotificationName,
+                    notification.NotificationId);
                 failures.Add(exception);
-                continue;
             }
-
-            await HandleResultsAsync(notification, provider.Name, results, cancellationToken);
         }
 
         if (failures.Count == 1)
@@ -230,17 +252,27 @@ public class PushNotifier :
         }
     }
 
-    /// <summary>Removes dead devices and logs one summary line for rejected messages. Never logs tokens.</summary>
+    /// <summary>
+    /// Removes the devices the provider reported dead — under the provider name each device was stored with rather
+    /// than the provider's own spelling, so a store matching names exactly still finds them — and logs one summary
+    /// line for rejected messages. Never logs tokens.
+    /// </summary>
     protected virtual async Task HandleResultsAsync(
         NotificationPayload notification,
         string providerName,
+        IReadOnlyList<(PushTarget Target, PushMessage Message)> sent,
         IReadOnlyList<PushSendResult> results,
         CancellationToken cancellationToken)
     {
-        foreach (var result in results.Where(result => result.Status == PushSendStatus.TokenInvalid))
+        var deadTokens = results
+            .Where(result => result.Status == PushSendStatus.TokenInvalid)
+            .Select(result => result.Token)
+            .ToHashSet(StringComparer.Ordinal);
+
+        foreach (var target in sent.Select(item => item.Target).Where(target => deadTokens.Contains(target.Token)))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            await DeviceStore.RemoveAsync(providerName, result.Token, cancellationToken);
+            await DeviceStore.RemoveAsync(target.Provider, target.Token, cancellationToken);
         }
 
         var failed = results.Where(result => result.Status == PushSendStatus.Failed).ToList();

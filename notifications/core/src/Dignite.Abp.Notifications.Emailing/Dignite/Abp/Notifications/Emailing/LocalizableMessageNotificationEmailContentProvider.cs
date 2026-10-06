@@ -1,8 +1,6 @@
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Localization;
-using Volo.Abp;
 using Volo.Abp.DependencyInjection;
 
 namespace Dignite.Abp.Notifications.Emailing;
@@ -28,16 +26,7 @@ public class LocalizableMessageNotificationEmailContentProvider
         LocalizableMessageNotificationData data,
         CancellationToken cancellationToken)
     {
-        var localizer = data.ResourceName != null
-            ? StringLocalizerFactory.CreateByResourceNameOrNull(data.ResourceName)
-            : null;
-        localizer ??= StringLocalizerFactory.CreateDefaultOrNull();
-
-        var body = localizer == null
-            ? data.Name
-            : data.Arguments != null
-                ? localizer[data.Name, data.Arguments.Values.ToArray()].Value
-                : localizer[data.Name].Value;
+        var body = data.Localize(StringLocalizerFactory);
 
         return Task.FromResult<NotificationEmail?>(
             new NotificationEmail(context.Notification.NotificationName, body));
