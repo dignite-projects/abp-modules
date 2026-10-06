@@ -34,6 +34,16 @@
     font-size: 0.9rem;
 }
 
+.dignite-inbox-item.dignite-inbox-unread {
+    background-color: rgba(13, 110, 253, 0.05);
+    box-shadow: inset 3px 0 0 var(--bs-primary, #0d6efd);
+}
+
+.dignite-inbox-item-body {
+    min-width: 0;
+    cursor: pointer;
+}
+
 @keyframes dignite-notification-pulse {
     0% { transform: scale(1); }
     50% { transform: scale(1.2); }

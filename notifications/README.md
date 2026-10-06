@@ -738,11 +738,18 @@ definition registry and availability policy; startup resolves that replacement b
 
 ## UI libraries (optional)
 
-- **MVC** (`Dignite.NotificationCenter.Web`): a notification-bell view component and a
-  subscriptions page. Configure the hub URL and per-type rendering via `NotificationCenterWebOptions`
-  — `SignalRHubUrl`, `DataViewComponents` (keyed by discriminator), and `EntityLinkResolvers`.
-- **Angular** (`angular/projects/notification-center`): an ABP-generated proxy service plus bell and
-  subscriptions components, built against `/api/notification-center` and the SignalR hub.
+- **MVC** (`Dignite.NotificationCenter.Web`): a notification-bell view component, a subscriptions settings tab,
+  and an inbox page at `/NotificationCenter/Notifications` (`NotificationCenterWebConsts.InboxPageUrl`). Configure
+  the hub URL and per-type rendering via `NotificationCenterWebOptions` — `SignalRHubUrl`, `DataViewComponents`
+  (keyed by discriminator), and `EntityLinkResolvers`; the inbox page renders items with the same options.
+- **Angular** (`angular/projects/notification-center`): an ABP-generated proxy service plus bell, subscriptions and
+  inbox components, built against `/api/notification-center` and the SignalR hub. Mount the inbox with
+  `createRoutes()` at `/notifications`.
+
+The inbox page lists the user's notifications under group tabs with unread counts, with an all/unread filter,
+paging, per-item delete, "mark all as read" and "clear read". Clicking an item marks it read and follows its entity
+link; the item stays listed until the user deletes it. Neither UI adds a main-menu item for it — the page is reached
+from the bell.
 
 Both bells open a SignalR connection to `/signalr-hubs/notifications` and refresh from the REST inbox when a
 `ReceiveNotification` message arrives or the connection reconnects (auto-reconnect handled by the SignalR client);

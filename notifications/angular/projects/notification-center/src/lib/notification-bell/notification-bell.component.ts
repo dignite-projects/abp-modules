@@ -3,7 +3,7 @@ import { DOCUMENT, DatePipe, NgComponentOutlet } from '@angular/common';
 import { AuthService, EnvironmentService, LocalizationPipe } from '@abp/ng.core';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
-import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { UserNotificationService, UserNotificationDto } from '../proxy/dignite/abp/notification-center';
 import { NotificationSeverity, UserNotificationState } from '../proxy/dignite/abp/notifications';
 import { NotificationDataComponentsService } from '../notification-data/notification-data-components.service';
@@ -12,11 +12,13 @@ import {
   NotificationEntityLinkTarget,
   NotificationEntityLinksService,
 } from '../notification-links/notification-entity-links.service';
+import { NotificationNavigationService } from '../notification-links/notification-navigation.service';
+import { NotificationCenterEventsService } from '../notification-inbox/notification-center-events.service';
 
 /**
  * Notification bell: unread badge + dropdown of recent unread notifications, with mark-as-read / mark-all-as-read.
- * Refreshes on startup and when the ABP-mapped SignalR hub receives a notification (auto-reconnect handled by the
- * SignalR client). Each item's body is dispatched by discriminator through NotificationDataComponentsService
+ * Refreshes on startup, when the ABP-mapped SignalR hub receives a notification (auto-reconnect handled by the
+ * SignalR client), and when the inbox page reports a change through NotificationCenterEventsService. Each item's body is dispatched by discriminator through NotificationDataComponentsService
  * (mirrors the MVC UI's NotificationCenterWebOptions.DataViewComponents), falling back to a generic image-only
  * rendering when no renderer is registered for it. Server-side tolerant placeholders use the built-in
  * "Dignite.Unsupported" renderer, so unreadable payloads still produce a visible safe fallback.
@@ -119,7 +121,9 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
   private ngZone = inject(NgZone);
   private document = inject(DOCUMENT);
   private changeDetectorRef = inject(ChangeDetectorRef);
-  private router = inject(Router);
+  private navigation = inject(NotificationNavigationService);
+  private events = inject(NotificationCenterEventsService);
+  private inboxChangedSubscription?: Subscription;
   private hubConnection?: HubConnection;
   private startPromise?: Promise<void>;
 
@@ -130,9 +134,11 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.refresh();
     this.startRealtime();
+    this.inboxChangedSubscription = this.events.inboxChanged$.subscribe(() => this.refresh());
   }
 
   ngOnDestroy(): void {
+    this.inboxChangedSubscription?.unsubscribe();
     void this.hubConnection?.stop();
   }
 
@@ -229,62 +235,7 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
   }
 
   private navigateToTarget(target: NotificationEntityLinkTarget | null): void {
-    if (!target) {
-      return;
-    }
-
-    if (typeof target === 'string') {
-      this.navigateToStringTarget(target);
-      return;
-    }
-
-    if (Array.isArray(target)) {
-      void this.router.navigate(target);
-      return;
-    }
-
-    void this.router.navigateByUrl(target);
-  }
-
-  private navigateToStringTarget(target: string): void {
-    const trimmedTarget = target.trim();
-    if (!trimmedTarget) {
-      return;
-    }
-
-    const windowRef = this.document.defaultView;
-    if (this.isExternalUrl(trimmedTarget, windowRef)) {
-      windowRef?.location.assign(trimmedTarget);
-      return;
-    }
-
-    if (/^[a-z][a-z0-9+.-]*:/i.test(trimmedTarget) && windowRef) {
-      const url = new URL(trimmedTarget);
-      void this.router.navigateByUrl(`${url.pathname}${url.search}${url.hash}`);
-      return;
-    }
-
-    void this.router.navigateByUrl(trimmedTarget);
-  }
-
-  private isExternalUrl(target: string, windowRef: Window | null): boolean {
-    if (target.startsWith('//')) {
-      return true;
-    }
-
-    if (!/^[a-z][a-z0-9+.-]*:/i.test(target)) {
-      return false;
-    }
-
-    if (!windowRef) {
-      return true;
-    }
-
-    try {
-      return new URL(target).origin !== windowRef.location.origin;
-    } catch {
-      return true;
-    }
+    this.navigation.navigate(target);
   }
 
   private startRealtime(): void {

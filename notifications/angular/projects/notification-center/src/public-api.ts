@@ -14,3 +14,8 @@ export * from './lib/notification-data/message-notification-data.component';
 export * from './lib/notification-data/localizable-message-notification-data.component';
 export * from './lib/notification-data/unsupported-notification-data.component';
 export * from './lib/notification-links/notification-entity-links.service';
+export * from './lib/notification-links/notification-navigation.service';
+export * from './lib/notification-inbox/notification-inbox.component';
+export * from './lib/notification-inbox/notification-center-events.service';
+export * from './lib/enums/components';
+export * from './lib/notification-center.routes';

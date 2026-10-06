@@ -1,0 +1,109 @@
+@page
+@using Dignite.Abp.Notifications
+@using Dignite.NotificationCenter.Localization
+@using Dignite.NotificationCenter.Web
+@using Dignite.NotificationCenter.Web.Pages.NotificationCenter.Notifications
+@using Microsoft.AspNetCore.Mvc.Localization
+@using Microsoft.Extensions.Options
+@using Volo.Abp.AspNetCore.Mvc.UI.Layout
+@model IndexModel
+@inject IHtmlLocalizer<NotificationCenterResource> L
+@inject IPageLayout PageLayout
+@inject IOptions<NotificationCenterWebOptions> WebOptionsAccessor
+@{
+    PageLayout.Content.Title = L["Notifications"].Value;
+    var options = WebOptionsAccessor.Value;
+}
+@section scripts {
+    <abp-script-bundle name="@typeof(IndexModel).FullName">
+        <abp-script src="/Dignite/NotificationCenter/Web/notification-inbox.js" />
+    </abp-script-bundle>
+}
+<abp-card class="dignite-notification-inbox">
+    <abp-card-header>
+        <ul class="nav nav-tabs card-header-tabs dignite-inbox-tabs">
+            <li class="nav-item">
+                <a class="nav-link @(Model.GroupName == null ? "active" : "")" href="@Model.GetPageUrl(null, Model.UnreadOnly)">
+                    @L["Inbox:All"]
+                    <span class="badge rounded-pill bg-primary ms-1 dignite-inbox-unread-count" data-group-name="" data-count="@Model.TotalUnreadCount" @(Model.TotalUnreadCount > 0 ? "" : "hidden")>@Model.TotalUnreadCount</span>
+                </a>
+            </li>
+            @foreach (var group in Model.Groups)
+            {
+                <li class="nav-item">
+                    <a class="nav-link @(group.Name == Model.GroupName ? "active" : "")" href="@Model.GetPageUrl(group.Name, Model.UnreadOnly)">
+                        @group.DisplayName
+                        <span class="badge rounded-pill bg-primary ms-1 dignite-inbox-unread-count" data-group-name="@group.Name" data-count="@group.UnreadCount" @(group.UnreadCount > 0 ? "" : "hidden")>@group.UnreadCount</span>
+                    </a>
+                </li>
+            }
+        </ul>
+    </abp-card-header>
+    <abp-card-body>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div class="btn-group btn-group-sm" role="group">
+                <a class="btn btn-outline-secondary @(!Model.UnreadOnly ? "active" : "")" href="@Model.GetPageUrl(Model.GroupName, false)">@L["Inbox:All"]</a>
+                <a class="btn btn-outline-secondary @(Model.UnreadOnly ? "active" : "")" href="@Model.GetPageUrl(Model.GroupName, true)">@L["Inbox:Unread"]</a>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-sm btn-outline-primary dignite-inbox-mark-all-read"
+                        data-confirm-message="@L["MarkAllAsReadConfirmation"].Value"
+                        disabled="@(Model.TotalUnreadCount == 0)">
+                    @L["MarkAllAsRead"]
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger dignite-inbox-delete-all-read"
+                        data-confirm-message="@L["DeleteAllReadConfirmation"].Value">
+                    @L["DeleteAllRead"]
+                </button>
+            </div>
+        </div>
+
+        @if (!Model.Items.Any())
+        {
+            <p class="text-muted mb-0 dignite-inbox-empty">@L["NoNotifications"]</p>
+        }
+        else
+        {
+            <div class="list-group dignite-inbox-list mb-3">
+                @foreach (var item in Model.Items)
+                {
+                    var notification = item.Notification;
+                    var isUnread = notification.State == UserNotificationState.Unread;
+                    <div class="list-group-item dignite-inbox-item @(isUnread ? "dignite-inbox-unread" : "")"
+                         data-notification-id="@notification.NotificationId"
+                         data-group-name="@notification.GroupName"
+                         data-url="@item.Url">
+                        <div class="d-flex align-items-start gap-2">
+                            <div class="flex-grow-1 dignite-inbox-item-body" role="button" tabindex="0">
+                                <div class="dignite-notification-item-header">
+                                    <span class="dignite-notification-item-title fw-semibold @notification.Severity.ToTextColorCssClass()">
+                                        @(string.IsNullOrEmpty(notification.NotificationDisplayName) ? notification.NotificationName : notification.NotificationDisplayName)
+                                    </span>
+                                    <small class="dignite-notification-item-time text-muted">@notification.CreationTime.ToString("g")</small>
+                                </div>
+                                @if (Model.GroupName == null && notification.GroupDisplayName != null)
+                                {
+                                    <small class="text-muted d-block">@notification.GroupDisplayName</small>
+                                }
+                                @if (item.Discriminator != null && options.DataViewComponents.TryGetValue(item.Discriminator, out var dataViewComponentType))
+                                {
+                                    @await Component.InvokeAsync(dataViewComponentType, new { data = notification.Data })
+                                }
+                                else if (notification.Data is IHasNotificationImageUrl { ImageUrl.Length: > 0 } withImage)
+                                {
+                                    <img src="@withImage.ImageUrl" class="dignite-notification-image" alt="" />
+                                }
+                            </div>
+                            <button type="button" class="btn btn-sm btn-link text-danger p-0 dignite-inbox-delete"
+                                    title="@L["Delete"].Value" aria-label="@L["Delete"].Value"
+                                    data-confirm-message="@L["DeleteNotificationConfirmation"].Value">
+                                <i class="fa fa-trash" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+            <abp-paginator model="Model.PagerModel" show-info="true" />
+        }
+    </abp-card-body>
+</abp-card>

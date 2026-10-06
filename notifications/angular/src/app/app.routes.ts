@@ -1,4 +1,3 @@
-import { authGuard, permissionGuard } from '@abp/ng.core';
 import { Routes } from '@angular/router';
 export const APP_ROUTES: Routes = [
   {
@@ -20,7 +19,6 @@ export const APP_ROUTES: Routes = [
   },
   {
     path: 'notifications',
-    canActivate: [authGuard],
-    loadComponent: () => import('./notifications/notifications.component').then(c => c.NotificationsComponent),
+    loadChildren: () => import('@dignite/ng.notification-center').then(c => c.createRoutes()),
   },
 ];

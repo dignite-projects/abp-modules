@@ -7,11 +7,11 @@
     // error reporting, and this surface auto-tracks the C# app services (no URLs to keep in sync). The inbox
     // and subscriptions are two controllers, so there are two proxy objects (paths follow the controller names).
     function inboxApi() {
-        return dignite.abp.notificationCenter.userNotification;
+        return dignite.notificationCenter.userNotification;
     }
 
     function subscriptionApi() {
-        return dignite.abp.notificationCenter.notificationSubscription;
+        return dignite.notificationCenter.notificationSubscription;
     }
 
     function refreshDropdown(bell) {
@@ -167,6 +167,14 @@
         } else {
             el.setAttribute('hidden', '');
         }
+    }
+
+    // ---- badge sync with the inbox page ----
+    // The inbox page (notification-inbox.js) reports the new unread total after marking a notification read.
+    if (typeof abp !== 'undefined' && abp.event) {
+        abp.event.on('dignite.notificationCenter.unreadCountChanged', function (count) {
+            setBadgeCount(count);
+        });
     }
 
     // ---- real-time receive over ABP SignalR (optional, degrades gracefully) ----
