@@ -18,4 +18,5 @@ export * from './lib/notification-links/notification-navigation.service';
 export * from './lib/notification-inbox/notification-inbox.component';
 export * from './lib/notification-inbox/notification-center-events.service';
 export * from './lib/enums/components';
+export * from './lib/enums/paths';
 export * from './lib/notification-center.routes';

@@ -1,5 +1,6 @@
 import { eLayoutType, RoutesService } from '@abp/ng.core';
 import { inject, provideAppInitializer } from '@angular/core';
+import { NOTIFICATION_CENTER_INBOX_PATH } from '@dignite/ng.notification-center';
 import { eNotificationCenterRouteNames } from '../enums/route-names';
 
 export const NOTIFICATION_CENTER_ROUTE_PROVIDERS = [
@@ -12,7 +13,7 @@ export function configureRoutes() {
   const routes = inject(RoutesService);
   routes.add([
     {
-      path: '/notifications',
+      path: NOTIFICATION_CENTER_INBOX_PATH,
       name: eNotificationCenterRouteNames.Notifications,
       iconClass: 'fas fa-bell',
       order: 2,

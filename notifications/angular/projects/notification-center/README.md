@@ -97,9 +97,10 @@ Advanced hosts can inject `NotificationRealtimeService` directly to observe `ref
 The bell keeps the notification title and time in a fixed header row. The body below it is rendered by
 the notification data discriminator; register custom body components with `NotificationDataComponentsService`.
 
-Notifications are not required to be navigable. Clicking an item marks it as read in place, updates the badge,
-and keeps the item visible in the currently open dropdown. The next time the bell is opened, it reloads the
-unread list and read items naturally drop out. If a resolver is registered for the item's `entityTypeName`,
+Notifications are not required to be navigable. The bell lists the ten most recent notifications, read and
+unread (unread ones highlighted; the badge counts only unread), with a "View all" link to the inbox page.
+Clicking an item marks it as read in place and updates the badge; the item stays listed, rendered as read.
+If a resolver is registered for the item's `entityTypeName`,
 the bell marks it as read and navigates through Angular Router so the SPA is not reloaded:
 
 ```ts

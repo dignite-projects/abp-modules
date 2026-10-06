@@ -76,7 +76,7 @@ describe('NotificationBellComponent', () => {
   }
 
   describe('refresh', () => {
-    it('loads the unread count and the unread list on init', () => {
+    it('loads the unread count and the most recent notifications regardless of state on init', () => {
       notificationService.getUnreadCount = vi.fn(() => of(3));
       notificationService.getList = vi.fn(() => of({ items: [notification()], totalCount: 1 }));
 
@@ -84,10 +84,13 @@ describe('NotificationBellComponent', () => {
 
       expect(fixture.componentInstance.unreadCount).toBe(3);
       expect(fixture.componentInstance.notifications).toHaveLength(1);
-      expect(notificationService.getList).toHaveBeenCalledWith({
-        state: UserNotificationState.Unread,
-        maxResultCount: 10,
-      });
+      expect(notificationService.getList).toHaveBeenCalledWith({ maxResultCount: 10 });
+    });
+
+    it('links "View all" to the inbox page path', () => {
+      const fixture = render();
+
+      expect(fixture.componentInstance.inboxPath).toBe('/notifications');
     });
 
     it('refreshes again when the dropdown opens, but not when it closes', () => {

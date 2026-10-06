@@ -45,9 +45,10 @@ public class NotificationBellViewComponent : ViewComponent
     protected virtual async Task<NotificationBellViewModel> CreateViewModelAsync()
     {
         var unreadCount = await UserNotificationAppService.GetUnreadCountAsync();
+        // The most recent notifications regardless of state: reading one keeps it here (rendered as read) instead of
+        // making it vanish; the badge alone counts unread. The full history lives on the inbox page.
         var recent = await UserNotificationAppService.GetListAsync(new GetUserNotificationListInput
         {
-            State = UserNotificationState.Unread,
             MaxResultCount = 10
         });
 
