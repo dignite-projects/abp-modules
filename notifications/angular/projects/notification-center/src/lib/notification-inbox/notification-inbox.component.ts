@@ -1,9 +1,9 @@
-import { ChangeDetectorRef, Component, OnInit, Type, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, Type, inject } from '@angular/core';
 import { DatePipe, NgComponentOutlet } from '@angular/common';
 import { LocalizationPipe } from '@abp/ng.core';
 import { Confirmation, ConfirmationService } from '@abp/ng.theme.shared';
 import { NgbPagination } from '@ng-bootstrap/ng-bootstrap';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import {
   UserNotificationDto,
   UserNotificationGroupDto,
@@ -150,7 +150,7 @@ import { NotificationCenterEventsService } from './notification-center-events.se
     `,
   ],
 })
-export class NotificationInboxComponent implements OnInit {
+export class NotificationInboxComponent implements OnInit, OnDestroy {
   readonly pageSize = 20;
 
   groups: UserNotificationGroupDto[] = [];
@@ -161,6 +161,7 @@ export class NotificationInboxComponent implements OnInit {
   unreadOnly = false;
 
   private markingNotificationIds = new Set<string>();
+  private listSubscription?: Subscription;
   private notificationService = inject(UserNotificationService);
   private notificationDataComponents = inject(NotificationDataComponentsService);
   private notificationEntityLinks = inject(NotificationEntityLinksService);
@@ -177,6 +178,10 @@ export class NotificationInboxComponent implements OnInit {
   ngOnInit(): void {
     this.loadGroups();
     this.loadList();
+  }
+
+  ngOnDestroy(): void {
+    this.listSubscription?.unsubscribe();
   }
 
   selectGroup(groupName: string | null): void {
@@ -291,7 +296,10 @@ export class NotificationInboxComponent implements OnInit {
   }
 
   private loadList(): void {
-    this.notificationService
+    // Only the latest selection's response may land: a slower response for a tab/filter/page the user already left
+    // would otherwise overwrite the current list.
+    this.listSubscription?.unsubscribe();
+    this.listSubscription = this.notificationService
       .getList({
         groupName: this.selectedGroupName ?? undefined,
         state: this.unreadOnly ? UserNotificationState.Unread : undefined,

@@ -4,6 +4,7 @@ import { AuthService, EnvironmentService, LocalizationPipe } from '@abp/ng.core'
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { Subscription } from 'rxjs';
+import { RouterLink } from '@angular/router';
 import { UserNotificationService, UserNotificationDto } from '../proxy/dignite/abp/notification-center';
 import { NotificationSeverity, UserNotificationState } from '../proxy/dignite/abp/notifications';
 import { NotificationDataComponentsService } from '../notification-data/notification-data-components.service';
@@ -14,9 +15,11 @@ import {
 } from '../notification-links/notification-entity-links.service';
 import { NotificationNavigationService } from '../notification-links/notification-navigation.service';
 import { NotificationCenterEventsService } from '../notification-inbox/notification-center-events.service';
+import { NOTIFICATION_CENTER_INBOX_PATH } from '../enums/paths';
 
 /**
- * Notification bell: unread badge + dropdown of recent unread notifications, with mark-as-read / mark-all-as-read.
+ * Notification bell: unread badge + dropdown of the most recent notifications (read and unread), with mark-as-read /
+ * mark-all-as-read and a "View all" link to the inbox page. Reading an item keeps it listed, rendered as read.
  * Refreshes on startup, when the ABP-mapped SignalR hub receives a notification (auto-reconnect handled by the
  * SignalR client), and when the inbox page reports a change through NotificationCenterEventsService. Each item's body is dispatched by discriminator through NotificationDataComponentsService
  * (mirrors the MVC UI's NotificationCenterWebOptions.DataViewComponents), falling back to a generic image-only
@@ -26,7 +29,7 @@ import { NotificationCenterEventsService } from '../notification-inbox/notificat
 @Component({
   selector: 'abp-notification-bell',
   standalone: true,
-  imports: [DatePipe, LocalizationPipe, NgComponentOutlet, NgbDropdownModule],
+  imports: [DatePipe, LocalizationPipe, NgComponentOutlet, NgbDropdownModule, RouterLink],
   template: `
     <div
       class="dropdown abp-notification-bell"
@@ -64,7 +67,7 @@ import { NotificationCenterEventsService } from '../notification-inbox/notificat
           }
         </div>
         @if (notifications.length === 0) {
-          <div class="abp-notification-empty">{{ 'NotificationCenter::NoUnreadNotifications' | abpLocalization }}</div>
+          <div class="abp-notification-empty">{{ 'NotificationCenter::NoNotifications' | abpLocalization }}</div>
         } @else {
           @for (n of notifications; track n.id) {
             <div
@@ -88,6 +91,11 @@ import { NotificationCenterEventsService } from '../notification-inbox/notificat
             </div>
           }
         }
+        <a
+          class="abp-notification-view-all"
+          [routerLink]="inboxPath"
+          (click)="notificationDropdown.close()"
+        >{{ 'NotificationCenter::ViewAll' | abpLocalization }}</a>
       </div>
     </div>
   `,
@@ -105,12 +113,14 @@ import { NotificationCenterEventsService } from '../notification-inbox/notificat
       .abp-notification-item-title { min-width: 0; overflow-wrap: anywhere; font-size: 0.9rem; }
       .abp-notification-item-time { font-size: 0.75rem; color: #888; white-space: nowrap; }
       .abp-notification-item-image { max-width: 100%; border-radius: 4px; margin-top: 4px; }
+      .abp-notification-view-all { display: block; padding: 8px; text-align: center; font-size: 0.85rem; text-decoration: none; }
     `,
   ],
 })
 export class NotificationBellComponent implements OnInit, OnDestroy {
   unreadCount = 0;
   notifications: UserNotificationDto[] = [];
+  readonly inboxPath = NOTIFICATION_CENTER_INBOX_PATH;
 
   private markingNotificationIds = new Set<string>();
   private notificationService = inject(UserNotificationService);
@@ -148,7 +158,8 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
       this.unreadCount = c;
       this.changeDetectorRef.markForCheck();
     });
-    this.notificationService.getList({ state: UserNotificationState.Unread, maxResultCount: 10 }).subscribe(r => {
+    // The most recent notifications regardless of state; the badge alone counts unread.
+    this.notificationService.getList({ maxResultCount: 10 }).subscribe(r => {
       this.notifications = r.items;
       this.changeDetectorRef.markForCheck();
     });

@@ -200,36 +200,6 @@ public class MyHostDbContext : AbpDbContext<MyHostDbContext>, INotificationCente
 
 Then add a migration in your host and update the database, exactly as for any other ABP module.
 
-### Upgrading to notification groups
-
-Notification groups are a breaking change for definition providers and add one column to the inbox table:
-
-1. **Definition providers**: replace every `context.Add(new NotificationDefinition(name, displayName))` with
-   `context.AddGroup(groupName, groupDisplayName).AddNotification(name, displayName)`. The top-level `Add` and the
-   public `NotificationDefinition` constructor are gone. A custom `NotificationDefinitionManager` that overrode
-   `CreateDefinitions()` now overrides `CreateGroups()`; `INotificationDefinitionManager` gained `GetGroups()` and
-   `GetGroupOrNull(name)`.
-2. **Inbox rows**: `UserNotification` gains a required `NotificationName` (a copy of the notification's definition
-   name), so the inbox can be filtered and counted by group with single-table indexed queries on both providers.
-   `INotificationStore` implementations must populate it from `UserNotificationInfo.NotificationName` and implement
-   the new name filters and `GetUnreadCountsByNotificationNameAsync`.
-
-Existing EF Core databases need a host migration that adds the column, backfills it from the notification row, and
-then adds the new `(TenantId, UserId, NotificationName, State, CreationTime)` index. Add the column as nullable (or
-with a temporary default), run the backfill, then make it required:
-
-```sql
-UPDATE un
-SET un.NotificationName = n.NotificationName
-FROM NotifUserNotifications un
-JOIN NotifNotifications n ON n.Id = un.NotificationId;  -- default "Notif" prefix; adjust prefix, schema and SQL dialect
-```
-
-Inbox rows whose notification row is already gone are never returned by the inbox; delete them before making the
-column required. MongoDB needs the same backfill (set each `NotifUserNotifications` document's `NotificationName`
-from its `NotifNotifications` document) before the new index is relied on; documents without the field simply never
-match a group filter.
-
 ### Upgrading subscription identity indexes
 
 Subscription identity is the tuple `(TenantId, UserId, NotificationName, EntityTypeName?, EntityId?)`.

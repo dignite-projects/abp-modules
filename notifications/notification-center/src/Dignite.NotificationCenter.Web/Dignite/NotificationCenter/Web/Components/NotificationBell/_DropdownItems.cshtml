@@ -21,7 +21,7 @@
     </div>
     @if (!Model.Items.Any())
     {
-        <div class="p-3 text-muted">@L["NoUnreadNotifications"]</div>
+        <div class="p-3 text-muted">@L["NoNotifications"]</div>
     }
     else
     {
@@ -48,4 +48,6 @@
             </a>
         }
     }
+    <a href="@Url.Content(NotificationCenterWebConsts.InboxPageUrl)"
+       class="dignite-notification-view-all d-block p-2 text-center small text-decoration-none">@L["ViewAll"]</a>
 </div>

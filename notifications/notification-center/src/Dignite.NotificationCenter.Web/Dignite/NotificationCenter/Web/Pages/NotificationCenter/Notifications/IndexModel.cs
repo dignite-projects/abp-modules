@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using Dignite.NotificationCenter.Localization;
 using Dignite.NotificationCenter.Web.Components.NotificationBell;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Volo.Abp.Application.Dtos;
 using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Pagination;
 using Volo.Abp.AspNetCore.Mvc.UI.RazorPages;
 
@@ -58,17 +60,31 @@ public class IndexModel : AbpPageModel
         TotalUnreadCount = Groups.Sum(group => group.UnreadCount);
 
         CurrentPage = CurrentPage < 1 ? 1 : CurrentPage;
-        var result = await UserNotificationAppService.GetListAsync(new GetUserNotificationListInput
+        var result = await GetPageAsync(CurrentPage);
+
+        // A delete or "clear read" reloads the same URL and can empty the page it was on; show the new last page
+        // instead of an empty state while earlier pages still have notifications.
+        var lastPage = Math.Max(1, (int)Math.Ceiling(result.TotalCount / (double)PageSize));
+        if (result.Items.Count == 0 && CurrentPage > lastPage)
         {
-            GroupName = GroupName,
-            State = UnreadOnly ? UserNotificationState.Unread : null,
-            SkipCount = (CurrentPage - 1) * PageSize,
-            MaxResultCount = PageSize
-        });
+            CurrentPage = lastPage;
+            result = await GetPageAsync(CurrentPage);
+        }
 
         Items = result.Items.Select(ItemViewModelFactory.Create).ToList();
         PagerModel = new PagerModel(
             result.TotalCount, Items.Count, CurrentPage, PageSize, GetPageUrl(GroupName, UnreadOnly));
+    }
+
+    protected virtual Task<PagedResultDto<UserNotificationDto>> GetPageAsync(int page)
+    {
+        return UserNotificationAppService.GetListAsync(new GetUserNotificationListInput
+        {
+            GroupName = GroupName,
+            State = UnreadOnly ? UserNotificationState.Unread : null,
+            SkipCount = (page - 1) * PageSize,
+            MaxResultCount = PageSize
+        });
     }
 
     /// <summary>URL of this page for a group/filter combination (first page).</summary>
