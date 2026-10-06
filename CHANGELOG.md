@@ -14,6 +14,33 @@ Because releases are lockstep, a version may contain changes to only one module 
 packages are still republished at that version with unchanged content. Entries are grouped by module
 so it stays clear which part of the repository actually moved.
 
+## [Unreleased]
+
+### Added
+
+#### notifications
+
+- **Device push channel.** `Dignite.Abp.Notifications.Push` adds the `"Push"` channel: a definition says
+  `UseChannels("Push")` and the notification reaches the recipient's phones. Which delivery service carries
+  a message is decided per device - each registered device names the `IPushProvider` that issued its
+  token - so one channel spans Expo, FCM and APNs. Devices come from a new `IPushDeviceStore` seam (a null
+  store until something replaces it), content from an `INotificationPushContentProvider` chain built once
+  per device culture, and every message carries the inbox keys (`notificationId`, `notificationName`,
+  `entityTypeName`, `entityId`) as silent data. A device the provider reports dead is removed. Delivery
+  stays best-effort: no retry, no delivery state. Core, the distributor and
+  `NotificationDeliveryRequestedEto` are unchanged.
+- **Expo Push Service provider.** `Dignite.Abp.Notifications.Push.Expo` sends through Expo's push API (one
+  HTTP endpoint for iOS and Android, batches of 100), with `ExpoPushOptions.AccessToken` for Expo's
+  enhanced push security. Only push tickets are read; receipts are not polled.
+
+### Changed
+
+#### notifications
+
+- `NotificationCultureResolver` (Abstractions) now holds the recipient-culture fallback that
+  `EmailNotifier.ResolveCulture` used to implement privately, so the email and push notifiers share it;
+  `EmailNotifier` switches cultures with ABP's `CultureHelper.Use`. Behaviour is unchanged.
+
 ## [10.0.0-rc.19] - 2026-10-04
 
 ### Fixed

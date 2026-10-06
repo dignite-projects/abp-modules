@@ -50,6 +50,8 @@ the first stable version exists the initial pre-release is necessarily also expo
 | `Dignite.Abp.Notifications.SignalR` | Real-time push notifier (SignalR hub at `/signalr-hubs/notifications`). |
 | `Dignite.Abp.Notifications.Emailing` | Email notifier (ABP `IEmailSender`). |
 | `Dignite.Abp.Notifications.Emailing.Identity` | Optional ABP Identity-backed email address resolver for the Emailing notifier. |
+| `Dignite.Abp.Notifications.Push` | Device push notifier (the `"Push"` channel): content chain, `IPushDeviceStore` and `IPushProvider` contracts. |
+| `Dignite.Abp.Notifications.Push.Expo` | Expo Push Service provider for the Push notifier (iOS + Android through one API). |
 | `Dignite.Abp.Notifications.Identity` | Permission gating and active-user audience paging via ABP Identity. |
 
 **Optional Notification Center** (`notification-center/`) — persistence + REST API + UI, depends on
@@ -92,6 +94,12 @@ Email is optional:
 ```bash
 dotnet add path/to/MyApp.csproj package Dignite.Abp.Notifications.Emailing --version 10.0.0-rc.4
 dotnet add path/to/MyApp.csproj package Dignite.Abp.Notifications.Emailing.Identity --version 10.0.0-rc.4
+```
+
+Device push (iOS / Android) is optional too — the channel plus one provider:
+
+```bash
+dotnet add path/to/MyApp.csproj package Dignite.Abp.Notifications.Push.Expo
 ```
 
 ### Full Notification Center with EF Core
@@ -529,6 +537,20 @@ the transport adapter, so a channel plugin does not implement an event-handler i
 - **SignalR** — clients connect to the hub at `/signalr-hubs/notifications` (an ABP `AbpHub`, mapped
   **automatically**; the host must *not* call `MapHub`) and receive a trimmed `NotificationPayload`
   with the recipient list stripped, so siblings' user IDs never leak to each other.
+- **Push** — pushes to the recipient's phones. The channel is one (`"Push"`); the delivery service is
+  chosen per device: each registered device names the `IPushProvider` that issued its token
+  (`Dignite.Abp.Notifications.Push.Expo` ships the Expo Push Service provider), so a definition only ever
+  says `UseChannels("Push")`. Devices come from an `IPushDeviceStore`; the base package registers a null
+  store, so nothing is sent (and a warning is logged) until a real one replaces it. Content is built once
+  per device culture by an `INotificationPushContentProvider` chain that mirrors the email one (built-in
+  fallbacks for `MessageNotificationData` and `LocalizableMessageNotificationData`); every message also
+  carries `notificationId`, `notificationName`, `entityTypeName` and `entityId` as silent data so a tapped
+  notification can open — and mark read — its inbox entry. A device a provider reports dead is removed
+  from the store. Push text travels through Apple's, Google's and the provider's servers and shows on a
+  lock screen: keep it to "something new, open the app". With Expo, turn on *Enhanced Security for Push
+  Notifications* and set `ExpoPushOptions.AccessToken` in production — without it, anyone holding a
+  device's Expo push token can push to it. Expo push *receipts* are not polled (no delivery state, by
+  design); only dead devices reported on the ticket are removed.
 - **Emailing** — resolves each recipient's email address and sends via ABP's `IEmailSender`. Addresses
   come from an ordered `IEmailNotificationAddressResolver` chain: `EmailNotifier` takes the first
   non-null address result. The result may also carry a recipient culture used while building that user's email.
@@ -850,7 +872,7 @@ For Docker or other deployments, use the corresponding double-underscore environ
 ## Repository layout
 
 ```
-core/                 core framework (Abstractions, Notifications, Identity, Emailing, Emailing.Identity, SignalR) + tests
+core/                 core framework (Abstractions, Notifications, Identity, Emailing, Emailing.Identity, SignalR, Push, Push.Expo) + tests
 notification-center/  optional persistence + REST API + MVC UI + tests (EF Core & MongoDB)
 angular/              Angular UI library (projects/notification-center) + demo app   ── local dev only
 host/                 runnable ABP MVC demo host                                     ── local dev only

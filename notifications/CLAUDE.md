@@ -13,8 +13,8 @@ and the Angular demo app are local-dev-only, never packed.
 One `.slnx` — `Dignite.NotificationCenter.slnx`:
 
 - **`core/`** — `Abstractions, Notifications, Notifications.Identity,
-  Notifications.Emailing[.Identity], Notifications.SignalR`. Core never references
-  NotificationCenter; works standalone via `NullNotificationStore`.
+  Notifications.Emailing[.Identity], Notifications.SignalR, Notifications.Push[.Expo]`. Core never
+  references NotificationCenter; works standalone via `NullNotificationStore`.
 - **`notification-center/`** — `Domain.Shared, Domain, Application.Contracts, Application, HttpApi,
   HttpApi.Client, EntityFrameworkCore, MongoDB, Web`. `Web` = MVC UI (bell + subscriptions).
   `HttpApi` = explicit controllers under `/api/notification-center` (`UserNotificationController`,
@@ -37,6 +37,8 @@ projects that flatten to the project root are the exception).
 | `Notifications.Identity` | Permission-checker impl | Core, ABP Identity |
 | `Notifications.Emailing` / `.SignalR` | Notifier plugins | Abstractions + channel SDK |
 | `Notifications.Emailing.Identity` | Email address resolver | Emailing, ABP Identity |
+| `Notifications.Push` | Device push notifier; `IPushDeviceStore` / `IPushProvider` seams | Abstractions |
+| `Notifications.Push.Expo` | Expo Push Service provider | Push + `Microsoft.Extensions.Http` |
 | `NotificationCenter.Domain.Shared` | Constants, enums | — |
 | `NotificationCenter.Domain` | Aggregates | Domain.Shared, Core |
 | `NotificationCenter.Application.Contracts` | DTOs, service interfaces | Domain.Shared, Abstractions |

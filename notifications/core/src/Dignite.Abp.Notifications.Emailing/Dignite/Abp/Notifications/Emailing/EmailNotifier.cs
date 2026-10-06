@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -9,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Emailing;
+using Volo.Abp.Localization;
 
 namespace Dignite.Abp.Notifications.Emailing;
 
@@ -110,15 +110,10 @@ public class EmailNotifier :
         var culture = ResolveCulture(address.CultureName);
         NotificationEmail? email;
 
-        // CultureInfo is backed by AsyncLocal. Set it only around this recipient's content build and always restore
-        // both values so another delivery cannot inherit the previous recipient's culture.
-        var previousCulture = CultureInfo.CurrentCulture;
-        var previousUICulture = CultureInfo.CurrentUICulture;
-        try
+        // CultureInfo is backed by AsyncLocal. Set it only around this recipient's content build; CultureHelper.Use
+        // restores both values so another delivery cannot inherit the previous recipient's culture.
+        using (CultureHelper.Use(culture))
         {
-            CultureInfo.CurrentCulture = culture;
-            CultureInfo.CurrentUICulture = culture;
-
             email = await EmailBuilder.BuildAsync(
                 new NotificationEmailBuildContext(
                     notification,
@@ -127,11 +122,6 @@ public class EmailNotifier :
                     tenantId,
                     culture.Name),
                 cancellationToken);
-        }
-        finally
-        {
-            CultureInfo.CurrentCulture = previousCulture;
-            CultureInfo.CurrentUICulture = previousUICulture;
         }
 
         if (email == null)
@@ -168,60 +158,15 @@ public class EmailNotifier :
     }
 
     /// <summary>
-    /// Falls back rather than throws. The culture name is untrusted input — a value out of the setting store, or
-    /// whatever an application resolver returned — and <see cref="CultureInfo.GetCultureInfo(string)"/> throws for a
-    /// name that is not well-formed, or for every real culture under invariant globalization. A bad stored culture
-    /// name should downgrade this recipient's email to the default culture, not fail the delivery.
+    /// Falls back rather than throws; see <see cref="NotificationCultureResolver"/>. A bad stored culture name should
+    /// downgrade this recipient's email to the default culture, not fail the delivery.
     /// </summary>
     protected virtual CultureInfo ResolveCulture(string? cultureName)
     {
-        if (TryGetCulture(cultureName, out var culture))
-        {
-            return culture;
-        }
-
-        if (!string.IsNullOrWhiteSpace(cultureName))
-        {
-            Logger.LogWarning(
-                "Recipient culture '{CultureName}' is not a valid culture name; falling back to '{DefaultCulture}'.",
-                cultureName,
-                EmailOptions.DefaultCulture);
-        }
-
-        if (TryGetCulture(EmailOptions.DefaultCulture, out var defaultCulture))
-        {
-            return defaultCulture;
-        }
-
-        // Also the invariant-globalization path, where no culture name resolves and there is nothing left to fall to.
-        Logger.LogWarning(
-            "{Options}.{Property} is '{DefaultCulture}', which is not a valid culture name; falling back to the "
-            + "ambient culture '{AmbientCulture}'.",
-            nameof(NotificationEmailOptions),
-            nameof(NotificationEmailOptions.DefaultCulture),
+        return NotificationCultureResolver.Resolve(
+            cultureName,
             EmailOptions.DefaultCulture,
-            CultureInfo.CurrentUICulture.Name);
-
-        return CultureInfo.CurrentUICulture;
-    }
-
-    private static bool TryGetCulture(string? cultureName, [NotNullWhen(true)] out CultureInfo? culture)
-    {
-        if (string.IsNullOrWhiteSpace(cultureName))
-        {
-            culture = null;
-            return false;
-        }
-
-        try
-        {
-            culture = CultureInfo.GetCultureInfo(cultureName);
-            return true;
-        }
-        catch (CultureNotFoundException)
-        {
-            culture = null;
-            return false;
-        }
+            $"{nameof(NotificationEmailOptions)}.{nameof(NotificationEmailOptions.DefaultCulture)}",
+            Logger);
     }
 }
