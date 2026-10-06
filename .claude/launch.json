@@ -28,6 +28,12 @@
       "url": "https://localhost:44380"
     },
     {
+      "name": "notifications-angular",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["yarn", "--cwd", "notifications/angular", "start"],
+      "port": 4200
+    },
+    {
       "name": "flex-fields-demo-host",
       "runtimeExecutable": "dotnet",
       "runtimeArgs": ["run", "--project", "flex-fields/demo/Dignite.Abp.FlexFields.Demo"],
