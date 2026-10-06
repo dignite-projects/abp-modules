@@ -18,7 +18,7 @@ namespace Dignite.NotificationCenter.Web.Host.Migrations
                 nullable: false,
                 defaultValue: "");
 
-            // Backfill existing inbox rows from their notification (see README "Upgrading to notification groups").
+            // Backfill the demo database's existing inbox rows from their notification.
             migrationBuilder.Sql(
                 "UPDATE NotifUserNotifications SET NotificationName = " +
                 "(SELECT n.NotificationName FROM NotifNotifications n WHERE n.Id = NotifUserNotifications.NotificationId) " +

@@ -5,8 +5,9 @@
     // only performs the user's actions through ABP's dynamic proxies (abp.ajax handles auth, antiforgery and error
     // display). Marking read updates the page in place — the item stays listed — while deletes and bulk actions
     // reload so paging and group counts stay authoritative. The bell's badge follows through the
-    // "dignite.notificationCenter.unreadCountChanged" ABP event (see notification-center.js).
-    var unreadCountChangedEvent = 'dignite.notificationCenter.unreadCountChanged';
+    // "dignite.notificationCenter.notificationsRead" ABP event (see notification-center.js), which carries how many
+    // notifications became read — a delta, so increments the bell received over SignalR since this page loaded survive.
+    var notificationsReadEvent = 'dignite.notificationCenter.notificationsRead';
 
     function inboxApi() {
         return dignite.notificationCenter.userNotification;
@@ -48,8 +49,9 @@
             if (markAll && total === 0) {
                 markAll.setAttribute('disabled', '');
             }
-            abp.event.trigger(unreadCountChangedEvent, total);
         }
+
+        abp.event.trigger(notificationsReadEvent, 1);
     }
 
     function openItem(item) {

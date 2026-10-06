@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Confirmation, ConfirmationService } from '@abp/ng.theme.shared';
-import { of } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import { UserNotificationDto, UserNotificationService } from '../proxy/dignite/abp/notification-center';
 import { UserNotificationState } from '../proxy/dignite/abp/notifications';
 import { NotificationEntityLinksService } from '../notification-links/notification-entity-links.service';
@@ -174,6 +174,22 @@ describe('NotificationInboxComponent', () => {
     expect(confirmation.warn).toHaveBeenCalledWith('NotificationCenter::DeleteAllReadConfirmation', 'AbpUi::AreYouSure');
     expect(notificationService.markAllAsRead).toHaveBeenCalledTimes(1);
     expect(notificationService.deleteAllRead).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores a slower response for a selection the user already left', () => {
+    const component = render();
+    const ordersResponse = new Subject<{ items: UserNotificationDto[]; totalCount: number }>();
+    const systemResponse = new Subject<{ items: UserNotificationDto[]; totalCount: number }>();
+    notificationService.getList.mockReturnValueOnce(ordersResponse).mockReturnValueOnce(systemResponse);
+
+    component.selectGroup('Orders');
+    component.selectGroup('System');
+    systemResponse.next({ items: [notification({ id: 'system', groupName: 'System' })], totalCount: 1 });
+    ordersResponse.next({ items: [notification({ id: 'orders-1' }), notification({ id: 'orders-2' })], totalCount: 2 });
+
+    expect(component.selectedGroupName).toBe('System');
+    expect(component.notifications.map(n => n.id)).toEqual(['system']);
+    expect(component.totalCount).toBe(1);
   });
 
   it('steps back to the new last page when a delete empties the current one', () => {

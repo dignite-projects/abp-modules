@@ -171,10 +171,10 @@
     }
 
     // ---- badge sync with the inbox page ----
-    // The inbox page (notification-inbox.js) reports the new unread total after marking a notification read.
+    // The inbox page (notification-inbox.js) reports how many notifications it marked read.
     if (typeof abp !== 'undefined' && abp.event) {
-        abp.event.on('dignite.notificationCenter.unreadCountChanged', function (count) {
-            setBadgeCount(count);
+        abp.event.on('dignite.notificationCenter.notificationsRead', function (count) {
+            setBadgeCount(getBadgeCount() - count);
         });
     }
 
