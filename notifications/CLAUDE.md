@@ -16,9 +16,10 @@ One `.slnx` — `Dignite.NotificationCenter.slnx`:
   Notifications.Emailing[.Identity], Notifications.SignalR, Notifications.Push[.Expo]`. Core never
   references NotificationCenter; works standalone via `NullNotificationStore`.
 - **`notification-center/`** — `Domain.Shared, Domain, Application.Contracts, Application, HttpApi,
-  HttpApi.Client, EntityFrameworkCore, MongoDB, Web`. `Web` = MVC UI (bell + subscriptions).
-  `HttpApi` = explicit controllers under `/api/notification-center` (`UserNotificationController`,
-  `NotificationSubscriptionController`) — not conventional/auto.
+  HttpApi.Client, EntityFrameworkCore, MongoDB, Web, Push[.Identity]`. `Web` = MVC UI (bell +
+  subscriptions). `HttpApi` = explicit controllers under `/api/notification-center`
+  (`UserNotificationController`, `NotificationSubscriptionController`, `PushDeviceController`) — not
+  conventional/auto.
 - **`host/`** — demo host (`Dignite.NotificationCenter.Web.Host`), no solution file:
   `dotnet run --project host/Dignite.NotificationCenter.Web.Host`. Own
   `Directory.Build.props`/`Directory.Packages.props` opting out of central package management.
@@ -45,6 +46,8 @@ projects that flatten to the project root are the exception).
 | `NotificationCenter.Application` | AppServices | Application.Contracts, Domain |
 | `NotificationCenter.HttpApi` / `.HttpApi.Client` | Explicit controllers / client proxies | Application.Contracts |
 | `NotificationCenter.EntityFrameworkCore` / `.MongoDB` | `INotificationStore` impls | Domain |
+| `NotificationCenter.Push` | `IPushDeviceStore` over the `PushDevice` registry | Domain, Notifications.Push |
+| `NotificationCenter.Push.Identity` | Drops devices whose ABP login session ended | NotificationCenter.Push, ABP Identity |
 | `NotificationCenter.Installer` | ABP Studio/Suite install entry point, embeds the module's `.abpmdl` | `Volo.Abp.VirtualFileSystem` |
 
 Notifiers depend on **only** `Abstractions` + their channel SDK — that's what lets a channel be added

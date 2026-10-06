@@ -32,6 +32,16 @@ so it stays clear which part of the repository actually moved.
 - **Expo Push Service provider.** `Dignite.Abp.Notifications.Push.Expo` sends through Expo's push API (one
   HTTP endpoint for iOS and Android, batches of 100), with `ExpoPushOptions.AccessToken` for Expo's
   enhanced push security. Only push tickets are read; receipts are not polled.
+- **Push device registry in the Notification Center.** A new `PushDevice` aggregate (EF Core and MongoDB)
+  records the phones each user can be pushed to, with `POST /api/notification-center/push-devices/register`
+  and `/unregister` for the app (token in the body, never the URL). A registration takes the request culture
+  as the device's language and the caller's `session_id` claim as its login session; a token registered to
+  someone else - in any tenant - moves to the caller; a user keeps at most `PushDeviceOptions.MaxDevicesPerUser`
+  devices (default 10), the least recently seen dropping out. `Dignite.NotificationCenter.Push` serves the
+  push channel's devices from it.
+- **Push follows the login session (optional).** `Dignite.NotificationCenter.Push.Identity` forgets a device
+  whose ABP Identity session no longer exists instead of pushing to it - signed out, revoked, or cleaned up
+  as inactive. Meaningful on hosts with Identity Pro session management; inert elsewhere.
 
 ### Changed
 
@@ -40,6 +50,9 @@ so it stays clear which part of the repository actually moved.
 - `NotificationCultureResolver` (Abstractions) now holds the recipient-culture fallback that
   `EmailNotifier.ResolveCulture` used to implement privately, so the email and push notifiers share it;
   `EmailNotifier` switches cultures with ABP's `CultureHelper.Use`. Behaviour is unchanged.
+- **Schema change: every EF Core host needs a migration** for the new `{prefix}PushDevices` table (hosts own
+  their migrations; this module ships none). Hosts that implement `INotificationCenterDbContext` or
+  `INotificationCenterMongoDbContext` themselves must also add the new `PushDevices` property.
 
 ## [10.0.0-rc.19] - 2026-10-04
 

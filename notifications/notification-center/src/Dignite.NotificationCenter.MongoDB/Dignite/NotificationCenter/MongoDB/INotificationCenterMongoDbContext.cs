@@ -16,4 +16,6 @@ public interface INotificationCenterMongoDbContext :
     IMongoCollection<UserNotification> UserNotifications { get; }
 
     IMongoCollection<NotificationSubscription> NotificationSubscriptions { get; }
+
+    IMongoCollection<PushDevice> PushDevices { get; }
 }

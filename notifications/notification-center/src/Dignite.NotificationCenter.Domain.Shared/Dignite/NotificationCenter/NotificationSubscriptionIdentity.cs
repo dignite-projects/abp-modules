@@ -1,7 +1,4 @@
 using System;
-using System.Globalization;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Dignite.NotificationCenter;
 
@@ -73,22 +70,6 @@ public static class NotificationSubscriptionIdentity
 
     private static string ComputeHash(params string[] parts)
     {
-        var canonical = new StringBuilder();
-        foreach (var part in parts)
-        {
-            canonical.Append(part.Length.ToString(CultureInfo.InvariantCulture));
-            canonical.Append(':');
-            canonical.Append(part);
-        }
-
-        using var sha256 = SHA256.Create();
-        var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(canonical.ToString()));
-        var result = new StringBuilder(NotificationCenterConsts.SubscriptionIdentityKeyLength);
-        foreach (var value in bytes)
-        {
-            result.Append(value.ToString("x2", CultureInfo.InvariantCulture));
-        }
-
-        return result.ToString();
+        return NotificationCenterIdentityKey.Compute(parts);
     }
 }

@@ -89,6 +89,14 @@
       "path": "notification-center/src/Dignite.NotificationCenter.MongoDB/Dignite.NotificationCenter.MongoDB.abppkg",
       "folder": "notification-center/src"
     },
+    "Dignite.NotificationCenter.Push": {
+      "path": "notification-center/src/Dignite.NotificationCenter.Push/Dignite.NotificationCenter.Push.abppkg",
+      "folder": "notification-center/src"
+    },
+    "Dignite.NotificationCenter.Push.Identity": {
+      "path": "notification-center/src/Dignite.NotificationCenter.Push.Identity/Dignite.NotificationCenter.Push.Identity.abppkg",
+      "folder": "notification-center/src"
+    },
     "Dignite.NotificationCenter.Web": {
       "path": "notification-center/src/Dignite.NotificationCenter.Web/Dignite.NotificationCenter.Web.abppkg",
       "folder": "notification-center/src"
