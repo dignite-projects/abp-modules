@@ -12,6 +12,7 @@
     "Subscribed": "已訂閱",
     "SubscriptionScope": "範圍",
     "AllEntities": "所有實體",
+    "NotificationGroup:Other": "其他",
     "UnsupportedNotification": "目前版本無法顯示此通知。"
   }
 }

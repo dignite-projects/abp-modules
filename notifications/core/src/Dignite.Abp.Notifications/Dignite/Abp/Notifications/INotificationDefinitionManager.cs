@@ -18,7 +18,14 @@ public interface INotificationDefinitionManager
     /// <summary>Gets a definition by its ordinal, case-sensitive name, or <see langword="null"/>.</summary>
     NotificationDefinition? GetOrNull(string name);
 
+    /// <summary>Gets every definition, ordered by group and then registration order.</summary>
     IReadOnlyList<NotificationDefinition> GetAll();
+
+    /// <summary>Gets every group, in registration order.</summary>
+    IReadOnlyList<NotificationGroupDefinition> GetGroups();
+
+    /// <summary>Gets a group by its ordinal, case-sensitive name, or <see langword="null"/>.</summary>
+    NotificationGroupDefinition? GetGroupOrNull(string name);
 
     /// <summary>
     /// Evaluates whether the user may subscribe to and receive the notification in the ambient tenant/host context.

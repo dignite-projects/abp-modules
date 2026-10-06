@@ -65,8 +65,10 @@ Core logic must work with `NullNotificationStore` alone.
 **New notification type** (most common, no Domain layer change):
 1. `NotificationData` subclass with a stable `[NotificationDataType("...")]` discriminator — never
    the CLR type name. See `notifications-invariants` §1.
-2. Register in `NotificationDataOptions`; define via `INotificationDefinitionProvider` (name, display
-   text, feature/permission gating, `UseChannels(...)`).
+2. Register in `NotificationDataOptions`; define via `INotificationDefinitionProvider` —
+   `context.AddGroup(...).AddNotification(...)` (every definition belongs to a group, as with ABP
+   permissions; name, display text, feature/permission gating, `UseChannels(...)`). Groups are
+   definition-time metadata only, never persisted.
 3. Publish via `INotificationPublisher`. No entity/EF/Mongo change.
 
 **New Notifier**:

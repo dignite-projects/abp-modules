@@ -65,4 +65,30 @@ describe('NotificationSubscriptionsComponent', () => {
     expect(entitySpecific.isSubscribed).toBe(false);
     expect(definitionWide.isSubscribed).toBe(true);
   });
+
+  it('groups rows by notification group in first-appearance order', () => {
+    notificationService.getSubscriptions.mockReturnValueOnce(
+      of({
+        items: [
+          { notificationName: 'order.shipped', groupName: 'Orders', groupDisplayName: 'Orders' },
+          { notificationName: 'system.announcement', groupName: 'System', groupDisplayName: 'System' },
+          {
+            notificationName: 'order.shipped',
+            entityTypeName: 'Demo.Order',
+            entityId: '42',
+            groupName: 'Orders',
+            groupDisplayName: 'Orders',
+          },
+          { notificationName: 'removed', groupName: 'Dignite.NotificationCenter.Other', groupDisplayName: null },
+        ],
+      }) as any,
+    );
+    const fixture = TestBed.createComponent(NotificationSubscriptionsComponent);
+    fixture.componentInstance.ngOnInit();
+
+    const groups = fixture.componentInstance.groups;
+    expect(groups.map(group => group.name)).toEqual(['Orders', 'System', 'Dignite.NotificationCenter.Other']);
+    expect(groups[0].subscriptions.map(s => s.entityId ?? null)).toEqual([null, '42']);
+    expect(groups[2].displayName).toBe('Dignite.NotificationCenter.Other');
+  });
 });

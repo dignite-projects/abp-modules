@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Dignite.Abp.Notifications;
 using Shouldly;
+using Volo.Abp.Localization;
 using Volo.Abp.Modularity;
 using Xunit;
 
@@ -22,7 +23,9 @@ public abstract class UserNotificationAppService_Tests<TStartupModule> : Notific
     private readonly Guid _userId = Guid.NewGuid();
 
     private async Task<Guid> SeedNotificationAsync(
-        NotificationData data, UserNotificationState state = UserNotificationState.Unread)
+        NotificationData data,
+        UserNotificationState state = UserNotificationState.Unread,
+        string notificationName = TestNotificationDefinitionProvider.OrderShipped)
     {
         var notificationId = Guid.NewGuid();
         await WithUnitOfWorkAsync(async () =>
@@ -31,7 +34,7 @@ public abstract class UserNotificationAppService_Tests<TStartupModule> : Notific
             await store.InsertNotificationAsync(new NotificationInfo
             {
                 Id = notificationId,
-                NotificationName = "order.shipped",
+                NotificationName = notificationName,
                 Data = data,
                 Severity = NotificationSeverity.Info,
                 CreationTime = DateTime.UtcNow
@@ -40,6 +43,7 @@ public abstract class UserNotificationAppService_Tests<TStartupModule> : Notific
             {
                 UserId = _userId,
                 NotificationId = notificationId,
+                NotificationName = notificationName,
                 State = state,
                 CreationTime = DateTime.UtcNow
             });
@@ -63,6 +67,8 @@ public abstract class UserNotificationAppService_Tests<TStartupModule> : Notific
                 var dto = result.Items.Single();
                 dto.NotificationName.ShouldBe("order.shipped");
                 dto.NotificationDisplayName.ShouldBe("Order Shipped");
+                dto.GroupName.ShouldBe(TestNotificationDefinitionProvider.OrdersGroup);
+                dto.GroupDisplayName.ShouldBe("Orders");
                 dto.Data.ShouldBeOfType<OrderShippedNotificationData>().OrderNumber.ShouldBe("SO-1");
                 dto.State.ShouldBe(UserNotificationState.Unread);
             });
@@ -92,6 +98,7 @@ public abstract class UserNotificationAppService_Tests<TStartupModule> : Notific
                     Guid.NewGuid(),
                     _userId,
                     notificationId,
+                    "order.shipped",
                     UserNotificationState.Unread,
                     creationTime,
                     null));
@@ -115,6 +122,126 @@ public abstract class UserNotificationAppService_Tests<TStartupModule> : Notific
                 restJson.ShouldContain("\"type\":\"Dignite.Unsupported\"");
                 restJson.ShouldContain("\"originalDiscriminator\":\"Removed.Module.Payload\"");
                 restJson.ShouldContain("\"reason\":\"UnknownDiscriminator\"");
+            });
+        }
+    }
+
+    [Fact]
+    public async Task GetList_filters_by_group_including_the_other_bucket()
+    {
+        await SeedNotificationAsync(new MessageNotificationData("order"));
+        await SeedNotificationAsync(
+            new MessageNotificationData("announcement"),
+            notificationName: TestNotificationDefinitionProvider.Announcement);
+        var orphanId = await SeedNotificationAsync(
+            new MessageNotificationData("orphan"),
+            notificationName: "removed.definition");
+
+        using (CultureHelper.Use("en"))
+        using (ChangeCurrentUser(_userId))
+        {
+            await WithUnitOfWorkAsync(async () =>
+            {
+                var appService = GetRequiredService<IUserNotificationAppService>();
+
+                (await appService.GetListAsync(new GetUserNotificationListInput())).TotalCount.ShouldBe(3);
+
+                var orders = await appService.GetListAsync(new GetUserNotificationListInput
+                {
+                    GroupName = TestNotificationDefinitionProvider.OrdersGroup
+                });
+                orders.TotalCount.ShouldBe(1);
+                orders.Items.Single().NotificationName.ShouldBe(TestNotificationDefinitionProvider.OrderShipped);
+
+                var system = await appService.GetListAsync(new GetUserNotificationListInput
+                {
+                    GroupName = TestNotificationDefinitionProvider.SystemGroup
+                });
+                system.Items.Single().NotificationName.ShouldBe(TestNotificationDefinitionProvider.Announcement);
+
+                var other = await appService.GetListAsync(new GetUserNotificationListInput
+                {
+                    GroupName = NotificationCenterConsts.OtherGroupName
+                });
+                var orphan = other.Items.Single();
+                orphan.NotificationId.ShouldBe(orphanId);
+                orphan.GroupName.ShouldBe(NotificationCenterConsts.OtherGroupName);
+                orphan.GroupDisplayName.ShouldBe("Other");
+                orphan.NotificationDisplayName.ShouldBeNull();
+
+                foreach (var groupName in new[] { TestNotificationDefinitionProvider.EmptyGroup, "unknown.group" })
+                {
+                    var none = await appService.GetListAsync(new GetUserNotificationListInput { GroupName = groupName });
+                    none.TotalCount.ShouldBe(0);
+                    none.Items.ShouldBeEmpty();
+                }
+            });
+        }
+    }
+
+    [Fact]
+    public async Task GetGroups_lists_receivable_groups_in_definition_order_with_unread_counts()
+    {
+        await SeedNotificationAsync(new MessageNotificationData("o1"));
+        await SeedNotificationAsync(new MessageNotificationData("o2"));
+        await SeedNotificationAsync(new MessageNotificationData("o3"), UserNotificationState.Read);
+
+        using (ChangeCurrentUser(_userId))
+        {
+            await WithUnitOfWorkAsync(async () =>
+            {
+                var groups = (await GetRequiredService<IUserNotificationAppService>().GetGroupsAsync()).Items;
+
+                // The empty group has no receivable definition and no rows; "Other" has no rows.
+                groups.Select(group => group.Name).ShouldBe(new[]
+                {
+                    TestNotificationDefinitionProvider.OrdersGroup,
+                    TestNotificationDefinitionProvider.SystemGroup
+                });
+                groups[0].DisplayName.ShouldBe("Orders");
+                groups[0].UnreadCount.ShouldBe(2);
+                groups[1].DisplayName.ShouldBe("System");
+                groups[1].UnreadCount.ShouldBe(0);
+            });
+        }
+    }
+
+    [Fact]
+    public async Task GetGroups_appends_the_other_bucket_while_orphaned_rows_remain()
+    {
+        await SeedNotificationAsync(new MessageNotificationData("orphan unread"), notificationName: "removed.a");
+        await SeedNotificationAsync(
+            new MessageNotificationData("orphan read"),
+            UserNotificationState.Read,
+            "removed.b");
+
+        using (CultureHelper.Use("en"))
+        using (ChangeCurrentUser(_userId))
+        {
+            await WithUnitOfWorkAsync(async () =>
+            {
+                var other = (await GetRequiredService<IUserNotificationAppService>().GetGroupsAsync()).Items.Last();
+                other.Name.ShouldBe(NotificationCenterConsts.OtherGroupName);
+                other.DisplayName.ShouldBe("Other");
+                other.UnreadCount.ShouldBe(1);
+
+                await GetRequiredService<IUserNotificationAppService>().MarkAllAsReadAsync();
+            });
+
+            await WithUnitOfWorkAsync(async () =>
+            {
+                // Read-only orphans still surface the bucket so they stay reachable and deletable.
+                var other = (await GetRequiredService<IUserNotificationAppService>().GetGroupsAsync()).Items.Last();
+                other.Name.ShouldBe(NotificationCenterConsts.OtherGroupName);
+                other.UnreadCount.ShouldBe(0);
+
+                await GetRequiredService<IUserNotificationAppService>().DeleteAllReadAsync();
+            });
+
+            await WithUnitOfWorkAsync(async () =>
+            {
+                (await GetRequiredService<IUserNotificationAppService>().GetGroupsAsync()).Items
+                    .ShouldNotContain(group => group.Name == NotificationCenterConsts.OtherGroupName);
             });
         }
     }
@@ -180,6 +307,8 @@ public abstract class UserNotificationAppService_Tests<TStartupModule> : Notific
                 var subscription = subscriptions.Items.Single(s => s.NotificationName == "order.shipped");
                 subscription.IsSubscribed.ShouldBeTrue();
                 subscription.DisplayName.ShouldBe("Order Shipped");
+                subscription.GroupName.ShouldBe(TestNotificationDefinitionProvider.OrdersGroup);
+                subscription.GroupDisplayName.ShouldBe("Orders");
             });
         }
     }

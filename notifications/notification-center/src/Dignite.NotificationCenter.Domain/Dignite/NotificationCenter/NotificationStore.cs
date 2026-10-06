@@ -109,6 +109,7 @@ public class NotificationStore : INotificationStore, ITransientDependency
                 userNotification.Id == Guid.Empty ? GuidGenerator.Create() : userNotification.Id,
                 userNotification.UserId,
                 userNotification.NotificationId,
+                userNotification.NotificationName,
                 userNotification.State,
                 userNotification.CreationTime == default ? Clock.Now : userNotification.CreationTime,
                 userNotification.TenantId ?? CurrentTenant.Id))
@@ -210,18 +211,16 @@ public class NotificationStore : INotificationStore, ITransientDependency
         int maxResultCount = int.MaxValue,
         DateTime? startDate = null,
         DateTime? endDate = null,
+        IReadOnlyCollection<string>? notificationNames = null,
+        IReadOnlyCollection<string>? excludedNotificationNames = null,
         CancellationToken cancellationToken = default)
     {
         // Two indexed queries + an in-memory join, rather than a cross-collection join, so the SAME store works on
         // both EF Core and MongoDB. The (UserId, State, CreationTime) index serves the first query; the second is a
         // primary-key batch lookup. A user-notification whose notification was deleted is skipped, not thrown on
         // (roadmap problem D).
-        var userNotificationQuery = await UserNotificationRepository.GetQueryableAsync();
-        userNotificationQuery = userNotificationQuery.Where(un =>
-            un.UserId == userId
-            && (state == null || un.State == state)
-            && (startDate == null || un.CreationTime >= startDate)
-            && (endDate == null || un.CreationTime <= endDate));
+        var userNotificationQuery = await CreateUserNotificationQueryAsync(
+            userId, state, startDate, endDate, notificationNames, excludedNotificationNames);
 
         var pagedUserNotifications = await AsyncExecuter.ToListAsync(
             userNotificationQuery
@@ -262,7 +261,39 @@ public class NotificationStore : INotificationStore, ITransientDependency
         UserNotificationState? state = null,
         DateTime? startDate = null,
         DateTime? endDate = null,
+        IReadOnlyCollection<string>? notificationNames = null,
+        IReadOnlyCollection<string>? excludedNotificationNames = null,
         CancellationToken cancellationToken = default)
+    {
+        var query = await CreateUserNotificationQueryAsync(
+            userId, state, startDate, endDate, notificationNames, excludedNotificationNames);
+
+        return await AsyncExecuter.CountAsync(query, cancellationToken);
+    }
+
+    public virtual async Task<Dictionary<string, int>> GetUnreadCountsByNotificationNameAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        // One grouped query over the user's unread rows only, served by the inbox indexes.
+        var query = await UserNotificationRepository.GetQueryableAsync();
+        var counts = await AsyncExecuter.ToListAsync(
+            query
+                .Where(un => un.UserId == userId && un.State == UserNotificationState.Unread)
+                .GroupBy(un => un.NotificationName)
+                .Select(group => new { NotificationName = group.Key, Count = group.Count() }),
+            cancellationToken);
+
+        return counts.ToDictionary(row => row.NotificationName, row => row.Count, StringComparer.Ordinal);
+    }
+
+    protected virtual async Task<IQueryable<UserNotification>> CreateUserNotificationQueryAsync(
+        Guid userId,
+        UserNotificationState? state,
+        DateTime? startDate,
+        DateTime? endDate,
+        IReadOnlyCollection<string>? notificationNames,
+        IReadOnlyCollection<string>? excludedNotificationNames)
     {
         var query = await UserNotificationRepository.GetQueryableAsync();
         query = query.Where(un =>
@@ -271,7 +302,19 @@ public class NotificationStore : INotificationStore, ITransientDependency
             && (startDate == null || un.CreationTime >= startDate)
             && (endDate == null || un.CreationTime <= endDate));
 
-        return await AsyncExecuter.CountAsync(query, cancellationToken);
+        if (notificationNames != null)
+        {
+            var included = notificationNames.ToList();
+            query = query.Where(un => included.Contains(un.NotificationName));
+        }
+
+        if (excludedNotificationNames is { Count: > 0 })
+        {
+            var excluded = excludedNotificationNames.ToList();
+            query = query.Where(un => !excluded.Contains(un.NotificationName));
+        }
+
+        return query;
     }
 
     public virtual async Task InsertSubscriptionAsync(
@@ -420,6 +463,7 @@ public class NotificationStore : INotificationStore, ITransientDependency
             Id = un.Id,
             UserId = un.UserId,
             NotificationId = un.NotificationId,
+            NotificationName = un.NotificationName,
             State = un.State,
             CreationTime = un.CreationTime,
             TenantId = un.TenantId

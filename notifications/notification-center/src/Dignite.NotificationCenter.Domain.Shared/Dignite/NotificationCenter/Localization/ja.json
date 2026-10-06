@@ -12,6 +12,7 @@
     "Subscribed": "購読済み",
     "SubscriptionScope": "範囲",
     "AllEntities": "すべてのエンティティ",
+    "NotificationGroup:Other": "その他",
     "UnsupportedNotification": "このバージョンではこの通知を表示できません。",
     "Permission:NotificationCenter": "通知センター",
     "Permission:Deliveries": "配信運用状況を表示",

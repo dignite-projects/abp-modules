@@ -7,12 +7,15 @@ using Volo.Abp.Localization;
 namespace Dignite.Abp.Notifications;
 
 /// <summary>
-/// A notification type registered by a business module: its stable name, display text, optional
+/// A notification type registered by a business module: its stable name, owning group, display text, optional
 /// permission/feature gating, and free-form attributes.
 /// </summary>
 public class NotificationDefinition
 {
     public string Name { get; }
+
+    /// <summary>Name of the <see cref="NotificationGroupDefinition"/> this definition belongs to.</summary>
+    public string GroupName { get; }
 
     public ILocalizableString DisplayName { get; set; }
 
@@ -31,8 +34,10 @@ public class NotificationDefinition
     /// <summary>Free-form extension bag — e.g. explicit external channel routing.</summary>
     public IDictionary<string, object?> Attributes { get; }
 
-    public NotificationDefinition(string name, ILocalizableString displayName)
+    /// <summary>Created through <see cref="NotificationGroupDefinition.AddNotification"/>.</summary>
+    protected internal NotificationDefinition(string groupName, string name, ILocalizableString displayName)
     {
+        GroupName = Check.NotNullOrWhiteSpace(groupName, nameof(groupName));
         Name = Check.NotNullOrWhiteSpace(name, nameof(name));
         DisplayName = Check.NotNull(displayName, nameof(displayName));
         Attributes = new Dictionary<string, object?>();

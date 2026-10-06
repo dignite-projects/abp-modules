@@ -1,6 +1,6 @@
-import type { GetUserNotificationListInput, UserNotificationDto } from './models';
+import type { GetUserNotificationListInput, UserNotificationDto, UserNotificationGroupDto } from './models';
 import { RestService, Rest } from '@abp/ng.core';
-import type { PagedResultDto } from '@abp/ng.core';
+import type { ListResultDto, PagedResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
 
 @Injectable({
@@ -27,11 +27,19 @@ export class UserNotificationService {
     { apiName: this.apiName,...config });
   
 
+  getGroups = (config?: Partial<Rest.Config>) =>
+    this.restService.request<any, ListResultDto<UserNotificationGroupDto>>({
+      method: 'GET',
+      url: '/api/notification-center/notifications/groups',
+    },
+    { apiName: this.apiName,...config });
+  
+
   getList = (input: GetUserNotificationListInput, config?: Partial<Rest.Config>) =>
     this.restService.request<any, PagedResultDto<UserNotificationDto>>({
       method: 'GET',
       url: '/api/notification-center/notifications',
-      params: { state: input.state, startDate: input.startDate, endDate: input.endDate, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { state: input.state, groupName: input.groupName, startDate: input.startDate, endDate: input.endDate, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
   

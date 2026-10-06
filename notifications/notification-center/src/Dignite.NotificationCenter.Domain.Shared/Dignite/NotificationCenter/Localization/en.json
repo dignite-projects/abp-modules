@@ -12,6 +12,7 @@
     "Subscribed": "Subscribed",
     "SubscriptionScope": "Scope",
     "AllEntities": "All entities",
+    "NotificationGroup:Other": "Other",
     "UnsupportedNotification": "This notification cannot be displayed by this version.",
     "Permission:NotificationCenter": "Notification Center",
     "Permission:Deliveries": "View delivery operations",

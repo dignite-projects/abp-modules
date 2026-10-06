@@ -129,6 +129,8 @@ public class NullNotificationStore : INotificationStore, ISingletonDependency
         int maxResultCount = int.MaxValue,
         DateTime? startDate = null,
         DateTime? endDate = null,
+        IReadOnlyCollection<string>? notificationNames = null,
+        IReadOnlyCollection<string>? excludedNotificationNames = null,
         CancellationToken cancellationToken = default)
     {
         return Task.FromResult(new List<UserNotificationWithNotification>());
@@ -139,8 +141,17 @@ public class NullNotificationStore : INotificationStore, ISingletonDependency
         UserNotificationState? state = null,
         DateTime? startDate = null,
         DateTime? endDate = null,
+        IReadOnlyCollection<string>? notificationNames = null,
+        IReadOnlyCollection<string>? excludedNotificationNames = null,
         CancellationToken cancellationToken = default)
     {
         return Task.FromResult(0);
+    }
+
+    public Task<Dictionary<string, int>> GetUnreadCountsByNotificationNameAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(new Dictionary<string, int>(StringComparer.Ordinal));
     }
 }

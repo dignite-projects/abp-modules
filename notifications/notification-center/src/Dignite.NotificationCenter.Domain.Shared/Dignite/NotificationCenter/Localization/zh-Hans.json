@@ -12,6 +12,7 @@
     "Subscribed": "已订阅",
     "SubscriptionScope": "范围",
     "AllEntities": "所有实体",
+    "NotificationGroup:Other": "其他",
     "UnsupportedNotification": "当前版本无法显示此通知。",
     "Permission:NotificationCenter": "通知中心",
     "Permission:Deliveries": "查看投递运行状态",
