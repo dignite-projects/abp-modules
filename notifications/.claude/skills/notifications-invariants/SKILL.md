@@ -57,15 +57,25 @@ Newtonsoft.Json anywhere in this pipeline.
   hand-rolled switch statement in a specific layer. Storage (EF Core / MongoDB) and the HTTP API use
   the converter registered once, globally, on `AbpSystemTextJsonSerializerOptions` in
   `AbpNotificationsAbstractionsModule.ConfigureServices` (so remote `HttpApi.Client` consumers get it too).
-- **The distributed event bus never sees a live `NotificationData`.** ABP serializes ETOs with plain
-  `System.Text.Json` and *no* app-level options — the transactional outbox/inbox included — so a
-  polymorphic/abstract member on an ETO is lossy on write and throws on read
-  (`NotSupportedException` while draining the box; issue #118). `NotificationDeliveryRequestedEto`
-  therefore carries the payload pre-serialized as `DataJson`, produced via
-  `INotificationDataSerializer.Serialize` at the distributor publish boundary and hydrated via
-  `INotificationDataSerializer.Deserialize` (`NotificationPayload.FromRequest(request, dataSerializer)`)
-  at the notifier boundary. Keep every ETO a flat, default-STJ-round-trippable POCO; never put an
-  abstract/polymorphic member back on one.
+- **No wire contract ever carries a live `NotificationData`.** Any contract serialized by an engine this
+  module does not configure — the distributed event bus, SignalR hub protocols, any future transport — must
+  carry the payload as pre-serialized/raw JSON, never a polymorphic/abstract member; such a member is lossy on
+  write and may throw on read. `NotificationPayload` (the typed view) is in-process only: notifiers render
+  from it, they never serialize it to a client.
+  - **Distributed event bus.** ABP serializes ETOs with plain `System.Text.Json` and *no* app-level
+    options — the transactional outbox/inbox included — so a polymorphic/abstract member on an ETO is lossy on
+    write and throws on read (`NotSupportedException` while draining the box; issue #118).
+    `NotificationDeliveryRequestedEto` therefore carries the payload pre-serialized as `DataJson`, produced via
+    `INotificationDataSerializer.Serialize` at the distributor publish boundary and hydrated via
+    `INotificationDataSerializer.Deserialize` (`NotificationPayload.FromRequest(request, dataSerializer)`)
+    at the notifier boundary. Keep every ETO a flat, default-STJ-round-trippable POCO; never put an
+    abstract/polymorphic member back on one.
+  - **SignalR.** The hub protocol serializes with its own plain System.Text.Json options, so a
+    `NotificationPayload` pushed to clients arrived as `"data": {}` (no discriminator, no content).
+    `SignalRNotifier` therefore pushes a flat `SignalRNotificationMessage` whose `JsonElement? Data` is the
+    raw `DataJson` object (`{"type": "...", ...}`, the same shape the REST inbox returns). The MessagePack hub
+    protocol is unsupported (`JsonElement` has no formatter). The proof is a test through the real
+    `JsonHubProtocol` (`SignalRNotificationMessage_Tests`), like the ETO's plain-STJ test.
 - The payload envelope carries only the stable `type` discriminator — no `schemaVersion`, no upcaster chain.
   (An earlier design added event-sourcing-style schema versioning + N→N+1 upcasters; it was removed as
   over-engineering — notifications are read-once, not a replayable event stream. Don't reintroduce it.)
