@@ -14,6 +14,51 @@ Because releases are lockstep, a version may contain changes to only one module 
 packages are still republished at that version with unchanged content. Entries are grouped by module
 so it stays clear which part of the repository actually moved.
 
+## [10.0.0-rc.21] - 2026-10-07
+
+### Changed
+
+#### notifications
+
+- **Breaking - delivery channels are routed by the host, not fixed in the definition.**
+  `NotificationDefinition.UseChannels(...)` / `GetChannelsOrNull()` and the `NotificationChannels` helper are
+  gone. Routing lives in the new `NotificationRoutingOptions` (Core), which has two levels only: a rule per
+  notification name (`ForNotification(name, channels...)`, `ForNotifications(names, channels...)`,
+  `InboxOnly(names...)`) and a `Default` for notifications without a rule. A module adds defaults for its own
+  notifications in `ConfigureServices`; the host module, configured last, overrides any of them - later writes win
+  and a repeated rule for the same notification replaces the earlier one as a whole. Groups carry no routing.
+  Core and Abstractions know no channel names (each notifier package keeps its own `XxxNotifier.ChannelName`).
+  `Default` is never "every installed channel", so installing a notifier package cannot fan existing
+  notifications out to a new channel; `InboxOnly` is the explicit rule that overrides `Default`.
+  **Migrate** `.UseChannels("SignalR", "Email")` to
+  `Configure<NotificationRoutingOptions>(o => o.ForNotification(name, "SignalR", "Email"))`.
+- **`INotificationChannelResolver`** (Core) decides the channels for one notification; the default reads
+  `NotificationRoutingOptions`. It is called once per notification, before recipients are batched, inside the
+  notification's tenant scope, so a host can replace it for tenant- or severity-dependent routing. Per-user channel
+  preferences are not part of it. `DefaultNotificationDistributor` takes it as a new constructor argument.
+- **Startup validation of routing.** A rule for a notification no provider defines fails the start (catches typos); a
+  channel no notifier in the process hosts logs a warning naming the channel and the notifications that use it
+  (`NotificationRoutingOptions.RequireHostedChannels` makes it fail, for hosts that deliver every channel
+  themselves); in stateless mode (`NullNotificationStore`) a notification that resolves to no channel fails at
+  startup instead of at publish time.
+- **Breaking - `INotificationsClient.ReceiveNotification` takes `SignalRNotificationMessage`**, not
+  `NotificationPayload`. `NotificationPayload` stays as the in-process typed view the Email and Push notifiers
+  render from, but it is no longer a wire contract. Clients that read the message by property name see the same
+  fields; only `data` changes shape (see Fixed). The MessagePack hub protocol is not supported.
+
+### Fixed
+
+#### notifications
+
+- **The SignalR push carried `"data": {}`.** The hub protocol serializes with its own System.Text.Json options,
+  which do not know the polymorphic `NotificationData` converter, so clients received neither the `type`
+  discriminator nor the content. The bundled MVC and Angular bells only use the push as a refresh prompt and were
+  unaffected; in stateless forwarding mode, where the push is the only carrier of the payload, custom clients
+  received nothing usable. `data` is now the raw discriminator-tagged JSON object
+  (`{"type":"Dignite.Message","message":"..."}`), the same shape the REST inbox returns for
+  `UserNotificationDto.Data`. A module-wide rule now covers this class of bug: a wire contract serialized by an
+  engine the module does not configure never carries a live `NotificationData`.
+
 ## [10.0.0-rc.20] - 2026-10-07
 
 ### Added
