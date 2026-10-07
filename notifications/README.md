@@ -551,8 +551,12 @@ Configure<NotificationNotifierOptions>(options =>
 ```
 
 - **SignalR** — clients connect to the hub at `/signalr-hubs/notifications` (an ABP `AbpHub`, mapped
-  **automatically**; the host must *not* call `MapHub`) and receive a trimmed `NotificationPayload`
-  with the recipient list stripped, so siblings' user IDs never leak to each other.
+  **automatically**; the host must *not* call `MapHub`) and receive a flat `SignalRNotificationMessage`
+  (`notificationId`, `notificationName`, `data`, `severity`, `creationTime`, `entityTypeName`, `entityId`) with the
+  recipient list stripped, so siblings' user IDs never leak to each other. `data` is the raw discriminator-tagged
+  JSON object (`{"type": "...", ...}`) — the same shape the REST inbox returns — because SignalR hub protocols
+  serialize with their own options, not this module's polymorphic converter. The MessagePack hub protocol is not
+  supported.
 - **Push** — pushes to the recipient's phones. The channel is one (`"Push"`); the delivery service is
   chosen per device: each registered device names the `IPushProvider` that issued its token
   (`Dignite.Abp.Notifications.Push.Expo` ships the Expo Push Service provider), so a definition only ever
@@ -652,8 +656,15 @@ public class WebPushNotifier
         NotificationDeliveryRequestedEto request,
         CancellationToken cancellationToken = default)
     {
+        // Typed, in-process: render from the hydrated payload...
         var payload = NotificationPayload.FromRequest(request, _dataSerializer);
-        await _webPush.SendAsync(request.UserId, payload, cancellationToken);
+        var body = payload.Data is MessageNotificationData message ? message.Message : payload.NotificationName;
+
+        // ...but put only a flat, serializer-agnostic DTO on the wire (see below).
+        await _webPush.SendAsync(
+            request.UserId,
+            new WebPushMessage { NotificationId = request.NotificationId, Body = body, DataJson = request.DataJson },
+            cancellationToken);
     }
 }
 ```
@@ -666,6 +677,10 @@ transport serializer — ABP's event bus (outbox/inbox included) serializes ETOs
 the application's JSON options. Inject `INotificationDataSerializer` (it ships with Abstractions) and hydrate through
 `NotificationPayload.FromRequest`; the read is tolerant, so an unknown or malformed payload becomes
 `UnsupportedNotificationData` instead of throwing.
+
+`NotificationPayload` is an in-process view for rendering. A notifier that serializes a notification for an
+external client must not put it on the wire: define its own flat DTO carrying the data as raw JSON, as the SignalR
+package does with `SignalRNotificationMessage`.
 
 Use `UseChannels(...)` only for external delivery channels. If a definition omits `UseChannels(...)`,
 it is NotificationCenter inbox-only: the notification is persisted for the recipient to read later,

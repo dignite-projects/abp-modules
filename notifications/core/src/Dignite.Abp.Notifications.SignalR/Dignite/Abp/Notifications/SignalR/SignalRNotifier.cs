@@ -8,7 +8,9 @@ namespace Dignite.Abp.Notifications.SignalR;
 
 /// <summary>
 /// Relays single-recipient delivery requests to connected SignalR users. Recipients receive only a
-/// <see cref="NotificationPayload"/>, which by construction omits every aggregate recipient list.
+/// <see cref="SignalRNotificationMessage"/> — a flat wire DTO that omits every aggregate recipient list and
+/// carries the notification data as raw JSON, because hub protocols do not use this module's
+/// polymorphic <see cref="NotificationData"/> converter.
 /// </summary>
 [ExposeServices(
     typeof(INotificationNotifier),
@@ -21,16 +23,11 @@ public class SignalRNotifier :
 
     protected IHubContext<NotificationsHub> HubContext { get; }
 
-    protected INotificationDataSerializer DataSerializer { get; }
-
     public string Name => ChannelName;
 
-    public SignalRNotifier(
-        IHubContext<NotificationsHub> hubContext,
-        INotificationDataSerializer dataSerializer)
+    public SignalRNotifier(IHubContext<NotificationsHub> hubContext)
     {
         HubContext = hubContext;
-        DataSerializer = dataSerializer;
     }
 
     public virtual async Task DeliverAsync(
@@ -45,7 +42,7 @@ public class SignalRNotifier :
 
         await HubContext.Clients.User(request.UserId.ToString()).SendCoreAsync(
             nameof(INotificationsClient.ReceiveNotification),
-            new object[] { NotificationPayload.FromRequest(request, DataSerializer) },
+            new object[] { SignalRNotificationMessage.FromRequest(request) },
             cancellationToken);
     }
 }
