@@ -192,7 +192,7 @@
     }
 
     // ---- real-time receive over ABP SignalR (optional, degrades gracefully) ----
-    // The server-side Notifier (Dignite.Abp.Notifications.SignalR) pushes a per-recipient NotificationPayload
+    // The server-side Notifier (Dignite.Abp.Notifications.SignalR) pushes a per-recipient SignalRNotificationMessage
     // (recipient list already stripped, per notifications-invariants §4) via the strongly-typed client method
     // "ReceiveNotification". We only refresh the unread badge + flag the bell here; the authoritative, fully
     // rendered list (localized display name, custom per-type view components, entity links) is server-rendered

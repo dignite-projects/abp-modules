@@ -3,9 +3,16 @@ using System;
 namespace Dignite.Abp.Notifications;
 
 /// <summary>
-/// The per-user view of a notification pushed to a client (e.g. over SignalR). It deliberately carries no
-/// aggregate recipient list, so a user never receives other users' ids.
+/// The per-user typed view of a notification that notifiers render from (e.g. Email and Push dispatch content
+/// providers on the CLR type of <see cref="Data"/>). It deliberately carries no aggregate recipient list, so a
+/// user never receives other users' ids.
 /// </summary>
+/// <remarks>
+/// This is an in-process type, not a wire contract: <see cref="Data"/> is the polymorphic
+/// <see cref="NotificationData"/>, which only serializers configured with this module's converter can write.
+/// A channel that serializes a notification for an external client must map it to its own flat DTO
+/// (see <c>SignalRNotificationMessage</c> in the SignalR package).
+/// </remarks>
 public class NotificationPayload
 {
     public Guid NotificationId { get; set; }
