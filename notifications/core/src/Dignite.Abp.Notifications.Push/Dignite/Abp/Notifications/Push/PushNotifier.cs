@@ -24,8 +24,9 @@ namespace Dignite.Abp.Notifications.Push;
 /// removed — does not stop the others. Each failure is logged here with its provider (exception type only, never the
 /// message, like Core's handler), and rethrown once every provider has been tried so the delivery counts as failed.
 /// <para>
-/// The constructor never throws: Core's delivery handler builds every channel's notifier for every event, so a push
-/// misconfiguration found here must fail push deliveries only, not email or SignalR ones.
+/// The constructor never throws: a provider-name clash fails each push delivery instead, through the same best-effort
+/// path as any other delivery failure, rather than escaping Core's delivery handler while it resolves the notifier.
+/// (That handler builds only the notifier of the event's channel, so other channels are unaffected either way.)
 /// </para>
 /// </remarks>
 [ExposeServices(

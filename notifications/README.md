@@ -536,6 +536,20 @@ A notifier implements the single canonical `INotificationNotifier` contract and 
 and throwing is logged and dropped by the Core handler (not retried). The Core-owned distributed-event handler is
 the transport adapter, so a channel plugin does not implement an event-handler interface.
 
+Each channel module maps its channel to its notifier type in `NotificationNotifierOptions`, and the handler
+constructs only the notifier registered for a delivery's channel — an email delivery never builds the push notifier,
+and one channel's notifier failing to construct does not affect the others. A channel name maps to one type (two
+types claiming a channel fail the application start), so to customize a built-in channel replace its notifier type
+in dependency injection — e.g. `[Dependency(ReplaceServices = true)]` plus `[ExposeServices(typeof(EmailNotifier))]`
+on a subclass — rather than registering a second one. A custom channel registers itself the same way:
+
+```csharp
+Configure<NotificationNotifierOptions>(options =>
+{
+    options.Notifiers.Add<SmsNotifier>(SmsNotifier.ChannelName); // must equal SmsNotifier.Name
+});
+```
+
 - **SignalR** — clients connect to the hub at `/signalr-hubs/notifications` (an ABP `AbpHub`, mapped
   **automatically**; the host must *not* call `MapHub`) and receive a trimmed `NotificationPayload`
   with the recipient list stripped, so siblings' user IDs never leak to each other.
