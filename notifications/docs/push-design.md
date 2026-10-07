@@ -10,7 +10,7 @@
 - 真正新增的设计只有一处：**设备 token 的登记与生命周期**。它放进 NotificationCenter（新聚合
   `PushDevice` 加注册接口），通过一个桥接包接到通知器上，和 `Emailing.Identity` 是同一个模式。
 - 渠道只有一个，名叫 `"Push"`。Expo、FCM、APNs 是渠道下**可替换的投递提供方**，按设备记录上的提供方类型分发。
-  写通知定义的人只需要写 `UseChannels("Push")`。
+  业务模块只需要在 `NotificationRoutingOptions` 里把自己的通知路由到 `"Push"`（`options.ForNotification(name, "Push")`）。
 - 第一期只实现 **Expo Push 提供方**（campus 用的就是它）。FCM / APNs 直连等有真实需求时再加，
   不改动其他部分。
 - 可选的会话集成：装上 `NotificationCenter.Push.Identity`，推送就跟随 ABP 登录会话的生命周期，
@@ -19,7 +19,7 @@
 ## 1. 目标与非目标
 
 **目标**
-1. 已有的通知定义加上 `UseChannels("Push")` 后，推送就能到达用户的手机（iOS / Android）。
+1. 已有的通知在 `NotificationRoutingOptions` 里路由到 `"Push"` 后，推送就能到达用户的手机（iOS / Android）。
 2. 设备 token 有完整的生命周期：注册、换绑、登出解绑、失效清理。
 3. 每台设备按用户在 App 里选的语言生成推送文案。
 4. 点开推送后，App 能定位到收件箱里对应的那一条（`notificationId`），并标记已读。
@@ -319,7 +319,7 @@ access token 里是否带有 `session_id` claim（§14）。
    `NotificationCenter.Push.Identity`；Web 端如果需要铃铛，再加 `Notifications.SignalR` 和 UI 包。
 2. 在 `CampusDbContext` 中调用 `ConfigureNotificationCenter()`，然后生成迁移。
 3. 配置 `ExpoPushOptions.AccessToken`，从机密配置读取，不能写进仓库。
-4. 用 `INotificationDefinitionProvider` 定义 campus 自己的通知，加上 `UseChannels("Push")`。
+4. 用 `INotificationDefinitionProvider` 定义 campus 自己的通知，并在 `NotificationRoutingOptions` 里用 `ForNotification(name, "Push")` 路由到 Push。
    在业务代码中通过 `INotificationPublisher` 发布。
 5. 为 campus 的每种通知类型编写 `NotificationPushContentProvider<TData>`，按 §9 第 3 条控制敏感度。
 

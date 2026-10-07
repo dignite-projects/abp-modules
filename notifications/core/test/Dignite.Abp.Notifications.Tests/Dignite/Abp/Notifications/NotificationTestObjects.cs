@@ -50,6 +50,13 @@ internal static class NotificationTestObjects
         return new NotificationDataSerializer(CreateRegistry(extraTypes));
     }
 
+    /// <summary>A default resolver whose <see cref="NotificationRoutingOptions.Default"/> is the given channels.</summary>
+    public static DefaultNotificationChannelResolver CreateChannelResolver(params string[] defaultChannels)
+    {
+        return new DefaultNotificationChannelResolver(
+            Options.Create(new NotificationRoutingOptions { Default = defaultChannels }));
+    }
+
     private static NotificationDataOptions CreateBaseOptions()
     {
         var options = new NotificationDataOptions();

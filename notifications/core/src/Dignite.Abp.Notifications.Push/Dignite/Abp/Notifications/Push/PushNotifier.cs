@@ -15,8 +15,8 @@ namespace Dignite.Abp.Notifications.Push;
 /// <summary>
 /// Relays notifications to the recipient's phones. Like email, a device push needs a UserId → address mapping — here
 /// the user's registered devices, supplied by <see cref="IPushDeviceStore"/>. Each device names the
-/// <see cref="IPushProvider"/> that issued its token, so one channel spans Expo, FCM, APNs, ... Honors channel routing
-/// via <see cref="NotificationChannels"/>.
+/// <see cref="IPushProvider"/> that issued its token, so one channel spans Expo, FCM, APNs, ... Which notifications reach it is
+/// decided by the routing configuration in Core.
 /// </summary>
 /// <remarks>
 /// Delivery is best-effort: no retry and no delivery state. Content is built once per device culture. A device a

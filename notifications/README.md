@@ -445,7 +445,7 @@ MVC and Angular libraries render the placeholder as a generic unsupported-notifi
 its raw diagnostic JSON. Writing an unregistered CLR type still throws — that fail-fast is unconditional.
 
 **3. Register the notification definition** through an `INotificationDefinitionProvider` — its group, name,
-display text, optional feature/permission gating, and explicit channel routing. Like ABP permissions, every
+display text, and optional feature/permission gating. Like ABP permissions, every
 definition belongs to a **group** (e.g. "Orders"), which is how the inbox and the subscription settings categorize
 notifications:
 
@@ -456,11 +456,13 @@ public class ShopNotificationDefinitionProvider : NotificationDefinitionProvider
     {
         var orders = context.AddGroup("Demo.Orders", new FixedLocalizableString("Orders"));
 
-        orders.AddNotification("Demo.OrderShipped", new FixedLocalizableString("Order shipped"))
-            .UseChannels(SignalRNotifier.ChannelName);
+        orders.AddNotification("Demo.OrderShipped", new FixedLocalizableString("Order shipped"));
     }
 }
 ```
+
+A definition says nothing about delivery channels — which external channels carry it is decided by
+[routing](#routing), configured once in `NotificationRoutingOptions`.
 
 Group and definition names use ordinal, case-sensitive comparison. Every duplicate group name and every duplicate
 definition name — across all groups, not just within one — is a startup error, and the error identifies both
@@ -555,8 +557,8 @@ Configure<NotificationNotifierOptions>(options =>
   with the recipient list stripped, so siblings' user IDs never leak to each other.
 - **Push** — pushes to the recipient's phones. The channel is one (`"Push"`); the delivery service is
   chosen per device: each registered device names the `IPushProvider` that issued its token
-  (`Dignite.Abp.Notifications.Push.Expo` ships the Expo Push Service provider), so a definition only ever
-  says `UseChannels("Push")`. Devices come from an `IPushDeviceStore`; the base package registers a null
+  (`Dignite.Abp.Notifications.Push.Expo` ships the Expo Push Service provider), so a routing rule only ever
+  names `"Push"`. Devices come from an `IPushDeviceStore`; the base package registers a null
   store, so nothing is sent (and a warning is logged) until a real one replaces it — with the Notification
   Center, install `Dignite.NotificationCenter.Push` to serve devices from its `PushDevice` registry (see
   [Push devices](#push-devices-notification-center)); without it, implement the store over your own device
@@ -667,25 +669,62 @@ the application's JSON options. Inject `INotificationDataSerializer` (it ships w
 `NotificationPayload.FromRequest`; the read is tolerant, so an unknown or malformed payload becomes
 `UnsupportedNotificationData` instead of throwing.
 
-Use `UseChannels(...)` only for external delivery channels. If a definition omits `UseChannels(...)`,
-it is NotificationCenter inbox-only: the notification is persisted for the recipient to read later,
-but no SignalR, Email, Web Push, or other notifier event is published. This keeps adding another
-notifier from accidentally fanning out existing notification types to a new channel:
+### Routing
+
+Which external channels carry a notification is **not** part of its definition: the module that defines a
+notification does not know what the host has installed. Routing lives in `NotificationRoutingOptions` and has two
+levels only — a rule per notification name, and a `Default` for notifications without a rule. Core knows no channel
+names; they are the open set registered through `NotificationNotifierOptions` (each notifier package keeps its own
+`XxxNotifier.ChannelName`, or just write the string).
+
+A module adds defaults for its own notifications in its `ConfigureServices`; the host module, loaded last,
+configures the same options again to override any of them. Later writes win, and a repeated rule for the same
+notification replaces the earlier one as a whole (channels are not merged):
 
 ```csharp
-orders.AddNotification("Demo.OrderShipped", new FixedLocalizableString("Order shipped"))
-    .UseChannels(SignalRNotifier.ChannelName, EmailNotifier.ChannelName);
+// Business module:
+Configure<NotificationRoutingOptions>(options =>
+{
+    options.ForNotifications(
+        ["Demo.OrderShipped", "Demo.OrderCancelled"],
+        SignalRNotifier.ChannelName, "Push");
+});
+
+// Host module (optional):
+Configure<NotificationRoutingOptions>(options =>
+{
+    options.Default = [SignalRNotifier.ChannelName];                     // notifications without a rule
+    options.ForNotification("Demo.OrderCancelled", SignalRNotifier.ChannelName, EmailNotifier.ChannelName);
+    options.InboxOnly("Demo.AuditLog");                                  // explicit: persisted, no external channel
+});
 ```
 
-For inbox-only Notification Center entries, omit `UseChannels(...)`:
+- `ForNotification(name, channels...)` needs at least one channel; `InboxOnly(names...)` is the explicit rule for
+  "no external channel" and overrides `Default`. Channel names are trimmed and de-duplicated ignoring case;
+  notification names are case-sensitive.
+- A notification with no rule and no `Default` is inbox-only: it is persisted for the recipient but no notifier
+  event is published. `Default` is never "every installed channel", so adding a notifier package cannot silently
+  fan existing notifications out to a new channel.
+- Bind from configuration with the standard options binding
+  (`Configure<NotificationRoutingOptions>(configuration.GetSection(...))`); dictionary keys are notification names.
+- For routing that depends on the tenant, severity or a setting, replace `INotificationChannelResolver`. It is called
+  once per notification, before recipients are batched, so it cannot express per-user preferences.
 
-```csharp
-system.AddNotification("Demo.AuditLog", new FixedLocalizableString("Audit log"));
-```
+Startup checks run once the definitions are materialized:
 
-In stateless forwarding mode (`NullNotificationStore`, no NotificationCenter installed), an inbox-only
-definition has nowhere to persist; publishing it fails fast. Configure at least one external channel in
-that mode.
+| Situation | Result |
+|---|---|
+| A rule names a notification that is not defined | Startup fails, listing every unknown name |
+| A rule or `Default` names a channel no notifier in this process hosts | Warning per channel, listing the notifications that use it; set `RequireHostedChannels = true` to fail instead |
+| Stateless mode (`NullNotificationStore`) and a definition resolves to no channel | Startup fails, listing the notifications (skipped if `INotificationChannelResolver` is replaced) |
+
+An unhosted channel is legitimate in a split deployment, where another process delivers it. At runtime the processes
+that do not host the channel ignore its delivery events (logged at Debug only; the startup warning is the one place
+a misconfiguration is reported).
+
+In stateless forwarding mode an inbox-only notification has nowhere to persist; the checks above reject it at startup
+(and the distributor rejects it at publish time when a replacement resolver returns no channel). Give every
+notification a rule or a `Default` in that mode.
 
 ## Push devices (Notification Center)
 

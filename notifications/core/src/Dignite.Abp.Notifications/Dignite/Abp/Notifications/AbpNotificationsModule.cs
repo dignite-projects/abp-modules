@@ -39,6 +39,7 @@ public class AbpNotificationsModule : AbpModule
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         AddValidatedOptions<NotificationDistributionOptions>(context.Services, options => options.Validate());
+        AddValidatedOptions<NotificationRoutingOptions>(context.Services, options => options.Validate());
 
         // NotificationDefinitionRegistration.Validate() runs from NotificationDefinitionStartupService instead of this
         // options-validation pipeline: the real definition-name conflict check only exists inside

@@ -52,6 +52,7 @@ public abstract class NotificationDistribution_Tests<TStartupModule> : Notificat
         return new DefaultNotificationDistributor(
             GetRequiredService<INotificationStore>(),
             GetRequiredService<INotificationDefinitionManager>(),
+            GetRequiredService<INotificationChannelResolver>(),
             eventBus,
             GetRequiredService<INotificationDataSerializer>(),
             GetRequiredService<ICurrentTenant>(),

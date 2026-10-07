@@ -20,6 +20,8 @@ public class DefaultNotificationDistributor :
 
     protected INotificationDefinitionManager DefinitionManager { get; }
 
+    protected INotificationChannelResolver ChannelResolver { get; }
+
     protected IDistributedEventBus DistributedEventBus { get; }
 
     protected INotificationDataSerializer DataSerializer { get; }
@@ -33,6 +35,7 @@ public class DefaultNotificationDistributor :
     public DefaultNotificationDistributor(
         INotificationStore store,
         INotificationDefinitionManager definitionManager,
+        INotificationChannelResolver channelResolver,
         IDistributedEventBus distributedEventBus,
         INotificationDataSerializer dataSerializer,
         ICurrentTenant currentTenant,
@@ -41,6 +44,7 @@ public class DefaultNotificationDistributor :
     {
         Store = store;
         DefinitionManager = definitionManager;
+        ChannelResolver = channelResolver;
         DistributedEventBus = distributedEventBus;
         DataSerializer = dataSerializer;
         CurrentTenant = currentTenant;
@@ -71,7 +75,8 @@ public class DefaultNotificationDistributor :
             // back to the caller's ambient tenant.
             using (CurrentTenant.Change(notification.TenantId, null))
             {
-                var channels = ResolveExternalChannelsOrNull(notification.NotificationName);
+                // Resolved once per notification, before recipients are batched.
+                var channels = await ResolveExternalChannelsOrNullAsync(notification, cancellationToken);
                 var excluded = excludedUserIds is { Length: > 0 } ? new HashSet<Guid>(excludedUserIds) : null;
 
                 if (userIds != null)
@@ -209,29 +214,31 @@ public class DefaultNotificationDistributor :
         }
     }
 
-    protected virtual string[]? ResolveExternalChannelsOrNull(string notificationName)
+    protected virtual async Task<string[]?> ResolveExternalChannelsOrNullAsync(
+        NotificationInfo notification,
+        CancellationToken cancellationToken)
     {
-        var definition = DefinitionManager.Get(notificationName);
+        var definition = DefinitionManager.Get(notification.NotificationName);
 
-        var channels = definition.GetChannelsOrNull();
-        if (channels == null)
+        var channels = await ChannelResolver.ResolveAsync(definition, notification, cancellationToken);
+        if (channels == null || channels.Length == 0)
         {
             if (Store is NullNotificationStore)
             {
                 throw new AbpException(
-                    $"Notification '{notificationName}' has no external channels and no NotificationCenter inbox store is installed. Configure UseChannels(...) or install NotificationCenter.");
+                    $"Notification '{notification.NotificationName}' has no external channels and no NotificationCenter inbox store is installed. Configure NotificationRoutingOptions or install NotificationCenter.");
             }
 
             return null;
         }
 
-        if (channels.Length == 0 || channels.Any(string.IsNullOrWhiteSpace))
+        if (channels.Any(string.IsNullOrWhiteSpace))
         {
             throw new AbpException(
-                $"Notification '{notificationName}' has invalid delivery channel configuration.");
+                $"Notification '{notification.NotificationName}' has invalid delivery channel configuration.");
         }
 
-        return channels.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        return channels.Select(channel => channel.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
     protected virtual NotificationDeliveryRequestedEto CreateDeliveryRequest(

@@ -225,7 +225,7 @@ public class DefaultNotificationPublisherTests
         {
             var definitionManager = Substitute.For<INotificationDefinitionManager>();
             definitionManager.Get("test")
-                .Returns(new NotificationDefinition("Test", "test", new FixedLocalizableString("Test")).UseChannels("Test"));
+                .Returns(new NotificationDefinition("Test", "test", new FixedLocalizableString("Test")));
             definitionManager.IsAvailableAsync("test", Arg.Any<Guid>()).Returns(true);
 
             Store.When(x => x.InsertNotificationAsync(Arg.Any<NotificationInfo>()))
@@ -245,6 +245,7 @@ public class DefaultNotificationPublisherTests
                 new DefaultNotificationDistributor(
                     Store,
                     definitionManager,
+                    NotificationTestObjects.CreateChannelResolver("Test"),
                     EventBus,
                     NotificationTestObjects.CreateSerializer(),
                     CurrentTenant,
