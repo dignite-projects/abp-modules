@@ -17,6 +17,12 @@ namespace Dignite.Abp.Notifications;
 /// Only the notifier registered for the event's channel in <see cref="NotificationNotifierOptions"/> is constructed,
 /// so an email delivery never builds the push or SignalR notifier (or their dependency graphs), and one channel's
 /// notifier failing to construct cannot break another channel's deliveries.
+/// <para>
+/// Resolving the notifier is as best-effort as delivering through it: a notifier that cannot be built, or that answers
+/// to a different name than the channel it is registered for, is a configuration error of that one channel. It is
+/// logged and the delivery dropped, never thrown back into the event bus, where it would surface in the publisher's
+/// unit of work or be redelivered by an inbox.
+/// </para>
 /// </remarks>
 [ExposeServices(
     typeof(IDistributedEventHandler<NotificationDeliveryRequestedEto>),
@@ -44,7 +50,23 @@ public class NotificationDeliveryRequestedHandler :
 
     public virtual async Task HandleEventAsync(NotificationDeliveryRequestedEto eventData)
     {
-        var notifier = ResolveNotifierOrNull(eventData.Channel);
+        INotificationNotifier? notifier;
+        try
+        {
+            notifier = ResolveNotifierOrNull(eventData.Channel);
+        }
+        catch (Exception exception)
+        {
+            // Unlike a delivery failure below, the exception itself is logged: building a notifier involves no
+            // recipient or payload data, and the message is what names the missing dependency or the misregistration.
+            Logger.LogError(
+                exception,
+                "The notifier for channel {Channel} could not be resolved; notification {NotificationId} is not delivered on this channel.",
+                eventData.Channel,
+                eventData.NotificationId);
+            return;
+        }
+
         if (notifier == null)
         {
             // Distributed event subscribers receive every channel's work type. A process that does not host this
