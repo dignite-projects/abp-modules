@@ -61,6 +61,10 @@ so it stays clear which part of the repository actually moved.
   start instead of the first delivery. **Custom notifiers must register:**
   `Configure<NotificationNotifierOptions>(o => o.Notifiers.Add<TNotifier>(channelName))` - one exposed only as
   `INotificationNotifier` is no longer called. `INotificationNotifier` itself is unchanged.
+- **A notifier that cannot be resolved no longer escapes the delivery handler.** A notifier whose construction
+  fails, or that answers to a different name than the channel it is registered for, is now logged at Error (with
+  the exception - building a notifier involves no recipient data) and the delivery dropped, as best-effort as a
+  failed delivery, instead of throwing back into the event bus.
 - **Schema change: every EF Core host needs a migration** for the new `{prefix}PushDevices` table (hosts own
   their migrations; this module ships none). Hosts that implement `INotificationCenterDbContext` or
   `INotificationCenterMongoDbContext` themselves must also add the new `PushDevices` property.

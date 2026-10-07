@@ -40,6 +40,7 @@ public class NotificationDeliveryRequestedHandler_Tests
         public override void ConfigureServices(ServiceConfigurationContext context)
         {
             context.Services.AddSingleton<NotifierConstructionLog>();
+            context.Services.AddSingleton<ILoggerProvider, ErrorCapturingLoggerProvider>();
             context.Services.AddTransient<RecordingNotifier>();
             context.Services.AddTransient<ConstructorThrowingNotifier>();
             context.Services.AddTransient<DeliveryThrowingNotifier>();
@@ -66,6 +67,7 @@ public class NotificationDeliveryRequestedHandler_Tests
         public override void ConfigureServices(ServiceConfigurationContext context)
         {
             context.Services.AddSingleton<NotifierConstructionLog>();
+            context.Services.AddSingleton<ILoggerProvider, ErrorCapturingLoggerProvider>();
             context.Services.Replace(ServiceDescriptor.Singleton(Substitute.For<IEmailSender>()));
 
             var addressResolver = Substitute.For<IEmailNotificationAddressResolver>();
@@ -129,16 +131,18 @@ public class NotificationDeliveryRequestedHandler_Tests
     }
 
     [Fact]
-    public async Task A_notifier_that_cannot_be_constructed_fails_only_its_own_channel()
+    public async Task A_notifier_that_cannot_be_constructed_is_logged_and_dropped_without_affecting_other_channels()
     {
         using var application = await CreateApplicationAsync<FakeChannelsTestModule>();
         using var scope = application.ServiceProvider.CreateScope();
         var services = scope.ServiceProvider;
         var handler = services.GetRequiredService<NotificationDeliveryRequestedHandler>();
 
-        var exception = await Should.ThrowAsync<Exception>(
-            () => handler.HandleEventAsync(CreateRequest(services, BrokenChannel)));
-        ShouldContainConstructionFailure(exception);
+        // Best-effort: the construction failure must not escape into the event bus — it is logged instead.
+        await handler.HandleEventAsync(CreateRequest(services, BrokenChannel));
+        services.GetRequiredService<NotifierConstructionLog>().Types
+            .ShouldBe(new[] { typeof(ConstructorThrowingNotifier) });
+        ShouldContainConstructionFailure(LoggedErrors(services).ShouldHaveSingleItem());
 
         await handler.HandleEventAsync(CreateRequest(services, RecordingChannel));
         services.GetRequiredService<NotifierConstructionLog>().Deliveries.Single().Channel
@@ -164,16 +168,18 @@ public class NotificationDeliveryRequestedHandler_Tests
     }
 
     [Fact]
-    public async Task A_notifier_registered_under_a_channel_other_than_its_name_is_rejected()
+    public async Task A_notifier_registered_under_a_channel_other_than_its_name_is_not_delivered_through()
     {
         using var application = await CreateApplicationAsync<FakeChannelsTestModule>();
         using var scope = application.ServiceProvider.CreateScope();
         var services = scope.ServiceProvider;
 
-        var exception = await Should.ThrowAsync<InvalidOperationException>(
-            () => services.GetRequiredService<NotificationDeliveryRequestedHandler>()
-                .HandleEventAsync(CreateRequest(services, MisnamedChannel)));
-        exception.Message.ShouldContain(MisnamedChannel);
+        // Rejected as a misregistration (logged), not delivered under a name it does not answer to — and not thrown.
+        await services.GetRequiredService<NotificationDeliveryRequestedHandler>()
+            .HandleEventAsync(CreateRequest(services, MisnamedChannel));
+
+        services.GetRequiredService<NotifierConstructionLog>().Deliveries.ShouldBeEmpty();
+        LoggedErrors(services).ShouldHaveSingleItem().Message.ShouldContain(MisnamedChannel);
 
         await application.ShutdownAsync();
     }
@@ -192,10 +198,10 @@ public class NotificationDeliveryRequestedHandler_Tests
         await services.GetRequiredService<IEmailSender>().Received(1).SendAsync(
             "a@b.com", Arg.Any<string>(), "Hello", Arg.Any<bool>());
 
-        // The push notifier really is unbuildable — only a push delivery is affected by it.
-        var exception = await Should.ThrowAsync<Exception>(
-            () => handler.HandleEventAsync(CreateRequest(services, PushNotifier.ChannelName)));
-        ShouldContainConstructionFailure(exception);
+        // The push notifier really is unbuildable — only a push delivery is affected by it, and only by being dropped.
+        LoggedErrors(services).ShouldBeEmpty();
+        await handler.HandleEventAsync(CreateRequest(services, PushNotifier.ChannelName));
+        ShouldContainConstructionFailure(LoggedErrors(services).ShouldHaveSingleItem());
         services.GetRequiredService<NotifierConstructionLog>().Types
             .ShouldBe(new[] { typeof(ConstructorThrowingPushNotifier) });
 
@@ -284,6 +290,15 @@ public class NotificationDeliveryRequestedHandler_Tests
         };
     }
 
+    private static IReadOnlyList<Exception> LoggedErrors(IServiceProvider services)
+    {
+        return services.GetServices<ILoggerProvider>()
+            .OfType<ErrorCapturingLoggerProvider>()
+            .Single()
+            .Errors
+            .ToList();
+    }
+
     private static void ShouldContainConstructionFailure(Exception exception)
     {
         // The container may wrap the constructor's exception; the original must still be in the chain.
@@ -297,6 +312,45 @@ public class NotificationDeliveryRequestedHandler_Tests
 
         throw new ShouldAssertException(
             $"Expected a {nameof(NotifierConstructionException)} in the chain of {exception.GetType().FullName}.");
+    }
+
+    /// <summary>Records the exception of every Error-level log entry, from any category.</summary>
+    public class ErrorCapturingLoggerProvider : ILoggerProvider
+    {
+        public ConcurrentQueue<Exception> Errors { get; } = new();
+
+        public ILogger CreateLogger(string categoryName) => new ErrorCapturingLogger(Errors);
+
+        public void Dispose()
+        {
+        }
+
+        private sealed class ErrorCapturingLogger : ILogger
+        {
+            private readonly ConcurrentQueue<Exception> _errors;
+
+            public ErrorCapturingLogger(ConcurrentQueue<Exception> errors)
+            {
+                _errors = errors;
+            }
+
+            public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+            public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Error;
+
+            public void Log<TState>(
+                LogLevel logLevel,
+                EventId eventId,
+                TState state,
+                Exception? exception,
+                Func<TState, Exception?, string> formatter)
+            {
+                if (logLevel >= LogLevel.Error && exception != null)
+                {
+                    _errors.Enqueue(exception);
+                }
+            }
+        }
     }
 
     public class NotifierConstructionLog
