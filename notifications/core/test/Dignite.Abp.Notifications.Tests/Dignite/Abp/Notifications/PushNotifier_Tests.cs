@@ -224,7 +224,7 @@ public class PushNotifier_Tests
     [Fact]
     public async Task Two_providers_claiming_the_same_name_fail_push_deliveries_but_not_construction()
     {
-        // Core's handler builds every channel's notifier for every event: throwing here would break email and SignalR.
+        // A provider clash fails push deliveries through the best-effort path instead of escaping Core's handler.
         var first = new FakeProvider("Expo");
         var notifier = CreateNotifier(
             new FakeDeviceStore(new PushTarget("Expo", "phone")),

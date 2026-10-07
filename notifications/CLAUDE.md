@@ -81,7 +81,10 @@ Core logic must work with `NullNotificationStore` alone.
    `Notifications.Abstractions` only if possible.
 2. Implement `INotificationNotifier`: stable `Name` + cancellation-aware
    `DeliverAsync(NotificationDeliveryRequestedEto, CancellationToken)`.
-3. Module class `[DependsOn(typeof(AbpNotificationsAbstractionsModule), ...)]`.
+3. Module class `[DependsOn(typeof(AbpNotificationsAbstractionsModule), ...)]` that registers the
+   channel: `Configure<NotificationNotifierOptions>(o => o.Notifiers.Add<TNotifier>(TNotifier.ChannelName))`.
+   Core's handler resolves only the notifier mapped to a delivery's channel; an unregistered notifier is
+   never called.
 
 ## Commands
 

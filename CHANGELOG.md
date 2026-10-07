@@ -53,6 +53,14 @@ so it stays clear which part of the repository actually moved.
 - `LocalizableMessageNotificationData.Localize(IStringLocalizerFactory)` (Abstractions) is now the one
   rendering rule for localizable messages; the email and push content providers and the MVC inbox view
   component call it instead of each carrying a copy. Output is unchanged.
+- **Core's delivery handler builds only the notifier for the delivery's channel.** It used to construct every
+  channel's notifier, with its whole dependency graph, for every delivery event and keep one - so an email
+  delivery also built the push and SignalR notifiers, and any one notifier failing to construct broke every
+  channel. Each channel module now maps its channel to its notifier type in the new `NotificationNotifierOptions`
+  (Abstractions), and the handler resolves just that type. A channel claimed by two types fails the application
+  start instead of the first delivery. **Custom notifiers must register:**
+  `Configure<NotificationNotifierOptions>(o => o.Notifiers.Add<TNotifier>(channelName))` - one exposed only as
+  `INotificationNotifier` is no longer called. `INotificationNotifier` itself is unchanged.
 - **Schema change: every EF Core host needs a migration** for the new `{prefix}PushDevices` table (hosts own
   their migrations; this module ships none). Hosts that implement `INotificationCenterDbContext` or
   `INotificationCenterMongoDbContext` themselves must also add the new `PushDevices` property.

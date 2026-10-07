@@ -9,4 +9,11 @@ namespace Dignite.Abp.Notifications.Emailing;
     )]
 public class AbpNotificationsEmailingModule : AbpModule
 {
+    public override void ConfigureServices(ServiceConfigurationContext context)
+    {
+        Configure<NotificationNotifierOptions>(options =>
+        {
+            options.Notifiers.Add<EmailNotifier>(EmailNotifier.ChannelName);
+        });
+    }
 }

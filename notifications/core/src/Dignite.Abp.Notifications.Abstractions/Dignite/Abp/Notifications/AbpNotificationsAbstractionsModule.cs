@@ -27,6 +27,13 @@ public class AbpNotificationsAbstractionsModule : AbpModule
             options.Add<UnsupportedNotificationData>();
         });
 
+        // Same fail-fast materialization for channel → notifier registrations: two notifier types claiming one
+        // channel fail the application start rather than the first delivery on that channel.
+        context.Services
+            .AddOptions<NotificationNotifierOptions>()
+            .Validate(_ => true)
+            .ValidateOnStart();
+
         // Registers the polymorphic NotificationData converter on ABP's IJsonSerializer options for every
         // app-level JSON boundary (e.g. HttpApi.Client proxies reading UserNotificationDto.Data). It does NOT
         // cover the distributed event bus: ABP serializes ETOs with plain System.Text.Json, which is why

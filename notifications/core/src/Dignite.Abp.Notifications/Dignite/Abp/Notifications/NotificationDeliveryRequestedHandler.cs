@@ -1,8 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.Threading;
@@ -13,6 +13,11 @@ namespace Dignite.Abp.Notifications;
 /// Best-effort dispatch of a delivery request to the channel notifier hosted by this process. There is no
 /// per-recipient delivery state, idempotency, or retry — the notification's authoritative record is the inbox row.
 /// </summary>
+/// <remarks>
+/// Only the notifier registered for the event's channel in <see cref="NotificationNotifierOptions"/> is constructed,
+/// so an email delivery never builds the push or SignalR notifier (or their dependency graphs), and one channel's
+/// notifier failing to construct cannot break another channel's deliveries.
+/// </remarks>
 [ExposeServices(
     typeof(IDistributedEventHandler<NotificationDeliveryRequestedEto>),
     typeof(NotificationDeliveryRequestedHandler))]
@@ -20,16 +25,19 @@ public class NotificationDeliveryRequestedHandler :
     IDistributedEventHandler<NotificationDeliveryRequestedEto>,
     ITransientDependency
 {
-    protected IReadOnlyList<INotificationNotifier> Notifiers { get; }
+    protected IServiceProvider ServiceProvider { get; }
+    protected IOptions<NotificationNotifierOptions> NotifierOptions { get; }
     protected ICancellationTokenProvider CancellationTokenProvider { get; }
     protected ILogger<NotificationDeliveryRequestedHandler> Logger { get; }
 
     public NotificationDeliveryRequestedHandler(
-        IEnumerable<INotificationNotifier> notifiers,
+        IServiceProvider serviceProvider,
+        IOptions<NotificationNotifierOptions> notifierOptions,
         ICancellationTokenProvider cancellationTokenProvider,
         ILogger<NotificationDeliveryRequestedHandler> logger)
     {
-        Notifiers = notifiers.ToList();
+        ServiceProvider = serviceProvider;
+        NotifierOptions = notifierOptions;
         CancellationTokenProvider = cancellationTokenProvider;
         Logger = logger;
     }
@@ -71,22 +79,21 @@ public class NotificationDeliveryRequestedHandler :
 
     protected virtual INotificationNotifier? ResolveNotifierOrNull(string channel)
     {
-        var matches = Notifiers
-            .Where(notifier => string.Equals(notifier.Name, channel, StringComparison.OrdinalIgnoreCase))
-            .GroupBy(notifier => notifier.GetType())
-            .Select(group => group.First())
-            .ToList();
-        if (matches.Count == 0)
+        // The event bus resolves this handler from a per-event scope, so the notifier shares that scope's lifetime.
+        // Two types claiming one channel never reach here: the options reject them as they are added.
+        if (!NotifierOptions.Value.Notifiers.TryGetValue(channel, out var notifierType))
         {
             return null;
         }
 
-        if (matches.Count != 1)
+        var notifier = (INotificationNotifier)ServiceProvider.GetRequiredService(notifierType);
+        if (!string.Equals(notifier.Name, channel, StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException(
-                $"Multiple notification notifiers are registered for channel '{channel}'.");
+                $"Notification notifier '{notifierType.FullName}' is registered for channel '{channel}' but its " +
+                $"{nameof(INotificationNotifier.Name)} is '{notifier.Name}'.");
         }
 
-        return matches[0];
+        return notifier;
     }
 }
