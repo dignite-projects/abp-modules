@@ -14,12 +14,26 @@ Because releases are lockstep, a version may contain changes to only one module 
 packages are still republished at that version with unchanged content. Entries are grouped by module
 so it stays clear which part of the repository actually moved.
 
-## [Unreleased]
+## [10.0.0-rc.20] - 2026-10-07
 
 ### Added
 
 #### notifications
 
+- **Notification groups.** Every definition now belongs to a group, as ABP permissions do:
+  `context.AddGroup(name, displayName).AddNotification(name, displayName)`. Duplicate group names, and duplicate
+  definition names across groups, fail at startup. The inbox API gains a `GroupName` filter,
+  `GET /api/notification-center/notifications/groups` (groups in definition order with their unread counts), and
+  `GroupName` / `GroupDisplayName` on `UserNotificationDto` and `NotificationSubscriptionDto`; notifications whose
+  definition no longer exists fall into a synthetic "Other" group. The subscription settings UI (MVC and Angular)
+  lists definitions under group headings.
+- **Inbox page** for MVC (`/NotificationCenter/Notifications`) and Angular (`NotificationInboxComponent`, served by
+  `createRoutes()` and replaceable via `eNotificationCenterComponents.Notifications`): group tabs with unread
+  counts, an all/unread filter, paging, per-item delete, and "mark all as read" / "clear read". It is reached from
+  the bell, not the main menu.
+- **The bell lists the ten most recent notifications, read and unread**, highlighting unread ones (the badge still
+  counts only unread), with a "View all" link to the inbox page. Reading a notification no longer removes it from
+  the bell.
 - **Device push channel.** `Dignite.Abp.Notifications.Push` adds the `"Push"` channel: a definition says
   `UseChannels("Push")` and the notification reaches the recipient's phones. Which delivery service carries
   a message is decided per device - each registered device names the `IPushProvider` that issued its
@@ -47,6 +61,14 @@ so it stays clear which part of the repository actually moved.
 
 #### notifications
 
+- **Breaking - definitions must be grouped.** Definition providers use `AddGroup(...).AddNotification(...)`; the
+  top-level `context.Add` and the public `NotificationDefinition` constructor are gone (custom definition managers
+  override `CreateGroups()` instead of `CreateDefinitions()`). `INotificationStore` gains include/exclude name
+  filters on the inbox list/count methods and `GetUnreadCountsByNotificationNameAsync`, and implementations must
+  populate `UserNotificationInfo.NotificationName`.
+- **Schema change:** `UserNotification` carries a copy of `NotificationName` (new column plus a
+  `(TenantId, UserId, NotificationName, State, CreationTime)` index on both providers), so group filtering and
+  per-group unread counts stay single-table queries. EF Core hosts need a migration.
 - `NotificationCultureResolver` (Abstractions) now holds the recipient-culture fallback that
   `EmailNotifier.ResolveCulture` used to implement privately, so the email and push notifiers share it;
   `EmailNotifier` switches cultures with ABP's `CultureHelper.Use`. Behaviour is unchanged.
@@ -68,6 +90,17 @@ so it stays clear which part of the repository actually moved.
 - **Schema change: every EF Core host needs a migration** for the new `{prefix}PushDevices` table (hosts own
   their migrations; this module ships none). Hosts that implement `INotificationCenterDbContext` or
   `INotificationCenterMongoDbContext` themselves must also add the new `PushDevices` property.
+
+### Fixed
+
+#### notifications
+
+- **MVC bell mark-as-read and the subscription toggles did nothing.** `notification-center.js` called
+  `dignite.abp.notificationCenter.*`, but ABP generates the proxies under `dignite.notificationCenter.*`.
+- **MVC bell badge double-counted and missed pushes.** Each SignalR push added one to the server-rendered count,
+  counting a notification twice when it arrived after the page rendered, and pushes missed while disconnected were
+  never counted. The bell now re-reads `GET .../notifications/unread-count` after every push and on reconnect, as
+  the Angular bell already did.
 
 ## [10.0.0-rc.19] - 2026-10-04
 
