@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Volo.Abp;
 using Volo.Abp.Localization;
 
@@ -65,29 +64,5 @@ public class NotificationDefinition
     {
         Attributes[key] = value;
         return this;
-    }
-
-    /// <summary>Routes delivery to specific external notifier channels (by name).</summary>
-    public NotificationDefinition UseChannels(params string[] channels)
-    {
-        if (channels == null || channels.Length == 0)
-        {
-            throw new ArgumentException(
-                "At least one notification channel must be specified. Omit UseChannels(...) for inbox-only notifications.",
-                nameof(channels));
-        }
-
-        if (channels.Any(string.IsNullOrWhiteSpace))
-        {
-            throw new ArgumentException("Notification channel names cannot be null, empty or whitespace.", nameof(channels));
-        }
-
-        Attributes[NotificationChannels.AttributeName] = channels.Select(channel => channel.Trim()).ToArray();
-        return this;
-    }
-
-    public string[]? GetChannelsOrNull()
-    {
-        return Attributes.TryGetValue(NotificationChannels.AttributeName, out var value) ? value as string[] : null;
     }
 }

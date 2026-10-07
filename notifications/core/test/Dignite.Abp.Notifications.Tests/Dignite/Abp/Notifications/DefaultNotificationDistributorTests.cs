@@ -72,7 +72,7 @@ public class DefaultNotificationDistributorTests
         var eventBus = Substitute.For<IDistributedEventBus>();
         var notificationName = $"batch-{Guid.NewGuid():N}";
         definitionManager.Get(notificationName).Returns(
-            new NotificationDefinition("Test", notificationName, new FixedLocalizableString("Batch")).UseChannels("Test"));
+            new NotificationDefinition("Test", notificationName, new FixedLocalizableString("Batch")));
         definitionManager.IsAvailableAsync(notificationName, Arg.Any<Guid>()).Returns(true);
 
         var writeBatches = new List<Guid[]>();
@@ -278,7 +278,11 @@ public class DefaultNotificationDistributorTests
         definitionManager.IsAvailableAsync("test", Arg.Any<Guid>()).Returns(true);
 
         var userId = Guid.NewGuid();
-        var distributor = CreateDistributor(store, definitionManager, eventBus);
+        var distributor = CreateDistributor(
+            store,
+            definitionManager,
+            eventBus,
+            channelResolver: NotificationTestObjects.CreateChannelResolver());
         var notification = new NotificationInfo { Id = Guid.NewGuid(), NotificationName = "test" };
 
         await distributor.DistributeAsync(notification, new[] { userId });
@@ -299,7 +303,11 @@ public class DefaultNotificationDistributorTests
         var eventBus = Substitute.For<IDistributedEventBus>();
         definitionManager.Get("test").Returns(new NotificationDefinition("Test", "test", new FixedLocalizableString("Test")));
 
-        var distributor = CreateDistributor(store, definitionManager, eventBus);
+        var distributor = CreateDistributor(
+            store,
+            definitionManager,
+            eventBus,
+            channelResolver: NotificationTestObjects.CreateChannelResolver());
         var notification = new NotificationInfo { Id = Guid.NewGuid(), NotificationName = "test" };
 
         await Should.ThrowAsync<AbpException>(() => distributor.DistributeAsync(notification, new[] { Guid.NewGuid() }));
@@ -437,11 +445,13 @@ public class DefaultNotificationDistributorTests
         IDistributedEventBus eventBus,
         ICurrentTenant? currentTenant = null,
         ILogger<DefaultNotificationDistributor>? logger = null,
-        NotificationDistributionOptions? options = null)
+        NotificationDistributionOptions? options = null,
+        INotificationChannelResolver? channelResolver = null)
     {
         return new DefaultNotificationDistributor(
             store,
             definitionManager,
+            channelResolver ?? NotificationTestObjects.CreateChannelResolver("Test"),
             eventBus,
             NotificationTestObjects.CreateSerializer(),
             currentTenant ?? new TestCurrentTenant(),
@@ -451,6 +461,6 @@ public class DefaultNotificationDistributorTests
 
     private static NotificationDefinition DefinitionWithChannels()
     {
-        return new NotificationDefinition("Test", "test", new FixedLocalizableString("Test")).UseChannels("Test");
+        return new NotificationDefinition("Test", "test", new FixedLocalizableString("Test"));
     }
 }

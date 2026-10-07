@@ -357,6 +357,9 @@ public class NotificationRegistration_Tests
     {
         var builder = Host.CreateApplicationBuilder();
         builder.Services.AddApplication<TStartupModule>();
+        // These tests exercise registration, not routing; give every definition a channel so the stateless-mode
+        // startup check (no inbox store, no channel) does not apply.
+        builder.Services.Configure<NotificationRoutingOptions>(options => options.Default = new[] { "Test" });
         return builder.Build();
     }
 }

@@ -232,6 +232,13 @@ public class HostModule : AbpModule
             options.Add<OrderShippedNotificationData>();
         });
 
+        // Route the demo notifications to the SignalR channel. A reusable module would add defaults for its own
+        // notifications the same way; the host, configured last, may override them or set Default.
+        Configure<NotificationRoutingOptions>(options =>
+        {
+            options.ForNotifications(["Demo.OrderShipped", "Demo.Announcement"], SignalRNotifier.ChannelName);
+        });
+
         // Demo the two extension points: a custom renderer for the "Demo.OrderShipped" discriminator, and a
         // click-through URL for the "Demo.Order" entity type. Both keyed by stable strings, never CLR type names.
         Configure<NotificationCenterWebOptions>(options =>

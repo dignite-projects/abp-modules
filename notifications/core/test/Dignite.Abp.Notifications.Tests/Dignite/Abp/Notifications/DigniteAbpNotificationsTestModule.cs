@@ -6,6 +6,7 @@ using Volo.Abp.BackgroundJobs;
 using Volo.Abp.BackgroundWorkers;
 using Volo.Abp.Modularity;
 using Volo.Abp.EventBus.Distributed;
+using Dignite.Abp.Notifications.SignalR;
 
 namespace Dignite.Abp.Notifications;
 
@@ -32,6 +33,20 @@ public class DigniteAbpNotificationsTestModule : AbpModule
         context.Services.Replace(
             ServiceDescriptor.Singleton<IBackgroundJobManager>(
                 sp => sp.GetRequiredService<FakeBackgroundJobManager>()));
+
+        // Every test notification is delivered on the SignalR channel.
+        Configure<NotificationRoutingOptions>(options =>
+        {
+            options.ForNotifications(
+                [
+                    TestNotificationDefinitionProvider.Plain,
+                    TestNotificationDefinitionProvider.FeatureGated,
+                    TestNotificationDefinitionProvider.DisabledFeatureGated,
+                    TestNotificationDefinitionProvider.PermissionGranted,
+                    TestNotificationDefinitionProvider.PermissionDenied
+                ],
+                SignalRNotifier.ChannelName);
+        });
 
         // Permission checks: swap the always-grant default for a fake that denies one specific permission.
         context.Services.Replace(

@@ -35,5 +35,12 @@ public class NotificationCenterTestBaseModule : AbpModule
         {
             options.Add<OrderShippedNotificationData>();
         });
+
+        Configure<NotificationRoutingOptions>(options =>
+        {
+            options.ForNotification(
+                TestNotificationDefinitionProvider.OrderShipped,
+                TestNotificationDefinitionProvider.TestChannel);
+        });
     }
 }

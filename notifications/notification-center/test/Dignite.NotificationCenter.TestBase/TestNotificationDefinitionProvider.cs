@@ -20,8 +20,7 @@ public class TestNotificationDefinitionProvider : NotificationDefinitionProvider
     public override void Define(INotificationDefinitionContext context)
     {
         context.AddGroup(OrdersGroup, new FixedLocalizableString("Orders"))
-            .AddNotification(OrderShipped, new FixedLocalizableString("Order Shipped"))
-            .UseChannels(TestChannel);
+            .AddNotification(OrderShipped, new FixedLocalizableString("Order Shipped"));
 
         context.AddGroup(SystemGroup, new FixedLocalizableString("System"))
             .AddNotification(Announcement, new FixedLocalizableString("Announcement"));
