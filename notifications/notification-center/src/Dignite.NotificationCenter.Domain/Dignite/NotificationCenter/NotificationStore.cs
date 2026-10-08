@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dignite.Abp.Notifications;
+using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Guids;
@@ -40,6 +41,8 @@ public class NotificationStore : INotificationStore, ITransientDependency
 
     protected IAsyncQueryableExecuter AsyncExecuter { get; }
 
+    protected IDataFilter DataFilter { get; }
+
     public NotificationStore(
         IRepository<Notification, Guid> notificationRepository,
         IRepository<UserNotification, Guid> userNotificationRepository,
@@ -48,7 +51,8 @@ public class NotificationStore : INotificationStore, ITransientDependency
         IGuidGenerator guidGenerator,
         IClock clock,
         ICurrentTenant currentTenant,
-        IAsyncQueryableExecuter asyncExecuter)
+        IAsyncQueryableExecuter asyncExecuter,
+        IDataFilter dataFilter)
     {
         NotificationRepository = notificationRepository;
         UserNotificationRepository = userNotificationRepository;
@@ -58,6 +62,7 @@ public class NotificationStore : INotificationStore, ITransientDependency
         Clock = clock;
         CurrentTenant = currentTenant;
         AsyncExecuter = asyncExecuter;
+        DataFilter = dataFilter;
     }
 
     public virtual async Task InsertNotificationAsync(
@@ -348,6 +353,24 @@ public class NotificationStore : INotificationStore, ITransientDependency
             x.TenantKey == tenantKey && x.UserId == userId
             && x.NotificationNameKey == notificationNameKey && x.ScopeKey == scopeKey,
             cancellationToken: cancellationToken);
+    }
+
+    public virtual async Task DeleteAllUserDataAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        // A person's id is unique across tenants, so one delete by it reaches every tenant. The tenant filter is
+        // switched off here because the providers disagree on DeleteDirectAsync: EF Core still applies it,
+        // MongoDB never does. Direct deletes load nothing, however many rows the user has.
+        using (DataFilter.Disable<IMultiTenant>())
+        {
+            await UserNotificationRepository.DeleteDirectAsync(
+                x => x.UserId == userId,
+                cancellationToken);
+            await SubscriptionRepository.DeleteDirectAsync(
+                x => x.UserId == userId,
+                cancellationToken);
+        }
     }
 
     public virtual async Task<bool> IsSubscribedAsync(

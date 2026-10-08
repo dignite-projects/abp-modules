@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Volo.Abp.Ddd.Domain" />
+    <PackageReference Include="Volo.Abp.Gdpr.Abstractions" />
   </ItemGroup>
 
   <ItemGroup>
