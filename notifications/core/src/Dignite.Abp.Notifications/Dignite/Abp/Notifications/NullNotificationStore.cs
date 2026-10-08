@@ -29,6 +29,13 @@ public class NullNotificationStore : INotificationStore, ISingletonDependency
         return Task.CompletedTask;
     }
 
+    public Task DeleteAllUserDataAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
+
     public Task<bool> IsSubscribedAsync(
         Guid userId,
         string notificationName,

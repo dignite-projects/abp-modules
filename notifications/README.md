@@ -391,10 +391,37 @@ payload ids, then delete) over a cross-collection join.
 
 | Record | Owner | Deletion rule |
 |---|---|---|
-| `UserNotification` inbox row | Notification Center / current user | Users delete their own rows via the inbox. A host may additionally age out `Read` rows; `Unread` rows must be retained. |
-| `Notification` base payload | Host retention job | Delete when older than the host's window **and** no inbox row still references it. |
-| `NotificationSubscription` | User subscription settings | Not time-based. Delete only by the exact subscription identity through the subscription APIs. |
+| `UserNotification` inbox row | Notification Center / current user | Users delete their own rows via the inbox. A host may additionally age out `Read` rows; `Unread` rows must be retained. All of a user's rows, whatever their state, go with [GDPR erasure](#personal-data-erasure-gdpr). |
+| `Notification` base payload | Host retention job | Delete when older than the host's window **and** no inbox row still references it. [GDPR erasure](#personal-data-erasure-gdpr) leaves it to this job. |
+| `NotificationSubscription` | User subscription settings | Not time-based. Delete only by the exact subscription identity through the subscription APIs — or all of a user's at once with [GDPR erasure](#personal-data-erasure-gdpr). |
 | ABP event inbox/outbox records | ABP distributed event bus | Use ABP's status-aware event-box cleanup windows. Do not add TTL deletes that bypass processed/in-progress state. |
+
+#### Personal data erasure (GDPR)
+
+The Notification Center subscribes to ABP's `GdprUserDataDeletionRequestedEto` (`Volo.Abp.Gdpr.Abstractions`) and
+erases what it keeps about that user: every inbox row (`UserNotification`, read and unread alike), every
+`NotificationSubscription`, and every `PushDevice`. Nothing needs configuring; installing the Notification Center
+registers the handler. ABP's open-source packages only define the event and nothing in this repository publishes
+it, so your host needs a publisher — a GDPR module that raises it, or your own code through `IDistributedEventBus`.
+With no publisher the handler never runs.
+
+Two limits to know:
+
+- **The shared `Notification` payload stays.** It has no owner and every recipient's inbox row references it, so
+  it cannot be deleted per user. Its `Data` may still contain personal data (a name in a message, say); remove
+  such payloads with the host retention job above, which deletes a payload once no inbox row references it.
+- **The tenant comes from the user id.** Before ABP 10.7 the event carries only the user id, with no tenant, so
+  the handler deletes by that id alone, in bulk — the user's rows go in every tenant sharing the database, and
+  no other user's can match. A host with a database per tenant must make the event reach the right tenant's
+  database (a distributed consumer runs in whatever tenant is ambient, usually the host). From ABP 10.7 the event
+  names its tenant and the bus enters it; the handler needs no change.
+
+Every delete is idempotent, so a redelivered event simply finishes the job. The deletes share one unit of work, but
+that is atomic only where your host runs units of work in a transaction (not on a standalone MongoDB), so a
+failure part-way leaves the erasure partly done until the event is delivered again: the ABP event inbox retries
+a failed event, whereas a bus without an inbox hands the exception to the publisher. To change what is erased,
+replace `GdprUserDataDeletionRequestedHandler` (its method is `virtual`) or add a further
+`IDistributedEventHandler<GdprUserDataDeletionRequestedEto>` for your own data.
 
 ## Defining and publishing a notification
 
@@ -777,7 +804,8 @@ A user keeps at most `PushDeviceOptions.MaxDevicesPerUser` devices (default 10);
 the device seen least recently. Together with dead-device reports from the provider this bounds the registry —
 there is no cleanup worker. The token key is unique across tenants, so a phone moving to another tenant stops
 receiving the previous tenant's pushes; with a database per tenant that cannot be enforced across databases,
-and the guarantee rests on unregistering at sign-out.
+and the guarantee rests on unregistering at sign-out. When a user's data is erased on request, their devices go
+with it — see [Personal data erasure](#personal-data-erasure-gdpr).
 
 `Dignite.NotificationCenter.Push.Identity` makes push follow the ABP login session: a device registered
 under a session that no longer exists (signed out, revoked, ended by the concurrent-login rule, cleaned up as

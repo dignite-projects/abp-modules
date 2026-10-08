@@ -14,6 +14,24 @@ Because releases are lockstep, a version may contain changes to only one module 
 packages are still republished at that version with unchanged content. Entries are grouped by module
 so it stays clear which part of the repository actually moved.
 
+## [Unreleased]
+
+### Added
+
+#### notifications
+
+- **Personal data erasure on `GdprUserDataDeletionRequestedEto`.** The Notification Center now depends on
+  `Volo.Abp.Gdpr.Abstractions` and handles ABP's GDPR deletion event (`GdprUserDataDeletionRequestedHandler`): it
+  deletes the user's inbox rows (read and unread), notification subscriptions and push devices, in every tenant.
+  Rows are removed in bulk by user id alone, because before ABP 10.7 the event carries no tenant. The shared
+  `Notification` payload is left to the host's retention job. Nothing in this repository publishes the event - the
+  host needs a publisher; without one the handler never runs. See "Personal data erasure (GDPR)" in the notifications
+  README.
+- **Breaking - `INotificationStore.DeleteAllUserDataAsync(userId)`** erases the user's inbox rows and subscriptions in
+  every tenant; custom `INotificationStore` implementations must add it (`NullNotificationStore` is a no-op).
+  `PushDeviceManager.RemoveAllAsync(userId)` does the same for push devices. `NotificationStore` takes `IDataFilter` as
+  a new constructor argument.
+
 ## [10.0.0-rc.21] - 2026-10-07
 
 ### Changed

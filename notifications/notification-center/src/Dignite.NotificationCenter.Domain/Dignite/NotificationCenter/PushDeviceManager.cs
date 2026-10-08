@@ -131,6 +131,23 @@ public class PushDeviceManager : ITransientDependency
             .ToList();
     }
 
+    /// <summary>
+    /// Forgets every device registered to the user, in every tenant, e.g. when the user's personal data is erased. A
+    /// user with no devices is not an error.
+    /// </summary>
+    /// <remarks>
+    /// A person's id is unique across tenants, so one delete by it reaches every tenant. The tenant filter is switched
+    /// off here because the providers disagree on <c>DeleteDirectAsync</c>: EF Core still applies it, MongoDB never
+    /// does. Direct deletes load nothing, however many devices the user has.
+    /// </remarks>
+    public virtual async Task RemoveAllAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        using (DataFilter.Disable<IMultiTenant>())
+        {
+            await Repository.DeleteDirectAsync(d => d.UserId == userId, cancellationToken);
+        }
+    }
+
     /// <summary>Forgets a device a push provider reported dead. An unknown device is not an error.</summary>
     public virtual async Task RemoveAsync(string provider, string token, CancellationToken cancellationToken = default)
     {

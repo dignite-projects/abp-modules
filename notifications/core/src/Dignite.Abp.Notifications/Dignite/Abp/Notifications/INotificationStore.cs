@@ -24,6 +24,16 @@ public interface INotificationStore
         string? entityId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Erases everything the store keeps about the user — every inbox row, whatever its state, and every subscription
+    /// identity — in every tenant, for example when the user's personal data is erased. The shared notification
+    /// payload is not touched. Rows are removed in bulk without being loaded, so this is not the way to clear one
+    /// tenant's inbox: use <see cref="DeleteAllUserNotificationsAsync"/> for that.
+    /// </summary>
+    Task DeleteAllUserDataAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Checks only the exact definition-wide or entity-specific subscription identity.</summary>
     Task<bool> IsSubscribedAsync(
         Guid userId,
