@@ -259,7 +259,7 @@ MongoDB：NotificationCenter 支持 Mongo，DefinitionStore 应有 `.MongoDB` �
 （`[authorization]PermissionChecker.cs`、`AbpMultiTenancyClaimsIdentityExtensions.GetMultiTenancySide`）。
 包不再依赖 `Volo.Abp.Identity.Domain`，改依赖 `Identity.Domain.Shared` + `Volo.Abp.Authorization`。
 
-实现来源：单体由 Identity.Domain 的 `IdentityUserRoleFinder` 提供；微服务由 `Volo.Abp.Identity.Pro.HttpApi.Client` 的
+实现来源：单体由 Identity.Domain 的 `UserRoleFinder` 提供；微服务由 `Volo.Abp.Identity.Pro.HttpApi.Client` 的
 `HttpClientUserRoleFinder` 提供，服务端的 `GetRoleNamesAsync` 含组织单元带来的角色。cloud 已有先例：AdministrationService
 引用该包（`csproj:62`、`Module:99`），`RemoteServices:AbpIdentity` 直连 IdentityService（`appsettings.json:52-55`），
 IdentityService 开了 `ExposeIntegrationServices`（`CloudIdentityServiceModule.cs:397`），客户端代理自动带 `__tenant` 头。
