@@ -16,6 +16,8 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+## [10.0.0-rc.23] - 2026-10-09
+
 ### Added
 
 #### notifications
