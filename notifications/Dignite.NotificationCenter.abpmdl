@@ -13,6 +13,14 @@
       "path": "core/src/Dignite.Abp.Notifications.Abstractions/Dignite.Abp.Notifications.Abstractions.abppkg",
       "folder": "core/src"
     },
+    "Dignite.Abp.Notifications.DefinitionStore": {
+      "path": "core/src/Dignite.Abp.Notifications.DefinitionStore/Dignite.Abp.Notifications.DefinitionStore.abppkg",
+      "folder": "core/src"
+    },
+    "Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore": {
+      "path": "core/src/Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore/Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore.abppkg",
+      "folder": "core/src"
+    },
     "Dignite.Abp.Notifications.Emailing": {
       "path": "core/src/Dignite.Abp.Notifications.Emailing/Dignite.Abp.Notifications.Emailing.abppkg",
       "folder": "core/src"

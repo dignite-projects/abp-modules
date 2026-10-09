@@ -2,6 +2,8 @@
   <Folder Name="/core/" />
   <Folder Name="/core/src/">
     <Project Path="core/src/Dignite.Abp.Notifications.Abstractions/Dignite.Abp.Notifications.Abstractions.csproj" />
+    <Project Path="core/src/Dignite.Abp.Notifications.DefinitionStore/Dignite.Abp.Notifications.DefinitionStore.csproj" />
+    <Project Path="core/src/Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore/Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore.csproj" />
     <Project Path="core/src/Dignite.Abp.Notifications.Distribution/Dignite.Abp.Notifications.Distribution.csproj" />
     <Project Path="core/src/Dignite.Abp.Notifications.Emailing/Dignite.Abp.Notifications.Emailing.csproj" />
     <Project Path="core/src/Dignite.Abp.Notifications.Emailing.Identity/Dignite.Abp.Notifications.Emailing.Identity.csproj" />
