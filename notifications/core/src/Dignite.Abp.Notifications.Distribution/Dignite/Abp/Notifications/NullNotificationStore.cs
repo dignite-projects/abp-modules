@@ -10,6 +10,11 @@ namespace Dignite.Abp.Notifications;
 /// No-op store used in stateless forwarding mode (no NotificationCenter installed). Notifications are still
 /// published as delivery events; nothing is persisted, and there are no subscriptions or inbox.
 /// </summary>
+/// <remarks>
+/// Registered with <c>TryRegister</c>: the Notification Center's store does not depend on this package, so nothing
+/// orders the two modules, and a plain registration made after the real store would win silently.
+/// </remarks>
+[Dependency(TryRegister = true)]
 public class NullNotificationStore : INotificationStore, ISingletonDependency
 {
     public Task InsertSubscriptionAsync(

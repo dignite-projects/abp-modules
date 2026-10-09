@@ -33,7 +33,7 @@ public class NotificationDeliveryRequestedHandler_Tests
     private const string MisnamedChannel = "Misnamed";
 
     [DependsOn(
-        typeof(AbpNotificationsModule),
+        typeof(AbpNotificationsDistributionModule),
         typeof(AbpAutofacModule))]
     public class FakeChannelsTestModule : AbpModule
     {
@@ -58,7 +58,7 @@ public class NotificationDeliveryRequestedHandler_Tests
 
     /// <summary>The real Email and Push channels installed side by side, with a push notifier that cannot be built.</summary>
     [DependsOn(
-        typeof(AbpNotificationsModule),
+        typeof(AbpNotificationsDistributionModule),
         typeof(AbpNotificationsEmailingModule),
         typeof(AbpNotificationsPushModule),
         typeof(AbpAutofacModule))]

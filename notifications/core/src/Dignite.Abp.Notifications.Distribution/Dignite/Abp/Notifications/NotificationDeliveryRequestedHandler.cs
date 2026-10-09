@@ -71,7 +71,7 @@ public class NotificationDeliveryRequestedHandler :
         {
             // Distributed event subscribers receive every channel's work type. A process that does not host this
             // channel leaves the event untouched. Debug, not Warning: in a split deployment this fires once per
-            // recipient and channel; misconfiguration is reported once at startup by NotificationDefinitionStartupService.
+            // recipient and channel; misconfiguration is reported once at startup by NotificationDistributionStartupService.
             Logger.LogDebug(
                 "Ignoring notification delivery for notification {NotificationId} because channel {Channel} is not hosted by this process.",
                 eventData.NotificationId,

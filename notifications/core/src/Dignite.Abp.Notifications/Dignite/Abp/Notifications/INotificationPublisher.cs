@@ -4,8 +4,10 @@ using System.Threading.Tasks;
 namespace Dignite.Abp.Notifications;
 
 /// <summary>
-/// Entry point business code calls to publish a notification. Small explicit fan-outs distribute inline;
-/// larger ones go to a background job (threshold configurable via <see cref="NotificationDistributionOptions"/>).
+/// Entry point business code calls to publish a notification. The host chooses the implementation:
+/// Dignite.Abp.Notifications.Distribution distributes in this process (small explicit fan-outs inline, larger ones
+/// through a background job — the threshold is <c>NotificationDistributionOptions</c>), and
+/// Dignite.Abp.Notifications.Remote hands the notification to the process that hosts the inbox.
 /// </summary>
 public interface INotificationPublisher
 {
