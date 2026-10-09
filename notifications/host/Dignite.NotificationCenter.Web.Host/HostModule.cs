@@ -61,6 +61,7 @@ using Microsoft.Extensions.Hosting;
 
 // Dignite NotificationCenter integration
 using Dignite.Abp.Notifications;
+using Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore;
 using Dignite.Abp.Notifications.SignalR;
 using Dignite.Abp.Notifications.Identity;
 using Dignite.NotificationCenter;
@@ -125,7 +126,10 @@ namespace Dignite.NotificationCenter.Web.Host;
     typeof(NotificationCenterApplicationModule),
     typeof(NotificationCenterHttpApiModule),
     typeof(NotificationCenterEntityFrameworkCoreModule),
-    typeof(NotificationCenterWebModule)
+    typeof(NotificationCenterWebModule),
+    // The definition store with its defaults: this host saves its definitions at startup (as every publisher of a split
+    // deployment does) and, defining every notification it serves itself, does not read the store.
+    typeof(AbpNotificationsDefinitionStoreEntityFrameworkCoreModule)
 )]
 public class HostModule : AbpModule
 {
