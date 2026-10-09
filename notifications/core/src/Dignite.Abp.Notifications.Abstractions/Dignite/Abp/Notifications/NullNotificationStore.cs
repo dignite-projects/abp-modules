@@ -11,8 +11,9 @@ namespace Dignite.Abp.Notifications;
 /// published as delivery events; nothing is persisted, and there are no subscriptions or inbox.
 /// </summary>
 /// <remarks>
-/// Registered with <c>TryRegister</c>: the Notification Center's store does not depend on this package, so nothing
-/// orders the two modules, and a plain registration made after the real store would win silently.
+/// The null default of <see cref="INotificationStore"/>, next to the contract as ABP keeps <c>NullPermissionStore</c>
+/// next to <c>IPermissionStore</c>. Registered with <c>TryRegister</c>, so whatever registered a store first keeps it;
+/// the Notification Center's store replaces it.
 /// </remarks>
 [Dependency(TryRegister = true)]
 public class NullNotificationStore : INotificationStore, ISingletonDependency

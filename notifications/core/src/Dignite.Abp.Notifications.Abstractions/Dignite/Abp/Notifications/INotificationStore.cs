@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 namespace Dignite.Abp.Notifications;
 
 /// <summary>
-/// Persistence abstraction for notifications and subscriptions. The core depends only on this; the optional
-/// NotificationCenter module supplies a real implementation, otherwise the no-op <c>NullNotificationStore</c> of
-/// Dignite.Abp.Notifications.Distribution is used. It lives in Abstractions so that the store implementations never depend
-/// on the distribution pipeline.
+/// Persistence abstraction for notifications and subscriptions. The pipeline depends only on this; the optional
+/// NotificationCenter module supplies a real implementation, otherwise the no-op <see cref="NullNotificationStore"/> is
+/// used. It lives in Abstractions so that the store implementations never depend on the distribution pipeline.
 /// </summary>
 public interface INotificationStore
 {

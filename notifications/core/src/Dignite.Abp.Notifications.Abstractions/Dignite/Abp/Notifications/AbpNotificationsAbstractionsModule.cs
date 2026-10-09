@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Volo.Abp.Features;
 using Volo.Abp.Json.SystemTextJson;
 using Volo.Abp.Localization;
@@ -79,6 +80,13 @@ public class AbpNotificationsAbstractionsModule : AbpModule
         // StaticNotificationDefinitionStore's lazily-built dictionary, so both checks belong at the one hook that can
         // reach it.
         context.Services.AddHostedService<NotificationDefinitionStartupService>();
+    }
+
+    public override void PostConfigureServices(ServiceConfigurationContext context)
+    {
+        // The fallback publisher, registered after every module's own services so that a real one always wins
+        // whatever the module order; see NullNotificationPublisher.
+        context.Services.TryAddSingleton<INotificationPublisher, NullNotificationPublisher>();
     }
 
     private static void AutoAddDefinitionProviders(IServiceCollection services)

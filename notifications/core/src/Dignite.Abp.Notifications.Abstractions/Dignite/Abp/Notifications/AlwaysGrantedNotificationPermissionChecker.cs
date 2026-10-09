@@ -6,9 +6,9 @@ namespace Dignite.Abp.Notifications;
 
 /// <summary>Default checker: every permission-gated notification is available to every user.</summary>
 /// <remarks>
-/// Registered with <c>TryRegister</c>: <c>Dignite.Abp.Notifications.Identity</c> replaces it without depending on this
-/// package, so nothing orders the two modules, and a plain registration made after the real checker would silently
-/// grant every permission.
+/// The default of <see cref="INotificationPermissionChecker"/>, next to the contract as ABP keeps
+/// <c>AlwaysAllowPermissionChecker</c> next to <c>IPermissionChecker</c>. Registered with <c>TryRegister</c>, so whatever
+/// registered a checker first keeps it; <c>Dignite.Abp.Notifications.Identity</c> replaces it.
 /// </remarks>
 [Dependency(TryRegister = true)]
 public class AlwaysGrantedNotificationPermissionChecker : INotificationPermissionChecker, ISingletonDependency

@@ -43,7 +43,7 @@ public class PackageBoundary_Tests
 
         services.GetRequiredService<INotificationPublisher>().ShouldBeOfType<RemoteNotificationPublisher>();
         services.GetService<INotificationDistributor>().ShouldBeNull();
-        services.GetService<INotificationStore>().ShouldBeNull();
+        services.GetRequiredService<INotificationStore>().ShouldBeOfType<NullNotificationStore>();
 
         await application.ShutdownAsync();
     }
