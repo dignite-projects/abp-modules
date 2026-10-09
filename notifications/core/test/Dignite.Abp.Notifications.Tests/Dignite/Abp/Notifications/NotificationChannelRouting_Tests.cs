@@ -311,7 +311,6 @@ public class NotificationChannelRouting_Tests
             definitionManager,
             resolver,
             eventBus,
-            NotificationTestObjects.CreateSerializer(),
             new TestCurrentTenant(),
             NullLogger<DefaultNotificationDistributor>.Instance,
             Options.Create(distributionOptions ?? new NotificationDistributionOptions()));

@@ -3,7 +3,8 @@ using System;
 namespace Dignite.Abp.Notifications;
 
 /// <summary>
-/// An in-memory notification being published/distributed (before it becomes per-user store rows).
+/// An in-memory notification being published/distributed (before it becomes per-user store rows), or one read back
+/// from the store.
 /// </summary>
 public class NotificationInfo
 {
@@ -11,7 +12,17 @@ public class NotificationInfo
 
     public string NotificationName { get; set; } = default!;
 
-    public NotificationData? Data { get; set; }
+    /// <summary>
+    /// The payload as discriminator-tagged JSON produced by <see cref="INotificationDataSerializer"/>
+    /// (e.g. <c>{"type":"Dignite.Message","message":"..."}</c>), or null when the notification carries no data.
+    /// </summary>
+    /// <remarks>
+    /// The payload is serialized once, at the publish boundary, and travels as this string from there on: into the
+    /// store, onto every <see cref="NotificationDeliveryRequestedEto"/>, through the distribution background job and
+    /// across processes. The process that distributes therefore never needs to know the payload's CLR type; a reader
+    /// that wants the typed view calls <see cref="INotificationDataSerializer.Deserialize"/>, which is tolerant.
+    /// </remarks>
+    public string? DataJson { get; set; }
 
     public string? EntityTypeName { get; set; }
 

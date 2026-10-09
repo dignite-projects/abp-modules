@@ -50,7 +50,7 @@ public abstract class GdprUserDataDeletion_Tests<TStartupModule> : NotificationC
                     {
                         Id = notificationId,
                         NotificationName = TestNotificationDefinitionProvider.OrderShipped,
-                        Data = new OrderShippedNotificationData { OrderNumber = "SO-1", ItemCount = 1 },
+                        DataJson = SerializeData(new OrderShippedNotificationData { OrderNumber = "SO-1", ItemCount = 1 }),
                         Severity = NotificationSeverity.Info,
                         CreationTime = creationTime
                     });

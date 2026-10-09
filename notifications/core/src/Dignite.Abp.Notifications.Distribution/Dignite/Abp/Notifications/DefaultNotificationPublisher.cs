@@ -26,6 +26,8 @@ public class DefaultNotificationPublisher : INotificationPublisher, ITransientDe
 
     protected INotificationDefinitionManager DefinitionManager { get; }
 
+    protected INotificationDataSerializer DataSerializer { get; }
+
     public DefaultNotificationPublisher(
         IOptions<NotificationDistributionOptions> options,
         INotificationDistributor distributor,
@@ -33,7 +35,8 @@ public class DefaultNotificationPublisher : INotificationPublisher, ITransientDe
         IGuidGenerator guidGenerator,
         IClock clock,
         ICurrentTenant currentTenant,
-        INotificationDefinitionManager definitionManager)
+        INotificationDefinitionManager definitionManager,
+        INotificationDataSerializer dataSerializer)
     {
         Options = options.Value;
         Distributor = distributor;
@@ -42,6 +45,7 @@ public class DefaultNotificationPublisher : INotificationPublisher, ITransientDe
         Clock = clock;
         CurrentTenant = currentTenant;
         DefinitionManager = definitionManager;
+        DataSerializer = dataSerializer;
     }
 
     public virtual async Task PublishAsync(
@@ -65,7 +69,9 @@ public class DefaultNotificationPublisher : INotificationPublisher, ITransientDe
         {
             Id = GuidGenerator.Create(),
             NotificationName = notificationName,
-            Data = data,
+            // The publish boundary: the payload is serialized here, once, and travels as a string from now on. An
+            // unregistered payload type throws here, before anything is persisted or enqueued.
+            DataJson = DataSerializer.Serialize(data),
             EntityTypeName = entityIdentifier?.EntityTypeName,
             EntityId = entityIdentifier?.EntityId,
             Severity = severity,

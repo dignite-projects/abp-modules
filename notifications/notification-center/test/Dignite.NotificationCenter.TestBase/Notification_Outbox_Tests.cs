@@ -30,13 +30,13 @@ public abstract class Notification_Outbox_Tests<TStartupModule> : NotificationCe
         return Task.CompletedTask;
     }
 
-    protected static NotificationInfo NewNotification(Guid id, Guid? tenantId = null)
+    protected NotificationInfo NewNotification(Guid id, Guid? tenantId = null)
     {
         return new NotificationInfo
         {
             Id = id,
             NotificationName = "order.shipped",
-            Data = new MessageNotificationData("hi"),
+            DataJson = SerializeData(new MessageNotificationData("hi")),
             Severity = NotificationSeverity.Info,
             CreationTime = DateTime.UtcNow,
             TenantId = tenantId

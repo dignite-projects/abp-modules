@@ -24,8 +24,6 @@ public class DefaultNotificationDistributor :
 
     protected IDistributedEventBus DistributedEventBus { get; }
 
-    protected INotificationDataSerializer DataSerializer { get; }
-
     protected ICurrentTenant CurrentTenant { get; }
 
     protected ILogger<DefaultNotificationDistributor> Logger { get; }
@@ -37,7 +35,6 @@ public class DefaultNotificationDistributor :
         INotificationDefinitionManager definitionManager,
         INotificationChannelResolver channelResolver,
         IDistributedEventBus distributedEventBus,
-        INotificationDataSerializer dataSerializer,
         ICurrentTenant currentTenant,
         ILogger<DefaultNotificationDistributor> logger,
         IOptions<NotificationDistributionOptions> options)
@@ -46,7 +43,6 @@ public class DefaultNotificationDistributor :
         DefinitionManager = definitionManager;
         ChannelResolver = channelResolver;
         DistributedEventBus = distributedEventBus;
-        DataSerializer = dataSerializer;
         CurrentTenant = currentTenant;
         Logger = logger;
         Options = options.Value;
@@ -247,12 +243,13 @@ public class DefaultNotificationDistributor :
         string channel)
     {
         // The ETO must stay a flat, default-STJ-serializable POCO (ABP's outbox/inbox serializes it without the
-        // app's JSON options), so the polymorphic payload crosses the wire as a discriminator-tagged string.
+        // app's JSON options), so the payload crosses the wire as the discriminator-tagged string it was published as.
+        // It is copied, not re-serialized: this process need not know the payload's CLR type.
         return new NotificationDeliveryRequestedEto
         {
             NotificationId = notification.Id,
             NotificationName = notification.NotificationName,
-            DataJson = DataSerializer.Serialize(notification.Data),
+            DataJson = notification.DataJson,
             Severity = notification.Severity,
             CreationTime = notification.CreationTime,
             UserId = userId,

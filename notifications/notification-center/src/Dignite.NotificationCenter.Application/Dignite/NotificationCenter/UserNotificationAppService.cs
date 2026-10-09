@@ -17,6 +17,13 @@ public class UserNotificationAppService : NotificationCenterAppService, IUserNot
 
     protected INotificationDefinitionManager DefinitionManager { get; }
 
+    /// <summary>
+    /// Hydrates the stored payload JSON for the DTO. The read is tolerant: a payload this process cannot read (an
+    /// unregistered discriminator, malformed JSON) becomes <see cref="UnsupportedNotificationData"/>, never an error.
+    /// </summary>
+    protected INotificationDataSerializer DataSerializer =>
+        LazyServiceProvider.LazyGetRequiredService<INotificationDataSerializer>();
+
     public UserNotificationAppService(
         INotificationStore store,
         INotificationDefinitionManager definitionManager)
@@ -170,7 +177,7 @@ public class UserNotificationAppService : NotificationCenterAppService, IUserNot
             NotificationDisplayName = definition?.DisplayName.Localize(StringLocalizerFactory).Value,
             GroupName = group?.Name ?? NotificationCenterConsts.OtherGroupName,
             GroupDisplayName = GetGroupDisplayName(group),
-            Data = source.Notification.Data,
+            Data = DataSerializer.Deserialize(source.Notification.DataJson),
             EntityTypeName = source.Notification.EntityTypeName,
             EntityId = source.Notification.EntityId,
             Severity = source.Notification.Severity,

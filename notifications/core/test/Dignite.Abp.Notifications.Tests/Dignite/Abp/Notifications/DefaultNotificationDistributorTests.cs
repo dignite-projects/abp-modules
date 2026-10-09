@@ -353,6 +353,33 @@ public class DefaultNotificationDistributorTests
     }
 
     [Fact]
+    public async Task Copies_the_published_payload_json_onto_every_delivery_event_without_reading_it()
+    {
+        var store = Substitute.For<INotificationStore>();
+        var definitionManager = Substitute.For<INotificationDefinitionManager>();
+        var eventBus = Substitute.For<IDistributedEventBus>();
+        definitionManager.Get("test").Returns(DefinitionWithChannels());
+        definitionManager.IsAvailableAsync("test", Arg.Any<Guid>()).Returns(true);
+
+        var published = new List<NotificationDeliveryRequestedEto>();
+        eventBus.WhenForAnyArgs(x => x.PublishAsync(Arg.Any<NotificationDeliveryRequestedEto>()))
+            .Do(ci => published.Add(ci.Arg<NotificationDeliveryRequestedEto>()));
+
+        // A discriminator no registry in this test knows: the distributor must not need to.
+        const string dataJson = "{\"type\":\"Publisher.Only.Payload\",\"orderNumber\":\"SO-1\",\"lines\":[1,2]}";
+        var notification = new NotificationInfo { Id = Guid.NewGuid(), NotificationName = "test", DataJson = dataJson };
+
+        await CreateDistributor(store, definitionManager, eventBus)
+            .DistributeAsync(notification, new[] { Guid.NewGuid(), Guid.NewGuid() });
+
+        published.Count.ShouldBe(2);
+        published.ShouldAllBe(item => item.DataJson == dataJson);
+        await store.Received(1).InsertNotificationAsync(
+            Arg.Is<NotificationInfo>(n => n.DataJson == dataJson),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Explicit_recipients_are_filtered_by_the_same_definition_eligibility_as_subscribers()
     {
         var store = Substitute.For<INotificationStore>();
@@ -453,7 +480,6 @@ public class DefaultNotificationDistributorTests
             definitionManager,
             channelResolver ?? NotificationTestObjects.CreateChannelResolver("Test"),
             eventBus,
-            NotificationTestObjects.CreateSerializer(),
             currentTenant ?? new TestCurrentTenant(),
             logger ?? NullLogger<DefaultNotificationDistributor>.Instance,
             Options.Create(options ?? new NotificationDistributionOptions()));
