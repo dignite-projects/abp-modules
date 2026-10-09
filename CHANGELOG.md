@@ -49,10 +49,9 @@ so it stays clear which part of the repository actually moved.
   (`L:Resource,Key`) and resolved in the reader, through ABP's external localization store when the resource is not
   registered there. The EF Core package maps `NotifDefinitionGroups` / `NotifDefinitions` on the `NotificationCenter`
   connection string (`[IgnoreMultiTenancy]`) and adds `ConfigureNotificationDefinitionStore()` for the host's migration
-  DbContext; no migrations ship. The module warns at startup when it reads the store while ABP's
-  `IsDynamicPermissionStoreEnabled` / `IsDynamicFeatureStoreEnabled` are off. A MongoDB implementation is a follow-up.
-  The repository now pins `Polly` 8.6.3 (the version ABP 10.5's own stores use) and references
-  `Volo.Abp.PermissionManagement.Domain` / `Volo.Abp.FeatureManagement.Domain` for those two options. See
+  DbContext; no migrations ship. The process that reads the store must also turn on ABP's
+  `IsDynamicPermissionStoreEnabled` / `IsDynamicFeatureStoreEnabled` (not checked; see the README). A MongoDB
+  implementation is a follow-up. The repository now pins `Polly` 8.6.3 (the version ABP 10.5's own stores use). See
   "Definition catalog" in the notifications README.
 - `IStaticNotificationDefinitionStore` / `StaticNotificationDefinitionStore` (the providers' definitions, built once)
   and `IDynamicNotificationDefinitionStore` with its empty default `NullDynamicNotificationDefinitionStore` in Core,

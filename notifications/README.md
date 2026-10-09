@@ -544,6 +544,13 @@ distribution job. Eligibility (`RequirePermission` / `RequireFeature`), the inbo
 happen there, in the notification's tenant. The channels the publisher resolved are used as they are; the service's
 own routing is not consulted for them.
 
+**The notification service must turn on ABP's `PermissionManagementOptions.IsDynamicPermissionStoreEnabled` and
+`FeatureManagementOptions.IsDynamicFeatureStoreEnabled`.** A definition's `RequirePermission` / `RequireFeature`
+usually names a permission or feature another service defines, and ABP knows those names in this process only through
+its dynamic stores (both are off by default). Without them the permission or feature is unknown here and its check
+answers false without an error, so every recipient of a notification that requires it is filtered out — no inbox row,
+no delivery. Nothing checks this at startup (ABP does not cross-check another module's switches either).
+
 - **Idempotency.** Configure ABP's event inbox on the notification service: it deduplicates by message id and runs the
   handler, the inbox rows and the outbox records of the delivery events in one transaction. Without an inbox the
   handler opens its own unit of work. A notification id the store has already seen is not inserted again either.
@@ -570,7 +577,7 @@ own routing is not consulted for them.
 | Publisher | A definition resolves to no channel | Allowed: inbox-only |
 | Publisher | Publishing an undefined notification | Throws, as the local publisher does |
 | Notification service | A publish request names a notification neither defined here nor read from the catalog | The handler throws before writing anything; the event inbox retries it (use `InboxProcessorFailurePolicy.RetryLater`) |
-| Notification service | `IsDynamicNotificationStoreEnabled` on, but ABP's `IsDynamicPermissionStoreEnabled` / `IsDynamicFeatureStoreEnabled` off | A startup warning per option: a requirement another service defines would filter every recipient out |
+| Notification service | ABP's `IsDynamicPermissionStoreEnabled` / `IsDynamicFeatureStoreEnabled` off | Not checked: the recipients of a notification that requires another service's permission or feature are all filtered out (see above) |
 
 ### Definition catalog
 
@@ -589,7 +596,7 @@ defines itself winning over a saved one of the same name.
   there, and ABP's `PermissionManagementOptions.IsDynamicPermissionStoreEnabled` and
   `FeatureManagementOptions.IsDynamicFeatureStoreEnabled` too: a definition's `RequirePermission` /
   `RequireFeature` names another service's permission or feature, which ABP knows only through its dynamic stores —
-  without them the check finds no such name and filters every recipient out, so the module warns at startup. The
+  without them the check finds no such name and silently filters every recipient out (not checked at startup). The
   service reloads the catalog when a publisher's save changes it, at most 30 seconds later (the distributed cache
   holds a common stamp, as for ABP's permissions).
 - **A notification not read yet is retried, not dropped.** A publisher may publish before the service has read its

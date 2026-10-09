@@ -58,8 +58,6 @@
     <!-- notifications-only -->
     <PackageVersion Include="Volo.Abp.Localization" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.SettingManagement.Domain" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.PermissionManagement.Domain" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.FeatureManagement.Domain" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.Features" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.Timing" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.Guids" Version="10.5.0" />

@@ -1,11 +1,7 @@
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Shouldly;
 using Volo.Abp.Data;
-using Volo.Abp.FeatureManagement;
-using Volo.Abp.PermissionManagement;
 using Xunit;
 
 namespace Dignite.Abp.Notifications.DefinitionStore;
@@ -38,60 +34,6 @@ public class AbpNotificationsDefinitionStoreModule_Tests
             PublisherADefinitionProvider.OrderShipped
         });
         publisherA.Get<IDynamicNotificationDefinitionStoreInMemoryCache>().CacheStamp.ShouldNotBeNull();
-    }
-
-    [Fact]
-    public async Task Reading_the_store_without_the_dynamic_permission_and_feature_stores_warns_at_startup()
-    {
-        using var shared = new SharedDefinitionStoreInfrastructure();
-        var logs = new CapturingLoggerProvider();
-
-        await using (await DefinitionStoreTestApplication.StartAsync<NotificationServiceTestModule>(
-                         "NotificationService",
-                         shared,
-                         services => services.AddSingleton<ILoggerProvider>(logs)))
-        {
-        }
-
-        var warnings = logs.WarningsOf<AbpNotificationsDefinitionStoreModule>();
-        warnings.Count.ShouldBe(2);
-        warnings.ShouldContain(message => message.Contains("IsDynamicPermissionStoreEnabled is off"));
-        warnings.ShouldContain(message => message.Contains("IsDynamicFeatureStoreEnabled is off"));
-    }
-
-    [Fact]
-    public async Task No_warning_when_the_dynamic_permission_and_feature_stores_are_on_or_the_store_is_not_read()
-    {
-        using var shared = new SharedDefinitionStoreInfrastructure();
-        var logs = new CapturingLoggerProvider();
-
-        await using (await DefinitionStoreTestApplication.StartAsync<NotificationServiceTestModule>(
-                         "NotificationService",
-                         shared,
-                         services =>
-                         {
-                             services.AddSingleton<ILoggerProvider>(logs);
-                             services.Configure<PermissionManagementOptions>(options =>
-                                 options.IsDynamicPermissionStoreEnabled = true);
-                             services.Configure<FeatureManagementOptions>(options =>
-                                 options.IsDynamicFeatureStoreEnabled = true);
-                         }))
-        {
-        }
-
-        await using (await DefinitionStoreTestApplication.StartAsync<PublisherATestModule>(
-                         "PublisherA",
-                         shared,
-                         services =>
-                         {
-                             services.AddSingleton<ILoggerProvider>(logs);
-                             services.PostConfigure<NotificationDefinitionStoreOptions>(options =>
-                                 options.IsDynamicNotificationStoreEnabled = false);
-                         }))
-        {
-        }
-
-        logs.WarningsOf<AbpNotificationsDefinitionStoreModule>().ShouldBeEmpty();
     }
 
     [Fact]
