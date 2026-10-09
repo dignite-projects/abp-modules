@@ -2,12 +2,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.Json.SystemTextJson;
 using Volo.Abp.Localization;
 using Volo.Abp.Modularity;
+using Volo.Abp.MultiTenancy;
 
 namespace Dignite.Abp.Notifications;
 
 [DependsOn(
     typeof(AbpLocalizationModule),
-    typeof(AbpJsonSystemTextJsonModule)
+    typeof(AbpJsonSystemTextJsonModule),
+    typeof(AbpMultiTenancyAbstractionsModule)
     )]
 public class AbpNotificationsAbstractionsModule : AbpModule
 {
@@ -37,7 +39,8 @@ public class AbpNotificationsAbstractionsModule : AbpModule
         // Registers the polymorphic NotificationData converter on ABP's IJsonSerializer options for every
         // app-level JSON boundary (e.g. HttpApi.Client proxies reading UserNotificationDto.Data). It does NOT
         // cover the distributed event bus: ABP serializes ETOs with plain System.Text.Json, which is why
-        // NotificationDeliveryRequestedEto carries pre-serialized DataJson instead of a live NotificationData.
+        // NotificationDeliveryRequestedEto and NotificationPublishRequestedEto carry pre-serialized DataJson instead of
+        // a live NotificationData.
         context.Services
             .AddOptions<AbpSystemTextJsonSerializerOptions>()
             .Configure<INotificationDataTypeRegistry>((options, registry) =>

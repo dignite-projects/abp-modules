@@ -33,6 +33,10 @@
       "path": "core/src/Dignite.Abp.Notifications.Push.Expo/Dignite.Abp.Notifications.Push.Expo.abppkg",
       "folder": "core/src"
     },
+    "Dignite.Abp.Notifications.Remote": {
+      "path": "core/src/Dignite.Abp.Notifications.Remote/Dignite.Abp.Notifications.Remote.abppkg",
+      "folder": "core/src"
+    },
     "Dignite.Abp.Notifications.SignalR": {
       "path": "core/src/Dignite.Abp.Notifications.SignalR/Dignite.Abp.Notifications.SignalR.abppkg",
       "folder": "core/src"

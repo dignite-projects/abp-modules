@@ -1,8 +1,5 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Options;
-using Volo.Abp.BackgroundJobs;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Guids;
 using Volo.Abp.MultiTenancy;
@@ -10,13 +7,13 @@ using Volo.Abp.Timing;
 
 namespace Dignite.Abp.Notifications;
 
+/// <summary>
+/// Publishes in the process that distributes: small explicit fan-outs are distributed inline, everything else through a
+/// background job — the decision belongs to <see cref="NotificationDistributionDispatcher"/>.
+/// </summary>
 public class DefaultNotificationPublisher : INotificationPublisher, ITransientDependency
 {
-    protected NotificationDistributionOptions Options { get; }
-
-    protected INotificationDistributor Distributor { get; }
-
-    protected IBackgroundJobManager BackgroundJobManager { get; }
+    protected NotificationDistributionDispatcher Dispatcher { get; }
 
     protected IGuidGenerator GuidGenerator { get; }
 
@@ -29,18 +26,14 @@ public class DefaultNotificationPublisher : INotificationPublisher, ITransientDe
     protected INotificationDataSerializer DataSerializer { get; }
 
     public DefaultNotificationPublisher(
-        IOptions<NotificationDistributionOptions> options,
-        INotificationDistributor distributor,
-        IBackgroundJobManager backgroundJobManager,
+        NotificationDistributionDispatcher dispatcher,
         IGuidGenerator guidGenerator,
         IClock clock,
         ICurrentTenant currentTenant,
         INotificationDefinitionManager definitionManager,
         INotificationDataSerializer dataSerializer)
     {
-        Options = options.Value;
-        Distributor = distributor;
-        BackgroundJobManager = backgroundJobManager;
+        Dispatcher = dispatcher;
         GuidGenerator = guidGenerator;
         Clock = clock;
         CurrentTenant = currentTenant;
@@ -79,15 +72,6 @@ public class DefaultNotificationPublisher : INotificationPublisher, ITransientDe
             TenantId = CurrentTenant.Id
         };
 
-        if (userIds != null && userIds.Distinct().Count() <= Options.DirectDistributionUserThreshold)
-        {
-            await Distributor.DistributeAsync(notification, userIds, excludedUserIds);
-            return;
-        }
-
-        // Subscription resolution and large explicit fan-outs run off the request thread; the distributor
-        // batches recipients internally.
-        await BackgroundJobManager.EnqueueAsync(
-            new NotificationDistributionJobArgs(notification, userIds, excludedUserIds));
+        await Dispatcher.DispatchAsync(notification, userIds, excludedUserIds);
     }
 }

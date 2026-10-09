@@ -391,9 +391,7 @@ public abstract class NotificationDistribution_Tests<TStartupModule> : Notificat
         var distributor = CreateDistributor(eventBus, options);
         var backgroundJobManager = Substitute.For<IBackgroundJobManager>();
         var publisher = new DefaultNotificationPublisher(
-            Options.Create(options),
-            distributor,
-            backgroundJobManager,
+            new NotificationDistributionDispatcher(Options.Create(options), distributor, backgroundJobManager),
             GetRequiredService<IGuidGenerator>(),
             GetRequiredService<IClock>(),
             GetRequiredService<ICurrentTenant>(),

@@ -33,6 +33,13 @@ public class NotificationInfo
     public DateTime CreationTime { get; set; }
 
     /// <summary>
+    /// The external channels, when they were already resolved — by a publisher in another process, where the routing
+    /// rules of the defining module live. <see langword="null"/> (the default) lets the distributor resolve them with
+    /// <see cref="INotificationChannelResolver"/>; an empty array means inbox-only. Not persisted.
+    /// </summary>
+    public string[]? Channels { get; set; }
+
+    /// <summary>
     /// The authoritative tenant for recipient lookup, eligibility, persistence, and event publication.
     /// <see langword="null"/> explicitly means the host context; distribution never falls back to the caller's
     /// ambient tenant. Direct <see cref="INotificationDistributor"/> callers must populate this for tenant data.

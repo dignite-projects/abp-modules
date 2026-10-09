@@ -11,8 +11,9 @@ namespace Dignite.Abp.Notifications;
 
 /// <summary>
 /// The in-process distribution pipeline: the local <see cref="INotificationPublisher"/>, the distributor, the
-/// distribution background job, the delivery event handler that calls the channel notifiers, and the no-op
-/// <see cref="NullNotificationStore"/> of stateless mode. Install it in the process that hosts the inbox and the
+/// distribution background job, the delivery event handler that calls the channel notifiers, the handler that
+/// distributes notifications published in other processes (<see cref="NotificationPublishRequestedEto"/>), and the
+/// no-op <see cref="NullNotificationStore"/> of stateless mode. Install it in the process that hosts the inbox and the
 /// channels — a monolith, or a dedicated notification service. A publisher whose inbox lives in another process
 /// installs <c>Dignite.Abp.Notifications.Remote</c> instead; the two cannot share a process.
 /// </summary>
@@ -50,6 +51,7 @@ public class AbpNotificationsDistributionModule : AbpModule
         Configure<AbpDistributedEventBusOptions>(options =>
         {
             options.Handlers.Add<NotificationDeliveryRequestedHandler>();
+            options.Handlers.Add<NotificationPublishRequestedHandler>();
         });
     }
 }

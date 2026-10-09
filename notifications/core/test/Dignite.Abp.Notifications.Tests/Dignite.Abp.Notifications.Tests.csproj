@@ -26,6 +26,7 @@
     <ProjectReference Include="..\Dignite.Abp.Notifications.TestProviderB\Dignite.Abp.Notifications.TestProviderB.csproj" />
     <ProjectReference Include="..\..\src\Dignite.Abp.Notifications\Dignite.Abp.Notifications.csproj" />
     <ProjectReference Include="..\..\src\Dignite.Abp.Notifications.Distribution\Dignite.Abp.Notifications.Distribution.csproj" />
+    <ProjectReference Include="..\..\src\Dignite.Abp.Notifications.Remote\Dignite.Abp.Notifications.Remote.csproj" />
     <ProjectReference Include="..\..\src\Dignite.Abp.Notifications.Identity\Dignite.Abp.Notifications.Identity.csproj" />
     <ProjectReference Include="..\..\src\Dignite.Abp.Notifications.SignalR\Dignite.Abp.Notifications.SignalR.csproj" />
     <ProjectReference Include="..\..\src\Dignite.Abp.Notifications.Emailing\Dignite.Abp.Notifications.Emailing.csproj" />

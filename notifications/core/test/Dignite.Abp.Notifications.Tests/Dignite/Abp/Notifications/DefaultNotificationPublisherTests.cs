@@ -65,9 +65,7 @@ public class DefaultNotificationPublisherTests
         currentTenant.Id.Returns(tenantId);
 
         return new DefaultNotificationPublisher(
-            options,
-            _distributor,
-            _backgroundJobManager,
+            new NotificationDistributionDispatcher(options, _distributor, _backgroundJobManager),
             guidGenerator,
             clock,
             currentTenant,
