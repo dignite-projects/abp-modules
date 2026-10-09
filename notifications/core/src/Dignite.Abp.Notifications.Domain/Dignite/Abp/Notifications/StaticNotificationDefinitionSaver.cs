@@ -11,6 +11,7 @@ using Volo.Abp;
 using Volo.Abp.Caching;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.DistributedLocking;
+using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.Json.SystemTextJson.Modifiers;
 using Volo.Abp.Threading;
 using Volo.Abp.Uow;
@@ -28,8 +29,10 @@ namespace Dignite.Abp.Notifications;
 /// <see cref="NotificationDefinitionStoreOptions.DeletedNotifications"/> /
 /// <see cref="NotificationDefinitionStoreOptions.DeletedNotificationGroups"/> — never a record this process merely does
 /// not define, since other applications write to the same tables.</item>
-/// <item>When anything was written, renew the common stamp, which tells every dynamic store to reload; then cache the
-/// new hash.</item>
+/// <item>When anything was written, renew the common stamp, which tells every dynamic store to reload; when definitions
+/// were inserted or changed, publish their names in a <see cref="NotificationDefinitionsChangedEto"/> (ABP's
+/// <c>DynamicPermissionDefinitionsChangedEto</c>) through the distributed event bus, inside the unit of work so that an
+/// outbox stores it with the records; then cache the new hash.</item>
 /// </list>
 /// </summary>
 /// <remarks>
@@ -61,6 +64,8 @@ public class StaticNotificationDefinitionSaver : IStaticNotificationDefinitionSa
 
     protected IUnitOfWorkManager UnitOfWorkManager { get; }
 
+    protected IDistributedEventBus DistributedEventBus { get; }
+
     public StaticNotificationDefinitionSaver(
         IStaticNotificationDefinitionStore staticStore,
         INotificationGroupDefinitionRecordRepository notificationGroupRepository,
@@ -72,7 +77,8 @@ public class StaticNotificationDefinitionSaver : IStaticNotificationDefinitionSa
         IAbpDistributedLock distributedLock,
         IOptions<NotificationDefinitionStoreOptions> storeOptions,
         ICancellationTokenProvider cancellationTokenProvider,
-        IUnitOfWorkManager unitOfWorkManager)
+        IUnitOfWorkManager unitOfWorkManager,
+        IDistributedEventBus distributedEventBus)
     {
         StaticStore = staticStore;
         NotificationGroupRepository = notificationGroupRepository;
@@ -83,6 +89,7 @@ public class StaticNotificationDefinitionSaver : IStaticNotificationDefinitionSa
         DistributedLock = distributedLock;
         CancellationTokenProvider = cancellationTokenProvider;
         UnitOfWorkManager = unitOfWorkManager;
+        DistributedEventBus = distributedEventBus;
         StoreOptions = storeOptions.Value;
         CacheOptions = cacheOptions.Value;
     }
@@ -124,12 +131,14 @@ public class StaticNotificationDefinitionSaver : IStaticNotificationDefinitionSa
                 throw new AbpException("Could not acquire distributed lock for saving static notification definitions!");
             }
 
+            var newOrChangedNotifications = new List<string>();
             using (var unitOfWork = UnitOfWorkManager.Begin(requiresNew: true, isTransactional: true))
             {
                 try
                 {
                     var hasChangesInGroups = await UpdateChangedNotificationGroupsAsync(notificationGroupRecords);
-                    var hasChangesInNotifications = await UpdateChangedNotificationsAsync(notificationRecords);
+                    var hasChangesInNotifications =
+                        await UpdateChangedNotificationsAsync(notificationRecords, newOrChangedNotifications);
 
                     if (hasChangesInGroups || hasChangesInNotifications)
                     {
@@ -155,6 +164,14 @@ public class StaticNotificationDefinitionSaver : IStaticNotificationDefinitionSa
                     }
 
                     throw;
+                }
+
+                if (newOrChangedNotifications.Any())
+                {
+                    await DistributedEventBus.PublishAsync(new NotificationDefinitionsChangedEto
+                    {
+                        Notifications = newOrChangedNotifications.Distinct().ToList()
+                    });
                 }
 
                 await unitOfWork.CompleteAsync();
@@ -227,8 +244,11 @@ public class StaticNotificationDefinitionSaver : IStaticNotificationDefinitionSa
         return newRecords.Any() || changedRecords.Any() || deletedRecords.Any();
     }
 
+    /// <param name="notificationRecords">This process's definitions, serialized.</param>
+    /// <param name="newOrChangedNotifications">Receives the names of the definitions inserted or patched.</param>
     protected virtual async Task<bool> UpdateChangedNotificationsAsync(
-        IEnumerable<NotificationDefinitionRecord> notificationRecords)
+        IEnumerable<NotificationDefinitionRecord> notificationRecords,
+        List<string> newOrChangedNotifications)
     {
         var newRecords = new List<NotificationDefinitionRecord>();
         var changedRecords = new List<NotificationDefinitionRecord>();
@@ -275,11 +295,13 @@ public class StaticNotificationDefinitionSaver : IStaticNotificationDefinitionSa
 
         if (newRecords.Any())
         {
+            newOrChangedNotifications.AddRange(newRecords.Select(x => x.Name));
             await NotificationRepository.InsertManyAsync(newRecords);
         }
 
         if (changedRecords.Any())
         {
+            newOrChangedNotifications.AddRange(changedRecords.Select(x => x.Name));
             await NotificationRepository.UpdateManyAsync(changedRecords);
         }
 

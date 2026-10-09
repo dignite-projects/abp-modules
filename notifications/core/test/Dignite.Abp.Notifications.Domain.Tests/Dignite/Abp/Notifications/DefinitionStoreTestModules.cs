@@ -55,6 +55,9 @@ public class DefinitionStoreTestModule : AbpModule
 
         context.Services.Replace(
             ServiceDescriptor.Transient<NotificationDynamicInitializer, ForegroundOnlyNotificationDynamicInitializer>());
+
+        // What NotificationDefinitionsChangedRecorder writes: the definition-changed events this application received.
+        context.Services.AddSingleton<ReceivedDefinitionChanges>();
     }
 }
 
