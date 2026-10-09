@@ -12,9 +12,12 @@ and the Angular demo app are local-dev-only, never packed.
 
 One `.slnx` — `Dignite.NotificationCenter.slnx`:
 
-- **`core/`** — `Abstractions, Notifications, Notifications.Identity,
-  Notifications.Emailing[.Identity], Notifications.SignalR, Notifications.Push[.Expo]`. Core never
-  references NotificationCenter; works standalone via `NullNotificationStore`.
+- **`core/`** — `Abstractions, Notifications, Notifications.Distribution, Notifications.Remote,
+  Notifications.Identity, Notifications.Emailing[.Identity], Notifications.SignalR, Notifications.Push[.Expo]`.
+  Core never references NotificationCenter; Core + Distribution works standalone via `NullNotificationStore`.
+  **Contracts stay in Core, implementations go to Distribution**: anything another package implements
+  (`INotificationStore`, `INotificationPermissionChecker`) or a business module uses stays in Core, so neither
+  the Notification Center's store, `Notifications.Identity` nor a business module depends on Distribution.
 - **`notification-center/`** — `Domain.Shared, Domain, Application.Contracts, Application, HttpApi,
   HttpApi.Client, EntityFrameworkCore, MongoDB, Web, Push[.Identity]`. `Web` = MVC UI (bell +
   subscriptions). `HttpApi` = explicit controllers under `/api/notification-center`
@@ -33,8 +36,10 @@ projects that flatten to the project root are the exception).
 
 | Project | Responsibility | Depends on |
 |---|---|---|
-| `Notifications.Abstractions` | Data contracts + distributed-event contract | — |
-| `Notifications` (Core) | Definitions, publish/distribute, `INotificationStore` abstraction | Abstractions |
+| `Notifications.Abstractions` | Data contracts + the two distributed-event contracts (`NotificationDeliveryRequestedEto`, `NotificationPublishRequestedEto`) | — |
+| `Notifications` (Core) | Definitions, routing, `INotificationPublisher` / `INotificationStore` / `INotificationDistributor` / `INotificationPermissionChecker` contracts, info records | Abstractions |
+| `Notifications.Distribution` | Local publisher, distributor, distribution job, delivery + publish-request handlers, `NullNotificationStore`, `NotificationSubscriptionManager` | Core |
+| `Notifications.Remote` | Remote `INotificationPublisher` (one `NotificationPublishRequestedEto` per notification); refuses to start next to Distribution | Core |
 | `Notifications.Identity` | Permission-checker impl | Core, ABP Identity |
 | `Notifications.Emailing` / `.SignalR` | Notifier plugins | Abstractions + channel SDK |
 | `Notifications.Emailing.Identity` | Email address resolver | Emailing, ABP Identity |
@@ -43,7 +48,7 @@ projects that flatten to the project root are the exception).
 | `NotificationCenter.Domain.Shared` | Constants, enums | — |
 | `NotificationCenter.Domain` | Aggregates | Domain.Shared, Core |
 | `NotificationCenter.Application.Contracts` | DTOs, service interfaces | Domain.Shared, Abstractions |
-| `NotificationCenter.Application` | AppServices | Application.Contracts, Domain |
+| `NotificationCenter.Application` | AppServices | Application.Contracts, Domain, Distribution |
 | `NotificationCenter.HttpApi` / `.HttpApi.Client` | Explicit controllers / client proxies | Application.Contracts |
 | `NotificationCenter.EntityFrameworkCore` / `.MongoDB` | `INotificationStore` impls | Domain |
 | `NotificationCenter.Push` | `IPushDeviceStore` over the `PushDevice` registry | Domain, Notifications.Push |
@@ -58,12 +63,17 @@ provider-agnostic scenarios) · `.EntityFrameworkCore.Tests` / `.MongoDB.Tests` 
 
 ## Two operation modes
 
-1. **Stateless forwarding** — `Notifications` + Notifiers, no persistence (`NullNotificationStore`),
+1. **Stateless forwarding** — `Notifications.Distribution` + Notifiers, no persistence (`NullNotificationStore`),
    explicit `UserIds` only.
 2. **Full Notification Center** — + `NotificationCenter` (+ EF Core or MongoDB): persistence,
    subscriptions, inbox, REST API.
 
 Core logic must work with `NullNotificationStore` alone.
+
+Either mode can also serve **remote publishing**: a publisher process installs `Notifications.Remote` instead of
+Distribution and sends one `NotificationPublishRequestedEto` per notification (definition checked, channels resolved
+and payload serialized in the publisher, through its outbox); the process running mode 1 or 2 handles it with
+`NotificationPublishRequestedHandler` and distributes locally. Remote and Distribution never share a process.
 
 ## Adding a feature
 
@@ -85,8 +95,8 @@ Core logic must work with `NullNotificationStore` alone.
    `DeliverAsync(NotificationDeliveryRequestedEto, CancellationToken)`.
 3. Module class `[DependsOn(typeof(AbpNotificationsAbstractionsModule), ...)]` that registers the
    channel: `Configure<NotificationNotifierOptions>(o => o.Notifiers.Add<TNotifier>(TNotifier.ChannelName))`.
-   Core's handler resolves only the notifier mapped to a delivery's channel; an unregistered notifier is
-   never called.
+   Distribution's delivery handler resolves only the notifier mapped to a delivery's channel; an unregistered
+   notifier is never called.
 
 ## Commands
 

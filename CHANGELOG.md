@@ -16,6 +16,66 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Added
+
+#### notifications
+
+- **Split deployment: publish in one process, distribute in another.** The new `Dignite.Abp.Notifications.Remote`
+  package replaces `INotificationPublisher` with `RemoteNotificationPublisher`, for a service whose inbox and channels
+  live in a separate notification service. It checks that the definition exists, serializes the payload, resolves the
+  channels with the local `INotificationChannelResolver` (the routing rules are configured where the business module
+  runs) and publishes one `NotificationPublishRequestedEto` per notification — into the publisher's outbox when a unit
+  of work is active, in the same transaction as the business change. The notification service handles it with
+  `NotificationPublishRequestedHandler`: the publisher's notification id, tenant, payload JSON and channels are kept,
+  small explicit fan-outs are distributed inline and the rest through the service's own job. Remote and Distribution
+  in one process fail the start. See "Split deployment" in the notifications README.
+- **`NotificationPublishRequestedEto`** (Abstractions, wire name `Dignite.Abp.Notifications.NotificationPublishRequested`):
+  a flat, default-System.Text.Json POCO carrying the payload as `DataJson`, the recipients and the resolved channels.
+  It implements `IMultiTenant`, so the receiving bus runs the handler in its tenant, host included. Abstractions now
+  references `Volo.Abp.MultiTenancy.Abstractions`.
+- `NotificationInfo.Channels` carries channels resolved by a publisher in another process; the distributor uses them
+  as they are and asks neither the resolver nor the definition manager for routing.
+- `NotificationStore.InsertNotificationAsync` skips a notification id it already holds, so a second run of the same
+  distribution (a redelivered publish request, a retried job) does not fail on the primary key.
+
+### Changed
+
+#### notifications
+
+- **Breaking - the distribution pipeline moved out of `Dignite.Abp.Notifications` into the new
+  `Dignite.Abp.Notifications.Distribution` package.** Every process that referenced Core registered the distribution
+  job and the delivery event handler, so two services carrying business modules shared the job queue and both received
+  every `NotificationDeliveryRequestedEto`. Core keeps what business modules use — definitions, routing, the
+  `INotificationPublisher` contract, `NotificationInfo` and the other info records, the `INotificationStore` /
+  `INotificationDistributor` / `INotificationPermissionChecker` contracts — with unchanged namespaces and package id, so
+  modules compiled against rc.22 keep working. `DefaultNotificationPublisher`, `DefaultNotificationDistributor`,
+  `NotificationDistributionJob(Args)`, `NotificationDeliveryRequestedHandler`, `NullNotificationStore`,
+  `AlwaysGrantedNotificationPermissionChecker`, `NotificationSubscriptionManager` and `NotificationDistributionOptions`
+  moved to Distribution (same `Dignite.Abp.Notifications` namespace), as did the unhosted-channel warning and the
+  stateless no-channel startup check; Core keeps the check for rules naming undefined notifications.
+  **`AbpNotificationsModule` no longer registers the delivery handler, the job or `NotificationDistributionOptions`**,
+  and depends only on Abstractions and Features. **Migrate:** a host without the Notification Center adds
+  `Dignite.Abp.Notifications.Distribution` and `[DependsOn(typeof(AbpNotificationsDistributionModule))]`; otherwise
+  `INotificationPublisher` has no implementation. `Dignite.NotificationCenter.Application` depends on Distribution, so a
+  host with the Notification Center gets it automatically. Test hosts that relied on Core's publisher add Distribution
+  too.
+- **Breaking - `NotificationInfo.Data` is now `NotificationInfo.DataJson`**, the discriminator-tagged JSON produced by
+  `INotificationDataSerializer`. The publisher serializes once, at the publish boundary — an unregistered payload type
+  now fails there, before anything is persisted or enqueued — and the string travels from there: the store writes and
+  returns it unchanged, the distributor copies it onto every delivery event, and the job args round-trip through any
+  serializer. A process that distributes no longer needs the payload's CLR type. `UserNotificationAppService`
+  hydrates `UserNotificationDto.Data` through the tolerant `INotificationDataSerializer.Deserialize`, so the REST and C#
+  client contracts are unchanged. `DefaultNotificationDistributor` and `NotificationStore` no longer take the
+  serializer, and `NotificationStore.DeserializeDurableData` is gone. `DefaultNotificationPublisher` takes the new
+  `NotificationDistributionDispatcher` (the inline-or-job decision it now shares with the remote-publish handler) and
+  the serializer.
+- **Breaking - the distribution job is named `Dignite.Abp.Notifications.Distribute`** (`[BackgroundJobName]`) instead of
+  the args type's full name, so its queue is a stable contract of Distribution. Jobs still queued under the old name are
+  not picked up after the upgrade; drain the queue first.
+- `NullNotificationStore` and `AlwaysGrantedNotificationPermissionChecker` register with `TryRegister`: the packages
+  that replace them depend on Core, not Distribution, so module order no longer guarantees that the replacement is
+  registered last.
+
 ## [10.0.0-rc.22] - 2026-10-09
 
 ### Added
