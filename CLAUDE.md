@@ -8,9 +8,15 @@ and in other repositories depend on.
 
 These are the things most likely to be broken by an otherwise reasonable-looking change:
 
-1. **PackageIds and root namespaces never change.** Every package keeps the ID it has always had;
-   living in a subdirectory changed nothing for consumers (PackageId follows AssemblyName, not the
-   folder). Never rename a package or root namespace to "match" the layout.
+1. **PackageIds and root namespaces never change to match the layout.** Every package keeps the ID it
+   has always had; living in a subdirectory changed nothing for consumers (PackageId follows
+   AssemblyName, not the folder). Never rename a package or root namespace to "match" the folders.
+   The one rename on record is `10.0.0-rc.24`, which moved the notifications packages to ABP's own
+   naming (`.Abstractions` for contracts, the unsuffixed id for the default implementation, `.Client`
+   for the remote publisher, `.Domain.Shared` / `.Domain` / `.EntityFrameworkCore` for the definition
+   store) while the module was still pre-release, with a Migrate section in the CHANGELOG. Adopting an
+   ABP convention before the first stable release is the only reason a rename has ever been accepted;
+   it is not a precedent for renaming after a layout change.
 
 2. **The three modules never reference each other.** `file-storing/`, `notifications/`, and
    `flex-fields/` share this repository for development and release only. A `ProjectReference`

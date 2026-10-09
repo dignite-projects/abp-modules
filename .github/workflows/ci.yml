@@ -128,6 +128,9 @@ jobs:
       - name: Run Notifications (core) tests
         run: dotnet test notifications/core/test/Dignite.Abp.Notifications.Tests/Dignite.Abp.Notifications.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/notifications
 
+      - name: Run Notifications (Domain) tests
+        run: dotnet test notifications/core/test/Dignite.Abp.Notifications.Domain.Tests/Dignite.Abp.Notifications.Domain.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/notifications
+
       - name: Run NotificationCenter (EF Core) tests
         run: dotnet test notifications/notification-center/test/Dignite.NotificationCenter.EntityFrameworkCore.Tests/Dignite.NotificationCenter.EntityFrameworkCore.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/notifications
 
