@@ -10,7 +10,7 @@ using Volo.Abp.Uow;
 namespace Dignite.Abp.Notifications;
 
 /// <summary>
-/// Distributes a notification published in another process (by <c>Dignite.Abp.Notifications.Remote</c>) with this
+/// Distributes a notification published in another process (by <c>Dignite.Abp.Notifications.Client</c>) with this
 /// process's distributor, exactly as a local publish would: an explicit fan-out of at most
 /// <see cref="NotificationDistributionOptions.DirectDistributionUserThreshold"/> users inline, anything else through this
 /// process's own <see cref="NotificationDistributionJob"/>.

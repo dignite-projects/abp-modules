@@ -20,8 +20,9 @@ namespace Dignite.Abp.Notifications;
 /// <remarks>
 /// A business module depends on <see cref="AbpNotificationsAbstractionsModule"/>, never on this module: depending on it
 /// would bring the distributor, the job and the event handlers into every process that hosts the business module. A
-/// publisher whose inbox lives in another process installs <c>Dignite.Abp.Notifications.Remote</c> instead; the two
-/// cannot share a process.
+/// publisher whose inbox lives in another process installs <c>Dignite.Abp.Notifications.Client</c> instead. The two do not
+/// exclude each other: installed together, this package's <see cref="DefaultNotificationPublisher"/> wins in either module
+/// order and the process distributes its notifications itself.
 /// </remarks>
 [DependsOn(
     typeof(AbpNotificationsAbstractionsModule),

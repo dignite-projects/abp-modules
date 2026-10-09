@@ -8,7 +8,7 @@ using Volo.Abp.Guids;
 using Volo.Abp.MultiTenancy;
 using Volo.Abp.Timing;
 
-namespace Dignite.Abp.Notifications.Remote;
+namespace Dignite.Abp.Notifications.Client;
 
 /// <summary>
 /// Publishes a notification for another process to distribute. What only this process knows is decided here; the rest
@@ -26,7 +26,12 @@ namespace Dignite.Abp.Notifications.Remote;
 /// Recipients are neither deduplicated nor counted here: one notification is always one event, and the receiver decides
 /// between inline distribution and a background job.
 /// </summary>
-[Dependency(ReplaceServices = true)]
+/// <remarks>
+/// Registered with <c>TryRegister</c>: the local <c>DefaultNotificationPublisher</c> of <c>Dignite.Abp.Notifications</c>,
+/// registered plainly, wins over it in either module order, and it wins over <see cref="NullNotificationPublisher"/>, the
+/// fallback registered only when no module registered a publisher.
+/// </remarks>
+[Dependency(TryRegister = true)]
 [ExposeServices(typeof(INotificationPublisher), typeof(RemoteNotificationPublisher))]
 public class RemoteNotificationPublisher : INotificationPublisher, ITransientDependency
 {

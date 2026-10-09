@@ -119,8 +119,8 @@ namespace Dignite.NotificationCenter.Web.Host;
     typeof(AbpEntityFrameworkCoreSqliteModule),
 
     // Dignite NotificationCenter + notifiers + MVC UI (this repo). This host keeps the inbox and the channels, so it
-    // distributes in-process (Dignite.Abp.Notifications); a publisher whose inbox is elsewhere would install Remote
-    // instead.
+    // distributes in-process (Dignite.Abp.Notifications); a publisher whose inbox is elsewhere would install
+    // Dignite.Abp.Notifications.Client instead.
     typeof(AbpNotificationsModule),
     typeof(AbpNotificationsSignalRModule),
     typeof(AbpNotificationsIdentityModule),

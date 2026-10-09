@@ -55,7 +55,7 @@
     <Project Path="notifications/core/src/Dignite.Abp.Notifications.Emailing.Identity/Dignite.Abp.Notifications.Emailing.Identity.csproj" />
     <Project Path="notifications/core/src/Dignite.Abp.Notifications.Push/Dignite.Abp.Notifications.Push.csproj" />
     <Project Path="notifications/core/src/Dignite.Abp.Notifications.Push.Expo/Dignite.Abp.Notifications.Push.Expo.csproj" />
-    <Project Path="notifications/core/src/Dignite.Abp.Notifications.Remote/Dignite.Abp.Notifications.Remote.csproj" />
+    <Project Path="notifications/core/src/Dignite.Abp.Notifications.Client/Dignite.Abp.Notifications.Client.csproj" />
     <Project Path="notifications/core/src/Dignite.Abp.Notifications.Identity/Dignite.Abp.Notifications.Identity.csproj" />
     <Project Path="notifications/core/src/Dignite.Abp.Notifications.SignalR/Dignite.Abp.Notifications.SignalR.csproj" />
     <Project Path="notifications/core/src/Dignite.Abp.Notifications/Dignite.Abp.Notifications.csproj" />

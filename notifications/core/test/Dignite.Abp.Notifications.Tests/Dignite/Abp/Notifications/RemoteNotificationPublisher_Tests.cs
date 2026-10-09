@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Dignite.Abp.Notifications.Remote;
+using Dignite.Abp.Notifications.Client;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -208,12 +208,12 @@ public class RemoteNotificationPublisherOutbox_Tests : AbpIntegratedTest<RemoteN
     }
 
     /// <summary>
-    /// A publisher service: Core + Remote with a business module's definition and routing, an outbox, and a local
+    /// A publisher service: Abstractions + Client with a business module's definition and routing, an outbox, and a local
     /// consumer of the publish request that only exists to observe a direct send. The test assembly is not
     /// conventionally registered, so nothing else from it leaks in.
     /// </summary>
     [DependsOn(
-        typeof(AbpNotificationsRemoteModule),
+        typeof(AbpNotificationsClientModule),
         typeof(AbpAutofacModule),
         typeof(AbpTestBaseModule))]
     public class RemotePublisherTestModule : AbpModule

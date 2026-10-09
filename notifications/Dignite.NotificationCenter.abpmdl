@@ -41,8 +41,8 @@
       "path": "core/src/Dignite.Abp.Notifications.Push.Expo/Dignite.Abp.Notifications.Push.Expo.abppkg",
       "folder": "core/src"
     },
-    "Dignite.Abp.Notifications.Remote": {
-      "path": "core/src/Dignite.Abp.Notifications.Remote/Dignite.Abp.Notifications.Remote.abppkg",
+    "Dignite.Abp.Notifications.Client": {
+      "path": "core/src/Dignite.Abp.Notifications.Client/Dignite.Abp.Notifications.Client.abppkg",
       "folder": "core/src"
     },
     "Dignite.Abp.Notifications.SignalR": {
