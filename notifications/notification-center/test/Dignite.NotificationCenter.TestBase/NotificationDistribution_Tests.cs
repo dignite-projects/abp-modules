@@ -28,7 +28,7 @@ namespace Dignite.NotificationCenter;
 public abstract class NotificationDistribution_Tests<TStartupModule> : NotificationCenterTestBase<TStartupModule>
     where TStartupModule : IAbpModule
 {
-    private static NotificationInfo NewNotification(
+    private NotificationInfo NewNotification(
         Guid id,
         string? entityTypeName = null,
         string? entityId = null)
@@ -37,7 +37,7 @@ public abstract class NotificationDistribution_Tests<TStartupModule> : Notificat
         {
             Id = id,
             NotificationName = "order.shipped",
-            Data = new MessageNotificationData("hi"),
+            DataJson = SerializeData(new MessageNotificationData("hi")),
             EntityTypeName = entityTypeName,
             EntityId = entityId,
             Severity = NotificationSeverity.Info,
@@ -54,7 +54,6 @@ public abstract class NotificationDistribution_Tests<TStartupModule> : Notificat
             GetRequiredService<INotificationDefinitionManager>(),
             GetRequiredService<INotificationChannelResolver>(),
             eventBus,
-            GetRequiredService<INotificationDataSerializer>(),
             GetRequiredService<ICurrentTenant>(),
             GetRequiredService<ILogger<DefaultNotificationDistributor>>(),
             Options.Create(options ?? new NotificationDistributionOptions()));
@@ -392,13 +391,12 @@ public abstract class NotificationDistribution_Tests<TStartupModule> : Notificat
         var distributor = CreateDistributor(eventBus, options);
         var backgroundJobManager = Substitute.For<IBackgroundJobManager>();
         var publisher = new DefaultNotificationPublisher(
-            Options.Create(options),
-            distributor,
-            backgroundJobManager,
+            new NotificationDistributionDispatcher(Options.Create(options), distributor, backgroundJobManager),
             GetRequiredService<IGuidGenerator>(),
             GetRequiredService<IClock>(),
             GetRequiredService<ICurrentTenant>(),
-            GetRequiredService<INotificationDefinitionManager>());
+            GetRequiredService<INotificationDefinitionManager>(),
+            GetRequiredService<INotificationDataSerializer>());
         var distinctUsers = Enumerable.Range(0, 2_001).Select(_ => Guid.NewGuid()).ToArray();
         var users = distinctUsers
             .Concat(new[] { distinctUsers[0], distinctUsers[255], distinctUsers[256], distinctUsers[^1] })

@@ -65,13 +65,12 @@ public class DefaultNotificationPublisherTests
         currentTenant.Id.Returns(tenantId);
 
         return new DefaultNotificationPublisher(
-            options,
-            _distributor,
-            _backgroundJobManager,
+            new NotificationDistributionDispatcher(options, _distributor, _backgroundJobManager),
             guidGenerator,
             clock,
             currentTenant,
-            _definitionManager);
+            _definitionManager,
+            NotificationTestObjects.CreateSerializer());
     }
 
     [Fact]
@@ -172,6 +171,35 @@ public class DefaultNotificationPublisherTests
     }
 
     [Fact]
+    public async Task Serializes_the_payload_once_at_the_publish_boundary()
+    {
+        var publisher = CreatePublisher(threshold: 3);
+
+        await publisher.PublishAsync("test", new MessageNotificationData("hi"), userIds: new[] { Guid.NewGuid() });
+
+        // From here on the payload is a string: the store writes it, the delivery event copies it, a job carries it.
+        await _distributor.Received(1).DistributeAsync(
+            Arg.Is<NotificationInfo>(n => n.DataJson == "{\"type\":\"Dignite.Message\",\"message\":\"hi\"}"),
+            Arg.Any<Guid[]?>(),
+            Arg.Any<Guid[]?>());
+    }
+
+    [Fact]
+    public async Task An_unregistered_payload_type_fails_at_publish_before_any_side_effect()
+    {
+        var publisher = CreatePublisher(threshold: 3);
+
+        await Should.ThrowAsync<System.Text.Json.JsonException>(() => publisher.PublishAsync(
+            "test",
+            new OrderShippedNotificationData { OrderNumber = "SO-1" },
+            userIds: new[] { Guid.NewGuid() }));
+
+        await _distributor.DidNotReceiveWithAnyArgs().DistributeAsync(default!, default, default);
+        await _backgroundJobManager.DidNotReceiveWithAnyArgs()
+            .EnqueueAsync(Arg.Any<NotificationDistributionJobArgs>());
+    }
+
+    [Fact]
     public async Task Enqueues_a_single_background_job_when_above_threshold()
     {
         var tenantId = Guid.NewGuid();
@@ -247,7 +275,6 @@ public class DefaultNotificationPublisherTests
                     definitionManager,
                     NotificationTestObjects.CreateChannelResolver("Test"),
                     EventBus,
-                    NotificationTestObjects.CreateSerializer(),
                     CurrentTenant,
                     NullLogger<DefaultNotificationDistributor>.Instance,
                     Options.Create(new NotificationDistributionOptions())),

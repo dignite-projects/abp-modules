@@ -35,7 +35,7 @@ public abstract class UserNotificationAppService_Tests<TStartupModule> : Notific
             {
                 Id = notificationId,
                 NotificationName = notificationName,
-                Data = data,
+                DataJson = SerializeData(data),
                 Severity = NotificationSeverity.Info,
                 CreationTime = DateTime.UtcNow
             });

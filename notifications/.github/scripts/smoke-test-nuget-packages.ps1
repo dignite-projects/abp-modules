@@ -12,9 +12,11 @@ $artifacts = (Resolve-Path -LiteralPath $ArtifactsPath).Path
 $packageIds = @(
     'Dignite.Abp.Notifications.Abstractions',
     'Dignite.Abp.Notifications',
+    'Dignite.Abp.Notifications.Distribution',
     'Dignite.Abp.Notifications.Emailing',
     'Dignite.Abp.Notifications.Emailing.Identity',
     'Dignite.Abp.Notifications.Identity',
+    'Dignite.Abp.Notifications.Remote',
     'Dignite.Abp.Notifications.SignalR',
     'Dignite.NotificationCenter.Domain.Shared',
     'Dignite.NotificationCenter.Domain',
@@ -71,9 +73,11 @@ public static class PackageSurface
     [
         typeof(Dignite.Abp.Notifications.AbpNotificationsAbstractionsModule),
         typeof(Dignite.Abp.Notifications.AbpNotificationsModule),
+        typeof(Dignite.Abp.Notifications.AbpNotificationsDistributionModule),
         typeof(Dignite.Abp.Notifications.Emailing.AbpNotificationsEmailingModule),
         typeof(Dignite.Abp.Notifications.Emailing.Identity.AbpNotificationsEmailingIdentityModule),
         typeof(Dignite.Abp.Notifications.Identity.AbpNotificationsIdentityModule),
+        typeof(Dignite.Abp.Notifications.Remote.AbpNotificationsRemoteModule),
         typeof(Dignite.Abp.Notifications.SignalR.AbpNotificationsSignalRModule),
         typeof(Dignite.NotificationCenter.NotificationCenterDomainSharedModule),
         typeof(Dignite.NotificationCenter.NotificationCenterDomainModule),

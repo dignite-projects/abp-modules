@@ -13,6 +13,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Dignite.NotificationCenter.Application.Contracts\Dignite.NotificationCenter.Application.Contracts.csproj" />
     <ProjectReference Include="..\Dignite.NotificationCenter.Domain\Dignite.NotificationCenter.Domain.csproj" />
+    <!-- NotificationSubscriptionManager lives with the distribution pipeline; the process that serves the inbox
+         is the one that distributes, so installing the application layer brings the pipeline with it. -->
+    <ProjectReference Include="..\..\..\core\src\Dignite.Abp.Notifications.Distribution\Dignite.Abp.Notifications.Distribution.csproj" />
   </ItemGroup>
 
 </Project>

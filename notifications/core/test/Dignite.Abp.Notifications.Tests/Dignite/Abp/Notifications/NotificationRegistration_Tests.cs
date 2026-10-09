@@ -556,7 +556,7 @@ public class ValidRegistrationsStartupModule : AbpModule
     }
 }
 
-[DependsOn(typeof(AbpNotificationsModule))]
+[DependsOn(typeof(AbpNotificationsDistributionModule))]
 public class InvalidDistributionBatchStartupModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)

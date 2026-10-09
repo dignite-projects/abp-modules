@@ -16,10 +16,11 @@ namespace Dignite.NotificationCenter;
 
 /// <summary>
 /// EF-backed implementation of the core <see cref="INotificationStore"/>. Replaces the framework's
-/// <c>NullNotificationStore</c> when this module is installed. Both write and read go through the single core
-/// <see cref="INotificationDataSerializer"/> (System.Text.Json + stable discriminator) — no Newtonsoft, no
-/// AssemblyQualifiedName. Durable reads use its additive tolerant-reader capability so one historical payload
-/// cannot fail a whole inbox page. Queries use proper joins/indexes (fixes roadmap problem D).
+/// <c>NullNotificationStore</c> when this module is installed. The payload is stored exactly as it was published —
+/// the discriminator-tagged JSON of <see cref="NotificationInfo.DataJson"/>, produced once by
+/// <see cref="INotificationDataSerializer"/> at the publish boundary — and read back the same way, so the store
+/// never needs to know a payload's CLR type; readers hydrate it through the serializer's tolerant read.
+/// Queries use proper joins/indexes (fixes roadmap problem D).
 /// </summary>
 [Dependency(ReplaceServices = true)]
 [ExposeServices(typeof(INotificationStore))]
@@ -30,8 +31,6 @@ public class NotificationStore : INotificationStore, ITransientDependency
     protected IRepository<UserNotification, Guid> UserNotificationRepository { get; }
 
     protected IRepository<NotificationSubscription, Guid> SubscriptionRepository { get; }
-
-    protected INotificationDataSerializer DataSerializer { get; }
 
     protected IGuidGenerator GuidGenerator { get; }
 
@@ -47,7 +46,6 @@ public class NotificationStore : INotificationStore, ITransientDependency
         IRepository<Notification, Guid> notificationRepository,
         IRepository<UserNotification, Guid> userNotificationRepository,
         IRepository<NotificationSubscription, Guid> subscriptionRepository,
-        INotificationDataSerializer dataSerializer,
         IGuidGenerator guidGenerator,
         IClock clock,
         ICurrentTenant currentTenant,
@@ -57,7 +55,6 @@ public class NotificationStore : INotificationStore, ITransientDependency
         NotificationRepository = notificationRepository;
         UserNotificationRepository = userNotificationRepository;
         SubscriptionRepository = subscriptionRepository;
-        DataSerializer = dataSerializer;
         GuidGenerator = guidGenerator;
         Clock = clock;
         CurrentTenant = currentTenant;
@@ -69,10 +66,18 @@ public class NotificationStore : INotificationStore, ITransientDependency
         NotificationInfo notification,
         CancellationToken cancellationToken = default)
     {
+        // A notification arrives with the id its publisher gave it, so seeing it again means the same distribution ran
+        // twice (a redelivered publish request, a retried job). The event inbox deduplicates first; this check keeps
+        // the second run from failing on the primary key. Inbox rows have the same guard in InsertUserNotificationsAsync.
+        if (await NotificationExistsAsync(notification.Id, cancellationToken))
+        {
+            return;
+        }
+
         var entity = new Notification(
             notification.Id,
             notification.NotificationName,
-            DataSerializer.Serialize(notification.Data),
+            notification.DataJson,
             notification.EntityTypeName,
             notification.EntityId,
             notification.Severity,
@@ -80,6 +85,12 @@ public class NotificationStore : INotificationStore, ITransientDependency
             notification.TenantId ?? CurrentTenant.Id);
 
         await NotificationRepository.InsertAsync(entity, cancellationToken: cancellationToken);
+    }
+
+    protected virtual async Task<bool> NotificationExistsAsync(Guid notificationId, CancellationToken cancellationToken)
+    {
+        var query = await NotificationRepository.GetQueryableAsync();
+        return await AsyncExecuter.AnyAsync(query.Where(n => n.Id == notificationId), cancellationToken);
     }
 
     public virtual async Task InsertUserNotificationAsync(
@@ -470,7 +481,7 @@ public class NotificationStore : INotificationStore, ITransientDependency
         {
             Id = n.Id,
             NotificationName = n.NotificationName,
-            Data = DeserializeDurableData(n.Data),
+            DataJson = n.Data,
             EntityTypeName = n.EntityTypeName,
             EntityId = n.EntityId,
             Severity = n.Severity,
@@ -491,11 +502,6 @@ public class NotificationStore : INotificationStore, ITransientDependency
             CreationTime = un.CreationTime,
             TenantId = un.TenantId
         };
-    }
-
-    protected virtual NotificationData? DeserializeDurableData(string? json)
-    {
-        return DataSerializer.Deserialize(json);
     }
 
     protected virtual NotificationSubscriptionInfo MapToSubscriptionInfo(NotificationSubscription s)

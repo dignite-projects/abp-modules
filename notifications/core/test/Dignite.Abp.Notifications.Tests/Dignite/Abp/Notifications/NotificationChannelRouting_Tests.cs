@@ -311,19 +311,22 @@ public class NotificationChannelRouting_Tests
             definitionManager,
             resolver,
             eventBus,
-            NotificationTestObjects.CreateSerializer(),
             new TestCurrentTenant(),
             NullLogger<DefaultNotificationDistributor>.Instance,
             Options.Create(distributionOptions ?? new NotificationDistributionOptions()));
     }
 
-    private static NotificationDefinitionStartupService CreateStartup(
+    /// <summary>
+    /// The startup checks of a host that distributes: Core's routing-name check followed by Distribution's hosted-channel
+    /// and stateless-mode checks, in the order the hosted services run.
+    /// </summary>
+    private static StartupChecks CreateStartup(
         string[] definitionNames,
         NotificationRoutingOptions routing,
         string[] hostedChannels,
         INotificationStore? store = null,
         INotificationChannelResolver? resolver = null,
-        ILogger<NotificationDefinitionStartupService>? logger = null)
+        ILogger<NotificationDistributionStartupService>? logger = null)
     {
         var definitionManager = Substitute.For<INotificationDefinitionManager>();
         definitionManager.GetAll().Returns(definitionNames.Select(Definition).ToList());
@@ -339,14 +342,36 @@ public class NotificationChannelRouting_Tests
         services.AddSingleton(resolver ?? CreateResolver(routing));
         var provider = services.BuildServiceProvider();
 
-        return new NotificationDefinitionStartupService(
-            definitionManager,
-            Options.Create(new NotificationDefinitionRegistration()),
-            NotificationTestObjects.CreateRegistry(),
-            Options.Create(routing),
-            Options.Create(notifierOptions),
-            provider,
-            logger ?? NullLogger<NotificationDefinitionStartupService>.Instance);
+        return new StartupChecks(
+            new NotificationDefinitionStartupService(
+                definitionManager,
+                Options.Create(new NotificationDefinitionRegistration()),
+                NotificationTestObjects.CreateRegistry(),
+                Options.Create(routing)),
+            new NotificationDistributionStartupService(
+                definitionManager,
+                Options.Create(routing),
+                Options.Create(notifierOptions),
+                provider,
+                logger ?? NullLogger<NotificationDistributionStartupService>.Instance));
+    }
+
+    private sealed class StartupChecks
+    {
+        private readonly NotificationDefinitionStartupService _core;
+        private readonly NotificationDistributionStartupService _distribution;
+
+        public StartupChecks(NotificationDefinitionStartupService core, NotificationDistributionStartupService distribution)
+        {
+            _core = core;
+            _distribution = distribution;
+        }
+
+        public async Task StartingAsync(CancellationToken cancellationToken)
+        {
+            await _core.StartingAsync(cancellationToken);
+            await _distribution.StartingAsync(cancellationToken);
+        }
     }
 
     private sealed class FakeNotifier : INotificationNotifier
@@ -359,7 +384,7 @@ public class NotificationChannelRouting_Tests
         }
     }
 
-    private sealed class CapturingLogger : ILogger<NotificationDefinitionStartupService>
+    private sealed class CapturingLogger : ILogger<NotificationDistributionStartupService>
     {
         public List<(LogLevel Level, string Message)> Entries { get; } = new();
 

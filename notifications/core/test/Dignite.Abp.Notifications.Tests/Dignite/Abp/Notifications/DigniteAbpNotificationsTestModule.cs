@@ -11,7 +11,7 @@ using Dignite.Abp.Notifications.SignalR;
 namespace Dignite.Abp.Notifications;
 
 [DependsOn(
-    typeof(AbpNotificationsModule),
+    typeof(AbpNotificationsDistributionModule),
     typeof(AbpAutofacModule),
     typeof(AbpTestBaseModule)
     )]

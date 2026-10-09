@@ -1,6 +1,6 @@
 ---
 name: notifications-conventions
-description: How the Dignite.Abp.Notifications module applies ABP — the four BasicAggregateRoot aggregates with no custom repository interfaces, INotificationStore as the query seam, hand-written MapToDto (no Mapperly/AutoMapper), explicit HttpApi controllers, the two-layer authorization model with INotificationPermissionChecker, the NotificationDeliveryRequestedEto distributed event, the distribution background job, tenant handling, and read-time localization. Read when writing or reviewing code under notifications/ and the generic abp-* skill doesn't say what THIS module does.
+description: How the Dignite.Abp.Notifications module applies ABP — contracts in Core and implementations in Distribution (Remote for publishers that do not host the inbox), the payload carried as DataJson from the publish boundary, the four BasicAggregateRoot aggregates with no custom repository interfaces, INotificationStore as the query seam, hand-written MapToDto (no Mapperly/AutoMapper), explicit HttpApi controllers, the two-layer authorization model with INotificationPermissionChecker, the NotificationDeliveryRequestedEto and NotificationPublishRequestedEto distributed events, the distribution background job, tenant handling, and read-time localization. Read when writing or reviewing code under notifications/ and the generic abp-* skill doesn't say what THIS module does.
 ---
 
 # notifications — Module Conventions
@@ -14,6 +14,42 @@ description: How the Dignite.Abp.Notifications module applies ABP — the four B
 > Where this file and a generic `abp-*` skill disagree, **this file wins for code under `notifications/`**.
 > Note this module deliberately differs from `file-storing` on repositories, object mapping, controllers, and
 > distributed-event posture — don't cross-apply the other module's conventions.
+
+## Contracts stay in Core, implementations go to Distribution
+
+`Dignite.Abp.Notifications` (Core) holds what a business module needs and what other packages implement:
+definitions, routing (`NotificationRoutingOptions`, `INotificationChannelResolver`), the `INotificationPublisher`,
+`INotificationStore`, `INotificationDistributor` and `INotificationPermissionChecker` contracts, and the info records
+(`NotificationInfo`, …). `Dignite.Abp.Notifications.Distribution` holds the implementations of the in-process pipeline:
+`DefaultNotificationPublisher`, `DefaultNotificationDistributor`, `NotificationDistributionDispatcher`,
+`NotificationDistributionJob(Args)`, the two event handlers, `NullNotificationStore`,
+`AlwaysGrantedNotificationPermissionChecker`, `NotificationSubscriptionManager`, `NotificationDistributionOptions`.
+`Dignite.Abp.Notifications.Remote` holds the other `INotificationPublisher`.
+
+- **Placing a new type**: a contract another package implements, or a type a business module touches, goes to Core.
+  Anything that runs the pipeline goes to Distribution. If putting it in Distribution would make NotificationCenter.Domain,
+  `Notifications.Identity` or a business module reference Distribution, it is a contract — move it to Core.
+- **Never move a type a business module references** (`AbpNotificationsModule`, `INotificationPublisher`, the
+  definition API, `NotificationRoutingOptions`, `NotificationEntityIdentifier`, the payload types in Abstractions…): the
+  namespace and the assembly are a binary contract — modules compiled against an older release run on a newer one.
+  Moved implementation types keep the `Dignite.Abp.Notifications` namespace; only the Remote package has its own.
+- **Defaults that another package replaces register with `[Dependency(TryRegister = true)]`** (`NullNotificationStore`,
+  `AlwaysGrantedNotificationPermissionChecker`). The replacing package depends on Core, not Distribution, so module
+  order does not put the replacement last; a plain registration of the default would silently win.
+- **Startup checks follow the same split**: checks that hold for every process (rules naming undefined notifications)
+  run in Core; checks about what this process delivers (unhosted channels, stateless mode) run in Distribution.
+- **Remote and Distribution never share a process.** Remote's module fails the start when an `INotificationDistributor`
+  is registered — checked against the contract, so neither package references the other.
+
+## The payload travels as `DataJson` from the publish boundary
+
+`NotificationInfo` carries the payload as `DataJson` — the discriminator-tagged string `INotificationDataSerializer`
+produces — never as a live `NotificationData`. The publisher (local or remote) serializes **once**; from there the store
+writes the string, the distributor copies it onto every `NotificationDeliveryRequestedEto`, the job args and
+`NotificationPublishRequestedEto` carry it, and nothing in between needs the payload's CLR type. Only a reader that
+wants the typed view deserializes, through the tolerant `INotificationDataSerializer.Deserialize` (the inbox app
+service in `MapToDto`, a notifier through `NotificationPayload.FromRequest`). Don't re-serialize on the way through, and
+don't give the store or the distributor a serializer.
 
 ## The four aggregates deviate from the generic template — on purpose
 
@@ -54,7 +90,8 @@ multiple call sites.
 public class NotificationStore : INotificationStore, ITransientDependency { }
 ```
 
-This replaces Core's `NullNotificationStore` once `NotificationCenter` is installed. `NullNotificationStore`
+This replaces Distribution's `NullNotificationStore` once `NotificationCenter` is installed (the default is
+registered with `TryRegister`, so module order does not matter). `NullNotificationStore`
 must implement the **complete** contract without persistence — including keyset paging and bounded
 multi-insert.
 
@@ -108,7 +145,7 @@ because background-job distribution runs without a request culture.
 2. **`INotificationPermissionChecker`** (in Core, `Dignite.Abp.Notifications`) is a separate, pluggable
    abstraction that gates whether a *given user* is allowed to **receive** a given notification definition —
    checked during distribution (`NotificationDefinitionManager` / `DefaultNotificationDistributor`), not on an
-   AppService call. The default is `AlwaysGrantedNotificationPermissionChecker`; `Notifications.Identity`
+   AppService call. The default is Distribution's `AlwaysGrantedNotificationPermissionChecker`; `Notifications.Identity`
    supplies a real implementation backed by ABP Identity/Authorization.
 
 When adding a new notification type that should be permission-gated, wire it through
@@ -127,14 +164,24 @@ treat an explicit `userIds` array as a bypass (`notifications-invariants` §7).
 
 ### The distributed event: `NotificationDeliveryRequestedEto`
 
-Wire name `Dignite.Abp.Notifications.NotificationDeliveryRequested`. Core's internal handler adapts transport
+Wire name `Dignite.Abp.Notifications.NotificationDeliveryRequested`. Distribution's internal handler adapts transport
 to the canonical `INotificationNotifier.DeliverAsync` contract; **channel plugins do not implement distributed
-event handlers**. Distributed events are how Core reaches every Notifier.
+event handlers**. Distributed events are how the distributor reaches every Notifier. Only a process with Distribution
+subscribes to it.
 
 Before touching it, read `notifications-invariants` §1 (serialization) and §4 (single-recipient and
 cancellation guarantees). In particular: ABP serializes ETOs with plain System.Text.Json and *no* app-level
 options — the transactional outbox/inbox included — so a polymorphic/abstract member on an ETO is lossy on
 write and throws on read. Keep every ETO a flat, default-STJ-round-trippable POCO.
+
+### The distributed event: `NotificationPublishRequestedEto`
+
+Wire name `Dignite.Abp.Notifications.NotificationPublishRequested`. Sent by `RemoteNotificationPublisher` (one per
+notification, through the publisher's outbox) and handled by Distribution's `NotificationPublishRequestedHandler`,
+which goes through the same `NotificationDistributionDispatcher` as the local publisher. Same wire discipline as the
+delivery event (flat POCO, `DataJson`). It implements `IMultiTenant` so the handler runs in its tenant, host included,
+and it carries the channels the publisher resolved (`NotificationInfo.Channels`) — routing is read where the business
+module's rules are configured, never re-resolved by the receiver.
 
 ### Features gate notification *definitions*, not just endpoints
 
@@ -144,9 +191,13 @@ Same `PermissionName`/`FeatureName` pair as "Authorization — two layers" above
 
 ### The background job: `NotificationDistributionJob`
 
-`INotificationPublisher` enqueues it when the explicit recipient count exceeds the (currently hardcoded)
-direct-distribution threshold, instead of distributing inline. A large explicit fan-out goes to a **single**
+`NotificationDistributionDispatcher` — shared by `DefaultNotificationPublisher` and `NotificationPublishRequestedHandler` —
+enqueues it when there are no explicit recipients or their distinct count exceeds
+`NotificationDistributionOptions.DirectDistributionUserThreshold`, instead of distributing inline. A large explicit fan-out goes to a **single**
 background job carrying the caller's list; the job's distributor batches internally (`RecipientBatchSize`).
+
+The job name is fixed (`[BackgroundJobName("Dignite.Abp.Notifications.Distribute")]`), so its queue does not follow the
+CLR type, and only a process with Distribution registers it.
 
 **Preserve the notification tenant on every job** (`notifications-invariants` §8). Don't reintroduce a
 prepared-notification/eligibility-mode multi-job split; it was removed as over-engineering.
@@ -176,3 +227,7 @@ See "Display text is localized at read time" above — the same rule applies to 
 | A new custom repository interface per aggregate | A new method on `INotificationStore` |
 | Mapperly/AutoMapper in the AppService | The hand-written `protected virtual MapToDto(...)` |
 | A singleton manager injecting `INotificationStore` | `ITransientDependency` — `notifications-invariants` §2 |
+| A contract (or a type a business module uses) in Distribution | Core; only implementations go to Distribution |
+| A plain registration for a default another package replaces | `[Dependency(TryRegister = true)]` |
+| `NotificationData` on `NotificationInfo`, or re-serializing the payload in the store/distributor | `DataJson`, serialized once by the publisher |
+| Resolving channels again in the process that receives a remote publish | Use `NotificationInfo.Channels` as sent |

@@ -16,6 +16,9 @@ with **MVC** and **Angular** UI libraries.
 - **Two operation modes, one framework.** Run Core-only with process-local delivery state and no inbox,
   or install Notification Center for durable delivery state, persistent inbox, subscriptions,
   read/unread state, REST API, and operator retry.
+- **Split deployment.** A service that only publishes can hand its notifications to another process that hosts
+  the inbox and the channels: one `NotificationPublishRequestedEto` per notification, through the publisher's
+  outbox (see [Split deployment](#split-deployment)).
 - **Dual persistence.** EF Core and MongoDB implement the same inbox and delivery-state abstractions.
 - **Contract-driven & headless.** Every payload carries a stable type discriminator, so any
   consumer — .NET, JS/TS, or the shipped Angular library — can deserialize and render it. The
@@ -45,8 +48,10 @@ the first stable version exists the initial pre-release is necessarily also expo
 
 | Package | Purpose |
 |---|---|
-| `Dignite.Abp.Notifications.Abstractions` | Shared contracts: `NotificationData`, `NotificationDeliveryRequestedEto`, `[NotificationDataType]`, `INotificationDefinitionProvider`, `INotificationNotifier`. Notifiers and remote clients depend on **only** this. |
-| `Dignite.Abp.Notifications` | The core: definitions, the publish/distribute pipeline, the `INotificationStore` abstraction + `NullNotificationStore`. |
+| `Dignite.Abp.Notifications.Abstractions` | Shared contracts: `NotificationData`, `NotificationDeliveryRequestedEto`, `NotificationPublishRequestedEto`, `[NotificationDataType]`, `INotificationDefinitionProvider`, `INotificationNotifier`. Notifiers and remote clients depend on **only** this. |
+| `Dignite.Abp.Notifications` | The core business modules reference: definitions, routing (`NotificationRoutingOptions`, `INotificationChannelResolver`), the `INotificationPublisher` contract, and the `INotificationStore` / `INotificationDistributor` / `INotificationPermissionChecker` contracts. It implements none of the pipeline. |
+| `Dignite.Abp.Notifications.Distribution` | The in-process pipeline: the local `INotificationPublisher`, the distributor, the distribution background job, the delivery and publish-request event handlers, `NullNotificationStore`. Installed by the process that hosts the inbox and the channels. |
+| `Dignite.Abp.Notifications.Remote` | Remote publishing: an `INotificationPublisher` that sends one `NotificationPublishRequestedEto` per notification to the process that distributes. For publishers that do not host the inbox; never installed together with Distribution. |
 | `Dignite.Abp.Notifications.SignalR` | Real-time push notifier (SignalR hub at `/signalr-hubs/notifications`). |
 | `Dignite.Abp.Notifications.Emailing` | Email notifier (ABP `IEmailSender`). |
 | `Dignite.Abp.Notifications.Emailing.Identity` | Optional ABP Identity-backed email address resolver for the Emailing notifier. |
@@ -72,7 +77,9 @@ Core:
 | `notification-center` (Angular, `angular/projects/`) | Angular UI: proxy service + bell & subscriptions components. |
 
 > Core never references the Notification Center — the two trees are independently installable, and
-> Core keeps working with `NullNotificationStore` alone. The `host/` (runnable ABP MVC demo) and
+> Core + Distribution keep working with `NullNotificationStore` alone. The contracts stay in Core and their
+> implementations live in Distribution, so a business module, the Notification Center's store and the Identity
+> permission checker never depend on Distribution. The `host/` (runnable ABP MVC demo) and
 > `angular/` (demo Angular app) folders are **local-dev demos only**; they are not packaged or
 > published.
 
@@ -82,12 +89,25 @@ The commands below show all packages installed into one host project for clarity
 solution, add each package to the matching layer and put the corresponding `[DependsOn]` entry in
 that layer's module.
 
-### Stateless forwarding
+A business module references `Dignite.Abp.Notifications` only — definitions, routing and `INotificationPublisher`.
+The host decides who implements the publisher, and the installation follows from where the inbox and the channels
+live:
 
-Install Core plus at least one external delivery channel. This example uses SignalR:
+| Host | Installs | Publisher |
+|---|---|---|
+| **Monolith** — publishes, distributes and delivers in one process | `Distribution` + notifiers (+ the Notification Center for an inbox) | local (`DefaultNotificationPublisher`) |
+| **Publisher** — its notifications are distributed by a notification service | `Remote` | remote (`RemoteNotificationPublisher`) |
+| **Notification service** — distributes for the publishers | `Distribution` + the Notification Center + notifiers | local, plus the handler for remote publish requests |
+
+A host with neither `Distribution` nor `Remote` has no `INotificationPublisher` and fails the first time one is
+resolved; a host with both fails at startup.
+
+### Monolith
+
+Stateless forwarding — Distribution plus at least one external delivery channel. This example uses SignalR:
 
 ```bash
-dotnet add path/to/MyApp.csproj package Dignite.Abp.Notifications --version 10.0.0-rc.4
+dotnet add path/to/MyApp.csproj package Dignite.Abp.Notifications.Distribution --prerelease
 dotnet add path/to/MyApp.csproj package Dignite.Abp.Notifications.SignalR --version 10.0.0-rc.4
 ```
 
@@ -104,7 +124,7 @@ Device push (iOS / Android) is optional too — the channel plus one provider:
 dotnet add path/to/MyApp.csproj package Dignite.Abp.Notifications.Push.Expo
 ```
 
-### Full Notification Center with EF Core
+With the full Notification Center on EF Core — `Dignite.NotificationCenter.Application` brings Distribution with it:
 
 ```bash
 dotnet add path/to/MyApp.csproj package Dignite.Abp.Notifications.SignalR --version 10.0.0-rc.4
@@ -118,6 +138,21 @@ dotnet add path/to/MyApp.csproj package Dignite.NotificationCenter.Web --version
 `Dignite.NotificationCenter.EntityFrameworkCore` with
 `Dignite.NotificationCenter.MongoDB`. Permission gating and active-user audience paging through
 `Dignite.Abp.Notifications.Identity` are also optional.
+
+### Publisher
+
+A service whose notifications another process distributes installs Remote next to its business modules — no
+notifier, no Notification Center:
+
+```bash
+dotnet add path/to/MyService.csproj package Dignite.Abp.Notifications.Remote --prerelease
+```
+
+### Notification service
+
+The process that hosts the inbox and the channels for the publishers installs the Notification Center (which
+brings Distribution) and its channels, exactly like a monolith with an inbox, plus an event inbox so that a
+redelivered publish request is processed once. See [Split deployment](#split-deployment).
 
 For an Angular host, install the version-matched UI library:
 
@@ -156,14 +191,14 @@ legacy production database without a migration plan is unsupported.
 
 ### 1. Stateless forwarding — real-time push, no persistence
 
-Install the core plus one or more notifiers. There is no inbox or subscription: you pass explicit
+Install the distribution pipeline plus one or more notifiers. There is no inbox or subscription: you pass explicit
 recipient `userIds`, the notifier pushes to connected clients, and nothing is stored
 (`NullNotificationStore`).
 
 ```csharp
 [DependsOn(
-    typeof(AbpNotificationsModule),
-    typeof(AbpNotificationsSignalRModule)   // real-time channel
+    typeof(AbpNotificationsDistributionModule),   // publisher, distributor, delivery handler (brings Core)
+    typeof(AbpNotificationsSignalRModule)         // real-time channel
 )]
 public class MyHostModule : AbpModule { }
 ```
@@ -175,6 +210,7 @@ persistent per-user inbox, subscriptions, read/unread state, and the `/api/notif
 
 ```csharp
 [DependsOn(
+    typeof(AbpNotificationsDistributionModule),                // optional: NotificationCenterApplicationModule brings it
     typeof(AbpNotificationsSignalRModule),                     // real-time channel
     // typeof(AbpNotificationsEmailingModule),                  // optional: email channel
     // typeof(AbpNotificationsEmailingIdentityModule),          // optional: UserId -> Email via ABP Identity
@@ -252,7 +288,7 @@ work; an outbox cannot make a non-transactional unit of work atomic.
 | EF Core, non-transactional UoW | no | completed inbox batches and already published events can remain |
 | MongoDB, outbox + transactional UoW on a supported topology | yes, within one distributor/job invocation | the transaction rolls back inbox and outbox records |
 | MongoDB, no outbox or non-transactional UoW | no | completed inbox batches and already published events can remain |
-| Core-only channel consumer | no inbox | the channel event is fire-once; nothing is retained across process exit |
+| Stateless (Core + Distribution) channel consumer | no inbox | the channel event is fire-once; nothing is retained across process exit |
 
 If you use the shipped `NotificationCenterDbContext`, one line enables both:
 
@@ -423,6 +459,89 @@ a failed event, whereas a bus without an inbox hands the exception to the publis
 replace `GdprUserDataDeletionRequestedHandler` (its method is `virtual`) or add a further
 `IDistributedEventHandler<GdprUserDataDeletionRequestedEto>` for your own data.
 
+## Split deployment
+
+A publisher does not have to host the inbox. A service that only publishes installs
+`Dignite.Abp.Notifications.Remote`; a **notification service** — the one process that owns the inbox, the
+subscriptions, the push devices and the channels — installs Distribution and the Notification Center. The business
+modules are the same in both topologies: they reference `Dignite.Abp.Notifications` and call `INotificationPublisher`.
+
+```
+Publisher service (Core + Remote)
+  business module ──► INotificationPublisher = RemoteNotificationPublisher
+                        │ definition exists · channels resolved · payload serialized
+                        ▼
+              NotificationPublishRequestedEto ──► outbox ──► broker
+                                                              │
+Notification service (Distribution + Notification Center + notifiers)
+  inbox ──► NotificationPublishRequestedHandler ──► local distributor (inline, or its own job queue)
+                                                     │ subscribers · eligibility · inbox rows
+                                                     ▼
+                              NotificationDeliveryRequestedEto ──► SignalR / Email / Push
+```
+
+```csharp
+// Publisher service
+[DependsOn(
+    typeof(MyBusinessApplicationModule),     // defines and publishes notifications, depends on AbpNotificationsModule
+    typeof(AbpNotificationsRemoteModule)
+)]
+public class MyServiceModule : AbpModule { }
+
+// Notification service
+[DependsOn(
+    typeof(AbpNotificationsSignalRModule),
+    typeof(NotificationCenterApplicationModule),          // brings AbpNotificationsDistributionModule
+    typeof(NotificationCenterHttpApiModule),
+    typeof(NotificationCenterEntityFrameworkCoreModule)
+)]
+public class NotificationServiceModule : AbpModule { }
+```
+
+**On the publisher**, `RemoteNotificationPublisher` does only what needs the publisher's process, and sends exactly
+one `NotificationPublishRequestedEto` per notification, whatever the number of recipients:
+
+1. The definition must exist locally; an undefined name throws while the caller is still on the line, as with the
+   local publisher.
+2. The payload is serialized once, with the stable discriminator, into `DataJson`.
+3. The channels are resolved with the local `INotificationChannelResolver` — the routing rules (module defaults and
+   host overrides in `NotificationRoutingOptions`) are configured in the publisher, so that is where they are read.
+4. The event is published. Inside a unit of work it goes into the publisher's outbox, in the same transaction as the
+   business change; enable ABP's transactional outbox on the publisher's database for that guarantee.
+
+**On the notification service**, `NotificationPublishRequestedHandler` turns the event into a `NotificationInfo` with
+the publisher's notification id, tenant, payload JSON and channels, and hands it to the same inline-or-job decision
+the local publisher uses (`NotificationDistributionOptions.DirectDistributionUserThreshold`): a small explicit fan-out
+is distributed inline, anything else — including subscription-resolved notifications — through the service's own
+distribution job. Eligibility (`RequirePermission` / `RequireFeature`), the inbox rows and the delivery events all
+happen there, in the notification's tenant. The channels the publisher resolved are used as they are; the service's
+own routing is not consulted for them.
+
+- **Idempotency.** Configure ABP's event inbox on the notification service: it deduplicates by message id and runs the
+  handler, the inbox rows and the outbox records of the delivery events in one transaction. Without an inbox the
+  handler opens its own unit of work. A notification id the store has already seen is not inserted again either.
+- **Payloads.** The service stores and forwards `DataJson` as the publisher wrote it, so it needs no business payload
+  types. The SignalR notifier pushes the JSON object unchanged, and the inbox REST API returns a payload type the service
+  has not registered as the [tolerant placeholder](#reading-persisted-payloads-tolerant-reads) with the original JSON
+  kept verbatim in `rawJson`. Register a payload type in the service only when its own Email or Push content providers
+  must render it (`LocalizableMessageNotificationData` is registered by default).
+- **Definitions.** Eligibility and the inbox's groups and display names read the service's own
+  `INotificationDefinitionManager`. Until a shared definition catalog is available, the service must have the
+  definitions it distributes: for a definition it does not know, every recipient is filtered out.
+- **Queues.** Only a process with Distribution registers the distribution job — named
+  `Dignite.Abp.Notifications.Distribute` (`[BackgroundJobName]`), independent of the CLR type — and only such a process
+  handles `NotificationDeliveryRequestedEto` and `NotificationPublishRequestedEto`. A publisher with Remote consumes
+  neither.
+
+| Process | Situation | Result |
+|---|---|---|
+| Any | Neither Distribution nor Remote installed | `INotificationPublisher` has no implementation; the first resolution fails |
+| Any | Both installed (the Notification Center's application layer counts as Distribution) | Startup fails, naming both packages |
+| Publisher | A routing rule names an undefined notification | Startup fails (Core's check) |
+| Publisher | A rule names a channel no notifier in the publisher hosts | Not checked — the channel is hosted elsewhere |
+| Publisher | A definition resolves to no channel | Allowed: inbox-only |
+| Publisher | Publishing an undefined notification | Throws, as the local publisher does |
+
 ## Defining and publishing a notification
 
 Most features need **no new entity** — `Notification` / `UserNotification` are generic containers for
@@ -468,6 +587,9 @@ it is tolerant: an unknown discriminator or malformed known payload becomes `Uns
 preserving the original discriminator and escaped raw JSON without activating an arbitrary CLR type, instead of
 throwing. One bad historical row therefore cannot fail the rest of an inbox page. Notification Center inbox reads,
 distributed-event deserialization, and HTTP server/client converters all go through this same tolerant path. The
+payload is serialized once, by the publisher, and carried from there as that JSON (`NotificationInfo.DataJson`): the
+store writes and returns it unchanged, every delivery event copies it, and only a reader that wants the typed view —
+the inbox app service, a notifier — deserializes it. The
 MVC and Angular libraries render the placeholder as a generic unsupported-notification message and do not display
 its raw diagnostic JSON. Writing an unregistered CLR type still throws — that fail-fast is unconditional.
 
@@ -517,7 +639,8 @@ await _publisher.PublishAsync(
 ```
 
 `PublishAsync` distributes small explicit fan-outs inline and larger ones via a background job (the
-threshold is configurable — see [Configuration](#configuration)). Recipient semantics are deliberate:
+threshold is configurable — see [Configuration](#configuration)); with [Remote](#split-deployment) that decision is
+made the same way by the process that distributes. Recipient semantics are deliberate:
 `userIds: null` resolves **subscribers**, an empty array is an intentional no-op, and a non-empty array
 targets those users explicitly. Duplicate explicit IDs are removed before the threshold is evaluated,
 inbox rows are persisted, or channel delivery is published.
@@ -562,8 +685,9 @@ subscription lookup, eligibility, inbox persistence, and event/outbox publicatio
 A notifier implements the single canonical `INotificationNotifier` contract and relays one
 `NotificationDeliveryRequestedEto` to a single channel. `Name` is the stable routing key. `DeliverAsync` receives a
 `CancellationToken`; delivery is best-effort, so a notifier that intentionally skips a recipient simply returns,
-and throwing is logged and dropped by the Core handler (not retried). The Core-owned distributed-event handler is
-the transport adapter, so a channel plugin does not implement an event-handler interface.
+and throwing is logged and dropped by the delivery handler (not retried). That distributed-event handler
+(`NotificationDeliveryRequestedHandler`, in Distribution) is the transport adapter, so a channel plugin does not
+implement an event-handler interface.
 
 Each channel module maps its channel to its notifier type in `NotificationNotifierOptions`, and the handler
 constructs only the notifier registered for a delivery's channel — an email delivery never builds the push notifier,
@@ -699,7 +823,7 @@ public class WebPushNotifier
 ```
 
 `DeliverAsync` handles one recipient/channel request and observes cancellation. Delivery is best-effort: to skip a
-recipient (e.g. no address), simply return; throwing is logged and dropped by the Core handler, not retried.
+recipient (e.g. no address), simply return; throwing is logged and dropped by the delivery handler, not retried.
 
 The event carries the payload pre-serialized as discriminator-tagged JSON (`request.DataJson`) so it survives any
 transport serializer — ABP's event bus (outbox/inbox included) serializes ETOs with plain `System.Text.Json`, without
@@ -752,13 +876,15 @@ Configure<NotificationRoutingOptions>(options =>
 - For routing that depends on the tenant, severity or a setting, replace `INotificationChannelResolver`. It is called
   once per notification, before recipients are batched, so it cannot express per-user preferences.
 
-Startup checks run once the definitions are materialized:
+Startup checks run once the definitions are materialized. The first runs wherever Core is installed; the other two
+are about the process that delivers, so they run only where Distribution is installed — a [remote
+publisher](#split-deployment) names channels another process hosts, and an inbox-only notification is fine there:
 
-| Situation | Result |
-|---|---|
-| A rule names a notification that is not defined | Startup fails, listing every unknown name |
-| A rule or `Default` names a channel no notifier in this process hosts | Warning per channel, listing the notifications that use it; set `RequireHostedChannels = true` to fail instead |
-| Stateless mode (`NullNotificationStore`) and a definition resolves to no channel | Startup fails, listing the notifications (skipped if `INotificationChannelResolver` is replaced) |
+| Situation | Checked by | Result |
+|---|---|---|
+| A rule names a notification that is not defined | Core | Startup fails, listing every unknown name |
+| A rule or `Default` names a channel no notifier in this process hosts | Distribution | Warning per channel, listing the notifications that use it; set `RequireHostedChannels = true` to fail instead |
+| Stateless mode (`NullNotificationStore`) and a definition resolves to no channel | Distribution | Startup fails, listing the notifications (skipped if `INotificationChannelResolver` is replaced) |
 
 An unhosted channel is legitimate in a split deployment, where another process delivers it. At runtime the processes
 that do not host the channel ignore its delivery events (logged at Debug only; the startup warning is the one place
@@ -907,6 +1033,7 @@ Configure<NotificationDefinitionRegistration>(options =>
     options.DefinitionProviders.Add(typeof(MyNotificationDefinitionProvider));
 });
 
+// Distribution only: configured in the process that distributes (a notification service, for remote publishers).
 Configure<NotificationDistributionOptions>(options =>
 {
     // Explicit recipients above this count distribute on a background job instead of inline. Default: 5.
@@ -940,30 +1067,39 @@ Configure<AbpDistributedEventBusOptions>(options =>
 ## Architecture
 
 ```
-Notifications.Abstractions   ── data model + NotificationDeliveryRequestedEto + notifier contract
+Notifications.Abstractions   ── data model + NotificationDeliveryRequestedEto + NotificationPublishRequestedEto
+        │                       + notifier contract
+Notifications (Core)         ── definitions · routing · contracts (publisher, store, distributor, permission checker)
         │
-Notifications (Core)         ── define → distribute → publish delivery events (best-effort)
-        │
-   ┌────┴───────────────────┐
-Notifiers                 NotificationCenter (optional)
-(SignalR / Email / …)     inbox · subscriptions · REST API · UI
-                                                       (EF Core / MongoDB)
+   ┌────┴──────────────────────────────┐
+Notifications.Remote               Notifications.Distribution
+publish → NotificationPublish-     publish → distribute → publish delivery events (best-effort);
+RequestedEto (another process      handles NotificationPublishRequestedEto from remote publishers
+distributes)                              │
+                                 ┌────────┴───────────────┐
+                              Notifiers                 NotificationCenter (optional)
+                              (SignalR / Email / …)     inbox · subscriptions · REST API · UI
+                                                        (EF Core / MongoDB)
 ```
 
 **Publish → distribute → notify:**
 
-1. Business code calls `INotificationPublisher.PublishAsync(...)`.
-2. Small explicit fan-outs distribute inline; larger ones enqueue a `NotificationDistributionJob`.
+1. Business code calls `INotificationPublisher.PublishAsync(...)`. The payload is serialized there, once, into
+   `NotificationInfo.DataJson`; from then on it travels as that string.
+2. With Distribution, small explicit fan-outs distribute inline and larger ones enqueue a
+   `NotificationDistributionJob`. With Remote, one `NotificationPublishRequestedEto` carries the notification (and the
+   channels resolved in the publisher) to the process that distributes, which makes the same inline-or-job decision.
 3. The distributor resolves bounded recipient batches (explicit `userIds`, or subscribers from
    `INotificationStore`), checks the definition's feature/permission availability, persists bounded
    inbox groups (a no-op under `NullNotificationStore`), then publishes one `NotificationDeliveryRequestedEto`
    per recipient/channel when external channels are configured.
-4. Only a process hosting the selected channel handles the work: the Core-owned event handler resolves the channel
+4. Only a process hosting the selected channel handles the work: Distribution's event handler resolves the channel
    notifier and calls `DeliverAsync` once. Delivery is best-effort — a channel that throws is logged and dropped,
    not retried; the inbox row is the authoritative record.
 
 `NotificationDeliveryRequestedEto` is the load-bearing boundary between scheduling and delivery and the extension
-point for any new channel. Under either Notification Center persistence provider, hosts should opt in to ABP's
+point for any new channel; `NotificationPublishRequestedEto` is the boundary between a publisher and the process that
+distributes for it. Neither carries a live `NotificationData`. Under either Notification Center persistence provider, hosts should opt in to ABP's
 transactional outbox (see [Configuration](#configuration)) so notification, inbox, and outgoing work records
 commit together.
 
@@ -1020,7 +1156,7 @@ For Docker or other deployments, use the corresponding double-underscore environ
 ## Repository layout
 
 ```
-core/                 core framework (Abstractions, Notifications, Identity, Emailing, Emailing.Identity, SignalR, Push, Push.Expo) + tests
+core/                 core framework (Abstractions, Notifications, Distribution, Remote, Identity, Emailing, Emailing.Identity, SignalR, Push, Push.Expo) + tests
 notification-center/  optional persistence + REST API + MVC UI + tests (EF Core & MongoDB)
 angular/              Angular UI library (projects/notification-center) + demo app   ── local dev only
 host/                 runnable ABP MVC demo host                                     ── local dev only

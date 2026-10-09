@@ -33,12 +33,20 @@
       "path": "core/src/Dignite.Abp.Notifications.Push.Expo/Dignite.Abp.Notifications.Push.Expo.abppkg",
       "folder": "core/src"
     },
+    "Dignite.Abp.Notifications.Remote": {
+      "path": "core/src/Dignite.Abp.Notifications.Remote/Dignite.Abp.Notifications.Remote.abppkg",
+      "folder": "core/src"
+    },
     "Dignite.Abp.Notifications.SignalR": {
       "path": "core/src/Dignite.Abp.Notifications.SignalR/Dignite.Abp.Notifications.SignalR.abppkg",
       "folder": "core/src"
     },
     "Dignite.Abp.Notifications": {
       "path": "core/src/Dignite.Abp.Notifications/Dignite.Abp.Notifications.abppkg",
+      "folder": "core/src"
+    },
+    "Dignite.Abp.Notifications.Distribution": {
+      "path": "core/src/Dignite.Abp.Notifications.Distribution/Dignite.Abp.Notifications.Distribution.abppkg",
       "folder": "core/src"
     },
     "Dignite.Abp.Notifications.TestProviderA": {

@@ -1,33 +1,24 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Volo.Abp;
-using Volo.Abp.BackgroundWorkers;
-using Volo.Abp.BackgroundJobs;
-using Volo.Abp.DistributedLocking;
-using Volo.Abp.EventBus;
-using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.Features;
-using Volo.Abp.Guids;
 using Volo.Abp.Modularity;
-using Volo.Abp.Timing;
-using Volo.Abp.Uow;
 
 namespace Dignite.Abp.Notifications;
 
+/// <summary>
+/// What a business module needs to define and publish notifications: definitions, routing, and the contracts
+/// (<see cref="INotificationPublisher"/>, <see cref="INotificationStore"/>, <see cref="INotificationDistributor"/>,
+/// <see cref="INotificationPermissionChecker"/>). It implements none of the pipeline: the host adds
+/// <c>Dignite.Abp.Notifications.Distribution</c> (it delivers notifications itself) or
+/// <c>Dignite.Abp.Notifications.Remote</c> (another process does). With neither, <see cref="INotificationPublisher"/>
+/// has no implementation and the first attempt to resolve it fails.
+/// </summary>
 [DependsOn(
     typeof(AbpNotificationsAbstractionsModule),
-    typeof(AbpFeaturesModule),
-    typeof(AbpTimingModule),
-    typeof(AbpBackgroundJobsAbstractionsModule),
-    typeof(AbpBackgroundWorkersModule),
-    typeof(AbpDistributedLockingAbstractionsModule),
-    typeof(AbpGuidsModule),
-    typeof(AbpEventBusModule),
-    typeof(AbpUnitOfWorkModule)
+    typeof(AbpFeaturesModule)
     )]
 public class AbpNotificationsModule : AbpModule
 {
@@ -38,19 +29,20 @@ public class AbpNotificationsModule : AbpModule
 
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
-        AddValidatedOptions<NotificationDistributionOptions>(context.Services, options => options.Validate());
-        AddValidatedOptions<NotificationRoutingOptions>(context.Services, options => options.Validate());
+        context.Services
+            .AddOptions<NotificationRoutingOptions>()
+            .Validate(options =>
+            {
+                options.Validate();
+                return true;
+            })
+            .ValidateOnStart();
 
         // NotificationDefinitionRegistration.Validate() runs from NotificationDefinitionStartupService instead of this
         // options-validation pipeline: the real definition-name conflict check only exists inside
         // NotificationDefinitionManager's lazily-built dictionary, so both checks belong at the one hook that can
         // reach it.
         context.Services.AddHostedService<NotificationDefinitionStartupService>();
-
-        Configure<AbpDistributedEventBusOptions>(options =>
-        {
-            options.Handlers.Add<NotificationDeliveryRequestedHandler>();
-        });
     }
 
     private static void AutoAddDefinitionProviders(IServiceCollection services)
@@ -67,20 +59,5 @@ public class AbpNotificationsModule : AbpModule
 
             options.DefinitionProviders.AddIfNotContains(definitionProviders);
         });
-    }
-
-    private static void AddValidatedOptions<TOptions>(
-        IServiceCollection services,
-        Action<TOptions> validate)
-        where TOptions : class
-    {
-        services
-            .AddOptions<TOptions>()
-            .Validate(options =>
-            {
-                validate(options);
-                return true;
-            })
-            .ValidateOnStart();
     }
 }

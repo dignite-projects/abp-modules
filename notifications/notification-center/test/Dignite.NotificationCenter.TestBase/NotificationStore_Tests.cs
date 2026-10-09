@@ -30,7 +30,7 @@ public abstract class NotificationStore_Tests<TStartupModule> : NotificationCent
             {
                 Id = notificationId,
                 NotificationName = notificationName,
-                Data = data,
+                DataJson = SerializeData(data),
                 Severity = NotificationSeverity.Success,
                 CreationTime = DateTime.UtcNow
             };
@@ -63,7 +63,7 @@ public abstract class NotificationStore_Tests<TStartupModule> : NotificationCent
             list.Count.ShouldBe(1);
             var row = list.Single();
             row.Notification.NotificationName.ShouldBe("order.shipped");
-            var data = row.Notification.Data.ShouldBeOfType<OrderShippedNotificationData>();
+            var data = DeserializeData(row.Notification.DataJson).ShouldBeOfType<OrderShippedNotificationData>();
             data.OrderNumber.ShouldBe("SO-1001");
             data.ItemCount.ShouldBe(3);
             row.UserNotification.State.ShouldBe(UserNotificationState.Unread);
@@ -90,6 +90,59 @@ public abstract class NotificationStore_Tests<TStartupModule> : NotificationCent
     }
 
     [Fact]
+    public async Task Stores_the_payload_json_verbatim_even_for_a_type_this_process_does_not_know()
+    {
+        // What a notification service receives from a publisher whose payload type it has not registered.
+        const string dataJson = "{\"type\":\"Publisher.Only.Payload\",\"orderNumber\":\"SO-1\",\"lines\":[1,2]}";
+        var notificationId = Guid.NewGuid();
+
+        await WithUnitOfWorkAsync(async () =>
+        {
+            await GetRequiredService<INotificationStore>().InsertNotificationAsync(new NotificationInfo
+            {
+                Id = notificationId,
+                NotificationName = "order.shipped",
+                DataJson = dataJson,
+                CreationTime = DateTime.UtcNow
+            });
+        });
+
+        await WithUnitOfWorkAsync(async () =>
+        {
+            (await GetRequiredService<IRepository<Notification, Guid>>().GetAsync(notificationId))
+                .Data.ShouldBe(dataJson);
+        });
+    }
+
+    [Fact]
+    public async Task Notification_insert_is_idempotent_by_id()
+    {
+        var notificationId = Guid.NewGuid();
+        var notification = new NotificationInfo
+        {
+            Id = notificationId,
+            NotificationName = "order.shipped",
+            DataJson = SerializeData(new MessageNotificationData("first")),
+            CreationTime = DateTime.UtcNow
+        };
+
+        // Two runs of the same distribution (a redelivered publish request, a retried job), each in its own unit of work.
+        for (var run = 0; run < 2; run++)
+        {
+            await WithUnitOfWorkAsync(async () =>
+            {
+                await GetRequiredService<INotificationStore>().InsertNotificationAsync(notification);
+            });
+        }
+
+        await WithUnitOfWorkAsync(async () =>
+        {
+            (await GetRequiredService<IRepository<Notification, Guid>>()
+                .GetListAsync(row => row.Id == notificationId)).Count.ShouldBe(1);
+        });
+    }
+
+    [Fact]
     public async Task User_notification_inserts_are_idempotent_by_user_and_notification()
     {
         var notificationId = Guid.NewGuid();
@@ -104,7 +157,7 @@ public abstract class NotificationStore_Tests<TStartupModule> : NotificationCent
             {
                 Id = notificationId,
                 NotificationName = "order.shipped",
-                Data = new OrderShippedNotificationData { OrderNumber = "SO-10", ItemCount = 1 },
+                DataJson = SerializeData(new OrderShippedNotificationData { OrderNumber = "SO-10", ItemCount = 1 }),
                 Severity = NotificationSeverity.Info,
                 CreationTime = creationTime
             });
@@ -210,21 +263,21 @@ public abstract class NotificationStore_Tests<TStartupModule> : NotificationCent
             var rows = await GetRequiredService<INotificationStore>().GetUserNotificationsAsync(userId);
 
             rows.Count.ShouldBe(4);
-            var legacy = rows.Single(row => row.Notification.Id == legacyId)
-                .Notification.Data.ShouldBeOfType<OrderShippedNotificationData>();
+            var legacy = DeserializeData(rows.Single(row => row.Notification.Id == legacyId)
+                .Notification.DataJson).ShouldBeOfType<OrderShippedNotificationData>();
             legacy.OrderNumber.ShouldBe("SO-LEGACY");
 
-            var unknown = rows.Single(row => row.Notification.Id == unknownId)
-                .Notification.Data.ShouldBeOfType<UnsupportedNotificationData>();
+            var unknown = DeserializeData(rows.Single(row => row.Notification.Id == unknownId)
+                .Notification.DataJson).ShouldBeOfType<UnsupportedNotificationData>();
             unknown.Reason.ShouldBe(UnsupportedNotificationDataReason.UnknownDiscriminator);
             unknown.OriginalDiscriminator.ShouldBe("Removed.Module.Payload");
 
-            var malformed = rows.Single(row => row.Notification.Id == malformedId)
-                .Notification.Data.ShouldBeOfType<UnsupportedNotificationData>();
+            var malformed = DeserializeData(rows.Single(row => row.Notification.Id == malformedId)
+                .Notification.DataJson).ShouldBeOfType<UnsupportedNotificationData>();
             malformed.Reason.ShouldBe(UnsupportedNotificationDataReason.MalformedPayload);
             malformed.RawJson.ShouldContain("not-an-integer");
-            var throwingSetter = rows.Single(row => row.Notification.Id == throwingSetterId)
-                .Notification.Data.ShouldBeOfType<UnsupportedNotificationData>();
+            var throwingSetter = DeserializeData(rows.Single(row => row.Notification.Id == throwingSetterId)
+                .Notification.DataJson).ShouldBeOfType<UnsupportedNotificationData>();
             throwingSetter.Reason.ShouldBe(UnsupportedNotificationDataReason.MalformedPayload);
             throwingSetter.RawJson.ShouldContain("THROW-FORMAT");
         });
