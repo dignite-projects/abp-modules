@@ -22,7 +22,7 @@ using Xunit;
 namespace Dignite.Abp.Notifications;
 
 /// <summary>
-/// Core's delivery handler constructs only the notifier registered for the event's channel — never every channel's
+/// The delivery handler constructs only the notifier registered for the event's channel — never every channel's
 /// notifier and its dependency graph — so one channel's notifier failing to construct cannot break another channel.
 /// </summary>
 public class NotificationDeliveryRequestedHandler_Tests
@@ -33,7 +33,7 @@ public class NotificationDeliveryRequestedHandler_Tests
     private const string MisnamedChannel = "Misnamed";
 
     [DependsOn(
-        typeof(AbpNotificationsDistributionModule),
+        typeof(AbpNotificationsModule),
         typeof(AbpAutofacModule))]
     public class FakeChannelsTestModule : AbpModule
     {
@@ -58,7 +58,7 @@ public class NotificationDeliveryRequestedHandler_Tests
 
     /// <summary>The real Email and Push channels installed side by side, with a push notifier that cannot be built.</summary>
     [DependsOn(
-        typeof(AbpNotificationsDistributionModule),
+        typeof(AbpNotificationsModule),
         typeof(AbpNotificationsEmailingModule),
         typeof(AbpNotificationsPushModule),
         typeof(AbpAutofacModule))]

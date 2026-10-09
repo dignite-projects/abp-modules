@@ -20,7 +20,7 @@ namespace Dignite.NotificationCenter.Web.Host.Migrations
                 .HasAnnotation("_Abp_DatabaseProvider", EfCoreDatabaseProvider.Sqlite)
                 .HasAnnotation("ProductVersion", "10.0.11");
 
-            modelBuilder.Entity("Dignite.Abp.Notifications.DefinitionStore.NotificationDefinitionRecord", b =>
+            modelBuilder.Entity("Dignite.Abp.Notifications.NotificationDefinitionRecord", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -68,7 +68,7 @@ namespace Dignite.NotificationCenter.Web.Host.Migrations
                     b.ToTable("NotifDefinitions", (string)null);
                 });
 
-            modelBuilder.Entity("Dignite.Abp.Notifications.DefinitionStore.NotificationGroupDefinitionRecord", b =>
+            modelBuilder.Entity("Dignite.Abp.Notifications.NotificationGroupDefinitionRecord", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()

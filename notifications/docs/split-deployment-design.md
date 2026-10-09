@@ -6,18 +6,25 @@
 > cloud `main@37cda52` 为准。
 >
 > 设计原则：**不发明机制，每个部件都对应一条 ABP 既有做法。** 每节末尾标注它照抄的是什么。
+>
+> **rc.24 包名调整。** 本稿在 rc.23 实现；rc.24 把包结构和命名对齐 ABP（§4、§4.1）：Core 并入
+> `Dignite.Abp.Notifications.Abstractions`，`.Distribution` 改名为无后缀的 `Dignite.Abp.Notifications`（实现包），
+> `.Remote` 改名为 `.Client`，`.DefinitionStore` / `.DefinitionStore.EntityFrameworkCore` 改为 `.Domain.Shared` /
+> `.Domain` / `.EntityFrameworkCore`；Client 与实现包不再互斥，改为本地优先（§9）。§1 描述的是 rc.22 的现状，保留当时的
+> 包名；§10、§11、§14 是 rc.23 的落地记录，rc.24 的变化写在各节末尾；其余各节已按 rc.24 的包名改写。
 
 ## 0. 结论先行
 
-- **Core 拆成两层。** `Dignite.Abp.Notifications` 只剩业务模块需要的东西（定义、路由、`INotificationPublisher`
-  契约、负载类型注册、`INotificationStore` 等契约）；分发器、后台作业、投递事件处理器、`NullNotificationStore`
-  移到新包 **`Dignite.Abp.Notifications.Distribution`**。业务模块的 PackageReference 和 `DependsOn` 不变。
-- **远程发布只发一条事件。** 新包 **`Dignite.Abp.Notifications.Remote`** 实现 `INotificationPublisher`：本地校验定义、
+- **契约与实现分包。** **`Dignite.Abp.Notifications.Abstractions`** 是唯一的契约包：业务模块需要的东西（定义、路由、
+  `INotificationPublisher` 契约、负载类型注册）、`INotificationStore` 等契约及其 Null 默认实现。分发器、后台作业、投递
+  事件处理器在实现包 **`Dignite.Abp.Notifications`**。业务模块只引用 Abstractions、只 `DependsOn`
+  `AbpNotificationsAbstractionsModule`（rc.23 的拆法是 Core + `.Distribution`，rc.24 按 ABP 命名改成现在这样，见 §4.1）。
+- **远程发布只发一条事件。** **`Dignite.Abp.Notifications.Client`** 实现 `INotificationPublisher`：本地校验定义、
   本地解析渠道、把负载序列化成 JSON，发 **`NotificationPublishRequestedEto`**（放 Abstractions）。
-  事件经发布方自己的 outbox 出去，和业务变更同一事务。Distribution 里的处理器收到后交给本地分发器。
-- **定义目录照 ABP 动态权限存储做。** 新包 **`Dignite.Abp.Notifications.DefinitionStore`** 及
-  `.DefinitionStore.EntityFrameworkCore`：每个发布方启动时把静态定义存进通知服务的库，通知服务动态读取。
-  `INotificationDefinitionManager` 改为异步。
+  事件经发布方自己的 outbox 出去，和业务变更同一事务。实现包里的处理器收到后交给本地分发器。
+- **定义目录照 ABP 动态权限存储做。** **`Dignite.Abp.Notifications.Domain`**（及 `.Domain.Shared`、
+  `.EntityFrameworkCore`）：每个发布方启动时把静态定义存进通知服务的库，通知服务动态读取；有新增或修改的定义时发
+  `NotificationDefinitionsChangedEto`。`INotificationDefinitionManager` 改为异步。
 - **`Notifications.Identity` 改依赖 `IUserRoleFinder`。** 不再引用 `Volo.Abp.Identity.Domain`；单体由 Identity.Domain
   提供实现，微服务由 `Volo.Abp.Identity.Pro.HttpApi.Client` 提供。
 - **推送设备的会话清理不在本稿范围。** `Push.Identity` 保持原样（见 §8）。
@@ -71,23 +78,23 @@ IdentityService 映射了 Identity 库。不装 `Notifications.Identity` 不报�
 
 ```
 发布方服务（VaultService、将来的 CampusService）
-  业务模块 ──► INotificationPublisher（Remote）
+  业务模块 ──► INotificationPublisher（Client 的 RemoteNotificationPublisher）
                 │ 校验定义存在 · 解析渠道 · 序列化负载
                 ▼
       NotificationPublishRequestedEto ──► 本服务 outbox ──► RabbitMQ
-  启动时：DefinitionStore 的 StaticSaver 把定义写进通知服务的库
+  启动时：Domain 的 StaticSaver 把定义写进通知服务的库
 
 通知服务（NotificationService）
-  inbox ──► NotificationPublishRequestedHandler ──► 本地分发器（Distribution）
+  inbox ──► NotificationPublishRequestedHandler ──► 本地分发器（实现包 Dignite.Abp.Notifications）
                                                       │ 订阅者 · 资格过滤 · 收件箱 · 投递事件
   通知器：SignalR（Expo / Email 按需）◄──────────────┘
   REST /api/notification-center · hub /signalr-hubs/notifications
-  DefinitionStore 的 DynamicStore：读所有发布方写入的定义
+  Domain 的 DynamicStore：读所有发布方写入的定义
 ```
 
 职责边界：发布方只知道「发生了什么、通知谁、走什么渠道」。通知服务拥有收件箱、订阅、推送设备、全部渠道、定义目录。
 
-**不变的东西**：单体宿主（私有化 vault、campus）继续用 Distribution 做进程内分发，行为与今天相同；
+**不变的东西**：单体宿主（私有化 vault、campus）继续用实现包做进程内分发，行为与今天相同；
 `@dignite/ng.notification-center` 的 REST 和 hub 基址来自同一个 `apiName`（`user-notification.service.ts:11`、
 `notification-bell.component.ts:257-261`），整体指向网关即可；react-native 的 `/api/notification-center/push-devices/*`
 路径不变。
@@ -101,9 +108,9 @@ IdentityService 映射了 Identity 库。不装 `Notifications.Identity` 不报�
 |---|---|
 | 模块身份是「尽力而为的应用内通知」，不是至少一次投递平台 | 没有新的状态机、租约、重试、遥测。跨进程只多一条事件，可靠性完全交给 ABP 的 outbox/inbox（§4 明确允许这样做） |
 | §1 没有任何线路契约携带活的 `NotificationData` | `NotificationPublishRequestedEto.DataJson` 是预序列化字符串；`NotificationInfo` 改为携带 `DataJson`，序列化前移到发布边界 |
-| §3 通知器只依赖 Abstractions | 不变。通知器不感知 Remote / Distribution 的区别 |
+| §3 通知器只依赖 Abstractions | 不变。通知器不感知 Client / 实现包的区别 |
 | §4 投递事件单收件人、尽力而为 | `NotificationDeliveryRequestedEto` 不改。`NotificationPublishRequestedEto` 携带收件人数组，但它是分发**之前**的服务端事件，和 `NotificationDistributionJobArgs` 携带 `Guid[]` 是同一层，不到达通知器或客户端 |
-| §5 两种运行模式都能工作 | 无状态模式 = Core + Distribution（含 `NullNotificationStore`）+ 通知器；完整模式再加 NotificationCenter。Distribution 不假设 Center 存在 |
+| §5 两种运行模式都能工作 | 无状态模式 = 实现包（`NullNotificationStore` 在 Abstractions）+ 通知器；完整模式再加 NotificationCenter。实现包不假设 Center 存在 |
 | §7 定义要求在投递时再次生效 | 资格过滤仍在分发器里做，只是分发器在通知服务。定义来自 DynamicStore，权限/功能名来自其它服务时靠 ABP 动态存储（§7） |
 | §7 在通知记录的租户里评估 | ETO 实现 `IMultiTenant`，处理器在该租户下运行（`EventBusBase.cs:282`），`NotificationInfo.TenantId` 显式赋值 |
 | §8 收件人工作有界 | 处理器沿用发布方的阈值逻辑：小扇出在线，大扇出入**本地**作业。作业只在通知服务注册 |
@@ -111,30 +118,73 @@ IdentityService 映射了 Identity 库。不装 `Notifications.Identity` 不报�
 
 ## 4. 包的重新划分
 
-| 包 | 内容 | 谁安装 |
+rc.24 的包表（rc.23 的 Core / `.Distribution` / `.Remote` / `.DefinitionStore(.EntityFrameworkCore)` 与它的对应见
+§4.1）：
+
+| 包 | 内容 | 依赖 | 谁安装 |
+|---|---|---|---|
+| `Dignite.Abp.Notifications.Abstractions` | 唯一的契约包：负载类型与判别符注册、`NotificationDeliveryRequestedEto`、`NotificationPublishRequestedEto`、`INotificationNotifier`；定义 API（provider、context、definition 类型、`INotificationDefinitionManager` 及 `NotificationDefinitionManager`、`IStaticNotificationDefinitionStore` + 实现、`IDynamicNotificationDefinitionStore` + `NullDynamicNotificationDefinitionStore`）；`NotificationRoutingOptions`、`INotificationChannelResolver` + `DefaultNotificationChannelResolver`；`INotificationPublisher`、`INotificationStore`、`INotificationDistributor`、`INotificationPermissionChecker`；`NotificationInfo` 等信息记录、`NotificationEntityIdentifier`；路由名对账的启动校验；Null 默认实现 `NullNotificationPublisher`（记 Warning 后返回）、`NullNotificationStore`、`AlwaysGrantedNotificationPermissionChecker` | ABP Localization、Json、MultiTenancy.Abstractions、Features（`netstandard2.0;netstandard2.1;net10.0`） | 业务模块、通知器、所有人（传递） |
+| `Dignite.Abp.Notifications`（实现包） | `DefaultNotificationPublisher`（普通注册，覆盖 Null）、`DefaultNotificationDistributor`、`NotificationDistributionDispatcher`、`NotificationDistributionJob(Args)`、`NotificationDeliveryRequestedHandler`、`NotificationPublishRequestedHandler`、`NotificationSubscriptionManager`、`NotificationDistributionOptions`、「未托管渠道」和「无状态模式下无渠道」两项启动校验 | Abstractions、ABP BackgroundJobs.Abstractions、EventBus、Guids、Timing | 托管收件箱和渠道的进程：单体宿主、通知服务 |
+| `Dignite.Abp.Notifications.Client` | `RemoteNotificationPublisher`（`TryRegister`） | Abstractions、ABP EventBus、Guids、Timing | 不托管收件箱的发布方 |
+| `Dignite.Abp.Notifications.Domain.Shared` | 记录列长常量、`NotificationDefinitionsChangedEto` | ABP EventBus.Abstractions（`netstandard2.0;netstandard2.1;net10.0`） | 随 Domain 传递 |
+| `Dignite.Abp.Notifications.Domain` | 定义记录实体、仓储接口、`StaticNotificationDefinitionSaver`（有变化时发 `NotificationDefinitionsChangedEto`）、`DynamicNotificationDefinitionStore` + 缓存、初始化器、序列化器、Options | Abstractions、Domain.Shared、ABP Ddd.Domain | 发布方（写）和通知服务（读写） |
+| `Dignite.Abp.Notifications.EntityFrameworkCore` | DbContext（连接串名 `NotificationCenter`）、仓储、`ConfigureNotificationDefinitionStore()` | Domain、ABP EntityFrameworkCore | 同上 |
+| `Dignite.NotificationCenter.*`、通知器包、`Emailing.Identity`、`Push.Identity` | 包名不改；`NotificationCenter.Domain` 依赖 Abstractions，`NotificationCenter.Application` 依赖实现包（要 `NotificationSubscriptionManager`） | — | 不变 |
+| `Dignite.Abp.Notifications.Identity` | 改依赖（§7）；依赖 Abstractions | — | 单体宿主、通知服务 |
+
+划分规则：**契约和它的 Null 默认实现在 Abstractions，默认实现在无后缀的实现包，Client 是远程发布。** 其它包实现的接口
+（`INotificationStore`、`INotificationPermissionChecker`）和业务模块、通知器用到的类型都在 Abstractions，否则
+NotificationCenter.Domain、Notifications.Identity 和业务模块要反向依赖实现包。**业务模块的模块类只 `DependsOn`
+`AbpNotificationsAbstractionsModule`**：rc.24 的 `AbpNotificationsModule` 是实现包的模块，依赖它会把分发器、作业和两个
+事件处理器带进每个托管该业务模块的进程。
+
+命名空间：Abstractions、实现包、Domain.Shared、Domain 都是 `Dignite.Abp.Notifications`（ABP 把
+`Volo.Abp.Authorization.Abstractions` 从 `Volo.Abp.Authorization` 拆出时没动命名空间，`40cf2607f6`）；Client 是
+`Dignite.Abp.Notifications.Client`，EntityFrameworkCore 是 `Dignite.Abp.Notifications.EntityFrameworkCore`，和 ABP 的
+`.Client`、`.EntityFrameworkCore` 包一样带后缀。
+
+兼容性：rc.23 的兼容性约束（「业务模块引用的类型命名空间和程序集都不动」）在 rc.24 **有意打破**：定义 API 等类型从
+`Dignite.Abp.Notifications.dll` 移到 `Dignite.Abp.Notifications.Abstractions.dll`（命名空间不变，但程序集变了），按 rc.23
+编译的业务模块必须重新编译，csproj 改引用 `.Abstractions`、`DependsOn` 改 `AbpNotificationsAbstractionsModule`。迁移步骤在
+根 `CHANGELOG.md`。
+
+一个宿主既没装实现包也没装 Client 时，`INotificationPublisher` 解析为 `NullNotificationPublisher`：每次发布记一条 Warning
+后返回，不抛（照 ABP `NullSmsSender` 的做法；`NullBackgroundJobManager` 是同样的单例 + 属性注入日志形状，但它在入队时抛）。
+它由 `AbpNotificationsAbstractionsModule.PostConfigureServices` 用 `TryAdd` 注册，而不是约定注册的 `TryRegister`：所有模块都
+依赖 Abstractions，约定注册的 Null 总是最先注册，会让同样 `TryRegister` 的 `RemoteNotificationPublisher` 永远注册不上。
+
+照抄：`Volo.Abp.BackgroundJobs.Abstractions`（入队契约 + `NullBackgroundJobManager`）与 `Volo.Abp.BackgroundJobs`（执行）的
+分法；`Volo.Abp.Authorization.Abstractions`（定义 API + `NullPermissionStore`）与 `Volo.Abp.PermissionManagement.Domain`
+（存储）的分法。
+
+### 4.1 与 ABP 包命名的对照
+
+| rc.23 | rc.24 | ABP 依据 |
 |---|---|---|
-| `Dignite.Abp.Notifications.Abstractions` | 现有内容 + `NotificationPublishRequestedEto` | 所有人（传递） |
-| `Dignite.Abp.Notifications`（Core） | 定义 API（provider、context、manager、definition 类型）、`NotificationRoutingOptions` 和 `INotificationChannelResolver`、`INotificationPublisher` 契约、`NotificationEntityIdentifier`、`NotificationInfo` 等信息记录、`INotificationStore`、`INotificationDistributor`、`INotificationPermissionChecker` 契约、路由名对账的启动校验 | 业务模块（不变） |
-| `Dignite.Abp.Notifications.Distribution`（新） | `DefaultNotificationPublisher`、`DefaultNotificationDistributor`、`NotificationDistributionJob`、`NotificationDeliveryRequestedHandler`、`NotificationPublishRequestedHandler`、`NullNotificationStore`、`AlwaysGrantedNotificationPermissionChecker`、随 store 走的 manager、「未托管渠道」和「无状态模式下无渠道」两项启动校验 | 托管收件箱和渠道的进程：单体宿主、通知服务 |
-| `Dignite.Abp.Notifications.Remote`（新） | 远程 `INotificationPublisher` | 不托管收件箱的发布方 |
-| `Dignite.Abp.Notifications.DefinitionStore`（新） | 定义记录实体、`StaticNotificationDefinitionSaver`、`DynamicNotificationDefinitionStore`、初始化器、Options | 发布方（写）和通知服务（读写） |
-| `Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore`（新） | DbContext（连接串名 `NotificationCenter`）、仓储 | 同上 |
-| `Dignite.NotificationCenter.*`、通知器包、`Emailing.Identity`、`Push.Identity` | 不改 | 不变 |
-| `Dignite.Abp.Notifications.Identity` | 改依赖（§7） | 单体宿主、通知服务 |
+| `Dignite.Abp.Notifications`（Core：定义、路由、契约） | 并入 `Dignite.Abp.Notifications.Abstractions`，模块 `AbpNotificationsAbstractionsModule` 承接其 `DependsOn`（Features 等）和 Options 校验 | 一个功能只有一个 Abstractions：`Volo.Abp.Authorization.Abstractions` 装定义 API + `IPermissionChecker` + `NullPermissionStore` + `AlwaysAllowPermissionChecker` |
+| `.Distribution` 里的 `NullNotificationStore`、`AlwaysGrantedNotificationPermissionChecker` | 移到 Abstractions（`TryRegister`）；新增 `NullNotificationPublisher` | ABP 把 Null 实现和契约放同包：`NullBackgroundJobManager` 在 `Volo.Abp.BackgroundJobs.Abstractions` |
+| `Dignite.Abp.Notifications.Distribution`（`AbpNotificationsDistributionModule`） | `Dignite.Abp.Notifications`（`AbpNotificationsModule`） | 无后缀 = 默认实现：`Volo.Abp.BackgroundJobs`、`Volo.Abp.EventBus`、`Volo.Abp.Authorization` |
+| `Dignite.Abp.Notifications.Remote`（`ReplaceServices`，与 Distribution 互斥） | `Dignite.Abp.Notifications.Client`（`AbpNotificationsClientModule`）；`RemoteNotificationPublisher` 改 `TryRegister`，删除互斥检查 | 远程实现放 `.Client`：`Volo.Abp.AspNetCore.Mvc.Client`（及其 `.Common`）里的 `RemotePermissionChecker`、`RemoteFeatureChecker`（类名带 Remote，包名带 Client）；不做互斥，`HttpClientUserRoleFinder` 用 `TryRegister` 让位给本地 `UserRoleFinder` |
+| `Dignite.Abp.Notifications.DefinitionStore` | `.Domain`（`AbpNotificationsDomainModule`）+ 新增 `.Domain.Shared`（`AbpNotificationsDomainSharedModule`） | 框架功能 + 它的持久化模块：`Volo.Abp.BackgroundJobs.Domain`、`Volo.Abp.AuditLogging.Domain`、`Volo.Abp.PermissionManagement.Domain(.Shared)` |
+| `Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore` | `.EntityFrameworkCore`（`AbpNotificationsEntityFrameworkCoreModule`），DbContext、`ConfigureNotificationDefinitionStore()` 和连接串名不变 | `Volo.Abp.PermissionManagement.EntityFrameworkCore` |
+| （无） | `NotificationDefinitionsChangedEto`（Domain.Shared），Saver 有新增或修改的定义时在其工作单元里发布 | `DynamicPermissionDefinitionsChangedEto`，`StaticPermissionSaver.cs:150-155` |
+| 命名空间 `Dignite.Abp.Notifications.Remote` / `.DefinitionStore` / `.DefinitionStore.EntityFrameworkCore` | `Dignite.Abp.Notifications.Client` / `Dignite.Abp.Notifications` / `Dignite.Abp.Notifications.EntityFrameworkCore` | 一个模块一个命名空间，`.Client`、`.EntityFrameworkCore` 带后缀 |
 
-划分规则：**契约留 Core，实现进 Distribution。** 其它包实现的接口（`INotificationStore`、`INotificationPermissionChecker`）
-必须留在 Core，否则 NotificationCenter.Domain 和 Notifications.Identity 要反向依赖 Distribution。
+发布方与实现包同装时的解析结果（`DefaultConventionalRegistrar`：`TryRegister` = `TryAdd`，普通注册 = `Add`，解析取最后一个）：
 
-兼容性约束：**业务模块今天引用的任何类型，命名空间和程序集都不动**（`AbpNotificationsModule`、`INotificationPublisher`、
-`NotificationDefinitionProvider`、`NotificationRoutingOptions`、`LocalizableMessageNotificationData`……）。这样
-`Dignite.Vault.Extract.Application` 和 `Dignite.Campus.Support.Application` 按 rc.22 编译的程序集可以直接跑在 rc.23 上，
-cloud 不必等它们各自发版。
+| 安装 | `INotificationPublisher` |
+|---|---|
+| 实现包 + Client（任意模块顺序） | `DefaultNotificationPublisher`：Client 在前时它后注册而胜出，Client 在后时 `TryAdd` 不生效 |
+| 只装 Client | `RemoteNotificationPublisher`：Null 在 `PostConfigureServices` 才 `TryAdd`，此时已有实现 |
+| 都不装 | `NullNotificationPublisher` |
 
-一个宿主既没装 Distribution 也没装 Remote 时，`INotificationPublisher` 无实现，第一次解析就失败——这是期望的失败方式，
-不加静默兜底。
+### 4.2 有意保留的偏离：生产端和消费端分包
 
-照抄：`Volo.Abp.BackgroundJobs.Abstractions`（入队契约）与 `Volo.Abp.BackgroundJobs`（执行）的分法；
-`Volo.Abp.Authorization`（定义 API）与 `Volo.Abp.PermissionManagement.Domain`（存储）的分法。
+ABP 的 `Volo.Abp.BackgroundJobs.RabbitMQ` 一个包两端都有，不想消费的进程靠 `AbpBackgroundJobOptions.IsJobExecutionEnabled`
+关掉执行。这里不这样做：`[F]Volo.Abp.BackgroundJobs.RabbitMQ\…\JobQueueManager.cs:36-41`（10.5 反编译）给
+`Options.GetJobs()` 里每个已注册的作业类型起消费者，而 `IsJobExecutionEnabled` 是进程级开关——发布方（VaultService）还要跑
+自己的作业，关不得。不注册分发作业和两个事件处理器是唯一不发明机制的办法，所以生产端（Client）和消费端（实现包）分成两个
+包。两个包同装时进程就是单体，本地优先（§4.1 的解析表）。
 
 ## 5. 远程发布
 
@@ -161,9 +211,10 @@ public class NotificationPublishRequestedEto : IMultiTenant
 平的 POCO，默认 System.Text.Json 可往返，和 `NotificationDeliveryRequestedEto` 同一纪律。字段集合和
 `NotificationDistributionJobArgs` 对齐，它们描述的是同一个东西：「一条待分发的通知」。
 
-### 5.2 Remote 发布器
+### 5.2 远程发布器（Client）
 
-`RemoteNotificationPublisher : INotificationPublisher`，`[Dependency(ReplaceServices = true)]`：
+`RemoteNotificationPublisher : INotificationPublisher`，`[Dependency(TryRegister = true)]`（rc.23 是 `ReplaceServices`，
+rc.24 改为让位给本地发布器，§4.1）：
 
 1. 本地 `INotificationDefinitionManager` 找定义，找不到抛——保留 `DefaultNotificationPublisher.cs:62` 的 fail-fast。
    业务模块的 provider 本来就在发布方进程里。
@@ -176,7 +227,7 @@ public class NotificationPublishRequestedEto : IMultiTenant
 
 去重和阈值判断都不在这里做：一条通知永远是一条事件，大小扇出的区分留给接收方。
 
-### 5.3 接收处理器（Distribution）
+### 5.3 接收处理器（实现包）
 
 `NotificationPublishRequestedHandler : IDistributedEventHandler<NotificationPublishRequestedEto>`：
 
@@ -213,7 +264,7 @@ public class NotificationPublishRequestedEto : IMultiTenant
 | 记录实体 | `NotificationGroupDefinitionRecord`、`NotificationDefinitionRecord`（带 `HasSameData` / `Patch`） | `PermissionGroupDefinitionRecord` / `PermissionDefinitionRecord` |
 | 表 | `NotifDefinitionGroups`、`NotifDefinitions`，连接串名 `NotificationCenter` | `AbpPermissionGroups` / `AbpPermissions` |
 | 序列化 | `INotificationDefinitionSerializer`；显示名用 ABP 的 `ILocalizableStringSerializer`（`L:VaultExtract,Notification:Ready`） | `IPermissionDefinitionSerializer` |
-| 静态保存 | `StaticNotificationDefinitionSaver`：应用级锁（不等待）→ MD5 hash 比缓存 → 公共锁 5 分钟 → 工作单元里插/改/删 → 更新公共 stamp | `StaticPermissionSaver.cs:70-76, 77-88, 90-96, 157-232, 103-108` |
+| 静态保存 | `StaticNotificationDefinitionSaver`：应用级锁（不等待）→ MD5 hash 比缓存 → 公共锁 5 分钟 → 工作单元里插/改/删 → 更新公共 stamp → 有新增或修改的定义时在同一工作单元里发 `NotificationDefinitionsChangedEto`（rc.24） | `StaticPermissionSaver.cs:70-76, 77-88, 90-96, 157-232, 103-108`；发事件 `:150-155`（10.8 源码） |
 | 删除 | 只删 `DeletedNotifications` / `DeletedNotificationGroups` 里显式列出的；多个服务共写一张表互不干扰 | `:175, 209-216` |
 | 动态读取 | `DynamicNotificationDefinitionStore`（瞬态）+ `...InMemoryCache`（单例）：SemaphoreSlim 串行，每 30 秒比一次 stamp，变了全量重读；stamp 不存在时在公共锁下初始化 | `DynamicPermissionDefinitionStore.cs:113-134, 136-170`；缓存单例 |
 | 初始化 | 后台启动，Polly 重试 | `PermissionDynamicInitializer.cs:97` |
@@ -238,7 +289,11 @@ public class NotificationPublishRequestedEto : IMultiTenant
 Angular 走 `/api/abp/application-localization`，由 Administration 合并外部资源。`LocalizableMessageNotificationData`
 本来就是按名字解析的（`LocalizableMessageNotificationDataExtensions.cs:21-24`）。
 
-MongoDB：NotificationCenter 支持 Mongo，DefinitionStore 应有 `.MongoDB` 实现；cloud 不需要，作为后续项，不阻塞本稿。
+`NotificationDefinitionsChangedEto` 只是通知别的服务「定义变了」，和 ABP 一样不是同步机制：动态 store 仍然靠公共 stamp
+重读，本模块没有它的处理器；只改组或只删除时不发（照 ABP）。§15 否决的「启动时发事件同步定义目录」仍然否决。
+
+MongoDB：NotificationCenter 支持 Mongo，定义存储应有 `Dignite.Abp.Notifications.MongoDB` 实现；cloud 不需要，作为后续项，
+不阻塞本稿。
 
 照抄：ABP 权限 / 功能 / 设置三套动态定义存储；cloud 里每个服务映射 `AdministrationService` 连接串保存自己的定义
 （VaultService 的 `VaultExtract.Enable` 就是这样进 `Cloud_Administration.AbpFeatures` 的）。
@@ -299,15 +354,15 @@ Identity 库的进程里算用户的有效权限；微服务模板给 Administra
 
 | 进程 | 情形 | 结果 |
 |---|---|---|
-| 任何宿主 | 既没装 Distribution 也没装 Remote | `INotificationPublisher` 无实现，首次解析失败 |
-| 任何宿主 | 两个都装 | 启动失败，消息指出二选一 |
-| 发布方（Remote） | 路由规则引用未定义的通知名 | 启动失败（Core 现有校验不动） |
-| 发布方（Remote） | 规则引用的渠道本进程没有通知器 | 不校验——渠道在别处托管。「未托管渠道」校验随 Distribution 走 |
-| 发布方（Remote） | 定义解析为无渠道 | 允许，表示只进收件箱 |
-| 发布方（Remote） | 发布时定义不存在 | 抛，和本地发布器一致 |
-| 通知服务 | 动态权限 / 功能存储未开 | 不校验，README 说明：必须打开 `IsDynamicPermissionStoreEnabled` 和 `IsDynamicFeatureStoreEnabled`，否则别的服务定义的权限名 / 功能名在本进程静默判 false，带门槛的通知会把所有收件人过滤掉。不做启动警告：它只对通知服务有意义，却要让每个装 DefinitionStore 的发布方多带两个管理模块的依赖；ABP 自己也不跨模块校验这类开关 |
+| 任何宿主 | 既没装实现包也没装 Client | `NullNotificationPublisher`：每次发布记 Warning 后返回（rc.23 是首次解析失败） |
+| 任何宿主 | 两个都装（NotificationCenter.Application 带着实现包） | 本地优先：`DefaultNotificationPublisher` 在任意模块顺序下胜出，进程自己分发（rc.23 是启动失败；ABP 不做这类互斥，`HttpClientUserRoleFinder` 用 `TryRegister` 让位给本地实现） |
+| 发布方（Client） | 路由规则引用未定义的通知名 | 启动失败（Abstractions 的校验） |
+| 发布方（Client） | 规则引用的渠道本进程没有通知器 | 不校验——渠道在别处托管。「未托管渠道」校验随实现包走 |
+| 发布方（Client） | 定义解析为无渠道 | 允许，表示只进收件箱 |
+| 发布方（Client） | 发布时定义不存在 | 抛，和本地发布器一致 |
+| 通知服务 | 动态权限 / 功能存储未开 | 不校验，README 说明：必须打开 `IsDynamicPermissionStoreEnabled` 和 `IsDynamicFeatureStoreEnabled`，否则别的服务定义的权限名 / 功能名在本进程静默判 false，带门槛的通知会把所有收件人过滤掉。不做启动警告：它只对通知服务有意义，却要让每个装定义存储（Domain）的发布方多带两个管理模块的依赖；ABP 自己也不跨模块校验这类开关 |
 | 通知服务 | 收到的 `NotificationName` 在本进程的静态定义和动态目录里都不存在 | 处理器在写入任何东西之前抛出带说明的异常，交给 ABP 事件 inbox 按其失败策略重试；通知服务应设 `AbpEventBusBoxesOptions.InboxProcessorFailurePolicy = RetryLater`（指数退避，默认 10 次后丢弃），ABP 默认的 `Retry` 会每个周期重跑同一事件并挡住它后面的事件。不按无定义分发：定义携带权限/功能门槛，不变量 §7 要求它们在投递时生效，未知定义当作无门槛就绕过了资格过滤；何况分发器的 `IsAvailableAsync` 对未知名本来判 false，"按无定义分发"实际是零收件人、事件标记已处理、通知静默丢失。常见原因是时间差（发布方启动时保存定义，通知服务每 30 秒比一次 stamp），几次重试之内即可通过 |
-| 无状态模式（Distribution + Null store） | 定义解析为无渠道 | 启动失败（现有校验，位置移到 Distribution） |
+| 无状态模式（实现包 + Null store） | 定义解析为无渠道 | 启动失败（现有校验，位置在实现包） |
 
 ## 10. Dignite.Cloud 的落地
 
@@ -346,7 +401,20 @@ Helm `angular-configmap.yaml` 的 scope、run profile 的 `execution.order`、Pr
 `Dignite.Abp.Notifications`（Core）经 Extract.Application 传递进来，不用显式引用；`NotificationCenterVersion` 属性改名或
 移到 NotificationService，注释改成「与 Extract 依赖的 `Dignite.Abp.Notifications` 同版本」。
 
-### 10.3 端到端验收
+### 10.3 rc.24 升级
+
+- NotificationService：`Dignite.Abp.Notifications.Distribution` → `Dignite.Abp.Notifications`（或只靠
+  NotificationCenter.Application 传递），`.DefinitionStore` / `.DefinitionStore.EntityFrameworkCore` →
+  `.EntityFrameworkCore`；`DependsOn` 改 `AbpNotificationsModule`、`AbpNotificationsEntityFrameworkCoreModule`；
+  `using Dignite.Abp.Notifications.DefinitionStore(.EntityFrameworkCore)` 改为 `Dignite.Abp.Notifications(.EntityFrameworkCore)`。
+- VaultService：`.Remote` → `.Client`（`AbpNotificationsClientModule`），`.DefinitionStore.EntityFrameworkCore` →
+  `.EntityFrameworkCore`。Extract.Application 升到 rc.24 后引用的是 `.Abstractions`；若它仍 `DependsOn`
+  `AbpNotificationsModule`，VaultService 会带进实现包、本地发布器胜出、在 VaultService 里分发——这正是 CHANGELOG 醒目提示的迁移项。
+- 两个服务的 EF 模型快照里，定义记录实体的 CLR 名从 `Dignite.Abp.Notifications.DefinitionStore.*` 变成
+  `Dignite.Abp.Notifications.*`；表和列不变。本仓库 demo host 已验证：改名前后 `dotnet ef migrations
+  has-pending-model-changes` 都报告无变化。
+
+### 10.4 端到端验收
 
 Vault 上传文档 → 文档就绪 → Angular 铃铛经 NotificationService 响；订阅设置页能列出 "Documents" 组的四条定义，显示名
 已本地化；VaultService 的库里没有 `Notif*` 表；RabbitMQ 里 `Cloud_VaultService` 队列不再收到 `NotificationDeliveryRequested`。
@@ -357,32 +425,39 @@ Vault 上传文档 → 文档就绪 → Angular 铃铛经 NotificationService �
   的注释改成「远程发布时该事务只含 outbox 写入」；`docs/en/egress/operator-notifications.md`、`deployment.md`、
   `CHANGELOG.md` 补「拆分部署：宿主装 Remote 而不是 NotificationCenter」。测试项目若依赖本地发布器，加 Distribution。
 - **campus.support 不改**。campus 单体宿主加 Distribution，`Push.Identity` 等照旧，行为不变。
+- rc.24：两个业务模块的 Application 项目改引用 `Dignite.Abp.Notifications.Abstractions`、`DependsOn`
+  `AbpNotificationsAbstractionsModule`；单体宿主把 `.Distribution` 换成 `Dignite.Abp.Notifications`。
 - Campus 进 cloud 是另一个设计：`Campus_Mobile` 客户端和 `Campus` scope、职员查找改走集成服务、会话集成服务（§8）、
   public 网关给手机端的路由。本稿不堵它的路。
 
 ## 12. 删除与修改清单（abp-modules/notifications）
 
+以下按 rc.24 的包名列出（rc.23 的实现顺序见 §14）。
+
 **新增**
 
-- Abstractions：`NotificationPublishRequestedEto`。
-- `Dignite.Abp.Notifications.Distribution`：从 Core 迁入 §4 列出的实现；`NotificationPublishRequestedHandler`；
+- Abstractions：`NotificationPublishRequestedEto`；rc.24 并入原 Core 的全部内容，并接收 `NullNotificationStore`、
+  `AlwaysGrantedNotificationPermissionChecker`，新增 `NullNotificationPublisher`。
+- `Dignite.Abp.Notifications`（实现包，rc.23 名为 `.Distribution`）：§4 列出的实现；`NotificationPublishRequestedHandler`；
   `[BackgroundJobName("Dignite.Abp.Notifications.Distribute")]`。
-- `Dignite.Abp.Notifications.Remote`：`RemoteNotificationPublisher`、模块类、与 Distribution 互斥的启动校验。
-- `Dignite.Abp.Notifications.DefinitionStore` + `.EntityFrameworkCore`：§6 的全部部件。
-- `Dignite.NotificationCenter.Installer` 的 `.abpmdl` 补新包（如果 Studio 安装需要）。
+- `Dignite.Abp.Notifications.Client`（rc.23 名为 `.Remote`）：`RemoteNotificationPublisher`（rc.24 起 `TryRegister`）、模块类。
+  rc.23 的「与 Distribution 互斥」启动校验在 rc.24 删除，改为本地优先。
+- `Dignite.Abp.Notifications.Domain.Shared` + `.Domain` + `.EntityFrameworkCore`（rc.23 名为 `.DefinitionStore` +
+  `.DefinitionStore.EntityFrameworkCore`）：§6 的全部部件；rc.24 新增 `NotificationDefinitionsChangedEto` 及其发布。
+- `Dignite.NotificationCenter.Installer` 的 `.abpmdl` 列出新包。
 
 **修改**
 
-- Core：`NotificationInfo.Data` → `DataJson`；`INotificationDefinitionManager` 异步化及其调用方；
-  `NotificationDefinitionStartupService` 只留路由名对账；`AbpNotificationsModule` 不再注册 handler 和作业。
-- Distribution 内：发布器的「在线 / 入队」判断提成共用方法；分发器接受预解析的 `Channels`；
+- Abstractions（rc.23 的 Core）：`NotificationInfo.Data` → `DataJson`；`INotificationDefinitionManager` 异步化及其调用方；
+  `NotificationDefinitionStartupService` 只留路由名对账；契约模块不注册 handler 和作业。
+- 实现包内：发布器的「在线 / 入队」判断提成共用方法；分发器接受预解析的 `Channels`；
   `NotificationStore.InsertNotificationAsync` 加 Id 预检（在 NotificationCenter.Domain）。
 - `Notifications.Identity`：§7。csproj 去掉 `Volo.Abp.Identity.Domain`。
-- README：Install 两段改成三种组合（单体 / 发布方 / 通知服务）；新增 "Split deployment" 一节；Packages 表加四个包；
-  Architecture 图加 `NotificationPublishRequestedEto`。
-- CLAUDE.md（notifications）：Structure 表加新包；"Two operation modes" 加第三种「远程发布」。
-- `notifications-conventions` skill：补「契约留 Core，实现进 Distribution」和 `DataJson` 规则。
-- `host/`：装 Distribution。
+- README：Install 改成三种组合（单体 / 发布方 / 通知服务）；"Split deployment" 一节（含 rc.24 的「生产端和消费端分包」
+  与「ABP 的包布局」）；Packages 表按 rc.24 的包；Architecture 图加 `NotificationPublishRequestedEto`。
+- CLAUDE.md（notifications）：Structure 表按 rc.24 的包；"Two operation modes" 加第三种「远程发布」。
+- `notifications-conventions` skill：「契约在 Abstractions，默认实现在无后缀包，Client 是远程发布」和 `DataJson` 规则。
+- `host/`：装实现包和 `.EntityFrameworkCore`。
 
 **不改**
 
@@ -393,15 +468,16 @@ Vault 上传文档 → 文档就绪 → Angular 铃铛经 NotificationService �
 | 项 | 断言 |
 |---|---|
 | ETO 往返 | `NotificationPublishRequestedEto` 用默认 STJ 往返，`DataJson` 内含判别符而非 CLR 名（照 ETO 现有测试） |
-| Remote 发布器 | 定义不存在抛；渠道由本地 resolver 解析并写入 ETO；有工作单元时事件进 outbox 而非直发；一条通知恰好一条事件，与收件人数量无关 |
+| 远程发布器（Client） | 定义不存在抛；渠道由本地 resolver 解析并写入 ETO；有工作单元时事件进 outbox 而非直发；一条通知恰好一条事件，与收件人数量无关 |
 | 接收处理器 | 租户来自 ETO；小扇出在线、大扇出入作业；`Channels` 非空时 resolver 不被调用（`Received(0)`）；同一 `NotificationId` 处理两次只有一行 `Notification` |
 | 负载透传 | 通知服务未注册的判别符：存储逐字节保留；收件箱 REST 返回 `Dignite.Unsupported` 且 `rawJson` 与原文一致；SignalR 原样推送；Email 跳过并记 Debug |
-| 包边界 | 只装 Core + Remote 的宿主：`JobQueueManager` 没有分发作业的消费者；没有 `NotificationDeliveryRequested` 的处理器 |
-| 互斥 | Distribution + Remote 同装 → 启动失败 |
-| DefinitionStore | 两个应用名各自保存，第二个不删第一个的记录；`DeletedNotifications` 删对应记录；hash 相同不写库；动态 store 在 stamp 变化后重读；静态优先于动态 |
+| 包边界 | 只装 Abstractions + Client 的宿主：`JobQueueManager` 没有分发作业的消费者；没有两个通知事件的处理器；`INotificationStore` 是 `NullNotificationStore` |
+| 本地优先（rc.24，取代 rc.23 的「互斥」） | 实现包 + Client 同装，两种模块顺序下都解析为 `DefaultNotificationPublisher`；只装 Client 解析为 `RemoteNotificationPublisher`；都不装解析为 `NullNotificationPublisher`，发布时记 Warning |
+| 定义存储（Domain） | 两个应用名各自保存，第二个不删第一个的记录；`DeletedNotifications` 删对应记录；hash 相同不写库；动态 store 在 stamp 变化后重读；静态优先于动态 |
 | 本地化 | 按名字的显示名经外部存储解析（测试里用内存 `IExternalLocalizationStore`） |
 | Identity | 拼出的 principal 含 UserId、全部 Role、TenantId；租户上下文正确；`IUserRoleFinder` 用 NSubstitute |
-| 无状态模式 | Distribution + Null store 行为与今天完全一致（现有测试不改） |
+| 无状态模式 | 实现包 + Null store 行为与今天完全一致（现有测试不改） |
+| 定义变更事件（rc.24） | 首次保存发一条含全部新名字的 `NotificationDefinitionsChangedEto`，hash 未变不发；修改只含被改的名字；删除不发；事件名稳定，默认 STJ 可往返 |
 
 ## 14. 实现顺序
 

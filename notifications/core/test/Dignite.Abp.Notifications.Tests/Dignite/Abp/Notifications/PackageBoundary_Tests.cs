@@ -1,7 +1,6 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
-using Dignite.Abp.Notifications.Remote;
+using Dignite.Abp.Notifications.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Shouldly;
@@ -15,14 +14,15 @@ using Xunit;
 namespace Dignite.Abp.Notifications;
 
 /// <summary>
-/// What each package brings into a process, assembled from ABP modules. A publisher with Core + Remote must not consume
-/// the distribution job queue or the delivery events (both used to arrive with Core); Remote and Distribution must
-/// not share a process.
+/// What each package brings into a process, assembled from ABP modules. A publisher with Abstractions + Client must not
+/// consume the distribution job queue or the delivery events; the in-process implementation registers both. Client and
+/// the implementation package do not exclude each other: installed together, the local publisher wins in either module
+/// order, as ABP's local <c>UserRoleFinder</c> wins over the <c>TryRegister</c>-ed <c>HttpClientUserRoleFinder</c>.
 /// </summary>
 public class PackageBoundary_Tests
 {
     [Fact]
-    public async Task A_Core_and_Remote_publisher_has_no_distribution_job_and_no_notification_event_handlers()
+    public async Task An_Abstractions_and_Client_publisher_has_no_distribution_job_and_no_notification_event_handlers()
     {
         using var application = await StartAsync<RemotePublisherModule>();
         var services = application.ServiceProvider;
@@ -43,15 +43,15 @@ public class PackageBoundary_Tests
 
         services.GetRequiredService<INotificationPublisher>().ShouldBeOfType<RemoteNotificationPublisher>();
         services.GetService<INotificationDistributor>().ShouldBeNull();
-        services.GetService<INotificationStore>().ShouldBeNull();
+        services.GetRequiredService<INotificationStore>().ShouldBeOfType<NullNotificationStore>();
 
         await application.ShutdownAsync();
     }
 
     [Fact]
-    public async Task A_Distribution_host_registers_the_job_under_its_stable_name_and_both_handlers()
+    public async Task An_implementation_host_registers_the_job_under_its_stable_name_and_both_handlers()
     {
-        using var application = await StartAsync<DistributionHostModule>();
+        using var application = await StartAsync<ImplementationHostModule>();
         var services = application.ServiceProvider;
 
         var job = services.GetRequiredService<IOptions<AbpBackgroundJobOptions>>().Value
@@ -76,16 +76,37 @@ public class PackageBoundary_Tests
     }
 
     [Theory]
-    [InlineData(typeof(RemoteThenDistributionModule))]
-    [InlineData(typeof(DistributionThenRemoteModule))]
-    public async Task Remote_and_Distribution_in_one_process_fail_the_start(Type startupModule)
+    [InlineData(typeof(ClientThenImplementationModule))]
+    [InlineData(typeof(ImplementationThenClientModule))]
+    public async Task Client_and_the_implementation_in_one_process_resolve_the_local_publisher(Type startupModule)
     {
-        var exception = await Should.ThrowAsync<Exception>(() => AbpApplicationFactory.CreateAsync(
-            startupModule,
-            options => options.UseAutofac()));
+        using var application = await AbpApplicationFactory.CreateAsync(startupModule, options => options.UseAutofac());
+        await application.InitializeAsync();
+        var services = application.ServiceProvider;
 
-        var message = exception.ToString();
-        message.ShouldContain("Dignite.Abp.Notifications.Remote and Dignite.Abp.Notifications.Distribution are both installed");
+        services.GetRequiredService<INotificationPublisher>().ShouldBeOfType<DefaultNotificationPublisher>();
+        services.GetServices<INotificationPublisher>()
+            .ShouldNotContain(publisher => publisher is NullNotificationPublisher);
+
+        // The process distributes itself, so it hosts the job and the handlers like any implementation host.
+        services.GetRequiredService<IOptions<AbpBackgroundJobOptions>>().Value
+            .GetJob(typeof(NotificationDistributionJobArgs)).JobType.ShouldBe(typeof(NotificationDistributionJob));
+        services.GetServices<IDistributedEventHandler<NotificationPublishRequestedEto>>()
+            .ShouldContain(handler => handler is NotificationPublishRequestedHandler);
+
+        await application.ShutdownAsync();
+    }
+
+    [Fact]
+    public async Task Client_alone_wins_over_the_null_publisher()
+    {
+        using var application = await StartAsync<ClientOnlyModule>();
+
+        application.ServiceProvider.GetServices<INotificationPublisher>()
+            .ShouldHaveSingleItem()
+            .ShouldBeOfType<RemoteNotificationPublisher>();
+
+        await application.ShutdownAsync();
     }
 
     private static async Task<IAbpApplicationWithInternalServiceProvider> StartAsync<TModule>()
@@ -105,9 +126,9 @@ public class PackageBoundary_Tests
         }
     }
 
-    // A publisher service: background jobs are installed (they would carry the distribution job if Core still did).
+    // A publisher service: background jobs are installed (they would carry the distribution job if the contracts did).
     [DependsOn(
-        typeof(AbpNotificationsRemoteModule),
+        typeof(AbpNotificationsClientModule),
         typeof(AbpBackgroundJobsAbstractionsModule),
         typeof(AbpAutofacModule))]
     public class RemotePublisherModule : IsolatedTestModule
@@ -115,25 +136,33 @@ public class PackageBoundary_Tests
     }
 
     [DependsOn(
-        typeof(AbpNotificationsDistributionModule),
+        typeof(AbpNotificationsModule),
         typeof(AbpAutofacModule))]
-    public class DistributionHostModule : IsolatedTestModule
+    public class ImplementationHostModule : IsolatedTestModule
     {
     }
 
     [DependsOn(
-        typeof(AbpNotificationsRemoteModule),
-        typeof(AbpNotificationsDistributionModule),
+        typeof(AbpNotificationsClientModule),
         typeof(AbpAutofacModule))]
-    public class RemoteThenDistributionModule : IsolatedTestModule
+    public class ClientOnlyModule : IsolatedTestModule
+    {
+    }
+
+    // Module order follows DependsOn: Client's publisher is registered before the local one here, after it below.
+    [DependsOn(
+        typeof(AbpNotificationsClientModule),
+        typeof(AbpNotificationsModule),
+        typeof(AbpAutofacModule))]
+    public class ClientThenImplementationModule : IsolatedTestModule
     {
     }
 
     [DependsOn(
-        typeof(AbpNotificationsDistributionModule),
-        typeof(AbpNotificationsRemoteModule),
+        typeof(AbpNotificationsModule),
+        typeof(AbpNotificationsClientModule),
         typeof(AbpAutofacModule))]
-    public class DistributionThenRemoteModule : IsolatedTestModule
+    public class ImplementationThenClientModule : IsolatedTestModule
     {
     }
 }

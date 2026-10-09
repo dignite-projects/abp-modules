@@ -12,7 +12,7 @@ namespace Dignite.Abp.Notifications.Push;
 /// <remarks>
 /// <para>
 /// With the Notification Center installed, <c>Dignite.NotificationCenter.Push</c> implements this over its
-/// <c>PushDevice</c> registry. A Core-only (stateless) host implements it against its own device storage. Without
+/// <c>PushDevice</c> registry. A stateless host (no Notification Center) implements it against its own device storage. Without
 /// either, <see cref="NullPushDeviceStore"/> answers "no devices" and the push channel delivers nothing.
 /// </para>
 /// <para>

@@ -61,7 +61,7 @@ using Microsoft.Extensions.Hosting;
 
 // Dignite NotificationCenter integration
 using Dignite.Abp.Notifications;
-using Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore;
+using Dignite.Abp.Notifications.EntityFrameworkCore;
 using Dignite.Abp.Notifications.SignalR;
 using Dignite.Abp.Notifications.Identity;
 using Dignite.NotificationCenter;
@@ -119,8 +119,9 @@ namespace Dignite.NotificationCenter.Web.Host;
     typeof(AbpEntityFrameworkCoreSqliteModule),
 
     // Dignite NotificationCenter + notifiers + MVC UI (this repo). This host keeps the inbox and the channels, so it
-    // distributes in-process (Distribution); a publisher whose inbox is elsewhere would install Remote instead.
-    typeof(AbpNotificationsDistributionModule),
+    // distributes in-process (Dignite.Abp.Notifications); a publisher whose inbox is elsewhere would install
+    // Dignite.Abp.Notifications.Client instead.
+    typeof(AbpNotificationsModule),
     typeof(AbpNotificationsSignalRModule),
     typeof(AbpNotificationsIdentityModule),
     typeof(NotificationCenterApplicationModule),
@@ -129,7 +130,7 @@ namespace Dignite.NotificationCenter.Web.Host;
     typeof(NotificationCenterWebModule),
     // The definition store with its defaults: this host saves its definitions at startup (as every publisher of a split
     // deployment does) and, defining every notification it serves itself, does not read the store.
-    typeof(AbpNotificationsDefinitionStoreEntityFrameworkCoreModule)
+    typeof(AbpNotificationsEntityFrameworkCoreModule)
 )]
 public class HostModule : AbpModule
 {

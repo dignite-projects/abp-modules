@@ -49,20 +49,20 @@
   <Folder Name="/notifications/core/" />
   <Folder Name="/notifications/core/src/">
     <Project Path="notifications/core/src/Dignite.Abp.Notifications.Abstractions/Dignite.Abp.Notifications.Abstractions.csproj" />
-    <Project Path="notifications/core/src/Dignite.Abp.Notifications.DefinitionStore/Dignite.Abp.Notifications.DefinitionStore.csproj" />
-    <Project Path="notifications/core/src/Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore/Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore.csproj" />
-    <Project Path="notifications/core/src/Dignite.Abp.Notifications.Distribution/Dignite.Abp.Notifications.Distribution.csproj" />
+    <Project Path="notifications/core/src/Dignite.Abp.Notifications.Domain/Dignite.Abp.Notifications.Domain.csproj" />
+    <Project Path="notifications/core/src/Dignite.Abp.Notifications.Domain.Shared/Dignite.Abp.Notifications.Domain.Shared.csproj" />
+    <Project Path="notifications/core/src/Dignite.Abp.Notifications.EntityFrameworkCore/Dignite.Abp.Notifications.EntityFrameworkCore.csproj" />
     <Project Path="notifications/core/src/Dignite.Abp.Notifications.Emailing/Dignite.Abp.Notifications.Emailing.csproj" />
     <Project Path="notifications/core/src/Dignite.Abp.Notifications.Emailing.Identity/Dignite.Abp.Notifications.Emailing.Identity.csproj" />
     <Project Path="notifications/core/src/Dignite.Abp.Notifications.Push/Dignite.Abp.Notifications.Push.csproj" />
     <Project Path="notifications/core/src/Dignite.Abp.Notifications.Push.Expo/Dignite.Abp.Notifications.Push.Expo.csproj" />
-    <Project Path="notifications/core/src/Dignite.Abp.Notifications.Remote/Dignite.Abp.Notifications.Remote.csproj" />
+    <Project Path="notifications/core/src/Dignite.Abp.Notifications.Client/Dignite.Abp.Notifications.Client.csproj" />
     <Project Path="notifications/core/src/Dignite.Abp.Notifications.Identity/Dignite.Abp.Notifications.Identity.csproj" />
     <Project Path="notifications/core/src/Dignite.Abp.Notifications.SignalR/Dignite.Abp.Notifications.SignalR.csproj" />
     <Project Path="notifications/core/src/Dignite.Abp.Notifications/Dignite.Abp.Notifications.csproj" />
   </Folder>
   <Folder Name="/notifications/core/test/">
-    <Project Path="notifications/core/test/Dignite.Abp.Notifications.DefinitionStore.Tests/Dignite.Abp.Notifications.DefinitionStore.Tests.csproj" />
+    <Project Path="notifications/core/test/Dignite.Abp.Notifications.Domain.Tests/Dignite.Abp.Notifications.Domain.Tests.csproj" />
     <Project Path="notifications/core/test/Dignite.Abp.Notifications.TestProviderA/Dignite.Abp.Notifications.TestProviderA.csproj" />
     <Project Path="notifications/core/test/Dignite.Abp.Notifications.TestProviderB/Dignite.Abp.Notifications.TestProviderB.csproj" />
     <Project Path="notifications/core/test/Dignite.Abp.Notifications.Tests/Dignite.Abp.Notifications.Tests.csproj" />

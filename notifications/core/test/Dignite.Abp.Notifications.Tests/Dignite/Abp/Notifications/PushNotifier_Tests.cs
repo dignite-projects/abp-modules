@@ -224,7 +224,7 @@ public class PushNotifier_Tests
     [Fact]
     public async Task Two_providers_claiming_the_same_name_fail_push_deliveries_but_not_construction()
     {
-        // A provider clash fails push deliveries through the best-effort path instead of escaping Core's handler.
+        // A provider clash fails push deliveries through the best-effort path instead of escaping the delivery handler.
         var first = new FakeProvider("Expo");
         var notifier = CreateNotifier(
             new FakeDeviceStore(new PushTarget("Expo", "phone")),

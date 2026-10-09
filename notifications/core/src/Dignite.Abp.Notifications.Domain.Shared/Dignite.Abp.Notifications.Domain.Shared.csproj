@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net10.0</TargetFrameworks>
+    <RootNamespace />
+    <Description>Constants and event contracts of the Dignite.Abp.Notifications definition store (Dignite.Abp.Notifications.Domain), after ABP's Volo.Abp.PermissionManagement.Domain.Shared: the record column sizes and NotificationDefinitionsChangedEto.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.EventBus.Abstractions" />
+  </ItemGroup>
+
+</Project>

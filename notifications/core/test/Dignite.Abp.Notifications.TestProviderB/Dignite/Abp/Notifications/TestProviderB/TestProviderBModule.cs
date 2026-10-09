@@ -3,7 +3,7 @@ using Volo.Abp.Modularity;
 
 namespace Dignite.Abp.Notifications.TestProviderB;
 
-[DependsOn(typeof(AbpNotificationsModule))]
+[DependsOn(typeof(AbpNotificationsAbstractionsModule))]
 public class TestProviderBModule : AbpModule
 {
 }

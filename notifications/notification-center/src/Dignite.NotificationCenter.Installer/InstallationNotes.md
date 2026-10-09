@@ -3,11 +3,12 @@
 Dignite.NotificationCenter is a DDD inbox/subscriptions backend (read/unread state, a REST API, and
 MVC/Angular UI) built on Dignite.Abp.Notifications' event-driven publish/distribute pipeline and
 pluggable Notifiers (Emailing, SignalR). Installing this module brings in the core notification
-framework and its in-process distribution pipeline (`Dignite.Abp.Notifications.Distribution`) as its
-underlying delivery layer. A service that only publishes notifications for another process to distribute
-installs `Dignite.Abp.Notifications.Remote` instead of this module, and both sides install
-`Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore` so that the process serving the inbox knows the
-publishers' notification definitions — see "Split deployment" and "Definition catalog" in the README.
+framework — the contracts (`Dignite.Abp.Notifications.Abstractions`) and the in-process implementation
+(`Dignite.Abp.Notifications`) — as its underlying delivery layer. A business module references only
+`Dignite.Abp.Notifications.Abstractions`. A service that only publishes notifications for another process to
+distribute installs `Dignite.Abp.Notifications.Client` instead of this module, and both sides install
+`Dignite.Abp.Notifications.EntityFrameworkCore` so that the process serving the inbox knows the publishers'
+notification definitions — see "Split deployment" and "Definition catalog" in the README.
 
 ## Documentation
 

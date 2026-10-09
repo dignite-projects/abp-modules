@@ -16,6 +16,96 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Added
+
+#### notifications
+
+- `NullNotificationPublisher` (Abstractions), the null default of `INotificationPublisher`, after ABP's `NullSmsSender`.
+- `NotificationDefinitionsChangedEto` (`Dignite.Abp.Notifications.Domain.Shared`, wire name
+  `Dignite.Abp.Notifications.NotificationDefinitionsChanged`), after ABP's `DynamicPermissionDefinitionsChangedEto`:
+  the saver publishes the names of the definitions a save inserted or changed, through the distributed event bus in
+  its unit of work (into the outbox when one is configured). Group-only changes and deletions publish nothing, as in
+  ABP. Nothing in the module handles it; the dynamic store still reloads through the common stamp.
+- `Dignite.Abp.Notifications.Domain.Shared` (`netstandard2.0;netstandard2.1;net10.0`): the record column sizes
+  (`NotificationDefinitionRecordConsts`, `NotificationGroupDefinitionRecordConsts`, moved from the definition store)
+  and the event above.
+
+### Changed
+
+#### notifications
+
+- **Breaking - the notifications packages follow ABP's package layout.** One `.Abstractions` package holds every
+  contract and its null default (as `Volo.Abp.Authorization.Abstractions` does), the in-process implementation takes
+  the plain name (as `Volo.Abp.BackgroundJobs` does), remote publishing lives in a `.Client` package (as
+  `RemotePermissionChecker` lives in `Volo.Abp.AspNetCore.Mvc.Client(.Common)`), and the definition store is the feature's
+  `.Domain.Shared` / `.Domain` / `.EntityFrameworkCore` (as `Volo.Abp.PermissionManagement.Domain` is):
+
+  | rc.23 package | rc.24 package | rc.23 module | rc.24 module |
+  |---|---|---|---|
+  | `Dignite.Abp.Notifications` (contracts) | `Dignite.Abp.Notifications.Abstractions` | `AbpNotificationsModule` | `AbpNotificationsAbstractionsModule` |
+  | `Dignite.Abp.Notifications.Distribution` | `Dignite.Abp.Notifications` (implementation) | `AbpNotificationsDistributionModule` | `AbpNotificationsModule` |
+  | `Dignite.Abp.Notifications.Remote` | `Dignite.Abp.Notifications.Client` | `AbpNotificationsRemoteModule` | `AbpNotificationsClientModule` |
+  | `Dignite.Abp.Notifications.DefinitionStore` | `Dignite.Abp.Notifications.Domain` + `Dignite.Abp.Notifications.Domain.Shared` | `AbpNotificationsDefinitionStoreModule` | `AbpNotificationsDomainModule` (+ `AbpNotificationsDomainSharedModule`) |
+  | `Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore` | `Dignite.Abp.Notifications.EntityFrameworkCore` | `AbpNotificationsDefinitionStoreEntityFrameworkCoreModule` | `AbpNotificationsEntityFrameworkCoreModule` |
+
+  Everything Core held — the definition API and its static/dynamic stores, `NotificationRoutingOptions`, the channel
+  resolver, `INotificationPublisher`, `INotificationStore`, `INotificationDistributor`, `INotificationPermissionChecker`,
+  the info records, `NotificationEntityIdentifier`, the routing-name startup check — moved into Abstractions with the
+  same `Dignite.Abp.Notifications` namespace, as did `NullNotificationStore` and `AlwaysGrantedNotificationPermissionChecker`
+  from Distribution. `AbpNotificationsAbstractionsModule` now also depends on `AbpFeaturesModule` and runs Core's
+  options validation. Abstractions keeps `netstandard2.0;netstandard2.1;net10.0`. The types moved assembly, so modules
+  compiled against rc.23 must be recompiled.
+
+  > **Migrate — business modules: `AbpNotificationsModule` changed meaning.** In rc.23 it was the contracts module a
+  > business module depended on; in rc.24 it is the in-process implementation and brings the distributor, the
+  > distribution job and both event handlers. A business module (for example an `*.Application` project that defines
+  > and publishes notifications) changes its csproj reference from `Dignite.Abp.Notifications` to
+  > `Dignite.Abp.Notifications.Abstractions` and its `[DependsOn(typeof(AbpNotificationsModule))]` to
+  > `[DependsOn(typeof(AbpNotificationsAbstractionsModule))]`. Left as it is, the module still compiles and pulls the
+  > implementation into every process that hosts it — in a publisher with `.Client` the local publisher then wins and
+  > the publisher distributes its notifications itself instead of sending them to the notification service.
+
+  **Migrate — hosts:**
+  - Monolith (distributes in-process): replace `Dignite.Abp.Notifications.Distribution` with `Dignite.Abp.Notifications`
+    and `AbpNotificationsDistributionModule` with `AbpNotificationsModule`. A host with `Dignite.NotificationCenter.Application`
+    gets it from there.
+  - Publisher of a split deployment: replace `Dignite.Abp.Notifications.Remote` with `Dignite.Abp.Notifications.Client`
+    (`AbpNotificationsClientModule`, namespace `Dignite.Abp.Notifications.Client`), and
+    `Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore` with `Dignite.Abp.Notifications.EntityFrameworkCore`.
+  - Notification service: `Dignite.Abp.Notifications.Distribution` → `Dignite.Abp.Notifications`,
+    `Dignite.Abp.Notifications.DefinitionStore(.EntityFrameworkCore)` → `Dignite.Abp.Notifications.Domain` /
+    `Dignite.Abp.Notifications.EntityFrameworkCore` (`AbpNotificationsEntityFrameworkCoreModule`).
+  - Namespaces: `Dignite.Abp.Notifications.DefinitionStore` → `Dignite.Abp.Notifications` (the record entities,
+    `NotificationDefinitionStoreOptions`, `NotificationDefinitionStoreDbProperties`, the saver, the dynamic store),
+    `Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore` → `Dignite.Abp.Notifications.EntityFrameworkCore`.
+    `NotificationDefinitionStoreDbContext`, `ConfigureNotificationDefinitionStore()`, the `NotificationCenter`
+    connection string name and the tables are unchanged. The record entities' CLR names change, so a host's EF model
+    snapshot names them differently; the demo host's snapshot was updated and `dotnet ef migrations
+    has-pending-model-changes` reports no change, so no migration is needed for the rename itself.
+
+- **Breaking - `.Client` and the in-process implementation no longer exclude each other; the local publisher wins.**
+  rc.23's Remote module failed the start when an `INotificationDistributor` was registered. `RemoteNotificationPublisher`
+  now registers with `TryRegister` (it used `ReplaceServices`), as ABP's `HttpClientUserRoleFinder` yields to a local
+  `UserRoleFinder`: with both packages installed, `DefaultNotificationPublisher` is resolved in either module order and
+  the process distributes itself; with only `.Client`, `RemoteNotificationPublisher` is.
+- **Breaking - a host without any publisher resolves `NullNotificationPublisher`** instead of failing on the first
+  resolution of `INotificationPublisher`: each publish logs a warning naming the notification and returns. It is
+  registered by `AbpNotificationsAbstractionsModule.PostConfigureServices` (`TryAdd`, after every module's own
+  registrations), so the local and the remote publisher always win over it.
+- **Breaking - `StaticNotificationDefinitionSaver` takes an `IDistributedEventBus`**, and
+  `UpdateChangedNotificationsAsync` takes the `List<string>` that receives the names of the inserted and changed
+  definitions (ABP's `StaticPermissionSaver` signature). Only subclasses of the saver are affected.
+
+### Removed
+
+#### notifications
+
+- The package ids `Dignite.Abp.Notifications.Distribution`, `Dignite.Abp.Notifications.Remote`,
+  `Dignite.Abp.Notifications.DefinitionStore` and `Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore` (see
+  the table above), the modules `AbpNotificationsDistributionModule`, `AbpNotificationsRemoteModule`,
+  `AbpNotificationsDefinitionStoreModule`, `AbpNotificationsDefinitionStoreEntityFrameworkCoreModule`, and the startup
+  check that made Remote and Distribution exclusive.
+
 ## [10.0.0-rc.23] - 2026-10-09
 
 ### Added

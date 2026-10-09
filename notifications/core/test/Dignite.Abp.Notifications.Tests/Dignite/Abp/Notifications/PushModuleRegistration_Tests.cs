@@ -12,13 +12,13 @@ using Xunit;
 namespace Dignite.Abp.Notifications;
 
 /// <summary>
-/// The push packages wired the way a host installs them: Core plus the push channel plus the Expo provider, and no
+/// The push packages wired the way a host installs them: the contracts plus the push channel plus the Expo provider, and no
 /// device store — so the null store must be what answers.
 /// </summary>
 public class PushModuleRegistration_Tests
 {
     [DependsOn(
-        typeof(AbpNotificationsModule),
+        typeof(AbpNotificationsAbstractionsModule),
         typeof(AbpNotificationsPushExpoModule),
         typeof(AbpAutofacModule))]
     public class PushTestModule : AbpModule

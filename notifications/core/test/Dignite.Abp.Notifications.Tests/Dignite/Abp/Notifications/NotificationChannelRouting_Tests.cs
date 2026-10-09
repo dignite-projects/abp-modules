@@ -317,8 +317,8 @@ public class NotificationChannelRouting_Tests
     }
 
     /// <summary>
-    /// The startup checks of a host that distributes: Core's routing-name check followed by Distribution's hosted-channel
-    /// and stateless-mode checks, in the order the hosted services run.
+    /// The startup checks of a host that distributes: Abstractions' routing-name check followed by the implementation
+    /// package's hosted-channel and stateless-mode checks, in the order the hosted services run.
     /// </summary>
     private static StartupChecks CreateStartup(
         string[] definitionNames,

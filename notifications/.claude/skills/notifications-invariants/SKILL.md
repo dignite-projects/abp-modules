@@ -124,14 +124,16 @@ constructor injection).
   request. Definition/registry caches (name → definition lookups) are fine as singletons — the
   permission/store checks that ride along with them are not.
 
-## 3. Notifiers are plugins — depend on `Abstractions`, not Core or Center
+## 3. Notifiers are plugins — depend on `Abstractions`, not the implementation or Center
 
 A Notifier (SignalR, Email, Push, future WebPush/SMS/Webhook) references
 `Dignite.Abp.Notifications.Abstractions` and its own channel SDK — nothing else in this repo. It
 implements `INotificationNotifier` and handles one `NotificationDeliveryRequestedEto` through cancellation-aware
-`DeliverAsync`; the internal handler in Distribution owns distributed transport adaptation. A Notifier should not need
-`INotificationStore`, EF Core, or MongoDB. This is what lets a channel be added,
-removed, or deployed independently without touching Core.
+`DeliverAsync`; the internal handler in `Dignite.Abp.Notifications` (the implementation package) owns distributed
+transport adaptation. A Notifier should not need `INotificationStore`, EF Core, or MongoDB. This is what lets a channel
+be added, removed, or deployed independently without touching the pipeline. (Abstractions now also carries the
+definition and routing contracts a notifier never uses; that is ABP's one-Abstractions-per-feature layout, not a
+reason to reference anything else.)
 
 There is **no exception left** — `Emailing` used to be one and no longer is; its `.csproj` has a
 single `ProjectReference`, to `Abstractions`. Don't reintroduce one. Host-specific address or
@@ -148,7 +150,7 @@ Notification Center's device registry — exactly as an email address comes from
 ## 4. Delivery is best-effort, single-recipient, and cancellation-aware
 
 `NotificationDeliveryRequestedEto` carries exactly one `UserId` and one channel. Never reintroduce an aggregate
-recipient list at this boundary. Delivery is **best-effort**: the internal handler in Distribution resolves the channel notifier
+recipient list at this boundary. Delivery is **best-effort**: the internal handler in the implementation package resolves the channel notifier
 and calls `DeliverAsync` once — there is no per-recipient delivery record, idempotency key, lease, or retry worker.
 The authoritative record of a notification is the inbox row; a channel that throws is logged and dropped, not
 retried. Forward the supplied `CancellationToken` to channel SDK calls and other cancellable I/O.
@@ -159,8 +161,8 @@ reintroduce it; use ABP's own distributed-event outbox if at-least-once transpor
 
 ## 5. Both operation modes must keep working
 
-Core and Distribution logic (publish, distribute, definitions) must function with `NullNotificationStore` (no
-Center installed) as well as a real store. Don't add a feature to Core or Distribution that silently assumes
+Abstractions and implementation logic (publish, distribute, definitions) must function with `NullNotificationStore`
+(no Center installed) as well as a real store. Don't add a feature to either package that silently assumes
 `NotificationCenter` is present — see "Two operation modes" in
 [`notifications/CLAUDE.md`](../../../CLAUDE.md).
 

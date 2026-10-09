@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>Remote publishing for Dignite.Abp.Notifications: an INotificationPublisher that validates the definition and resolves the channels locally, then sends one NotificationPublishRequestedEto through the distributed event bus (and the publisher's outbox) to the process that hosts the inbox. For publishers that do not host the inbox. Installed next to Dignite.Abp.Notifications, the local publisher wins.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.EventBus" />
+    <PackageReference Include="Volo.Abp.Guids" />
+    <PackageReference Include="Volo.Abp.Timing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.Abp.Notifications.Abstractions\Dignite.Abp.Notifications.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

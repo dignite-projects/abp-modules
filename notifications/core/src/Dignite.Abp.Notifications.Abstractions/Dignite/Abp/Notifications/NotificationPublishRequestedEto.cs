@@ -6,8 +6,8 @@ namespace Dignite.Abp.Notifications;
 
 /// <summary>
 /// A notification published in one process for the process that hosts the inbox and the channels to distribute. The
-/// remote publisher (<c>Dignite.Abp.Notifications.Remote</c>) sends it instead of distributing locally;
-/// <c>NotificationPublishRequestedHandler</c> in <c>Dignite.Abp.Notifications.Distribution</c> hands it to that process's
+/// remote publisher (<c>Dignite.Abp.Notifications.Client</c>) sends it instead of distributing locally;
+/// <c>NotificationPublishRequestedHandler</c> in <c>Dignite.Abp.Notifications</c> hands it to that process's
 /// distributor. One notification is one event, whatever the number of recipients.
 /// </summary>
 /// <remarks>

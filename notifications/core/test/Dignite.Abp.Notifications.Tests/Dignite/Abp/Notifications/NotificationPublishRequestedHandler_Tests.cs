@@ -20,7 +20,7 @@ using Xunit;
 namespace Dignite.Abp.Notifications;
 
 /// <summary>
-/// The receiving side of remote publishing, in a stateless Core + Distribution host: a publish request that arrives
+/// The receiving side of remote publishing, in a stateless host with the in-process implementation: a publish request that arrives
 /// through the distributed event bus is distributed by this process exactly as a local publish would be.
 /// </summary>
 public class NotificationPublishRequestedHandler_Tests : DigniteAbpNotificationsTestBase

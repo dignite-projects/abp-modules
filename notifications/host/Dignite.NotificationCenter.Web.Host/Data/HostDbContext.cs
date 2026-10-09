@@ -11,7 +11,7 @@ using Volo.Abp.OpenIddict.EntityFrameworkCore;
 using Volo.Abp.PermissionManagement.EntityFrameworkCore;
 using Volo.Abp.SettingManagement.EntityFrameworkCore;
 using Dignite.NotificationCenter.EntityFrameworkCore;
-using Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore;
+using Dignite.Abp.Notifications.EntityFrameworkCore;
 
 namespace Dignite.NotificationCenter.Web.Host.Data;
 

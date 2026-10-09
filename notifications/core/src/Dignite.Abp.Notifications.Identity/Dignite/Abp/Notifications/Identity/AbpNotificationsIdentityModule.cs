@@ -11,7 +11,7 @@ namespace Dignite.Abp.Notifications.Identity;
 /// package in one that does not.
 /// </summary>
 [DependsOn(
-    typeof(AbpNotificationsModule),
+    typeof(AbpNotificationsAbstractionsModule),
     typeof(AbpAuthorizationModule),
     typeof(AbpIdentityDomainSharedModule)
     )]
