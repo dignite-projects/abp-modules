@@ -5,11 +5,15 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Dignite.Abp.Notifications.SignalR;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using Shouldly;
+using Volo.Abp;
 using Volo.Abp.EventBus.Distributed;
+using Volo.Abp.Localization;
 using Volo.Abp.MultiTenancy;
 using Xunit;
 
@@ -25,6 +29,7 @@ public class NotificationPublishRequestedHandler_Tests : DigniteAbpNotifications
     private readonly ReceivedNotificationDeliveries _received;
     private readonly FakeBackgroundJobManager _backgroundJobs;
     private readonly ICurrentTenant _currentTenant;
+    private readonly TestDynamicNotificationDefinitionStore _definitionStore;
 
     public NotificationPublishRequestedHandler_Tests()
     {
@@ -32,6 +37,15 @@ public class NotificationPublishRequestedHandler_Tests : DigniteAbpNotifications
         _received = GetRequiredService<ReceivedNotificationDeliveries>();
         _backgroundJobs = GetRequiredService<FakeBackgroundJobManager>();
         _currentTenant = GetRequiredService<ICurrentTenant>();
+        _definitionStore = GetRequiredService<TestDynamicNotificationDefinitionStore>();
+    }
+
+    /// <summary>A notification service: definitions saved by the publishers arrive through a dynamic store.</summary>
+    protected override void AfterAddApplication(IServiceCollection services)
+    {
+        services.AddSingleton<TestDynamicNotificationDefinitionStore>();
+        services.Replace(ServiceDescriptor.Singleton<IDynamicNotificationDefinitionStore>(
+            provider => provider.GetRequiredService<TestDynamicNotificationDefinitionStore>()));
     }
 
     private static NotificationPublishRequestedEto NewRequest(Guid[]? userIds, Guid? tenantId = null, string[]? channels = null)
@@ -150,6 +164,60 @@ public class NotificationPublishRequestedHandler_Tests : DigniteAbpNotifications
         message.Data!.Value.GetRawText().ShouldBe(dataJson);
         JsonSerializer.Serialize(message, new JsonSerializerOptions(JsonSerializerDefaults.Web))
             .ShouldContain("\"data\":" + dataJson);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(6)]
+    [InlineData(null)]
+    public async Task A_notification_no_definition_describes_is_refused_before_anything_is_written(int? recipientCount)
+    {
+        var userIds = recipientCount == null
+            ? null
+            : Enumerable.Range(0, recipientCount.Value).Select(_ => Guid.NewGuid()).ToArray();
+        var request = NewRequest(userIds);
+        request.NotificationName = "Publisher.Not.Yet.Known";
+
+        var exception = await Should.ThrowAsync<AbpException>(() => _eventBus.PublishAsync(request));
+
+        exception.Message.ShouldContain("Publisher.Not.Yet.Known");
+        exception.Message.ShouldContain(request.NotificationId.ToString());
+        // Not distributed inline, not handed to a job: requirements cannot be applied without the definition.
+        _received.Items.ShouldBeEmpty();
+        _backgroundJobs.EnqueuedArgs.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task The_same_request_goes_through_once_its_definition_has_arrived()
+    {
+        var userId = Guid.NewGuid();
+        var request = NewRequest(new[] { userId });
+        request.NotificationName = "Publisher.Defined.Later";
+
+        await Should.ThrowAsync<AbpException>(() => _eventBus.PublishAsync(request));
+
+        // The publisher's definitions reach this process; the event inbox delivers the event again.
+        _definitionStore.Define(context => context.AddGroup("Publisher")
+            .AddNotification("Publisher.Defined.Later", new FixedLocalizableString("Defined later")));
+        await _eventBus.PublishAsync(request);
+
+        var delivery = _received.Items.ShouldHaveSingleItem();
+        delivery.NotificationName.ShouldBe("Publisher.Defined.Later");
+        delivery.UserId.ShouldBe(userId);
+    }
+
+    [Fact]
+    public async Task The_requirements_of_a_definition_from_the_store_apply_at_delivery()
+    {
+        _definitionStore.Define(context => context.AddGroup("Publisher")
+            .AddNotification("Publisher.Restricted", new FixedLocalizableString("Restricted"))
+            .RequirePermission(TestNotificationPermissionChecker.DeniedPermission));
+        var request = NewRequest(new[] { Guid.NewGuid() });
+        request.NotificationName = "Publisher.Restricted";
+
+        await _eventBus.PublishAsync(request);
+
+        _received.Items.ShouldBeEmpty();
     }
 
     [Fact]

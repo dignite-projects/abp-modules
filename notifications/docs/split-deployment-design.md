@@ -306,7 +306,7 @@ Identity 库的进程里算用户的有效权限；微服务模板给 Administra
 | 发布方（Remote） | 定义解析为无渠道 | 允许，表示只进收件箱 |
 | 发布方（Remote） | 发布时定义不存在 | 抛，和本地发布器一致 |
 | 通知服务 | 动态权限 / 功能存储未开 | DefinitionStore 的 `IsDynamicNotificationStoreEnabled` 开着而两者没开时启动警告，消息说明后果（别人的权限名静默判 false） |
-| 通知服务 | 收到的 `NotificationName` 在动态目录里也不存在 | 记日志，按无定义分发（只进收件箱、"Other" 组），不丢弃——目录同步与事件到达有时间差 |
+| 通知服务 | 收到的 `NotificationName` 在本进程的静态定义和动态目录里都不存在 | 处理器在写入任何东西之前抛出带说明的异常，交给 ABP 事件 inbox 按其失败策略重试；通知服务应设 `AbpEventBusBoxesOptions.InboxProcessorFailurePolicy = RetryLater`（指数退避，默认 10 次后丢弃），ABP 默认的 `Retry` 会每个周期重跑同一事件并挡住它后面的事件。不按无定义分发：定义携带权限/功能门槛，不变量 §7 要求它们在投递时生效，未知定义当作无门槛就绕过了资格过滤；何况分发器的 `IsAvailableAsync` 对未知名本来判 false，"按无定义分发"实际是零收件人、事件标记已处理、通知静默丢失。常见原因是时间差（发布方启动时保存定义，通知服务每 30 秒比一次 stamp），几次重试之内即可通过 |
 | 无状态模式（Distribution + Null store） | 定义解析为无渠道 | 启动失败（现有校验，位置移到 Distribution） |
 
 ## 10. Dignite.Cloud 的落地

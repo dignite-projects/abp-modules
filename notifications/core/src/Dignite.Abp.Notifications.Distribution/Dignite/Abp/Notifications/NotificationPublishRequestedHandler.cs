@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
+using Volo.Abp;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.Threading;
@@ -26,6 +27,14 @@ namespace Dignite.Abp.Notifications;
 /// inbox the handler opens its own unit of work (it joins the inbox's when there is one). The store's check on the
 /// notification id is a second guard.
 /// </para>
+/// <para>
+/// A notification whose name this process cannot find — neither among its own definitions nor among those read from the
+/// definition store — is refused with an exception before anything is written, so the event inbox retries it under its
+/// failure policy. The definition carries the permission and feature requirements that must apply at delivery, so
+/// distributing without it would treat an unknown notification as one without requirements; and the usual cause is
+/// timing (a publisher's definitions reach the store at its startup and this process within about 30 seconds), which a
+/// retry outlives.
+/// </para>
 /// </remarks>
 [ExposeServices(
     typeof(IDistributedEventHandler<NotificationPublishRequestedEto>),
@@ -36,6 +45,8 @@ public class NotificationPublishRequestedHandler :
 {
     protected NotificationDistributionDispatcher Dispatcher { get; }
 
+    protected INotificationDefinitionManager DefinitionManager { get; }
+
     protected IUnitOfWorkManager UnitOfWorkManager { get; }
 
     protected AbpUnitOfWorkDefaultOptions UnitOfWorkDefaultOptions { get; }
@@ -44,11 +55,13 @@ public class NotificationPublishRequestedHandler :
 
     public NotificationPublishRequestedHandler(
         NotificationDistributionDispatcher dispatcher,
+        INotificationDefinitionManager definitionManager,
         IUnitOfWorkManager unitOfWorkManager,
         IOptions<AbpUnitOfWorkDefaultOptions> unitOfWorkDefaultOptions,
         ICancellationTokenProvider cancellationTokenProvider)
     {
         Dispatcher = dispatcher;
+        DefinitionManager = definitionManager;
         UnitOfWorkManager = unitOfWorkManager;
         UnitOfWorkDefaultOptions = unitOfWorkDefaultOptions.Value;
         CancellationTokenProvider = cancellationTokenProvider;
@@ -56,6 +69,8 @@ public class NotificationPublishRequestedHandler :
 
     public virtual async Task HandleEventAsync(NotificationPublishRequestedEto eventData)
     {
+        await EnsureDefinedAsync(eventData);
+
         var notification = CreateNotification(eventData);
         var cancellationToken = CancellationTokenProvider.Token;
 
@@ -67,6 +82,26 @@ public class NotificationPublishRequestedHandler :
         await Dispatcher.DispatchAsync(notification, eventData.UserIds, eventData.ExcludedUserIds, cancellationToken);
 
         await unitOfWork.CompleteAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Refuses a notification no definition here describes, before anything is written; see the class remarks.
+    /// </summary>
+    protected virtual async Task EnsureDefinedAsync(NotificationPublishRequestedEto eventData)
+    {
+        if (await DefinitionManager.GetOrNullAsync(eventData.NotificationName) != null)
+        {
+            return;
+        }
+
+        throw new AbpException(
+            $"Notification '{eventData.NotificationName}' ({eventData.NotificationId}) was published by another " +
+            "process, but this process knows no definition with that name: it defines none itself and none was read " +
+            "from the notification definition store. Nothing was distributed; the event is left to the event inbox to " +
+            "retry. If the publisher has only just started, its definitions reach this process within about 30 " +
+            "seconds. Otherwise check that the publisher installs Dignite.Abp.Notifications.DefinitionStore with " +
+            "SaveStaticNotificationsToDatabase on and maps the same NotificationCenter database, and that this process " +
+            "has IsDynamicNotificationStoreEnabled on.");
     }
 
     protected virtual NotificationInfo CreateNotification(NotificationPublishRequestedEto eventData)
