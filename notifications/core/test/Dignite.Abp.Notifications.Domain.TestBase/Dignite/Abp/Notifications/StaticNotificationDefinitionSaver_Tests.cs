@@ -12,13 +12,15 @@ namespace Dignite.Abp.Notifications;
 /// <summary>
 /// Several services save their definitions to the same tables: each one inserts and patches only what it defines,
 /// deletes only what it lists, and skips the save when nothing changed since its last one.
+/// Provider-agnostic: each persistence provider's test project runs it on its own database.
 /// </summary>
-public class StaticNotificationDefinitionSaver_Tests
+public abstract class StaticNotificationDefinitionSaver_Tests<TInfrastructure>
+    where TInfrastructure : SharedDefinitionStoreInfrastructure, new()
 {
     [Fact]
     public async Task Two_applications_save_side_by_side_and_neither_deletes_the_others_records()
     {
-        using var shared = new SharedDefinitionStoreInfrastructure();
+        using var shared = new TInfrastructure();
 
         await using (var publisherA = await DefinitionStoreTestApplication.StartAsync<PublisherATestModule>("PublisherA", shared))
         {
@@ -55,7 +57,7 @@ public class StaticNotificationDefinitionSaver_Tests
     [Fact]
     public async Task DeletedNotifications_removes_only_the_listed_definitions()
     {
-        using var shared = new SharedDefinitionStoreInfrastructure();
+        using var shared = new TInfrastructure();
         await SaveBothPublishersAsync(shared);
 
         // Publisher A after OrderCancelled was removed from its code and listed for deletion.
@@ -77,7 +79,7 @@ public class StaticNotificationDefinitionSaver_Tests
     [Fact]
     public async Task DeletedNotificationGroups_removes_the_group_and_its_definitions()
     {
-        using var shared = new SharedDefinitionStoreInfrastructure();
+        using var shared = new TInfrastructure();
         await SaveBothPublishersAsync(shared);
 
         await using var publisherA = await DefinitionStoreTestApplication.StartAsync<NotificationServiceTestModule>(
@@ -94,7 +96,7 @@ public class StaticNotificationDefinitionSaver_Tests
     [Fact]
     public async Task An_unchanged_hash_skips_the_save()
     {
-        using var shared = new SharedDefinitionStoreInfrastructure();
+        using var shared = new TInfrastructure();
 
         await using var publisherA =
             await DefinitionStoreTestApplication.StartAsync<PublisherATestModule>("PublisherA", shared);
@@ -125,9 +127,30 @@ public class StaticNotificationDefinitionSaver_Tests
     }
 
     [Fact]
+    public async Task A_save_without_its_hash_finds_the_stored_records_unchanged()
+    {
+        using var shared = new TInfrastructure();
+
+        await using var publisherA =
+            await DefinitionStoreTestApplication.StartAsync<PublisherATestModule>("PublisherA", shared);
+        await publisherA.SaveStaticDefinitionsAsync();
+        var stamp = await shared.Cache.GetStringAsync(shared.StampKey);
+
+        // A flushed cache makes the next save compare every record with what the provider reads back — display texts,
+        // requirements and the attributes in ExtraProperties. Were any of them read back differently, every restart
+        // after a flush would patch the records, renew the stamp and announce the definitions again.
+        await shared.Cache.RemoveAsync(shared.GetHashKey("PublisherA"));
+        await publisherA.SaveStaticDefinitionsAsync();
+
+        (await shared.Cache.GetStringAsync(shared.StampKey)).ShouldBe(stamp);
+        (await shared.Cache.GetStringAsync(shared.GetHashKey("PublisherA"))).ShouldNotBeNull();
+        publisherA.Get<ReceivedDefinitionChanges>().Events.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public async Task A_changed_definition_is_patched_and_renews_the_stamp()
     {
-        using var shared = new SharedDefinitionStoreInfrastructure();
+        using var shared = new TInfrastructure();
 
         await using (var publisherA = await DefinitionStoreTestApplication.StartAsync<PublisherATestModule>("PublisherA", shared))
         {
@@ -152,7 +175,7 @@ public class StaticNotificationDefinitionSaver_Tests
     [Fact]
     public async Task Display_texts_are_saved_by_resource_name_and_only_json_scalar_attributes_are_kept()
     {
-        using var shared = new SharedDefinitionStoreInfrastructure();
+        using var shared = new TInfrastructure();
         await using var publisherA =
             await DefinitionStoreTestApplication.StartAsync<PublisherATestModule>("PublisherA", shared);
         await publisherA.SaveStaticDefinitionsAsync();

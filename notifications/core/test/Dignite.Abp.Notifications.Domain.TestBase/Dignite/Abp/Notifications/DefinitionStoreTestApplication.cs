@@ -5,13 +5,16 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp;
 using Volo.Abp.Modularity;
+using Volo.Abp.Modularity.PlugIns;
 using Volo.Abp.Uow;
 
 namespace Dignite.Abp.Notifications;
 
 /// <summary>
 /// A started ABP application with its own name — one service of the deployment that
-/// <see cref="SharedDefinitionStoreInfrastructure"/> describes.
+/// <see cref="SharedDefinitionStoreInfrastructure"/> describes. The startup module says what the service defines; the
+/// deployment's <see cref="SharedDefinitionStoreInfrastructure.ProviderModuleType"/> joins it as a plug-in module and
+/// says where the store lives.
 /// </summary>
 public sealed class DefinitionStoreTestApplication : IAsyncDisposable
 {
@@ -34,6 +37,7 @@ public sealed class DefinitionStoreTestApplication : IAsyncDisposable
         {
             options.ApplicationName = applicationName;
             options.UseAutofac();
+            options.PlugInSources.AddTypes(shared.ProviderModuleType);
             options.Services.AddSingleton(shared);
             configureServices?.Invoke(options.Services);
         });

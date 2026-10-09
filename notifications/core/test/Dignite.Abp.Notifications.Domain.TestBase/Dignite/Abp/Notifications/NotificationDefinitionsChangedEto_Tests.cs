@@ -16,13 +16,15 @@ namespace Dignite.Abp.Notifications;
 /// The saver publishes the names of the definitions it inserted or changed, as ABP's <c>StaticPermissionSaver</c>
 /// publishes <c>DynamicPermissionDefinitionsChangedEto</c>: once per save that wrote them, never for a skipped save or a
 /// deletion.
+/// Provider-agnostic: each persistence provider's test project runs it on its own database.
 /// </summary>
-public class NotificationDefinitionsChangedEto_Tests
+public abstract class NotificationDefinitionsChangedEto_Tests<TInfrastructure>
+    where TInfrastructure : SharedDefinitionStoreInfrastructure, new()
 {
     [Fact]
     public async Task Saving_new_definitions_publishes_their_names_and_an_unchanged_save_publishes_nothing()
     {
-        using var shared = new SharedDefinitionStoreInfrastructure();
+        using var shared = new TInfrastructure();
         await using var publisherA =
             await DefinitionStoreTestApplication.StartAsync<PublisherATestModule>("PublisherA", shared);
 
@@ -43,7 +45,7 @@ public class NotificationDefinitionsChangedEto_Tests
     [Fact]
     public async Task A_changed_definition_publishes_only_its_name_and_a_deletion_publishes_nothing()
     {
-        using var shared = new SharedDefinitionStoreInfrastructure();
+        using var shared = new TInfrastructure();
         await using (var publisherA =
                      await DefinitionStoreTestApplication.StartAsync<PublisherATestModule>("PublisherA", shared))
         {

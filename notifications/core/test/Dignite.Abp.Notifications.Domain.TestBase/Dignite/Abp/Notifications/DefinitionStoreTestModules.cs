@@ -1,31 +1,26 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Dignite.Abp.Notifications.EntityFrameworkCore;
 using Volo.Abp;
 using Volo.Abp.Autofac;
 using Volo.Abp.Caching;
 using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
-using Volo.Abp.EntityFrameworkCore;
-using Volo.Abp.EntityFrameworkCore.Sqlite;
 using Volo.Abp.Localization.External;
 using Volo.Abp.Modularity;
 
 namespace Dignite.Abp.Notifications;
 
 /// <summary>
-/// One service of a test deployment: the definition store on the test's shared database and distributed cache, with
-/// both switches on. The startup initialization does not run in the background here — a test saves and reads
-/// explicitly, so nothing races it.
+/// One service of a test deployment: the definition store on the test's shared distributed cache, with both switches
+/// on. The database comes from the provider module <see cref="DefinitionStoreTestApplication"/> adds next to it. The
+/// startup initialization does not run in the background here — a test saves and reads explicitly, so nothing races it.
 /// </summary>
 [DependsOn(
-    typeof(AbpNotificationsEntityFrameworkCoreModule),
-    typeof(AbpEntityFrameworkCoreSqliteModule),
+    typeof(AbpNotificationsDomainModule),
     typeof(AbpAutofacModule),
     typeof(AbpTestBaseModule)
     )]
@@ -34,11 +29,6 @@ public class DefinitionStoreTestModule : AbpModule
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         var shared = context.Services.GetSingletonInstance<SharedDefinitionStoreInfrastructure>();
-
-        Configure<AbpDbContextOptions>(options =>
-        {
-            options.Configure(dbContext => dbContext.DbContextOptions.UseSqlite(shared.Connection));
-        });
 
         context.Services.Replace(ServiceDescriptor.Singleton<IDistributedCache>(shared.Cache));
         Configure<AbpDistributedCacheOptions>(options => options.KeyPrefix = shared.KeyPrefix);
