@@ -52,7 +52,7 @@ public class NotificationDefinitionManager : INotificationDefinitionManager, ITr
     public virtual async Task<IReadOnlyList<NotificationDefinition>> GetAllAsync()
     {
         var staticDefinitions = await StaticStore.GetNotificationsAsync();
-        var staticNames = staticDefinitions.Select(definition => definition.Name).ToHashSet(StringComparer.Ordinal);
+        var staticNames = new HashSet<string>(staticDefinitions.Select(definition => definition.Name), StringComparer.Ordinal);
 
         return staticDefinitions
             .Concat((await DynamicStore.GetNotificationsAsync()).Where(definition => !staticNames.Contains(definition.Name)))
@@ -62,7 +62,7 @@ public class NotificationDefinitionManager : INotificationDefinitionManager, ITr
     public virtual async Task<IReadOnlyList<NotificationGroupDefinition>> GetGroupsAsync()
     {
         var staticGroups = await StaticStore.GetGroupsAsync();
-        var staticNames = staticGroups.Select(group => group.Name).ToHashSet(StringComparer.Ordinal);
+        var staticNames = new HashSet<string>(staticGroups.Select(group => group.Name), StringComparer.Ordinal);
 
         return staticGroups
             .Concat((await DynamicStore.GetGroupsAsync()).Where(group => !staticNames.Contains(group.Name)))

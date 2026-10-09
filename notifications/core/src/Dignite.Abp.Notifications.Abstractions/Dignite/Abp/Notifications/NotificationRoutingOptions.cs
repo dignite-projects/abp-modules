@@ -7,7 +7,7 @@ namespace Dignite.Abp.Notifications;
 
 /// <summary>
 /// Maps notification names to the external channels they are delivered on. Modules add defaults for their own
-/// notifications; the host module, configured last, overrides any of them or sets the fallback. Core knows no
+/// notifications; the host module, configured last, overrides any of them or sets the fallback. The contracts know no
 /// channel names — they are the open set registered through <see cref="NotificationNotifierOptions"/>.
 /// </summary>
 public class NotificationRoutingOptions
@@ -99,8 +99,11 @@ public class NotificationRoutingOptions
                 $"{nameof(NotificationRoutingOptions)}.{nameof(Default)} contains a null, empty or whitespace channel name.");
         }
 
-        foreach (var (notificationName, channels) in Notifications)
+        foreach (var rule in Notifications)
         {
+            var notificationName = rule.Key;
+            var channels = rule.Value;
+
             if (string.IsNullOrWhiteSpace(notificationName))
             {
                 throw new InvalidOperationException(

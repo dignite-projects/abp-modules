@@ -6,7 +6,7 @@ namespace Dignite.Abp.Notifications;
 /// <summary>
 /// Definitions this process does not define itself — the ones other processes saved to a shared definition store.
 /// Mirrors ABP's <c>IDynamicFeatureDefinitionStore</c> / <c>IDynamicPermissionDefinitionStore</c>. The contract lives in
-/// Core so that <see cref="INotificationDefinitionManager"/> can merge it without depending on a store; the default
+/// Abstractions so that <see cref="INotificationDefinitionManager"/> can merge it without depending on a store; the default
 /// (<see cref="NullDynamicNotificationDefinitionStore"/>) has nothing, and <c>Dignite.Abp.Notifications.DefinitionStore</c>
 /// replaces it.
 /// </summary>

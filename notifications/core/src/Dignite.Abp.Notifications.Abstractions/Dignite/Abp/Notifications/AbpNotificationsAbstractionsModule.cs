@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
+using Volo.Abp.Features;
 using Volo.Abp.Json.SystemTextJson;
 using Volo.Abp.Localization;
 using Volo.Abp.Modularity;
@@ -6,13 +9,27 @@ using Volo.Abp.MultiTenancy;
 
 namespace Dignite.Abp.Notifications;
 
+/// <summary>
+/// The contracts of Dignite.Abp.Notifications, after ABP's <c>AbpAuthorizationAbstractionsModule</c>: what a business
+/// module needs to define and publish notifications (definitions, routing, <see cref="INotificationPublisher"/>), what
+/// a notifier needs to deliver them (the payload types, <see cref="NotificationDeliveryRequestedEto"/>,
+/// <see cref="INotificationNotifier"/>), and the contracts other packages implement (<see cref="INotificationStore"/>,
+/// <see cref="INotificationDistributor"/>, <see cref="INotificationPermissionChecker"/>). It implements none of the
+/// pipeline.
+/// </summary>
 [DependsOn(
     typeof(AbpLocalizationModule),
     typeof(AbpJsonSystemTextJsonModule),
-    typeof(AbpMultiTenancyAbstractionsModule)
+    typeof(AbpMultiTenancyAbstractionsModule),
+    typeof(AbpFeaturesModule)
     )]
 public class AbpNotificationsAbstractionsModule : AbpModule
 {
+    public override void PreConfigureServices(ServiceConfigurationContext context)
+    {
+        AutoAddDefinitionProviders(context.Services);
+    }
+
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         // Force options materialization at startup so duplicate/ambiguous discriminator registrations fail fast
@@ -47,5 +64,36 @@ public class AbpNotificationsAbstractionsModule : AbpModule
             {
                 options.JsonSerializerOptions.Converters.Add(new NotificationDataJsonConverter(registry));
             });
+
+        context.Services
+            .AddOptions<NotificationRoutingOptions>()
+            .Validate(options =>
+            {
+                options.Validate();
+                return true;
+            })
+            .ValidateOnStart();
+
+        // NotificationDefinitionRegistration.Validate() runs from NotificationDefinitionStartupService instead of this
+        // options-validation pipeline: the real definition-name conflict check only exists inside
+        // StaticNotificationDefinitionStore's lazily-built dictionary, so both checks belong at the one hook that can
+        // reach it.
+        context.Services.AddHostedService<NotificationDefinitionStartupService>();
+    }
+
+    private static void AutoAddDefinitionProviders(IServiceCollection services)
+    {
+        services.PostConfigure<NotificationDefinitionRegistration>(options =>
+        {
+            var definitionProviders = services
+                .Where(descriptor => descriptor.ImplementationType != null &&
+                                     typeof(INotificationDefinitionProvider).IsAssignableFrom(
+                                         descriptor.ImplementationType))
+                .Select(descriptor => descriptor.ImplementationType!)
+                .Distinct()
+                .ToList();
+
+            options.DefinitionProviders.AddIfNotContains(definitionProviders);
+        });
     }
 }

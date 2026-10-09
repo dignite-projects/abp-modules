@@ -15,7 +15,7 @@ namespace Dignite.Abp.Notifications.Emailing;
 /// <summary>
 /// Relays notifications to email — the second notifier that stress-tests the framework's event contract. Unlike
 /// SignalR (which addresses users directly), email needs a UserId → address mapping, supplied by the
-/// <see cref="IEmailNotificationAddressResolver"/> chain. Which notifications reach it is decided by the routing configuration in Core.
+/// <see cref="IEmailNotificationAddressResolver"/> chain. Which notifications reach it is decided by <see cref="NotificationRoutingOptions"/>.
 /// Delivery is best-effort: a recipient without a resolvable address or email content is skipped with a log entry.
 /// </summary>
 [ExposeServices(
