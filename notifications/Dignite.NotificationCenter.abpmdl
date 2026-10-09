@@ -25,6 +25,10 @@
       "path": "core/src/Dignite.Abp.Notifications.EntityFrameworkCore/Dignite.Abp.Notifications.EntityFrameworkCore.abppkg",
       "folder": "core/src"
     },
+    "Dignite.Abp.Notifications.MongoDB": {
+      "path": "core/src/Dignite.Abp.Notifications.MongoDB/Dignite.Abp.Notifications.MongoDB.abppkg",
+      "folder": "core/src"
+    },
     "Dignite.Abp.Notifications.Emailing": {
       "path": "core/src/Dignite.Abp.Notifications.Emailing/Dignite.Abp.Notifications.Emailing.abppkg",
       "folder": "core/src"
@@ -57,8 +61,16 @@
       "path": "core/src/Dignite.Abp.Notifications/Dignite.Abp.Notifications.abppkg",
       "folder": "core/src"
     },
-    "Dignite.Abp.Notifications.Domain.Tests": {
-      "path": "core/test/Dignite.Abp.Notifications.Domain.Tests/Dignite.Abp.Notifications.Domain.Tests.abppkg",
+    "Dignite.Abp.Notifications.Domain.TestBase": {
+      "path": "core/test/Dignite.Abp.Notifications.Domain.TestBase/Dignite.Abp.Notifications.Domain.TestBase.abppkg",
+      "folder": "core/test"
+    },
+    "Dignite.Abp.Notifications.EntityFrameworkCore.Tests": {
+      "path": "core/test/Dignite.Abp.Notifications.EntityFrameworkCore.Tests/Dignite.Abp.Notifications.EntityFrameworkCore.Tests.abppkg",
+      "folder": "core/test"
+    },
+    "Dignite.Abp.Notifications.MongoDB.Tests": {
+      "path": "core/test/Dignite.Abp.Notifications.MongoDB.Tests/Dignite.Abp.Notifications.MongoDB.Tests.abppkg",
       "folder": "core/test"
     },
     "Dignite.Abp.Notifications.TestProviderA": {

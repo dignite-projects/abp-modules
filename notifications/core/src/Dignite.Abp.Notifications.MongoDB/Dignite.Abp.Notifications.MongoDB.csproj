@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>MongoDB collections of the Dignite.Abp.Notifications definition store (NotifDefinitionGroups, NotifDefinitions) on the NotificationCenter connection string, with the same unique name indexes as the EF Core tables. ConfigureNotificationDefinitionStore() maps them into a host's own MongoDB context.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.MongoDB" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.Abp.Notifications.Domain\Dignite.Abp.Notifications.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -122,14 +122,19 @@ jobs:
         run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.Mcp.Tests/Dignite.FileExplorer.Mcp.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/file-storing
 
       # --- notifications tests ---
-      # Dignite.NotificationCenter.TestBase is IsTestProject=false (shared scenarios, no runner) -
-      # it is exercised indirectly via the two projects below, never run directly. Coverage lands
-      # under coverage/notifications, uploaded under its own "notifications" flag below.
+      # Dignite.Abp.Notifications.Domain.TestBase and Dignite.NotificationCenter.TestBase are
+      # IsTestProject=false (shared scenarios, no runner) - each is exercised indirectly via its EF Core
+      # and MongoDB projects below, never run directly. The MongoDB projects start an embedded mongod
+      # via MongoSandbox. Coverage lands under coverage/notifications, uploaded under its own
+      # "notifications" flag below.
       - name: Run Notifications (core) tests
         run: dotnet test notifications/core/test/Dignite.Abp.Notifications.Tests/Dignite.Abp.Notifications.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/notifications
 
-      - name: Run Notifications (Domain) tests
-        run: dotnet test notifications/core/test/Dignite.Abp.Notifications.Domain.Tests/Dignite.Abp.Notifications.Domain.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/notifications
+      - name: Run Notifications definition store (EF Core) tests
+        run: dotnet test notifications/core/test/Dignite.Abp.Notifications.EntityFrameworkCore.Tests/Dignite.Abp.Notifications.EntityFrameworkCore.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/notifications
+
+      - name: Run Notifications definition store (MongoDB) tests
+        run: dotnet test notifications/core/test/Dignite.Abp.Notifications.MongoDB.Tests/Dignite.Abp.Notifications.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/notifications
 
       - name: Run NotificationCenter (EF Core) tests
         run: dotnet test notifications/notification-center/test/Dignite.NotificationCenter.EntityFrameworkCore.Tests/Dignite.NotificationCenter.EntityFrameworkCore.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/notifications

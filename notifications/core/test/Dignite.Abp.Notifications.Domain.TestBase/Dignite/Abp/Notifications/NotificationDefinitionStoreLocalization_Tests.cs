@@ -9,13 +9,15 @@ namespace Dignite.Abp.Notifications;
 /// <summary>
 /// The notification service localizes a publisher's display texts by resource name: the resource is not registered in
 /// this process, so ABP finds it in the external localization store (Language Management in a microservice solution).
+/// Provider-agnostic: each persistence provider's test project runs it on its own database.
 /// </summary>
-public class NotificationDefinitionStoreLocalization_Tests
+public abstract class NotificationDefinitionStoreLocalization_Tests<TInfrastructure>
+    where TInfrastructure : SharedDefinitionStoreInfrastructure, new()
 {
     [Fact]
     public async Task Display_texts_saved_by_name_resolve_through_the_external_localization_store()
     {
-        using var shared = new SharedDefinitionStoreInfrastructure();
+        using var shared = new TInfrastructure();
         await using (var publisherA = await DefinitionStoreTestApplication.StartAsync<PublisherATestModule>("PublisherA", shared))
         {
             await publisherA.SaveStaticDefinitionsAsync();

@@ -13,11 +13,11 @@ and the Angular demo app are local-dev-only, never packed.
 One `.slnx` — `Dignite.NotificationCenter.slnx`:
 
 - **`core/`** — `Notifications.Abstractions, Notifications, Notifications.Client,
-  Notifications.Domain[.Shared], Notifications.EntityFrameworkCore, Notifications.Identity,
+  Notifications.Domain[.Shared], Notifications.EntityFrameworkCore, Notifications.MongoDB, Notifications.Identity,
   Notifications.Emailing[.Identity], Notifications.SignalR, Notifications.Push[.Expo]` — ABP's layout for a framework
   feature (design doc §4.1): one `.Abstractions` with every contract and its null default, the in-process
   implementation under the plain name, remote publishing in `.Client`, the definition store as
-  `.Domain.Shared` / `.Domain` / `.EntityFrameworkCore`.
+  `.Domain.Shared` / `.Domain` / `.EntityFrameworkCore` / `.MongoDB`.
   `core/` never references NotificationCenter; `Notifications` works standalone via `NullNotificationStore`.
   **Contracts in Abstractions, the default implementation in `Notifications`, remote publishing in `Client`**:
   anything another package implements (`INotificationStore`, `INotificationPermissionChecker`) or a business module
@@ -49,6 +49,7 @@ projects that flatten to the project root are the exception).
 | `Notifications.Domain.Shared` | Record column sizes, `NotificationDefinitionsChangedEto` | ABP EventBus.Abstractions |
 | `Notifications.Domain` | Definition catalog after ABP's permission management domain: record entities, `StaticNotificationDefinitionSaver` (publishes `NotificationDefinitionsChangedEto`), `DynamicNotificationDefinitionStore` (replaces `NullDynamicNotificationDefinitionStore`), initializer, options | Abstractions, Domain.Shared, ABP Ddd.Domain |
 | `Notifications.EntityFrameworkCore` | `NotifDefinitionGroups` / `NotifDefinitions` on the `NotificationCenter` connection string, `ConfigureNotificationDefinitionStore()` | Domain, ABP EF Core |
+| `Notifications.MongoDB` | The same collections and unique name indexes on the same connection string (`[IgnoreMultiTenancy]` context), `ConfigureNotificationDefinitionStore()` on `IMongoModelBuilder` | Domain, ABP MongoDB |
 | `Notifications.Identity` | Permission-checker impl | Abstractions, ABP Authorization, `IUserRoleFinder` (`Identity.Domain.Shared`) |
 | `Notifications.Emailing` / `.SignalR` | Notifier plugins | Abstractions + channel SDK |
 | `Notifications.Emailing.Identity` | Email address resolver | Emailing, ABP Identity |
@@ -67,10 +68,11 @@ projects that flatten to the project root are the exception).
 Notifiers depend on **only** `Abstractions` + their channel SDK — that's what lets a channel be added
 without touching the pipeline.
 
-Tests by project: `Dignite.Abp.Notifications.Tests` (core) · `Dignite.Abp.Notifications.Domain.Tests`
-(the catalog on EF Core + SQLite, several named applications sharing one database and cache) ·
-`NotificationCenter.TestBase` (abstract provider-agnostic scenarios) · `.EntityFrameworkCore.Tests` /
-`.MongoDB.Tests` (per provider).
+Tests by project: `Dignite.Abp.Notifications.Tests` (core) · `Dignite.Abp.Notifications.Domain.TestBase`
+(abstract provider-agnostic catalog scenarios: several named applications sharing one database and cache; the
+provider module joins each application as a plug-in) · `Dignite.Abp.Notifications.EntityFrameworkCore.Tests` (SQLite) /
+`.MongoDB.Tests` (embedded mongod) · `NotificationCenter.TestBase` (abstract provider-agnostic scenarios) ·
+`.EntityFrameworkCore.Tests` / `.MongoDB.Tests` (per provider).
 
 ## Two operation modes
 
@@ -86,7 +88,7 @@ Either mode can also serve **remote publishing**: a publisher process installs `
 resolved and payload serialized in the publisher, through its outbox); the process running mode 1 or 2 handles it
 with `NotificationPublishRequestedHandler` and distributes locally. The two packages do not exclude each other: in one
 process the local publisher wins, whatever the module order. The receiving process knows the publishers' definitions
-through `Notifications.Domain` + `.EntityFrameworkCore` (publishers save at startup, the receiver reads with
+through `Notifications.Domain` + `.EntityFrameworkCore` or `.MongoDB` (publishers save at startup, the receiver reads with
 `IsDynamicNotificationStoreEnabled`); a request for a name it cannot find is refused with an exception so the event
 inbox retries it. Client and the implementation are separate packages, unlike ABP's `BackgroundJobs.RabbitMQ`, because a
 publisher must not register the distribution job or the event handlers at all (design doc §4.2).
@@ -120,9 +122,10 @@ publisher must not register the distribution job or the event handlers at all (d
 dotnet build Dignite.NotificationCenter.slnx
 dotnet test Dignite.NotificationCenter.slnx
 
-# core/ only, skips embedded-mongod tests:
+# core/ only (the MongoDB project starts an embedded mongod):
 dotnet test core/test/Dignite.Abp.Notifications.Tests
-dotnet test core/test/Dignite.Abp.Notifications.Domain.Tests
+dotnet test core/test/Dignite.Abp.Notifications.EntityFrameworkCore.Tests
+dotnet test core/test/Dignite.Abp.Notifications.MongoDB.Tests
 
 dotnet pack Dignite.NotificationCenter.slnx -c Release
 ```

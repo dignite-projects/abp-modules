@@ -12,13 +12,15 @@ namespace Dignite.Abp.Notifications;
 /// <summary>
 /// A notification service that defines nothing reads what the publishers saved: the requirements as they were saved,
 /// a reload when the common stamp changes (and not before), and its own definitions first.
+/// Provider-agnostic: each persistence provider's test project runs it on its own database.
 /// </summary>
-public class DynamicNotificationDefinitionStore_Tests
+public abstract class DynamicNotificationDefinitionStore_Tests<TInfrastructure>
+    where TInfrastructure : SharedDefinitionStoreInfrastructure, new()
 {
     [Fact]
     public async Task The_notification_service_reads_what_a_publisher_saved()
     {
-        using var shared = new SharedDefinitionStoreInfrastructure();
+        using var shared = new TInfrastructure();
         await SavePublisherAsync<PublisherATestModule>("PublisherA", shared);
 
         await using var notificationService =
@@ -49,7 +51,7 @@ public class DynamicNotificationDefinitionStore_Tests
     [Fact]
     public async Task A_changed_stamp_makes_the_store_reload_after_its_check_window()
     {
-        using var shared = new SharedDefinitionStoreInfrastructure();
+        using var shared = new TInfrastructure();
         await SavePublisherAsync<PublisherATestModule>("PublisherA", shared);
 
         await using var notificationService =
@@ -71,7 +73,7 @@ public class DynamicNotificationDefinitionStore_Tests
     [Fact]
     public async Task An_unchanged_stamp_keeps_the_loaded_definitions()
     {
-        using var shared = new SharedDefinitionStoreInfrastructure();
+        using var shared = new TInfrastructure();
         await SavePublisherAsync<PublisherATestModule>("PublisherA", shared);
 
         await using var notificationService =
@@ -98,7 +100,7 @@ public class DynamicNotificationDefinitionStore_Tests
     [Fact]
     public async Task A_missing_stamp_is_created_on_the_first_read()
     {
-        using var shared = new SharedDefinitionStoreInfrastructure();
+        using var shared = new TInfrastructure();
 
         await using var notificationService =
             await DefinitionStoreTestApplication.StartAsync<NotificationServiceTestModule>("NotificationService", shared);
@@ -113,7 +115,7 @@ public class DynamicNotificationDefinitionStore_Tests
     [Fact]
     public async Task With_the_dynamic_store_off_nothing_is_read()
     {
-        using var shared = new SharedDefinitionStoreInfrastructure();
+        using var shared = new TInfrastructure();
         await SavePublisherAsync<PublisherATestModule>("PublisherA", shared);
 
         await using var notificationService = await DefinitionStoreTestApplication.StartAsync<NotificationServiceTestModule>(
@@ -131,7 +133,7 @@ public class DynamicNotificationDefinitionStore_Tests
     [Fact]
     public async Task A_static_definition_wins_over_the_saved_one_of_the_same_name()
     {
-        using var shared = new SharedDefinitionStoreInfrastructure();
+        using var shared = new TInfrastructure();
         await SavePublisherAsync<PublisherATestModule>("PublisherA", shared);
 
         // This service does not save, so the publisher's records stay as they are.
