@@ -99,7 +99,7 @@ public class NotificationPublishRequestedHandler :
             "process, but this process knows no definition with that name: it defines none itself and none was read " +
             "from the notification definition store. Nothing was distributed; the event is left to the event inbox to " +
             "retry. If the publisher has only just started, its definitions reach this process within about 30 " +
-            "seconds. Otherwise check that the publisher installs Dignite.Abp.Notifications.DefinitionStore with " +
+            "seconds. Otherwise check that the publisher installs Dignite.Abp.Notifications.Domain with " +
             "SaveStaticNotificationsToDatabase on and maps the same NotificationCenter database, and that this process " +
             "has IsDynamicNotificationStoreEnabled on.");
     }

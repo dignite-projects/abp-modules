@@ -6,7 +6,7 @@ using Volo.Abp.DependencyInjection;
 namespace Dignite.Abp.Notifications;
 
 /// <summary>
-/// No dynamic definitions: a process without <c>Dignite.Abp.Notifications.DefinitionStore</c> knows only its own static
+/// No dynamic definitions: a process without <c>Dignite.Abp.Notifications.Domain</c> knows only its own static
 /// ones. Mirrors ABP's <c>NullDynamicFeatureDefinitionStore</c>. Registered with <c>TryRegister</c>, so the store's
 /// replacement wins whatever the module order.
 /// </summary>

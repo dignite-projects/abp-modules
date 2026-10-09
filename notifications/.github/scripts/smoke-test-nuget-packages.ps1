@@ -12,8 +12,9 @@ $artifacts = (Resolve-Path -LiteralPath $ArtifactsPath).Path
 $packageIds = @(
     'Dignite.Abp.Notifications.Abstractions',
     'Dignite.Abp.Notifications',
-    'Dignite.Abp.Notifications.DefinitionStore',
-    'Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore',
+    'Dignite.Abp.Notifications.Domain.Shared',
+    'Dignite.Abp.Notifications.Domain',
+    'Dignite.Abp.Notifications.EntityFrameworkCore',
     'Dignite.Abp.Notifications.Emailing',
     'Dignite.Abp.Notifications.Emailing.Identity',
     'Dignite.Abp.Notifications.Identity',
@@ -74,8 +75,9 @@ public static class PackageSurface
     [
         typeof(Dignite.Abp.Notifications.AbpNotificationsAbstractionsModule),
         typeof(Dignite.Abp.Notifications.AbpNotificationsModule),
-        typeof(Dignite.Abp.Notifications.DefinitionStore.AbpNotificationsDefinitionStoreModule),
-        typeof(Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore.AbpNotificationsDefinitionStoreEntityFrameworkCoreModule),
+        typeof(Dignite.Abp.Notifications.AbpNotificationsDomainSharedModule),
+        typeof(Dignite.Abp.Notifications.AbpNotificationsDomainModule),
+        typeof(Dignite.Abp.Notifications.EntityFrameworkCore.AbpNotificationsEntityFrameworkCoreModule),
         typeof(Dignite.Abp.Notifications.Emailing.AbpNotificationsEmailingModule),
         typeof(Dignite.Abp.Notifications.Emailing.Identity.AbpNotificationsEmailingIdentityModule),
         typeof(Dignite.Abp.Notifications.Identity.AbpNotificationsIdentityModule),
