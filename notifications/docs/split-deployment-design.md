@@ -198,7 +198,7 @@ public class NotificationPublishRequestedEto : IMultiTenant
 
 今天两个业务模块都只发 `LocalizableMessageNotificationData`（`DocumentNotificationPlanner.cs:129`、
 `ConsultationNotificationDispatcher.cs:134`），Abstractions 默认注册它，所以 Email/Push 的内容提供者在通知服务里照常命中。
-将来出现自定义负载类型，Email/Push 要渲染它时才需要在通知服务注册其判别符——收件箱和 SignalR 不需要。
+将来出现自定义负载类型：SignalR 原样推送 `DataJson`，不受影响；收件箱 REST 走不变量 §1 的容错读，未注册的判别符返回 `Dignite.Unsupported` 占位（原始 JSON 逐字节保留在 `rawJson`），Email/Push 找不到内容提供者则跳过。所以要让 REST/Angular 和 Email/Push 渲染它，通知服务必须注册其判别符；存储本身是透传的，注册之后历史数据照常可读。
 
 照抄：本模块 `NotificationDeliveryRequestedEto` 的 `DataJson`；ABP `StaticPermissionSaver` 发
 `DynamicPermissionDefinitionsChangedEto` 让别的服务做事。
@@ -395,7 +395,7 @@ Vault 上传文档 → 文档就绪 → Angular 铃铛经 NotificationService �
 | ETO 往返 | `NotificationPublishRequestedEto` 用默认 STJ 往返，`DataJson` 内含判别符而非 CLR 名（照 ETO 现有测试） |
 | Remote 发布器 | 定义不存在抛；渠道由本地 resolver 解析并写入 ETO；有工作单元时事件进 outbox 而非直发；一条通知恰好一条事件，与收件人数量无关 |
 | 接收处理器 | 租户来自 ETO；小扇出在线、大扇出入作业；`Channels` 非空时 resolver 不被调用（`Received(0)`）；同一 `NotificationId` 处理两次只有一行 `Notification` |
-| 负载透传 | 通知服务未注册的判别符：收件箱 REST 原样返回 JSON；SignalR 原样推送；Email 跳过并记 Debug |
+| 负载透传 | 通知服务未注册的判别符：存储逐字节保留；收件箱 REST 返回 `Dignite.Unsupported` 且 `rawJson` 与原文一致；SignalR 原样推送；Email 跳过并记 Debug |
 | 包边界 | 只装 Core + Remote 的宿主：`JobQueueManager` 没有分发作业的消费者；没有 `NotificationDeliveryRequested` 的处理器 |
 | 互斥 | Distribution + Remote 同装 → 启动失败 |
 | DefinitionStore | 两个应用名各自保存，第二个不删第一个的记录；`DeletedNotifications` 删对应记录；hash 相同不写库；动态 store 在 stamp 变化后重读；静态优先于动态 |
