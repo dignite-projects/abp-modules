@@ -57,7 +57,7 @@ the first stable version exists the initial pre-release is necessarily also expo
 | `Dignite.Abp.Notifications.Emailing.Identity` | Optional ABP Identity-backed email address resolver for the Emailing notifier. |
 | `Dignite.Abp.Notifications.Push` | Device push notifier (the `"Push"` channel): content chain, `IPushDeviceStore` and `IPushProvider` contracts. |
 | `Dignite.Abp.Notifications.Push.Expo` | Expo Push Service provider for the Push notifier (iOS + Android through one API). |
-| `Dignite.Abp.Notifications.Identity` | Permission gating and active-user audience paging via ABP Identity. |
+| `Dignite.Abp.Notifications.Identity` | Permission gating (`RequirePermission(...)`) through ABP authorization. Reads the recipient's roles from ABP's `IUserRoleFinder` (`Volo.Abp.Identity.Domain.Shared`), so it needs no Identity database; the host supplies the implementation, see [Recipient eligibility](#recipient-eligibility). |
 
 **Optional Notification Center** (`notification-center/`) — persistence + REST API + UI, depends on
 Core:
@@ -136,8 +136,9 @@ dotnet add path/to/MyApp.csproj package Dignite.NotificationCenter.Web --version
 
 `Dignite.NotificationCenter.Web` is optional. For MongoDB, replace
 `Dignite.NotificationCenter.EntityFrameworkCore` with
-`Dignite.NotificationCenter.MongoDB`. Permission gating and active-user audience paging through
-`Dignite.Abp.Notifications.Identity` are also optional.
+`Dignite.NotificationCenter.MongoDB`. Permission gating through `Dignite.Abp.Notifications.Identity` is also
+optional; the host must be able to resolve ABP's `IUserRoleFinder` (see
+[Recipient eligibility](#recipient-eligibility)).
 
 ### Publisher
 
@@ -658,6 +659,29 @@ needs its own application permission checks where appropriate.
 Eligibility is evaluated in the notification's recorded `TenantId`, not whichever tenant happens to be ambient
 when an inline call or background job executes. A tenant notification therefore uses that tenant's feature values
 and permission context, while a host notification is evaluated in the host context. Recipient IDs are never logged.
+
+Distribution's default `AlwaysGrantedNotificationPermissionChecker` grants everyone; `Dignite.Abp.Notifications.Identity`
+replaces it with a real check. The package asks ABP's `IUserRoleFinder` (`Volo.Abp.Identity.Domain.Shared`) for the
+recipient's role names, builds a principal carrying the user id, one role claim per role and, inside a tenant, the
+tenant id (the claims ABP's user and role permission providers read), and passes it to ABP's `IPermissionChecker`.
+It no longer depends on `Volo.Abp.Identity.Domain` or reads the Identity database, **but the host must be able to
+resolve an `IUserRoleFinder`**:
+
+- A process that maps the Identity database (a monolith) already has one: `Volo.Abp.Identity.Domain` registers
+  `UserRoleFinder`.
+- A notification service without that database installs an Identity `HttpApi.Client` package
+  (`Volo.Abp.Identity.Pro.HttpApi.Client`, or the open-source `Volo.Abp.Identity.HttpApi.Client`) and points
+  `RemoteServices:AbpIdentity` at the Identity service, which must expose its integration services
+  (`AbpAspNetCoreMvcOptions.ExposeIntegrationServices`). Its `HttpClientUserRoleFinder` calls the integration
+  service's `GetRoleNamesAsync` and is registered with `TryRegister`, so an in-process finder wins.
+  The process also has to know the permission names other services define: enable
+  `PermissionManagementOptions.IsDynamicPermissionStoreEnabled` (and
+  `FeatureManagementOptions.IsDynamicFeatureStoreEnabled` for `RequireFeature(...)`), otherwise such a permission is
+  silently denied.
+
+Known limits: one role lookup per candidate recipient; a permission with state checkers is evaluated against the
+ambient `ICurrentUser`, which is not logged in during background distribution; the user's `IsActive` flag is not
+checked.
 
 ### Bounded recipient pipeline
 

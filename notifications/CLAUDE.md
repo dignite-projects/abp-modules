@@ -40,7 +40,7 @@ projects that flatten to the project root are the exception).
 | `Notifications` (Core) | Definitions, routing, `INotificationPublisher` / `INotificationStore` / `INotificationDistributor` / `INotificationPermissionChecker` contracts, info records | Abstractions |
 | `Notifications.Distribution` | Local publisher, distributor, distribution job, delivery + publish-request handlers, `NullNotificationStore`, `NotificationSubscriptionManager` | Core |
 | `Notifications.Remote` | Remote `INotificationPublisher` (one `NotificationPublishRequestedEto` per notification); refuses to start next to Distribution | Core |
-| `Notifications.Identity` | Permission-checker impl | Core, ABP Identity |
+| `Notifications.Identity` | Permission-checker impl | Core, ABP Authorization, `IUserRoleFinder` (`Identity.Domain.Shared`) |
 | `Notifications.Emailing` / `.SignalR` | Notifier plugins | Abstractions + channel SDK |
 | `Notifications.Emailing.Identity` | Email address resolver | Emailing, ABP Identity |
 | `Notifications.Push` | Device push notifier; `IPushDeviceStore` / `IPushProvider` seams | Abstractions |

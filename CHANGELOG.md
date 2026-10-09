@@ -75,6 +75,19 @@ so it stays clear which part of the repository actually moved.
 - `NullNotificationStore` and `AlwaysGrantedNotificationPermissionChecker` register with `TryRegister`: the packages
   that replace them depend on Core, not Distribution, so module order no longer guarantees that the replacement is
   registered last.
+- **Breaking - `Dignite.Abp.Notifications.Identity` no longer depends on `Volo.Abp.Identity.Domain`; the host must be
+  able to resolve ABP's `IUserRoleFinder`.** `IdentityNotificationPermissionChecker` used
+  `IIdentityUserRepository` and `IUserClaimsPrincipalFactory<IdentityUser>`, which tied the package to the Identity
+  database. It now asks `IUserRoleFinder` (`Volo.Abp.Identity.Domain.Shared`) for the recipient's role names, builds
+  the principal ABP's permission providers read (`UserId`, one `Role` per role, and `TenantId` when a tenant is
+  current) and calls `IPermissionChecker`. The package references `Volo.Abp.Authorization` and
+  `Volo.Abp.Identity.Domain.Shared`; the package id, namespace, class name and `AbpNotificationsIdentityModule` are
+  unchanged. **Migrate:** a monolith that already installs `Volo.Abp.Identity.Domain` needs nothing, it registers
+  `UserRoleFinder`. A host without it must register an `IUserRoleFinder`, normally by installing an Identity
+  `HttpApi.Client` package (`Volo.Abp.Identity.Pro.HttpApi.Client`, whose `HttpClientUserRoleFinder` calls the
+  Identity service), and enable `IsDynamicPermissionStoreEnabled`. Installing the package no longer pulls in the
+  Identity domain or needs the Identity database. A recipient that no longer exists is no longer rejected up front:
+  it has no roles and is granted only what is granted to it directly.
 
 ## [10.0.0-rc.22] - 2026-10-09
 

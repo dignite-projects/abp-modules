@@ -146,7 +146,11 @@ because background-job distribution runs without a request culture.
    abstraction that gates whether a *given user* is allowed to **receive** a given notification definition —
    checked during distribution (`NotificationDefinitionManager` / `DefaultNotificationDistributor`), not on an
    AppService call. The default is Distribution's `AlwaysGrantedNotificationPermissionChecker`; `Notifications.Identity`
-   supplies a real implementation backed by ABP Identity/Authorization.
+   supplies a real implementation backed by ABP Identity/Authorization. It depends on the `IUserRoleFinder`
+   abstraction (`Identity.Domain.Shared`), never on `Identity.Domain`: it builds the `ClaimsPrincipal`
+   (`UserId`, one `Role` per role, `TenantId` from the ambient tenant) itself and hands it to `IPermissionChecker`.
+   The host supplies the finder — Identity.Domain's `UserRoleFinder` in a monolith, an Identity `HttpApi.Client`
+   package's `HttpClientUserRoleFinder` in a service without the Identity database.
 
 When adding a new notification type that should be permission-gated, wire it through
 `INotificationDefinitionProvider`/`NotificationDefinition` — don't try to gate it with an AppService-style
