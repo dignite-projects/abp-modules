@@ -10,7 +10,8 @@ namespace Dignite.Abp.Notifications.Client;
 /// one <see cref="NotificationPublishRequestedEto"/> per notification to the process that hosts the inbox and the
 /// channels (where <c>Dignite.Abp.Notifications</c> handles it). Install it in a publisher that does not host the inbox;
 /// such a process registers no distribution job and handles no delivery events. The package is named after ABP's
-/// <c>Volo.Abp.AspNetCore.Mvc.Client</c>, the package of <c>RemotePermissionChecker</c> and its siblings.
+/// <c>Volo.Abp.AspNetCore.Mvc.Client</c> (with <c>.Client.Common</c>, the packages of <c>RemotePermissionChecker</c> and its
+/// siblings).
 /// </summary>
 /// <remarks>
 /// It does not exclude the in-process implementation. <see cref="RemoteNotificationPublisher"/> registers with

@@ -12,13 +12,19 @@ and the Angular demo app are local-dev-only, never packed.
 
 One `.slnx` — `Dignite.NotificationCenter.slnx`:
 
-- **`core/`** — `Abstractions, Notifications, Notifications.Distribution, Notifications.Remote,
-  Notifications.DefinitionStore[.EntityFrameworkCore], Notifications.Identity, Notifications.Emailing[.Identity],
-  Notifications.SignalR, Notifications.Push[.Expo]`.
-  Core never references NotificationCenter; Core + Distribution works standalone via `NullNotificationStore`.
-  **Contracts stay in Core, implementations go to Distribution**: anything another package implements
-  (`INotificationStore`, `INotificationPermissionChecker`) or a business module uses stays in Core, so neither
-  the Notification Center's store, `Notifications.Identity` nor a business module depends on Distribution.
+- **`core/`** — `Notifications.Abstractions, Notifications, Notifications.Client,
+  Notifications.Domain[.Shared], Notifications.EntityFrameworkCore, Notifications.Identity,
+  Notifications.Emailing[.Identity], Notifications.SignalR, Notifications.Push[.Expo]` — ABP's layout for a framework
+  feature (design doc §4.1): one `.Abstractions` with every contract and its null default, the in-process
+  implementation under the plain name, remote publishing in `.Client`, the definition store as
+  `.Domain.Shared` / `.Domain` / `.EntityFrameworkCore`.
+  `core/` never references NotificationCenter; `Notifications` works standalone via `NullNotificationStore`.
+  **Contracts in Abstractions, the default implementation in `Notifications`, remote publishing in `Client`**:
+  anything another package implements (`INotificationStore`, `INotificationPermissionChecker`) or a business module
+  uses lives in Abstractions, so neither the Notification Center's store, `Notifications.Identity` nor a business
+  module depends on the implementation package. A business module's module class depends on
+  `AbpNotificationsAbstractionsModule` — `AbpNotificationsModule` is the implementation and would bring the
+  distributor, the job and both event handlers into every process hosting it.
 - **`notification-center/`** — `Domain.Shared, Domain, Application.Contracts, Application, HttpApi,
   HttpApi.Client, EntityFrameworkCore, MongoDB, Web, Push[.Identity]`. `Web` = MVC UI (bell +
   subscriptions). `HttpApi` = explicit controllers under `/api/notification-center`
@@ -37,21 +43,21 @@ projects that flatten to the project root are the exception).
 
 | Project | Responsibility | Depends on |
 |---|---|---|
-| `Notifications.Abstractions` | Data contracts + the two distributed-event contracts (`NotificationDeliveryRequestedEto`, `NotificationPublishRequestedEto`) | — |
-| `Notifications` (Core) | Definitions, routing, `INotificationPublisher` / `INotificationStore` / `INotificationDistributor` / `INotificationPermissionChecker` contracts, info records | Abstractions |
-| `Notifications.Distribution` | Local publisher, distributor, distribution job, delivery + publish-request handlers, `NullNotificationStore`, `NotificationSubscriptionManager` | Core |
-| `Notifications.Remote` | Remote `INotificationPublisher` (one `NotificationPublishRequestedEto` per notification); refuses to start next to Distribution | Core |
-| `Notifications.DefinitionStore` | Definition catalog after ABP's dynamic permission store: record entities, `StaticNotificationDefinitionSaver`, `DynamicNotificationDefinitionStore` (replaces Core's `NullDynamicNotificationDefinitionStore`), initializer, options | Core, ABP Ddd.Domain |
-| `Notifications.DefinitionStore.EntityFrameworkCore` | `NotifDefinitionGroups` / `NotifDefinitions` on the `NotificationCenter` connection string, `ConfigureNotificationDefinitionStore()` | DefinitionStore, ABP EF Core |
-| `Notifications.Identity` | Permission-checker impl | Core, ABP Authorization, `IUserRoleFinder` (`Identity.Domain.Shared`) |
+| `Notifications.Abstractions` | Every contract: payload types, the two distributed-event contracts (`NotificationDeliveryRequestedEto`, `NotificationPublishRequestedEto`), the notifier contract, definitions + static/dynamic definition stores, routing, `INotificationPublisher` / `INotificationStore` / `INotificationDistributor` / `INotificationPermissionChecker`, info records; the null defaults `NullNotificationPublisher` (late `TryAdd`), `NullNotificationStore`, `AlwaysGrantedNotificationPermissionChecker`, `NullDynamicNotificationDefinitionStore` | ABP Features, Localization, MultiTenancy.Abstractions, Json |
+| `Notifications` | The default, in-process implementation: local publisher, distributor, distribution job, delivery + publish-request handlers, `NotificationSubscriptionManager`, `NotificationDistributionOptions`, the hosted-channel / stateless startup checks | Abstractions, ABP BackgroundJobs.Abstractions, EventBus |
+| `Notifications.Client` | `RemoteNotificationPublisher` (one `NotificationPublishRequestedEto` per notification), `TryRegister`: the local publisher wins when both are installed | Abstractions, ABP EventBus |
+| `Notifications.Domain.Shared` | Record column sizes, `NotificationDefinitionsChangedEto` | ABP EventBus.Abstractions |
+| `Notifications.Domain` | Definition catalog after ABP's permission management domain: record entities, `StaticNotificationDefinitionSaver` (publishes `NotificationDefinitionsChangedEto`), `DynamicNotificationDefinitionStore` (replaces `NullDynamicNotificationDefinitionStore`), initializer, options | Abstractions, Domain.Shared, ABP Ddd.Domain |
+| `Notifications.EntityFrameworkCore` | `NotifDefinitionGroups` / `NotifDefinitions` on the `NotificationCenter` connection string, `ConfigureNotificationDefinitionStore()` | Domain, ABP EF Core |
+| `Notifications.Identity` | Permission-checker impl | Abstractions, ABP Authorization, `IUserRoleFinder` (`Identity.Domain.Shared`) |
 | `Notifications.Emailing` / `.SignalR` | Notifier plugins | Abstractions + channel SDK |
 | `Notifications.Emailing.Identity` | Email address resolver | Emailing, ABP Identity |
 | `Notifications.Push` | Device push notifier; `IPushDeviceStore` / `IPushProvider` seams | Abstractions |
 | `Notifications.Push.Expo` | Expo Push Service provider | Push + `Microsoft.Extensions.Http` |
 | `NotificationCenter.Domain.Shared` | Constants, enums | — |
-| `NotificationCenter.Domain` | Aggregates | Domain.Shared, Core |
+| `NotificationCenter.Domain` | Aggregates | Domain.Shared, Notifications.Abstractions |
 | `NotificationCenter.Application.Contracts` | DTOs, service interfaces | Domain.Shared, Abstractions |
-| `NotificationCenter.Application` | AppServices | Application.Contracts, Domain, Distribution |
+| `NotificationCenter.Application` | AppServices | Application.Contracts, Domain, Notifications (the implementation: `NotificationSubscriptionManager`) |
 | `NotificationCenter.HttpApi` / `.HttpApi.Client` | Explicit controllers / client proxies | Application.Contracts |
 | `NotificationCenter.EntityFrameworkCore` / `.MongoDB` | `INotificationStore` impls | Domain |
 | `NotificationCenter.Push` | `IPushDeviceStore` over the `PushDevice` registry | Domain, Notifications.Push |
@@ -59,29 +65,31 @@ projects that flatten to the project root are the exception).
 | `NotificationCenter.Installer` | ABP Studio/Suite install entry point, embeds the module's `.abpmdl` | `Volo.Abp.VirtualFileSystem` |
 
 Notifiers depend on **only** `Abstractions` + their channel SDK — that's what lets a channel be added
-without touching Core.
+without touching the pipeline.
 
-Tests by project: `Dignite.Abp.Notifications.Tests` (core) · `Dignite.Abp.Notifications.DefinitionStore.Tests`
+Tests by project: `Dignite.Abp.Notifications.Tests` (core) · `Dignite.Abp.Notifications.Domain.Tests`
 (the catalog on EF Core + SQLite, several named applications sharing one database and cache) ·
 `NotificationCenter.TestBase` (abstract provider-agnostic scenarios) · `.EntityFrameworkCore.Tests` /
 `.MongoDB.Tests` (per provider).
 
 ## Two operation modes
 
-1. **Stateless forwarding** — `Notifications.Distribution` + Notifiers, no persistence (`NullNotificationStore`),
-   explicit `UserIds` only.
+1. **Stateless forwarding** — `Notifications` (the implementation) + Notifiers, no persistence
+   (`NullNotificationStore`), explicit `UserIds` only.
 2. **Full Notification Center** — + `NotificationCenter` (+ EF Core or MongoDB): persistence,
    subscriptions, inbox, REST API.
 
-Core logic must work with `NullNotificationStore` alone.
+The pipeline must work with `NullNotificationStore` alone.
 
-Either mode can also serve **remote publishing**: a publisher process installs `Notifications.Remote` instead of
-Distribution and sends one `NotificationPublishRequestedEto` per notification (definition checked, channels resolved
-and payload serialized in the publisher, through its outbox); the process running mode 1 or 2 handles it with
-`NotificationPublishRequestedHandler` and distributes locally. Remote and Distribution never share a process. The
-receiving process knows the publishers' definitions through `Notifications.DefinitionStore` (publishers save at
-startup, the receiver reads with `IsDynamicNotificationStoreEnabled`); a request for a name it cannot find is
-refused with an exception so the event inbox retries it.
+Either mode can also serve **remote publishing**: a publisher process installs `Notifications.Client` instead of
+`Notifications` and sends one `NotificationPublishRequestedEto` per notification (definition checked, channels
+resolved and payload serialized in the publisher, through its outbox); the process running mode 1 or 2 handles it
+with `NotificationPublishRequestedHandler` and distributes locally. The two packages do not exclude each other: in one
+process the local publisher wins, whatever the module order. The receiving process knows the publishers' definitions
+through `Notifications.Domain` + `.EntityFrameworkCore` (publishers save at startup, the receiver reads with
+`IsDynamicNotificationStoreEnabled`); a request for a name it cannot find is refused with an exception so the event
+inbox retries it. Client and the implementation are separate packages, unlike ABP's `BackgroundJobs.RabbitMQ`, because a
+publisher must not register the distribution job or the event handlers at all (design doc §4.2).
 
 ## Adding a feature
 
@@ -103,8 +111,8 @@ refused with an exception so the event inbox retries it.
    `DeliverAsync(NotificationDeliveryRequestedEto, CancellationToken)`.
 3. Module class `[DependsOn(typeof(AbpNotificationsAbstractionsModule), ...)]` that registers the
    channel: `Configure<NotificationNotifierOptions>(o => o.Notifiers.Add<TNotifier>(TNotifier.ChannelName))`.
-   Distribution's delivery handler resolves only the notifier mapped to a delivery's channel; an unregistered
-   notifier is never called.
+   The delivery handler (in `Notifications`) resolves only the notifier mapped to a delivery's channel; an
+   unregistered notifier is never called.
 
 ## Commands
 
@@ -112,8 +120,9 @@ refused with an exception so the event inbox retries it.
 dotnet build Dignite.NotificationCenter.slnx
 dotnet test Dignite.NotificationCenter.slnx
 
-# Core only, skips embedded-mongod tests:
+# core/ only, skips embedded-mongod tests:
 dotnet test core/test/Dignite.Abp.Notifications.Tests
+dotnet test core/test/Dignite.Abp.Notifications.Domain.Tests
 
 dotnet pack Dignite.NotificationCenter.slnx -c Release
 ```

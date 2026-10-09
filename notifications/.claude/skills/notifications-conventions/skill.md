@@ -1,6 +1,6 @@
 ---
 name: notifications-conventions
-description: How the Dignite.Abp.Notifications module applies ABP — contracts in Core and implementations in Distribution (Remote for publishers that do not host the inbox), the definition catalog copied from ABP's dynamic permission store (static + dynamic definitions, async INotificationDefinitionManager), the payload carried as DataJson from the publish boundary, the four BasicAggregateRoot aggregates with no custom repository interfaces, INotificationStore as the query seam, hand-written MapToDtoAsync (no Mapperly/AutoMapper), explicit HttpApi controllers, the two-layer authorization model with INotificationPermissionChecker, the NotificationDeliveryRequestedEto and NotificationPublishRequestedEto distributed events, the distribution background job, tenant handling, and read-time localization. Read when writing or reviewing code under notifications/ and the generic abp-* skill doesn't say what THIS module does.
+description: How the Dignite.Abp.Notifications module applies ABP — ABP's package layout (contracts and null defaults in Abstractions, the in-process implementation in Dignite.Abp.Notifications, remote publishing in Client, the definition store as Domain.Shared/Domain/EntityFrameworkCore), the definition catalog copied from ABP's dynamic permission store (static + dynamic definitions, async INotificationDefinitionManager), the payload carried as DataJson from the publish boundary, the four BasicAggregateRoot aggregates with no custom repository interfaces, INotificationStore as the query seam, hand-written MapToDtoAsync (no Mapperly/AutoMapper), explicit HttpApi controllers, the two-layer authorization model with INotificationPermissionChecker, the NotificationDeliveryRequestedEto and NotificationPublishRequestedEto distributed events, the distribution background job, tenant handling, and read-time localization. Read when writing or reviewing code under notifications/ and the generic abp-* skill doesn't say what THIS module does.
 ---
 
 # notifications — Module Conventions
@@ -15,32 +15,45 @@ description: How the Dignite.Abp.Notifications module applies ABP — contracts 
 > Note this module deliberately differs from `file-storing` on repositories, object mapping, controllers, and
 > distributed-event posture — don't cross-apply the other module's conventions.
 
-## Contracts stay in Core, implementations go to Distribution
+## Contracts in Abstractions, the default implementation in `Dignite.Abp.Notifications`, remote publishing in Client
 
-`Dignite.Abp.Notifications` (Core) holds what a business module needs and what other packages implement:
-definitions, routing (`NotificationRoutingOptions`, `INotificationChannelResolver`), the `INotificationPublisher`,
-`INotificationStore`, `INotificationDistributor` and `INotificationPermissionChecker` contracts, and the info records
-(`NotificationInfo`, …). `Dignite.Abp.Notifications.Distribution` holds the implementations of the in-process pipeline:
-`DefaultNotificationPublisher`, `DefaultNotificationDistributor`, `NotificationDistributionDispatcher`,
-`NotificationDistributionJob(Args)`, the two event handlers, `NullNotificationStore`,
-`AlwaysGrantedNotificationPermissionChecker`, `NotificationSubscriptionManager`, `NotificationDistributionOptions`.
-`Dignite.Abp.Notifications.Remote` holds the other `INotificationPublisher`.
+The core packages follow ABP's layout for a framework feature (design doc §4 and §4.1):
 
-- **Placing a new type**: a contract another package implements, or a type a business module touches, goes to Core.
-  Anything that runs the pipeline goes to Distribution. If putting it in Distribution would make NotificationCenter.Domain,
-  `Notifications.Identity` or a business module reference Distribution, it is a contract — move it to Core.
-- **Never move a type a business module references** (`AbpNotificationsModule`, `INotificationPublisher`, the
-  definition API, `NotificationRoutingOptions`, `NotificationEntityIdentifier`, the payload types in Abstractions…): the
-  namespace and the assembly are a binary contract — modules compiled against an older release run on a newer one.
-  Moved implementation types keep the `Dignite.Abp.Notifications` namespace; only the Remote and DefinitionStore
-  packages have their own.
+| Package | Holds | ABP counterpart |
+|---|---|---|
+| `Dignite.Abp.Notifications.Abstractions` | Everything a business module or a notifier needs and everything another package implements: the definition API and its static/dynamic stores, routing (`NotificationRoutingOptions`, `INotificationChannelResolver`), `INotificationPublisher` / `INotificationStore` / `INotificationDistributor` / `INotificationPermissionChecker`, the info records, the payload types, both ETOs, `INotificationNotifier` — and the null defaults `NullNotificationPublisher`, `NullNotificationStore`, `AlwaysGrantedNotificationPermissionChecker`, `NullDynamicNotificationDefinitionStore` | `Volo.Abp.Authorization.Abstractions`, `Volo.Abp.BackgroundJobs.Abstractions` |
+| `Dignite.Abp.Notifications` | The in-process implementation: `DefaultNotificationPublisher`, `DefaultNotificationDistributor`, `NotificationDistributionDispatcher`, `NotificationDistributionJob(Args)`, the two event handlers, `NotificationSubscriptionManager`, `NotificationDistributionOptions` | `Volo.Abp.BackgroundJobs`, `Volo.Abp.EventBus` |
+| `Dignite.Abp.Notifications.Client` | `RemoteNotificationPublisher` | `Volo.Abp.AspNetCore.Mvc.Client(.Common)` (`RemotePermissionChecker`) |
+| `Dignite.Abp.Notifications.Domain.Shared` / `.Domain` / `.EntityFrameworkCore` | The definition store | `Volo.Abp.PermissionManagement.Domain.Shared` / `.Domain` / `.EntityFrameworkCore` |
+
+- **Placing a new type**: a contract another package implements, or a type a business module or a notifier touches,
+  goes to Abstractions, with its null default next to it. Anything that runs the pipeline goes to
+  `Dignite.Abp.Notifications`. If putting it there would make NotificationCenter.Domain, `Notifications.Identity`, a
+  notifier or a business module reference the implementation package, it is a contract — move it to Abstractions.
+- **A business module depends on `AbpNotificationsAbstractionsModule`, never on `AbpNotificationsModule`.** The latter
+  is the implementation: depending on it brings the distributor, the distribution job and both event handlers into
+  every process that hosts the module — in a publisher next to Client, the local publisher would even win and the
+  publisher would distribute itself.
+- **Namespaces don't follow packages around.** Abstractions, the implementation, Domain.Shared and Domain share
+  `Dignite.Abp.Notifications` (ABP kept `Volo.Abp.Authorization` when it split `.Abstractions` out); only `.Client` and
+  `.EntityFrameworkCore` add their suffix, like ABP's. A type moved between these packages keeps its namespace.
 - **Defaults that another package replaces register with `[Dependency(TryRegister = true)]`** (`NullNotificationStore`,
-  `AlwaysGrantedNotificationPermissionChecker`). The replacing package depends on Core, not Distribution, so module
-  order does not put the replacement last; a plain registration of the default would silently win.
+  `AlwaysGrantedNotificationPermissionChecker`, `NullDynamicNotificationDefinitionStore`), so whatever registered an
+  implementation first keeps it. The one exception is `NullNotificationPublisher`: it is registered by
+  `AbpNotificationsAbstractionsModule.PostConfigureServices` with `TryAdd`, after every module's own services, because
+  `RemoteNotificationPublisher` is itself `TryRegister`-ed (see below) and a conventional null registration — always
+  first, since everything depends on Abstractions — would keep it out.
 - **Startup checks follow the same split**: checks that hold for every process (rules naming undefined notifications)
-  run in Core; checks about what this process delivers (unhosted channels, stateless mode) run in Distribution.
-- **Remote and Distribution never share a process.** Remote's module fails the start when an `INotificationDistributor`
-  is registered — checked against the contract, so neither package references the other.
+  run in Abstractions; checks about what this process delivers (unhosted channels, stateless mode) run in the
+  implementation package.
+- **Client and the implementation do not exclude each other; the local publisher wins.** `RemoteNotificationPublisher`
+  is `TryRegister`-ed and `DefaultNotificationPublisher` registered plainly, so in one process the local one is resolved
+  in either module order — as ABP's `HttpClientUserRoleFinder` yields to a local `UserRoleFinder`. Don't reintroduce a
+  startup check that fails when both are installed.
+- **Why Client is its own package** (design §4.2): ABP's `BackgroundJobs.RabbitMQ` produces and consumes in one package
+  and relies on `IsJobExecutionEnabled` to stop consuming, but that is a process-wide switch a publisher with jobs of
+  its own cannot turn off, and `JobQueueManager` starts a consumer for every registered job type. A publisher must
+  therefore not register the distribution job or the handlers at all, which only a separate package achieves.
 
 ## The definition catalog is ABP's dynamic permission store, copied
 
@@ -50,12 +63,12 @@ the way an ABP microservice learns other services' permissions and features — 
 
 | Here | ABP |
 |---|---|
-| `IStaticNotificationDefinitionStore` / `StaticNotificationDefinitionStore` (Core, singleton, the providers' snapshot) | `IStaticFeatureDefinitionStore` / `StaticFeatureDefinitionStore` |
-| `IDynamicNotificationDefinitionStore` + `NullDynamicNotificationDefinitionStore` (Core, `TryRegister`) | `IDynamicFeatureDefinitionStore` + `NullDynamicFeatureDefinitionStore` |
+| `IStaticNotificationDefinitionStore` / `StaticNotificationDefinitionStore` (Abstractions, singleton, the providers' snapshot) | `IStaticFeatureDefinitionStore` / `StaticFeatureDefinitionStore` |
+| `IDynamicNotificationDefinitionStore` + `NullDynamicNotificationDefinitionStore` (Abstractions, `TryRegister`) | `IDynamicFeatureDefinitionStore` + `NullDynamicFeatureDefinitionStore` |
 | `NotificationDefinitionManager` (transient): static first, a dynamic one only under a name no static one has | `FeatureDefinitionManager` (merge), `PermissionDefinitionManager` (transient) |
 | `NotificationGroupDefinitionRecord` / `NotificationDefinitionRecord` with `HasSameData` / `Patch` | `PermissionGroupDefinitionRecord` / `PermissionDefinitionRecord` |
 | `INotificationDefinitionSerializer` (`ILocalizableStringSerializer`, JSON-scalar attributes only) | `IPermissionDefinitionSerializer` |
-| `StaticNotificationDefinitionSaver`: app lock → MD5 hash → common lock → UoW → stamp; deletes only the `Deleted*` lists | `StaticPermissionSaver` |
+| `StaticNotificationDefinitionSaver` (Domain): app lock → MD5 hash → common lock → UoW → stamp + `NotificationDefinitionsChangedEto`; deletes only the `Deleted*` lists | `StaticPermissionSaver` + `DynamicPermissionDefinitionsChangedEto` |
 | `DynamicNotificationDefinitionStore` (transient) + `...InMemoryCache` (singleton): semaphore, 30 s stamp check, full reload | `DynamicPermissionDefinitionStore[InMemoryCache]` |
 | `NotificationDynamicInitializer` (background, Polly) | `PermissionDynamicInitializer` |
 | `NotificationDefinitionStoreOptions` (off in a data migration environment) | `PermissionManagementOptions` + `AbpPermissionOptions.Deleted*` |
@@ -64,7 +77,7 @@ the way an ABP microservice learns other services' permissions and features — 
   `GetGroupsAsync` / `GetGroupOrNullAsync`; never cache their results beyond a request (the dynamic side changes).
   List a group's definitions from `GetAllAsync()` by `GroupName`, not from the group object: a saved definition may
   belong to a group this process also defines.
-- **Core never depends on the store.** The dynamic contract lives in Core; `DefinitionStore` replaces the null
+- **Abstractions never depends on the store.** The dynamic contract lives in Abstractions; `Domain` replaces the null
   implementation. Startup checks and the saver read `IStaticNotificationDefinitionStore` only — they are about what
   this process defines.
 - **Deletion is explicit.** Several services write the same tables, so a definition missing from this process is never
@@ -72,8 +85,11 @@ the way an ABP microservice learns other services' permissions and features — 
 - **Unknown at delivery means retry, not "no requirements".** `NotificationPublishRequestedHandler` throws for a name
   the manager cannot find, before writing anything, so the event inbox retries it (invariant §7: requirements apply
   at delivery). Don't make it distribute, log-and-skip, or mark the event processed.
-- Don't add a definitions-changed event, a startup sync event, or a custom cache: ABP's stamp-in-distributed-cache is
-  the mechanism (design §15).
+- **`NotificationDefinitionsChangedEto` is published, not consumed.** The saver publishes the names it inserted or
+  changed, in its unit of work, exactly where ABP's `StaticPermissionSaver` publishes
+  `DynamicPermissionDefinitionsChangedEto` — group-only changes and deletions publish nothing, as in ABP. It is for
+  other services; ABP's stamp-in-distributed-cache stays the reload mechanism. Don't add a handler that syncs the
+  catalog from it, a startup sync event, or a custom cache (design §15).
 
 ## The payload travels as `DataJson` from the publish boundary
 
@@ -124,7 +140,7 @@ multiple call sites.
 public class NotificationStore : INotificationStore, ITransientDependency { }
 ```
 
-This replaces Distribution's `NullNotificationStore` once `NotificationCenter` is installed (the default is
+This replaces Abstractions' `NullNotificationStore` once `NotificationCenter` is installed (the default is
 registered with `TryRegister`, so module order does not matter). `NullNotificationStore`
 must implement the **complete** contract without persistence — including keyset paging and bounded
 multi-insert.
@@ -155,7 +171,7 @@ grows enough to justify a mapper. (This is the opposite of `file-storing`, which
 
 ### Go through the managers, not the repository
 
-The read/inbox side doesn't touch a repository directly — it goes through Core's domain-service-level
+The read/inbox side doesn't touch a repository directly — it goes through the domain-service-level
 abstractions (`IUserNotificationManager`, `INotificationSubscriptionManager`, `INotificationDefinitionManager`),
 which internally delegate to `INotificationStore`. Prefer these managers over reaching for
 `IRepository<T, Guid>` directly, unless the manager genuinely has no suitable method.
@@ -178,10 +194,10 @@ because background-job distribution runs without a request culture.
 1. **Standard ABP permissions** gate `NotificationCenter`'s own AppServices/Controllers — e.g. an admin-only
    "manage all subscriptions" endpoint uses `[Authorize(...)]` exactly like any other ABP module.
 
-2. **`INotificationPermissionChecker`** (in Core, `Dignite.Abp.Notifications`) is a separate, pluggable
+2. **`INotificationPermissionChecker`** (in Abstractions, namespace `Dignite.Abp.Notifications`) is a separate, pluggable
    abstraction that gates whether a *given user* is allowed to **receive** a given notification definition —
    checked during distribution (`NotificationDefinitionManager` / `DefaultNotificationDistributor`), not on an
-   AppService call. The default is Distribution's `AlwaysGrantedNotificationPermissionChecker`; `Notifications.Identity`
+   AppService call. The default is `AlwaysGrantedNotificationPermissionChecker` (Abstractions); `Notifications.Identity`
    supplies a real implementation backed by ABP Identity/Authorization. It depends on the `IUserRoleFinder`
    abstraction (`Identity.Domain.Shared`), never on `Identity.Domain`: it builds the `ClaimsPrincipal`
    (`UserId`, one `Role` per role, `TenantId` from the ambient tenant) itself and hands it to `IPermissionChecker`.
@@ -204,10 +220,10 @@ treat an explicit `userIds` array as a bypass (`notifications-invariants` §7).
 
 ### The distributed event: `NotificationDeliveryRequestedEto`
 
-Wire name `Dignite.Abp.Notifications.NotificationDeliveryRequested`. Distribution's internal handler adapts transport
-to the canonical `INotificationNotifier.DeliverAsync` contract; **channel plugins do not implement distributed
-event handlers**. Distributed events are how the distributor reaches every Notifier. Only a process with Distribution
-subscribes to it.
+Wire name `Dignite.Abp.Notifications.NotificationDeliveryRequested`. The implementation package's internal handler
+adapts transport to the canonical `INotificationNotifier.DeliverAsync` contract; **channel plugins do not implement
+distributed event handlers**. Distributed events are how the distributor reaches every Notifier. Only a process with
+`Dignite.Abp.Notifications` subscribes to it.
 
 Before touching it, read `notifications-invariants` §1 (serialization) and §4 (single-recipient and
 cancellation guarantees). In particular: ABP serializes ETOs with plain System.Text.Json and *no* app-level
@@ -217,7 +233,7 @@ write and throws on read. Keep every ETO a flat, default-STJ-round-trippable POC
 ### The distributed event: `NotificationPublishRequestedEto`
 
 Wire name `Dignite.Abp.Notifications.NotificationPublishRequested`. Sent by `RemoteNotificationPublisher` (one per
-notification, through the publisher's outbox) and handled by Distribution's `NotificationPublishRequestedHandler`,
+notification, through the publisher's outbox) and handled by `NotificationPublishRequestedHandler` (`Dignite.Abp.Notifications`),
 which goes through the same `NotificationDistributionDispatcher` as the local publisher. Same wire discipline as the
 delivery event (flat POCO, `DataJson`). It implements `IMultiTenant` so the handler runs in its tenant, host included,
 and it carries the channels the publisher resolved (`NotificationInfo.Channels`) — routing is read where the business
@@ -237,7 +253,7 @@ enqueues it when there are no explicit recipients or their distinct count exceed
 background job carrying the caller's list; the job's distributor batches internally (`RecipientBatchSize`).
 
 The job name is fixed (`[BackgroundJobName("Dignite.Abp.Notifications.Distribute")]`), so its queue does not follow the
-CLR type, and only a process with Distribution registers it.
+CLR type, and only a process with `Dignite.Abp.Notifications` registers it.
 
 **Preserve the notification tenant on every job** (`notifications-invariants` §8). Don't reintroduce a
 prepared-notification/eligibility-mode multi-job split; it was removed as over-engineering.
@@ -267,8 +283,10 @@ See "Display text is localized at read time" above — the same rule applies to 
 | A new custom repository interface per aggregate | A new method on `INotificationStore` |
 | Mapperly/AutoMapper in the AppService | The hand-written `protected virtual MapToDtoAsync(...)` |
 | A singleton manager injecting `INotificationStore` | `ITransientDependency` — `notifications-invariants` §2 |
-| A contract (or a type a business module uses) in Distribution | Core; only implementations go to Distribution |
-| A plain registration for a default another package replaces | `[Dependency(TryRegister = true)]` |
+| A contract (or a type a business module or a notifier uses) in `Dignite.Abp.Notifications` | Abstractions; only implementations go to the implementation package |
+| A business module depending on `Dignite.Abp.Notifications` / `AbpNotificationsModule` | `Dignite.Abp.Notifications.Abstractions` / `AbpNotificationsAbstractionsModule` |
+| A plain registration for a default another package replaces | `[Dependency(TryRegister = true)]` (the null publisher: a late `TryAdd`) |
+| A startup check that makes Client and the implementation exclusive | `TryRegister` on the remote publisher; the local one wins |
 | `NotificationData` on `NotificationInfo`, or re-serializing the payload in the store/distributor | `DataJson`, serialized once by the publisher |
 | Synchronous definition lookups, or saving/validating against the merged definitions | `await` the manager; the saver and startup checks use `IStaticNotificationDefinitionStore` |
 | Deleting catalog records a process no longer defines | List them in `DeletedNotifications` / `DeletedNotificationGroups` |
