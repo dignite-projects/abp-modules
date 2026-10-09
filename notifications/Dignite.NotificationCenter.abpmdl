@@ -13,6 +13,14 @@
       "path": "core/src/Dignite.Abp.Notifications.Abstractions/Dignite.Abp.Notifications.Abstractions.abppkg",
       "folder": "core/src"
     },
+    "Dignite.Abp.Notifications.DefinitionStore": {
+      "path": "core/src/Dignite.Abp.Notifications.DefinitionStore/Dignite.Abp.Notifications.DefinitionStore.abppkg",
+      "folder": "core/src"
+    },
+    "Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore": {
+      "path": "core/src/Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore/Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore.abppkg",
+      "folder": "core/src"
+    },
     "Dignite.Abp.Notifications.Emailing": {
       "path": "core/src/Dignite.Abp.Notifications.Emailing/Dignite.Abp.Notifications.Emailing.abppkg",
       "folder": "core/src"
@@ -48,6 +56,10 @@
     "Dignite.Abp.Notifications.Distribution": {
       "path": "core/src/Dignite.Abp.Notifications.Distribution/Dignite.Abp.Notifications.Distribution.abppkg",
       "folder": "core/src"
+    },
+    "Dignite.Abp.Notifications.DefinitionStore.Tests": {
+      "path": "core/test/Dignite.Abp.Notifications.DefinitionStore.Tests/Dignite.Abp.Notifications.DefinitionStore.Tests.abppkg",
+      "folder": "core/test"
     },
     "Dignite.Abp.Notifications.TestProviderA": {
       "path": "core/test/Dignite.Abp.Notifications.TestProviderA/Dignite.Abp.Notifications.TestProviderA.abppkg",

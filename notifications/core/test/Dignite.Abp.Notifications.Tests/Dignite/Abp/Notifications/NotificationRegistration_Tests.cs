@@ -204,15 +204,17 @@ public class NotificationRegistration_Tests
         var definitionManager = host.Services.GetRequiredService<INotificationDefinitionManager>();
 
         // The test assembly's convention-discovered provider contributes its own group as well.
-        definitionManager.GetGroups().Select(group => group.Name)
+        (await definitionManager.GetGroupsAsync()).Select(group => group.Name)
             .Where(name => name != TestNotificationDefinitionProvider.GroupName)
             .ShouldBe(new[] { "Test.Orders", "Test.System" });
-        definitionManager.GetGroupOrNull("Test.System")!.Notifications.Single().Name.ShouldBe("Test.Announcement");
-        definitionManager.GetGroupOrNull("test.system").ShouldBeNull();
-        definitionManager.GetAll().Select(definition => definition.Name)
-            .Where(name => definitionManager.Get(name).GroupName != TestNotificationDefinitionProvider.GroupName)
+        (await definitionManager.GetGroupOrNullAsync("Test.System"))!.Notifications.Single().Name
+            .ShouldBe("Test.Announcement");
+        (await definitionManager.GetGroupOrNullAsync("test.system")).ShouldBeNull();
+        (await definitionManager.GetAllAsync())
+            .Where(definition => definition.GroupName != TestNotificationDefinitionProvider.GroupName)
+            .Select(definition => definition.Name)
             .ShouldBe(new[] { "Test.Order.Shipped", "Test.Order.Paid", "Test.Announcement" });
-        definitionManager.Get("Test.Order.Paid").GroupName.ShouldBe("Test.Orders");
+        (await definitionManager.GetAsync("Test.Order.Paid")).GroupName.ShouldBe("Test.Orders");
 
         await host.StopAsync();
     }
@@ -320,9 +322,17 @@ public class NotificationRegistration_Tests
     }
 
     [Fact]
-    public async Task Host_start_uses_the_registered_definition_manager_override()
+    public async Task Host_start_uses_the_registered_static_definition_store_override()
     {
-        await StartHostAsync<CustomDefinitionManagerStartupModule>();
+        // The default store would fail the start: providers A and B both register Test.CrossModuleDuplicate.
+        using var host = BuildHost<CustomStaticDefinitionStoreStartupModule>();
+        await host.StartAsync();
+
+        (await host.Services.GetRequiredService<INotificationDefinitionManager>().GetAllAsync())
+            .Select(definition => definition.Name)
+            .ShouldBe(new[] { "Test.CustomStore" });
+
+        await host.StopAsync();
     }
 
     [Fact]
@@ -335,7 +345,7 @@ public class NotificationRegistration_Tests
         await host.StartAsync();
         var definitionManager = host.Services.GetRequiredService<INotificationDefinitionManager>();
         await Task.WhenAll(Enumerable.Range(0, 32)
-            .Select(_ => Task.Run(() => definitionManager.GetAll())));
+            .Select(_ => Task.Run(() => definitionManager.GetAllAsync())));
 
         TestProviderADefinitionProvider.DefineCallCount.ShouldBe(1);
         await host.StopAsync();
@@ -419,9 +429,9 @@ internal sealed class ProviderDependencyDefinitionProvider : INotificationDefini
 }
 
 [DisableConventionalRegistration]
-internal sealed class CustomNotificationDefinitionManager : NotificationDefinitionManager
+internal sealed class CustomStaticNotificationDefinitionStore : StaticNotificationDefinitionStore
 {
-    public CustomNotificationDefinitionManager(
+    public CustomStaticNotificationDefinitionStore(
         IOptions<NotificationDefinitionRegistration> registration,
         IServiceScopeFactory serviceScopeFactory)
         : base(registration, serviceScopeFactory)
@@ -431,9 +441,9 @@ internal sealed class CustomNotificationDefinitionManager : NotificationDefiniti
     protected override IReadOnlyList<NotificationGroupDefinition> CreateGroups()
     {
         var context = new NotificationDefinitionContext();
-        context.AddGroup("Test.CustomManager").AddNotification(
-            "Test.CustomManager",
-            new FixedLocalizableString("Custom manager"));
+        context.AddGroup("Test.CustomStore").AddNotification(
+            "Test.CustomStore",
+            new FixedLocalizableString("Custom store"));
         return context.Groups;
     }
 }
@@ -588,11 +598,11 @@ public class SingleDefinitionProviderStartupModule : AbpModule
 }
 
 [DependsOn(typeof(TestProviderAModule), typeof(TestProviderBModule))]
-public class CustomDefinitionManagerStartupModule : AbpModule
+public class CustomStaticDefinitionStoreStartupModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         context.Services.Replace(
-            ServiceDescriptor.Singleton<INotificationDefinitionManager, CustomNotificationDefinitionManager>());
+            ServiceDescriptor.Singleton<IStaticNotificationDefinitionStore, CustomStaticNotificationDefinitionStore>());
     }
 }

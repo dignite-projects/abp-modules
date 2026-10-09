@@ -40,7 +40,7 @@ public class AbpNotificationsModule : AbpModule
 
         // NotificationDefinitionRegistration.Validate() runs from NotificationDefinitionStartupService instead of this
         // options-validation pipeline: the real definition-name conflict check only exists inside
-        // NotificationDefinitionManager's lazily-built dictionary, so both checks belong at the one hook that can
+        // StaticNotificationDefinitionStore's lazily-built dictionary, so both checks belong at the one hook that can
         // reach it.
         context.Services.AddHostedService<NotificationDefinitionStartupService>();
     }

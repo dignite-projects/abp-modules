@@ -94,6 +94,14 @@
     <PackageVersion Include="System.Text.Json" Version="10.0.11" />
   </ItemGroup>
 
+  <!--
+    Polly: the retry policy of the notification definition store's startup save, the same one ABP's own definition
+    stores use (Volo.Abp.PermissionManagement.Domain 10.5.0 depends on Polly 8.6.3; keep them on one version).
+  -->
+  <ItemGroup Label="Retry policies (notifications definition store)">
+    <PackageVersion Include="Polly" Version="8.6.3" />
+  </ItemGroup>
+
   <ItemGroup Label="Microsoft hosting abstractions">
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.11" />
   </ItemGroup>

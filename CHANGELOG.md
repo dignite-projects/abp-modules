@@ -37,6 +37,25 @@ so it stays clear which part of the repository actually moved.
   as they are and asks neither the resolver nor the definition manager for routing.
 - `NotificationStore.InsertNotificationAsync` skips a notification id it already holds, so a second run of the same
   distribution (a redelivered publish request, a retried job) does not fail on the primary key.
+- **Definition catalog: `Dignite.Abp.Notifications.DefinitionStore` and
+  `Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore`.** A notification service that hosts no business
+  module learns the publishers' definitions the way an ABP microservice learns other services' permissions: every
+  process saves its static definitions to shared tables at startup (`StaticNotificationDefinitionSaver`, in the
+  background with Polly retries), and a process with `NotificationDefinitionStoreOptions.IsDynamicNotificationStoreEnabled`
+  reads them (`DynamicNotificationDefinitionStore`, reloaded within 30 seconds of a change through a common stamp in the
+  distributed cache). Each part follows ABP's permission management domain, including the per-application hash that
+  skips unchanged saves and the rule that a save deletes only what `DeletedNotifications` / `DeletedNotificationGroups`
+  list, so services sharing the tables never delete each other's records. Display texts are stored by resource name
+  (`L:Resource,Key`) and resolved in the reader, through ABP's external localization store when the resource is not
+  registered there. The EF Core package maps `NotifDefinitionGroups` / `NotifDefinitions` on the `NotificationCenter`
+  connection string (`[IgnoreMultiTenancy]`) and adds `ConfigureNotificationDefinitionStore()` for the host's migration
+  DbContext; no migrations ship. The process that reads the store must also turn on ABP's
+  `IsDynamicPermissionStoreEnabled` / `IsDynamicFeatureStoreEnabled` (not checked; see the README). A MongoDB
+  implementation is a follow-up. The repository now pins `Polly` 8.6.3 (the version ABP 10.5's own stores use). See
+  "Definition catalog" in the notifications README.
+- `IStaticNotificationDefinitionStore` / `StaticNotificationDefinitionStore` (the providers' definitions, built once)
+  and `IDynamicNotificationDefinitionStore` with its empty default `NullDynamicNotificationDefinitionStore` in Core,
+  after ABP's static and dynamic feature definition stores.
 
 ### Changed
 
@@ -88,6 +107,25 @@ so it stays clear which part of the repository actually moved.
   Identity service), and enable `IsDynamicPermissionStoreEnabled`. Installing the package no longer pulls in the
   Identity domain or needs the Identity database. A recipient that no longer exists is no longer rejected up front:
   it has no roles and is granted only what is granted to it directly.
+- **Breaking - `INotificationDefinitionManager` is asynchronous**: `Get` / `GetOrNull` / `GetAll` / `GetGroups` /
+  `GetGroupOrNull` become `GetAsync` / `GetOrNullAsync` / `GetAllAsync` / `GetGroupsAsync` / `GetGroupOrNullAsync`,
+  because the manager now merges the definitions of this process with those of the definition catalog (static first,
+  a dynamic definition or group only under a name no static one has, as ABP's `FeatureDefinitionManager`). Business
+  modules' production code uses only the definition API and is unaffected; code that calls the manager — tests that
+  assert a definition included — awaits the new methods. `NotificationDefinitionManager` is transient (it was a
+  singleton) and no longer builds the definitions: a custom registry overrides
+  `StaticNotificationDefinitionStore.CreateGroups` (or replaces `IStaticNotificationDefinitionStore`) instead of
+  `NotificationDefinitionManager.CreateGroups`. The startup checks read the static definitions only.
+  `UserNotificationAppService.MapToDto` and `TryResolveGroupFilter` become `MapToDtoAsync` and
+  `ResolveGroupFilterAsync`, and `NotificationSubscriptionAppService.GetGroupOrNull` becomes `GetGroupOrNullAsync`.
+- **Breaking - a remote publish request whose notification is unknown is refused, so the event inbox retries it.**
+  `NotificationPublishRequestedHandler` looks the name up (its own definitions and the catalog) before writing anything
+  and throws when it finds none: the definition carries the permission and feature requirements that apply at
+  delivery, and until now such a request was distributed to no one and marked processed. The usual cause is a
+  publisher whose definitions have not reached the catalog yet, which a retry outlives; configure the notification
+  service with `AbpEventBusBoxesOptions.InboxProcessorFailurePolicy = RetryLater` (ABP's default `Retry` re-runs the
+  event every period and holds back the events behind it). The handler's constructor takes an
+  `INotificationDefinitionManager`.
 
 ## [10.0.0-rc.22] - 2026-10-09
 

@@ -16,24 +16,25 @@ namespace Dignite.Abp.Notifications;
 /// channels the rules name that no notifier here hosts, and — in stateless mode, where there is no inbox — definitions
 /// that resolve to no channel at all. Both checks are about the process that distributes, so they live with the
 /// distributor; Core's <c>NotificationDefinitionStartupService</c> keeps the check that holds everywhere (rules for
-/// notifications nobody defines).
+/// notifications nobody defines). Like that check, it reads this process's own definitions
+/// (<see cref="IStaticNotificationDefinitionStore"/>): the routing table configured here routes them.
 /// </summary>
 internal sealed class NotificationDistributionStartupService : IHostedLifecycleService
 {
-    private readonly INotificationDefinitionManager _definitionManager;
+    private readonly IStaticNotificationDefinitionStore _staticStore;
     private readonly IOptions<NotificationRoutingOptions> _routingOptions;
     private readonly IOptions<NotificationNotifierOptions> _notifierOptions;
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<NotificationDistributionStartupService> _logger;
 
     public NotificationDistributionStartupService(
-        INotificationDefinitionManager definitionManager,
+        IStaticNotificationDefinitionStore staticStore,
         IOptions<NotificationRoutingOptions> routingOptions,
         IOptions<NotificationNotifierOptions> notifierOptions,
         IServiceProvider serviceProvider,
         ILogger<NotificationDistributionStartupService> logger)
     {
-        _definitionManager = definitionManager;
+        _staticStore = staticStore;
         _routingOptions = routingOptions;
         _notifierOptions = notifierOptions;
         _serviceProvider = serviceProvider;
@@ -43,7 +44,7 @@ internal sealed class NotificationDistributionStartupService : IHostedLifecycleS
     public async Task StartingAsync(CancellationToken cancellationToken)
     {
         ValidateHostedChannels();
-        await ValidateStatelessRoutingAsync(_definitionManager.GetAll(), cancellationToken);
+        await ValidateStatelessRoutingAsync(await _staticStore.GetNotificationsAsync(), cancellationToken);
     }
 
     public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;

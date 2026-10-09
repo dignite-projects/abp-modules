@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Dignite.Abp.Notifications;
 using Shouldly;
+using Volo.Abp;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.Modularity;
@@ -52,6 +53,27 @@ public abstract class NotificationPublishRequested_Tests<TStartupModule> : Notif
             var inboxRows = await GetRequiredService<IRepository<UserNotification, Guid>>()
                 .GetListAsync(row => row.NotificationId == request.NotificationId);
             inboxRows.Select(row => row.UserId).ShouldBe(new[] { u1, u2 }, ignoreOrder: true);
+        });
+    }
+
+    [Fact]
+    public async Task A_request_for_a_notification_no_definition_describes_throws_and_leaves_the_inbox_untouched()
+    {
+        var userId = Guid.NewGuid();
+        var request = NewRequest(SerializeData(new MessageNotificationData("hi")), userId);
+        request.NotificationName = "Publisher.Not.Yet.Known";
+        var handler = GetRequiredService<IDistributedEventHandler<NotificationPublishRequestedEto>>();
+
+        // Thrown so that the event inbox retries it: distributing without the definition would skip its requirements.
+        (await Should.ThrowAsync<AbpException>(() => handler.HandleEventAsync(request)))
+            .Message.ShouldContain("Publisher.Not.Yet.Known");
+
+        await WithUnitOfWorkAsync(async () =>
+        {
+            (await GetRequiredService<IRepository<Notification, Guid>>()
+                .GetListAsync(row => row.Id == request.NotificationId)).ShouldBeEmpty();
+            (await GetRequiredService<IRepository<UserNotification, Guid>>()
+                .GetListAsync(row => row.UserId == userId)).ShouldBeEmpty();
         });
     }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dignite.Abp.Notifications;
@@ -40,21 +41,25 @@ public class NotificationSubscriptionAppService : NotificationCenterAppService, 
             .Select(subscription => subscription.NotificationName)
             .ToHashSet(StringComparer.Ordinal);
 
-        var dtos = available.Select(definition => new NotificationSubscriptionDto
+        var dtos = new List<NotificationSubscriptionDto>(available.Count);
+        foreach (var definition in available)
         {
-            NotificationName = definition.Name,
-            GroupName = definition.GroupName,
-            GroupDisplayName = GetGroupDisplayName(DefinitionManager.GetGroupOrNull(definition.GroupName)),
-            DisplayName = definition.DisplayName.Localize(StringLocalizerFactory).Value,
-            Description = definition.Description?.Localize(StringLocalizerFactory)?.Value,
-            IsSubscribed = definitionWideSubscriptions.Contains(definition.Name)
-        }).ToList();
+            dtos.Add(new NotificationSubscriptionDto
+            {
+                NotificationName = definition.Name,
+                GroupName = definition.GroupName,
+                GroupDisplayName = GetGroupDisplayName(await DefinitionManager.GetGroupOrNullAsync(definition.GroupName)),
+                DisplayName = definition.DisplayName.Localize(StringLocalizerFactory).Value,
+                Description = definition.Description?.Localize(StringLocalizerFactory)?.Value,
+                IsSubscribed = definitionWideSubscriptions.Contains(definition.Name)
+            });
+        }
 
         foreach (var subscription in subscribed.Where(subscription =>
                      subscription.EntityTypeName != null || subscription.EntityId != null))
         {
             availableByName.TryGetValue(subscription.NotificationName, out var definition);
-            var group = GetGroupOrNull(subscription.NotificationName);
+            var group = await GetGroupOrNullAsync(subscription.NotificationName);
             dtos.Add(new NotificationSubscriptionDto
             {
                 NotificationName = subscription.NotificationName,
@@ -72,7 +77,7 @@ public class NotificationSubscriptionAppService : NotificationCenterAppService, 
                      subscription.EntityTypeName == null && subscription.EntityId == null
                      && !availableByName.ContainsKey(subscription.NotificationName)))
         {
-            var group = GetGroupOrNull(subscription.NotificationName);
+            var group = await GetGroupOrNullAsync(subscription.NotificationName);
             dtos.Add(new NotificationSubscriptionDto
             {
                 NotificationName = subscription.NotificationName,
@@ -98,10 +103,10 @@ public class NotificationSubscriptionAppService : NotificationCenterAppService, 
     }
 
     /// <summary>The group of a defined notification (available to the user or not), or null when it no longer exists.</summary>
-    protected virtual NotificationGroupDefinition? GetGroupOrNull(string notificationName)
+    protected virtual async Task<NotificationGroupDefinition?> GetGroupOrNullAsync(string notificationName)
     {
-        var definition = DefinitionManager.GetOrNull(notificationName);
-        return definition == null ? null : DefinitionManager.GetGroupOrNull(definition.GroupName);
+        var definition = await DefinitionManager.GetOrNullAsync(notificationName);
+        return definition == null ? null : await DefinitionManager.GetGroupOrNullAsync(definition.GroupName);
     }
 
     protected virtual NotificationEntityIdentifier? CreateEntityIdentifier(NotificationSubscriptionScopeDto input)

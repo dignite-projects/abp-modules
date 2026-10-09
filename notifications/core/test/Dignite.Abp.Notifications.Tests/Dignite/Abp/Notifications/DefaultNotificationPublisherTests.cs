@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Shouldly;
 using Volo.Abp;
 using Volo.Abp.BackgroundJobs;
@@ -28,7 +29,7 @@ public class DefaultNotificationPublisherTests
 
     public DefaultNotificationPublisherTests()
     {
-        _definitionManager.Get(Arg.Any<string>()).Returns(call =>
+        _definitionManager.GetAsync(Arg.Any<string>()).Returns(call =>
             new NotificationDefinition(
                 "Test",
                 call.Arg<string>(),
@@ -105,7 +106,7 @@ public class DefaultNotificationPublisherTests
     [Fact]
     public async Task Undefined_notification_name_fails_before_any_side_effect()
     {
-        _definitionManager.Get("missing").Returns(_ => throw new AbpException("Undefined notification: missing"));
+        _definitionManager.GetAsync("missing").ThrowsAsync(new AbpException("Undefined notification: missing"));
         var publisher = CreatePublisher(threshold: 3);
 
         await Should.ThrowAsync<AbpException>(() => publisher.PublishAsync(
@@ -252,7 +253,7 @@ public class DefaultNotificationPublisherTests
         public NotificationDistributionJob CreateJob()
         {
             var definitionManager = Substitute.For<INotificationDefinitionManager>();
-            definitionManager.Get("test")
+            definitionManager.GetAsync("test")
                 .Returns(new NotificationDefinition("Test", "test", new FixedLocalizableString("Test")));
             definitionManager.IsAvailableAsync("test", Arg.Any<Guid>()).Returns(true);
 

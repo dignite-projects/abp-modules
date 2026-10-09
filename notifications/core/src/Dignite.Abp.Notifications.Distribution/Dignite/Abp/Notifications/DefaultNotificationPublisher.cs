@@ -56,7 +56,7 @@ public class DefaultNotificationPublisher : INotificationPublisher, ITransientDe
 
         // Fail fast on undefined notification names while the caller is still on the line, instead of
         // inside a background job.
-        DefinitionManager.Get(notificationName);
+        await DefinitionManager.GetAsync(notificationName);
 
         var notification = new NotificationInfo
         {

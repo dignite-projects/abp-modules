@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>The notification definition store of Dignite.Abp.Notifications, after ABP's dynamic permission and feature stores: every process saves the definitions its business modules register to a shared table, and a process that hosts no business module (a dedicated notification service) reads them from there. Add Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore for the tables.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Polly" />
+    <PackageReference Include="Volo.Abp.Ddd.Domain" />
+    <PackageReference Include="Volo.Abp.DistributedLocking.Abstractions" />
+    <PackageReference Include="Volo.Abp.Localization" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.Abp.Notifications\Dignite.Abp.Notifications.csproj" />
+  </ItemGroup>
+
+</Project>

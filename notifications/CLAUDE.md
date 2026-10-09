@@ -13,7 +13,8 @@ and the Angular demo app are local-dev-only, never packed.
 One `.slnx` — `Dignite.NotificationCenter.slnx`:
 
 - **`core/`** — `Abstractions, Notifications, Notifications.Distribution, Notifications.Remote,
-  Notifications.Identity, Notifications.Emailing[.Identity], Notifications.SignalR, Notifications.Push[.Expo]`.
+  Notifications.DefinitionStore[.EntityFrameworkCore], Notifications.Identity, Notifications.Emailing[.Identity],
+  Notifications.SignalR, Notifications.Push[.Expo]`.
   Core never references NotificationCenter; Core + Distribution works standalone via `NullNotificationStore`.
   **Contracts stay in Core, implementations go to Distribution**: anything another package implements
   (`INotificationStore`, `INotificationPermissionChecker`) or a business module uses stays in Core, so neither
@@ -40,6 +41,8 @@ projects that flatten to the project root are the exception).
 | `Notifications` (Core) | Definitions, routing, `INotificationPublisher` / `INotificationStore` / `INotificationDistributor` / `INotificationPermissionChecker` contracts, info records | Abstractions |
 | `Notifications.Distribution` | Local publisher, distributor, distribution job, delivery + publish-request handlers, `NullNotificationStore`, `NotificationSubscriptionManager` | Core |
 | `Notifications.Remote` | Remote `INotificationPublisher` (one `NotificationPublishRequestedEto` per notification); refuses to start next to Distribution | Core |
+| `Notifications.DefinitionStore` | Definition catalog after ABP's dynamic permission store: record entities, `StaticNotificationDefinitionSaver`, `DynamicNotificationDefinitionStore` (replaces Core's `NullDynamicNotificationDefinitionStore`), initializer, options | Core, ABP Ddd.Domain |
+| `Notifications.DefinitionStore.EntityFrameworkCore` | `NotifDefinitionGroups` / `NotifDefinitions` on the `NotificationCenter` connection string, `ConfigureNotificationDefinitionStore()` | DefinitionStore, ABP EF Core |
 | `Notifications.Identity` | Permission-checker impl | Core, ABP Authorization, `IUserRoleFinder` (`Identity.Domain.Shared`) |
 | `Notifications.Emailing` / `.SignalR` | Notifier plugins | Abstractions + channel SDK |
 | `Notifications.Emailing.Identity` | Email address resolver | Emailing, ABP Identity |
@@ -58,8 +61,10 @@ projects that flatten to the project root are the exception).
 Notifiers depend on **only** `Abstractions` + their channel SDK — that's what lets a channel be added
 without touching Core.
 
-Tests by project: `Dignite.Abp.Notifications.Tests` (core) · `NotificationCenter.TestBase` (abstract
-provider-agnostic scenarios) · `.EntityFrameworkCore.Tests` / `.MongoDB.Tests` (per provider).
+Tests by project: `Dignite.Abp.Notifications.Tests` (core) · `Dignite.Abp.Notifications.DefinitionStore.Tests`
+(the catalog on EF Core + SQLite, several named applications sharing one database and cache) ·
+`NotificationCenter.TestBase` (abstract provider-agnostic scenarios) · `.EntityFrameworkCore.Tests` /
+`.MongoDB.Tests` (per provider).
 
 ## Two operation modes
 
@@ -73,7 +78,10 @@ Core logic must work with `NullNotificationStore` alone.
 Either mode can also serve **remote publishing**: a publisher process installs `Notifications.Remote` instead of
 Distribution and sends one `NotificationPublishRequestedEto` per notification (definition checked, channels resolved
 and payload serialized in the publisher, through its outbox); the process running mode 1 or 2 handles it with
-`NotificationPublishRequestedHandler` and distributes locally. Remote and Distribution never share a process.
+`NotificationPublishRequestedHandler` and distributes locally. Remote and Distribution never share a process. The
+receiving process knows the publishers' definitions through `Notifications.DefinitionStore` (publishers save at
+startup, the receiver reads with `IsDynamicNotificationStoreEnabled`); a request for a name it cannot find is
+refused with an exception so the event inbox retries it.
 
 ## Adding a feature
 
@@ -111,4 +119,5 @@ dotnet pack Dignite.NotificationCenter.slnx -c Release
 ```
 
 No `DbMigrator` — a consuming host owns its own DbContext/migrations via
-`ConfigureNotificationCenter(builder)` or `INotificationCenterDbContext`.
+`ConfigureNotificationCenter(builder)` or `INotificationCenterDbContext` (and `ConfigureNotificationDefinitionStore(builder)`
+for the definition store's tables).

@@ -5,7 +5,9 @@ MVC/Angular UI) built on Dignite.Abp.Notifications' event-driven publish/distrib
 pluggable Notifiers (Emailing, SignalR). Installing this module brings in the core notification
 framework and its in-process distribution pipeline (`Dignite.Abp.Notifications.Distribution`) as its
 underlying delivery layer. A service that only publishes notifications for another process to distribute
-installs `Dignite.Abp.Notifications.Remote` instead of this module — see "Split deployment" in the README.
+installs `Dignite.Abp.Notifications.Remote` instead of this module, and both sides install
+`Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore` so that the process serving the inbox knows the
+publishers' notification definitions — see "Split deployment" and "Definition catalog" in the README.
 
 ## Documentation
 

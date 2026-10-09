@@ -145,10 +145,10 @@ public class NotificationDistribution_Integration_Tests : DigniteAbpNotification
     }
 
     [Fact]
-    public void Definition_providers_are_auto_discovered()
+    public async Task Definition_providers_are_auto_discovered()
     {
-        _definitionManager.GetOrNull(TestNotificationDefinitionProvider.Plain).ShouldNotBeNull();
-        _definitionManager.GetAll().Select(d => d.Name)
+        (await _definitionManager.GetOrNullAsync(TestNotificationDefinitionProvider.Plain)).ShouldNotBeNull();
+        (await _definitionManager.GetAllAsync()).Select(d => d.Name)
             .ShouldContain(TestNotificationDefinitionProvider.FeatureGated);
     }
 

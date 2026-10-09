@@ -11,6 +11,7 @@ using Volo.Abp.OpenIddict.EntityFrameworkCore;
 using Volo.Abp.PermissionManagement.EntityFrameworkCore;
 using Volo.Abp.SettingManagement.EntityFrameworkCore;
 using Dignite.NotificationCenter.EntityFrameworkCore;
+using Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore;
 
 namespace Dignite.NotificationCenter.Web.Host.Data;
 
@@ -46,5 +47,9 @@ public class HostDbContext : AbpDbContext<HostDbContext>
         builder.ConfigureEventInbox();
         builder.ConfigureEventOutbox();
         builder.ConfigureNotificationCenter();
+
+        /* The notification definition store's tables (same connection string name, NotificationCenter); its own
+         * DbContext reads and writes them at runtime. */
+        builder.ConfigureNotificationDefinitionStore();
     }
 }

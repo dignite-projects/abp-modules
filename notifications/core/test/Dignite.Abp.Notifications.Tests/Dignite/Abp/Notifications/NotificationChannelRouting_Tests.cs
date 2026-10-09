@@ -301,7 +301,7 @@ public class NotificationChannelRouting_Tests
         var definitionManager = Substitute.For<INotificationDefinitionManager>();
         var eventBus = Substitute.For<IDistributedEventBus>();
 
-        definitionManager.Get("test").Returns(Definition("test"));
+        definitionManager.GetAsync("test").Returns(Definition("test"));
         definitionManager.IsAvailableAsync("test", Arg.Any<Guid>()).Returns(true);
         eventBus.WhenForAnyArgs(x => x.PublishAsync(Arg.Any<NotificationDeliveryRequestedEto>()))
             .Do(ci => published.Add(ci.Arg<NotificationDeliveryRequestedEto>()));
@@ -328,8 +328,8 @@ public class NotificationChannelRouting_Tests
         INotificationChannelResolver? resolver = null,
         ILogger<NotificationDistributionStartupService>? logger = null)
     {
-        var definitionManager = Substitute.For<INotificationDefinitionManager>();
-        definitionManager.GetAll().Returns(definitionNames.Select(Definition).ToList());
+        var staticStore = Substitute.For<IStaticNotificationDefinitionStore>();
+        staticStore.GetNotificationsAsync().Returns(definitionNames.Select(Definition).ToList());
 
         var notifierOptions = new NotificationNotifierOptions();
         foreach (var channel in hostedChannels)
@@ -344,12 +344,12 @@ public class NotificationChannelRouting_Tests
 
         return new StartupChecks(
             new NotificationDefinitionStartupService(
-                definitionManager,
+                staticStore,
                 Options.Create(new NotificationDefinitionRegistration()),
                 NotificationTestObjects.CreateRegistry(),
                 Options.Create(routing)),
             new NotificationDistributionStartupService(
-                definitionManager,
+                staticStore,
                 Options.Create(routing),
                 Options.Create(notifierOptions),
                 provider,

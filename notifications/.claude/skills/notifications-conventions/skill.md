@@ -1,6 +1,6 @@
 ---
 name: notifications-conventions
-description: How the Dignite.Abp.Notifications module applies ABP — contracts in Core and implementations in Distribution (Remote for publishers that do not host the inbox), the payload carried as DataJson from the publish boundary, the four BasicAggregateRoot aggregates with no custom repository interfaces, INotificationStore as the query seam, hand-written MapToDto (no Mapperly/AutoMapper), explicit HttpApi controllers, the two-layer authorization model with INotificationPermissionChecker, the NotificationDeliveryRequestedEto and NotificationPublishRequestedEto distributed events, the distribution background job, tenant handling, and read-time localization. Read when writing or reviewing code under notifications/ and the generic abp-* skill doesn't say what THIS module does.
+description: How the Dignite.Abp.Notifications module applies ABP — contracts in Core and implementations in Distribution (Remote for publishers that do not host the inbox), the definition catalog copied from ABP's dynamic permission store (static + dynamic definitions, async INotificationDefinitionManager), the payload carried as DataJson from the publish boundary, the four BasicAggregateRoot aggregates with no custom repository interfaces, INotificationStore as the query seam, hand-written MapToDtoAsync (no Mapperly/AutoMapper), explicit HttpApi controllers, the two-layer authorization model with INotificationPermissionChecker, the NotificationDeliveryRequestedEto and NotificationPublishRequestedEto distributed events, the distribution background job, tenant handling, and read-time localization. Read when writing or reviewing code under notifications/ and the generic abp-* skill doesn't say what THIS module does.
 ---
 
 # notifications — Module Conventions
@@ -32,7 +32,8 @@ definitions, routing (`NotificationRoutingOptions`, `INotificationChannelResolve
 - **Never move a type a business module references** (`AbpNotificationsModule`, `INotificationPublisher`, the
   definition API, `NotificationRoutingOptions`, `NotificationEntityIdentifier`, the payload types in Abstractions…): the
   namespace and the assembly are a binary contract — modules compiled against an older release run on a newer one.
-  Moved implementation types keep the `Dignite.Abp.Notifications` namespace; only the Remote package has its own.
+  Moved implementation types keep the `Dignite.Abp.Notifications` namespace; only the Remote and DefinitionStore
+  packages have their own.
 - **Defaults that another package replaces register with `[Dependency(TryRegister = true)]`** (`NullNotificationStore`,
   `AlwaysGrantedNotificationPermissionChecker`). The replacing package depends on Core, not Distribution, so module
   order does not put the replacement last; a plain registration of the default would silently win.
@@ -41,6 +42,39 @@ definitions, routing (`NotificationRoutingOptions`, `INotificationChannelResolve
 - **Remote and Distribution never share a process.** Remote's module fails the start when an `INotificationDistributor`
   is registered — checked against the contract, so neither package references the other.
 
+## The definition catalog is ABP's dynamic permission store, copied
+
+A process that hosts no business module (a dedicated notification service) still needs the definitions: the inbox
+groups and display names, the subscription page and, above all, the delivery requirements come from them. They come
+the way an ABP microservice learns other services' permissions and features — copied part for part, names included:
+
+| Here | ABP |
+|---|---|
+| `IStaticNotificationDefinitionStore` / `StaticNotificationDefinitionStore` (Core, singleton, the providers' snapshot) | `IStaticFeatureDefinitionStore` / `StaticFeatureDefinitionStore` |
+| `IDynamicNotificationDefinitionStore` + `NullDynamicNotificationDefinitionStore` (Core, `TryRegister`) | `IDynamicFeatureDefinitionStore` + `NullDynamicFeatureDefinitionStore` |
+| `NotificationDefinitionManager` (transient): static first, a dynamic one only under a name no static one has | `FeatureDefinitionManager` (merge), `PermissionDefinitionManager` (transient) |
+| `NotificationGroupDefinitionRecord` / `NotificationDefinitionRecord` with `HasSameData` / `Patch` | `PermissionGroupDefinitionRecord` / `PermissionDefinitionRecord` |
+| `INotificationDefinitionSerializer` (`ILocalizableStringSerializer`, JSON-scalar attributes only) | `IPermissionDefinitionSerializer` |
+| `StaticNotificationDefinitionSaver`: app lock → MD5 hash → common lock → UoW → stamp; deletes only the `Deleted*` lists | `StaticPermissionSaver` |
+| `DynamicNotificationDefinitionStore` (transient) + `...InMemoryCache` (singleton): semaphore, 30 s stamp check, full reload | `DynamicPermissionDefinitionStore[InMemoryCache]` |
+| `NotificationDynamicInitializer` (background, Polly) | `PermissionDynamicInitializer` |
+| `NotificationDefinitionStoreOptions` (off in a data migration environment) | `PermissionManagementOptions` + `AbpPermissionOptions.Deleted*` |
+
+- **`INotificationDefinitionManager` is asynchronous.** Await `GetAsync` / `GetOrNullAsync` / `GetAllAsync` /
+  `GetGroupsAsync` / `GetGroupOrNullAsync`; never cache their results beyond a request (the dynamic side changes).
+  List a group's definitions from `GetAllAsync()` by `GroupName`, not from the group object: a saved definition may
+  belong to a group this process also defines.
+- **Core never depends on the store.** The dynamic contract lives in Core; `DefinitionStore` replaces the null
+  implementation. Startup checks and the saver read `IStaticNotificationDefinitionStore` only — they are about what
+  this process defines.
+- **Deletion is explicit.** Several services write the same tables, so a definition missing from this process is never
+  deleted; only `DeletedNotifications` / `DeletedNotificationGroups` delete. Don't add "sync" or "prune" logic.
+- **Unknown at delivery means retry, not "no requirements".** `NotificationPublishRequestedHandler` throws for a name
+  the manager cannot find, before writing anything, so the event inbox retries it (invariant §7: requirements apply
+  at delivery). Don't make it distribute, log-and-skip, or mark the event processed.
+- Don't add a definitions-changed event, a startup sync event, or a custom cache: ABP's stamp-in-distributed-cache is
+  the mechanism (design §15).
+
 ## The payload travels as `DataJson` from the publish boundary
 
 `NotificationInfo` carries the payload as `DataJson` — the discriminator-tagged string `INotificationDataSerializer`
@@ -48,7 +82,7 @@ produces — never as a live `NotificationData`. The publisher (local or remote)
 writes the string, the distributor copies it onto every `NotificationDeliveryRequestedEto`, the job args and
 `NotificationPublishRequestedEto` carry it, and nothing in between needs the payload's CLR type. Only a reader that
 wants the typed view deserializes, through the tolerant `INotificationDataSerializer.Deserialize` (the inbox app
-service in `MapToDto`, a notifier through `NotificationPayload.FromRequest`). Don't re-serialize on the way through, and
+service in `MapToDtoAsync`, a notifier through `NotificationPayload.FromRequest`). Don't re-serialize on the way through, and
 don't give the store or the distributor a serializer.
 
 ## The four aggregates deviate from the generic template — on purpose
@@ -115,7 +149,8 @@ that ride along with them are not. Check `notifications-invariants` §2 before m
 ### No mapper — mapping is hand-written
 
 `NotificationAppService` does **not** use Mapperly or AutoMapper — mapping is a hand-written
-`protected virtual TDto MapToDto(...)` method on the AppService itself. Follow this unless the DTO surface
+`protected virtual Task<TDto> MapToDtoAsync(...)` method on the AppService itself (asynchronous because it looks the
+definition up through the asynchronous definition manager). Follow this unless the DTO surface
 grows enough to justify a mapper. (This is the opposite of `file-storing`, which uses Mapperly — deliberately.)
 
 ### Go through the managers, not the repository
@@ -133,8 +168,9 @@ assume ABP auto API controller behaviour here.
 
 ### Display text is localized at read time
 
-`NotificationDisplayName` is localized **per the current reader's culture, inside `MapToDto`** — not baked in
-at publish time. Keep this if you touch that method; the opposite was a real bug in the legacy implementation,
+`NotificationDisplayName` is localized **per the current reader's culture, inside `MapToDtoAsync`** — not baked in
+at publish time. A definition read from the catalog localizes by resource name (`L:Resource,Key`), which ABP resolves
+through `IExternalLocalizationStore` when the resource is not registered in this process. Keep this if you touch that method; the opposite was a real bug in the legacy implementation,
 because background-job distribution runs without a request culture.
 
 ## Authorization — two layers
@@ -229,9 +265,12 @@ See "Display text is localized at read time" above — the same rule applies to 
 | A polymorphic/abstract member on an ETO | A flat, default-STJ-round-trippable POCO (`DataJson`) — `notifications-invariants` §1 |
 | `typeof(Order)` for `EntityTypeName` | A stable caller-chosen string: `new NotificationEntityIdentifier("Demo.Order", orderId)` |
 | A new custom repository interface per aggregate | A new method on `INotificationStore` |
-| Mapperly/AutoMapper in the AppService | The hand-written `protected virtual MapToDto(...)` |
+| Mapperly/AutoMapper in the AppService | The hand-written `protected virtual MapToDtoAsync(...)` |
 | A singleton manager injecting `INotificationStore` | `ITransientDependency` — `notifications-invariants` §2 |
 | A contract (or a type a business module uses) in Distribution | Core; only implementations go to Distribution |
 | A plain registration for a default another package replaces | `[Dependency(TryRegister = true)]` |
 | `NotificationData` on `NotificationInfo`, or re-serializing the payload in the store/distributor | `DataJson`, serialized once by the publisher |
+| Synchronous definition lookups, or saving/validating against the merged definitions | `await` the manager; the saver and startup checks use `IStaticNotificationDefinitionStore` |
+| Deleting catalog records a process no longer defines | List them in `DeletedNotifications` / `DeletedNotificationGroups` |
+| Distributing a remote publish whose definition is unknown | Throw before writing; the event inbox retries |
 | Resolving channels again in the process that receives a remote publish | Use `NotificationInfo.Channels` as sent |
