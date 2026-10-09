@@ -52,6 +52,7 @@
     <Project Path="notifications/core/src/Dignite.Abp.Notifications.Domain/Dignite.Abp.Notifications.Domain.csproj" />
     <Project Path="notifications/core/src/Dignite.Abp.Notifications.Domain.Shared/Dignite.Abp.Notifications.Domain.Shared.csproj" />
     <Project Path="notifications/core/src/Dignite.Abp.Notifications.EntityFrameworkCore/Dignite.Abp.Notifications.EntityFrameworkCore.csproj" />
+    <Project Path="notifications/core/src/Dignite.Abp.Notifications.MongoDB/Dignite.Abp.Notifications.MongoDB.csproj" />
     <Project Path="notifications/core/src/Dignite.Abp.Notifications.Emailing/Dignite.Abp.Notifications.Emailing.csproj" />
     <Project Path="notifications/core/src/Dignite.Abp.Notifications.Emailing.Identity/Dignite.Abp.Notifications.Emailing.Identity.csproj" />
     <Project Path="notifications/core/src/Dignite.Abp.Notifications.Push/Dignite.Abp.Notifications.Push.csproj" />

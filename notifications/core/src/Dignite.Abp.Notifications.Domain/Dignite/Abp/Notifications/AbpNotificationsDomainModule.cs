@@ -24,10 +24,10 @@ namespace Dignite.Abp.Notifications;
 /// </summary>
 /// <remarks>
 /// Install it in every publisher (to save) and in the notification service (to save and read). The tables come from
-/// <c>Dignite.Abp.Notifications.EntityFrameworkCore</c>. A process that reads the store also needs ABP's
-/// own dynamic permission and feature stores on (<c>IsDynamicPermissionStoreEnabled</c>,
-/// <c>IsDynamicFeatureStoreEnabled</c>) for the requirements other services define; like ABP, this module does not check
-/// another module's switches — the README says so.
+/// <c>Dignite.Abp.Notifications.EntityFrameworkCore</c>, the collections from <c>Dignite.Abp.Notifications.MongoDB</c>.
+/// A process that reads the store also needs ABP's own dynamic permission and feature stores on
+/// (<c>IsDynamicPermissionStoreEnabled</c>, <c>IsDynamicFeatureStoreEnabled</c>) for the requirements other services
+/// define; like ABP, this module does not check another module's switches — the README says so.
 /// </remarks>
 [DependsOn(
     typeof(AbpNotificationsAbstractionsModule),

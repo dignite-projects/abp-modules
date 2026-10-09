@@ -25,6 +25,10 @@
       "path": "core/src/Dignite.Abp.Notifications.EntityFrameworkCore/Dignite.Abp.Notifications.EntityFrameworkCore.abppkg",
       "folder": "core/src"
     },
+    "Dignite.Abp.Notifications.MongoDB": {
+      "path": "core/src/Dignite.Abp.Notifications.MongoDB/Dignite.Abp.Notifications.MongoDB.abppkg",
+      "folder": "core/src"
+    },
     "Dignite.Abp.Notifications.Emailing": {
       "path": "core/src/Dignite.Abp.Notifications.Emailing/Dignite.Abp.Notifications.Emailing.abppkg",
       "folder": "core/src"
