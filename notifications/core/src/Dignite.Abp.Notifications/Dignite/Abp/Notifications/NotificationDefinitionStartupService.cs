@@ -13,7 +13,7 @@ namespace Dignite.Abp.Notifications;
 /// Validates <see cref="NotificationDefinitionRegistration"/> and materializes notification definitions (plus the
 /// data-type registry, via constructor injection) in the host's starting phase, before any hosted service can
 /// publish notifications — the single startup fail-fast hook for both concerns, since the real definition-name
-/// conflict check only runs lazily inside <see cref="NotificationDefinitionManager"/> and can't be forced from
+/// conflict check only runs lazily inside <see cref="IStaticNotificationDefinitionStore"/> and can't be forced from
 /// the options-validation pipeline without it resolving itself. It also reconciles the rule names of
 /// <see cref="NotificationRoutingOptions"/> against the definition table, which is only reachable here.
 /// </summary>
@@ -21,30 +21,31 @@ namespace Dignite.Abp.Notifications;
 /// The checks that depend on what the process delivers — channels no notifier here hosts, and stateless mode — belong to
 /// the process that delivers, so they run in Dignite.Abp.Notifications.Distribution. A publisher whose notifications are
 /// delivered elsewhere still gets the routing-name check: a typo in its rules is a typo wherever it is delivered.
+/// Only this process's own (static) definitions count: its rules route what its modules define, and the check must not
+/// depend on what other processes have saved to a definition store by the time this one starts.
 /// </remarks>
 internal sealed class NotificationDefinitionStartupService : IHostedLifecycleService
 {
-    private readonly INotificationDefinitionManager _definitionManager;
+    private readonly IStaticNotificationDefinitionStore _staticStore;
     private readonly IOptions<NotificationDefinitionRegistration> _definitionRegistration;
     private readonly IOptions<NotificationRoutingOptions> _routingOptions;
 
     public NotificationDefinitionStartupService(
-        INotificationDefinitionManager definitionManager,
+        IStaticNotificationDefinitionStore staticStore,
         IOptions<NotificationDefinitionRegistration> definitionRegistration,
         INotificationDataTypeRegistry dataTypeRegistry,
         IOptions<NotificationRoutingOptions> routingOptions)
     {
-        _definitionManager = definitionManager;
+        _staticStore = staticStore;
         _definitionRegistration = definitionRegistration;
         _routingOptions = routingOptions;
         _ = dataTypeRegistry;
     }
 
-    public Task StartingAsync(CancellationToken cancellationToken)
+    public async Task StartingAsync(CancellationToken cancellationToken)
     {
         _definitionRegistration.Value.Validate();
-        ValidateRoutingNames(_definitionManager.GetAll());
-        return Task.CompletedTask;
+        ValidateRoutingNames(await _staticStore.GetNotificationsAsync());
     }
 
     public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;

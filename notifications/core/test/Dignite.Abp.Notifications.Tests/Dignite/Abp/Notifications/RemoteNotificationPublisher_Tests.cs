@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Dignite.Abp.Notifications.Remote;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Shouldly;
 using Volo.Abp;
 using Volo.Abp.Autofac;
@@ -40,8 +41,8 @@ public class RemoteNotificationPublisher_Tests
 
     public RemoteNotificationPublisher_Tests()
     {
-        _definitionManager.Get("test").Returns(new NotificationDefinition("Test", "test", new FixedLocalizableString("Test")));
-        _definitionManager.Get("missing").Returns(_ => throw new AbpException("Undefined notification: missing"));
+        _definitionManager.GetAsync("test").Returns(new NotificationDefinition("Test", "test", new FixedLocalizableString("Test")));
+        _definitionManager.GetAsync("missing").ThrowsAsync(new AbpException("Undefined notification: missing"));
         _eventBus.WhenForAnyArgs(bus => bus.PublishAsync(Arg.Any<NotificationPublishRequestedEto>()))
             .Do(call => _published.Add(call.Arg<NotificationPublishRequestedEto>()));
     }
@@ -156,7 +157,7 @@ public class RemoteNotificationPublisher_Tests
         await CreatePublisher().PublishAsync("test", userIds: Array.Empty<Guid>());
 
         await _eventBus.DidNotReceiveWithAnyArgs().PublishAsync(Arg.Any<NotificationPublishRequestedEto>());
-        _definitionManager.DidNotReceiveWithAnyArgs().Get(default!);
+        await _definitionManager.DidNotReceiveWithAnyArgs().GetAsync(default!);
     }
 }
 

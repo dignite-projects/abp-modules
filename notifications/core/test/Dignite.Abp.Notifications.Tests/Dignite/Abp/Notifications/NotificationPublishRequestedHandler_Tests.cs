@@ -179,8 +179,8 @@ public class NotificationPublishRequestedHandler_Tests : DigniteAbpNotifications
 
         await resolver.Received(0).ResolveAsync(
             Arg.Any<NotificationDefinition>(), Arg.Any<NotificationInfo>(), Arg.Any<CancellationToken>());
-        // Nor is the definition looked up for routing: a notification service may not know the definition yet.
-        definitionManager.DidNotReceiveWithAnyArgs().Get(default!);
+        // Nor is the definition looked up for routing: the channels came with the notification.
+        await definitionManager.DidNotReceiveWithAnyArgs().GetAsync(default!);
         published.ShouldHaveSingleItem().Channel.ShouldBe("Email");
     }
 }

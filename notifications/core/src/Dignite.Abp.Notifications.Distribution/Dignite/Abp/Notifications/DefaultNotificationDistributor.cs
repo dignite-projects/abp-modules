@@ -217,7 +217,7 @@ public class DefaultNotificationDistributor :
         // Channels resolved by a publisher in another process — where the defining module's routing rules are
         // configured — are used as they are; this process's resolver and routing are not consulted for them.
         var channels = notification.Channels ?? await ChannelResolver.ResolveAsync(
-            DefinitionManager.Get(notification.NotificationName),
+            await DefinitionManager.GetAsync(notification.NotificationName),
             notification,
             cancellationToken);
         if (channels == null || channels.Length == 0)

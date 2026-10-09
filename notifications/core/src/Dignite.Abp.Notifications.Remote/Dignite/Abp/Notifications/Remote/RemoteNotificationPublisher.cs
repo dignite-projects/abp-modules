@@ -76,7 +76,7 @@ public class RemoteNotificationPublisher : INotificationPublisher, ITransientDep
             return;
         }
 
-        var definition = DefinitionManager.Get(notificationName);
+        var definition = await DefinitionManager.GetAsync(notificationName);
 
         var notification = new NotificationInfo
         {

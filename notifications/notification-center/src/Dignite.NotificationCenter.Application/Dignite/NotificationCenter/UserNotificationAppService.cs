@@ -36,19 +36,27 @@ public class UserNotificationAppService : NotificationCenterAppService, IUserNot
     {
         var userId = CurrentUser.GetId();
 
-        if (!TryResolveGroupFilter(input.GroupName, out var notificationNames, out var excludedNotificationNames))
+        var filter = await ResolveGroupFilterAsync(input.GroupName);
+        if (filter == null)
         {
             return new PagedResultDto<UserNotificationDto>(0, new List<UserNotificationDto>());
         }
 
         var totalCount = await Store.GetUserNotificationCountAsync(
-            userId, input.State, input.StartDate, input.EndDate, notificationNames, excludedNotificationNames);
+            userId, input.State, input.StartDate, input.EndDate, filter.NotificationNames,
+            filter.ExcludedNotificationNames);
 
         var items = await Store.GetUserNotificationsAsync(
             userId, input.State, input.SkipCount, input.MaxResultCount, input.StartDate, input.EndDate,
-            notificationNames, excludedNotificationNames);
+            filter.NotificationNames, filter.ExcludedNotificationNames);
 
-        return new PagedResultDto<UserNotificationDto>(totalCount, items.Select(MapToDto).ToList());
+        var dtos = new List<UserNotificationDto>(items.Count);
+        foreach (var item in items)
+        {
+            dtos.Add(await MapToDtoAsync(item));
+        }
+
+        return new PagedResultDto<UserNotificationDto>(totalCount, dtos);
     }
 
     public virtual Task<int> GetUnreadCountAsync()
@@ -65,16 +73,17 @@ public class UserNotificationAppService : NotificationCenterAppService, IUserNot
             .Select(definition => definition.GroupName)
             .ToHashSet(StringComparer.Ordinal);
 
+        // A group's definitions are taken from the merged definition list by GroupName rather than from the group
+        // object: a definition from the definition store may belong to a group this process also defines.
+        var definitions = await DefinitionManager.GetAllAsync();
+        var definedNames = definitions.Select(definition => definition.Name).ToHashSet(StringComparer.Ordinal);
+
         var groups = new List<UserNotificationGroupDto>();
-        var definedNames = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var group in DefinitionManager.GetGroups())
+        foreach (var group in await DefinitionManager.GetGroupsAsync())
         {
-            var unreadCount = 0;
-            foreach (var definition in group.Notifications)
-            {
-                definedNames.Add(definition.Name);
-                unreadCount += unreadByName.GetValueOrDefault(definition.Name);
-            }
+            var unreadCount = definitions
+                .Where(definition => definition.GroupName == group.Name)
+                .Sum(definition => unreadByName.GetValueOrDefault(definition.Name));
 
             if (unreadCount > 0 || availableGroupNames.Contains(group.Name))
             {
@@ -129,44 +138,42 @@ public class UserNotificationAppService : NotificationCenterAppService, IUserNot
     /// <summary>
     /// Translates a group name into store name filters: a defined group keeps only its definitions, the synthetic
     /// <see cref="NotificationCenterConsts.OtherGroupName"/> excludes every defined name, and <see langword="null"/>
-    /// applies no filter. Returns <see langword="false"/> for an unknown group (or one without definitions), which
+    /// applies no filter. Returns <see langword="null"/> for an unknown group (or one without definitions), which
     /// can match nothing.
     /// </summary>
-    protected virtual bool TryResolveGroupFilter(
-        string? groupName,
-        out IReadOnlyCollection<string>? notificationNames,
-        out IReadOnlyCollection<string>? excludedNotificationNames)
+    protected virtual async Task<GroupFilter?> ResolveGroupFilterAsync(string? groupName)
     {
-        notificationNames = null;
-        excludedNotificationNames = null;
-
         if (groupName == null)
         {
-            return true;
+            return new GroupFilter(null, null);
         }
+
+        var definitions = await DefinitionManager.GetAllAsync();
 
         if (groupName == NotificationCenterConsts.OtherGroupName)
         {
-            excludedNotificationNames = DefinitionManager.GetAll().Select(definition => definition.Name).ToList();
-            return true;
+            return new GroupFilter(null, definitions.Select(definition => definition.Name).ToList());
         }
 
-        var group = DefinitionManager.GetGroupOrNull(groupName);
-        if (group == null || group.Notifications.Count == 0)
+        if (await DefinitionManager.GetGroupOrNullAsync(groupName) == null)
         {
-            return false;
+            return null;
         }
 
-        notificationNames = group.Notifications.Select(definition => definition.Name).ToList();
-        return true;
+        var notificationNames = definitions
+            .Where(definition => definition.GroupName == groupName)
+            .Select(definition => definition.Name)
+            .ToList();
+
+        return notificationNames.Count == 0 ? null : new GroupFilter(notificationNames, null);
     }
 
-    protected virtual UserNotificationDto MapToDto(UserNotificationWithNotification source)
+    protected virtual async Task<UserNotificationDto> MapToDtoAsync(UserNotificationWithNotification source)
     {
         // Display names are localized here, per the current reader's culture (fixes the reference implementation's
         // publish-time culture baking — roadmap problem F).
-        var definition = DefinitionManager.GetOrNull(source.Notification.NotificationName);
-        var group = definition == null ? null : DefinitionManager.GetGroupOrNull(definition.GroupName);
+        var definition = await DefinitionManager.GetOrNullAsync(source.Notification.NotificationName);
+        var group = definition == null ? null : await DefinitionManager.GetGroupOrNullAsync(definition.GroupName);
 
         return new UserNotificationDto
         {
@@ -185,4 +192,11 @@ public class UserNotificationAppService : NotificationCenterAppService, IUserNot
             State = source.UserNotification.State
         };
     }
+
+    /// <summary>The store name filters an inbox group selects.</summary>
+    /// <param name="NotificationNames">Only these notification names; <see langword="null"/> for no inclusion filter.</param>
+    /// <param name="ExcludedNotificationNames">Every name except these; <see langword="null"/> for no exclusion filter.</param>
+    protected sealed record GroupFilter(
+        IReadOnlyCollection<string>? NotificationNames,
+        IReadOnlyCollection<string>? ExcludedNotificationNames);
 }
