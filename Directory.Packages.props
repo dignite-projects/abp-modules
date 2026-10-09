@@ -74,6 +74,7 @@
     <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI.Bundling" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.SettingManagement.Web" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.Identity.Domain" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Identity.Domain.Shared" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.Emailing" Version="10.5.0" />
   </ItemGroup>
 

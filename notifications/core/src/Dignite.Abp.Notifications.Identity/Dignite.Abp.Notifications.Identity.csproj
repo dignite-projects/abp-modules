@@ -3,11 +3,12 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace />
-    <Description>ABP Identity integrations for Dignite.Abp.Notifications: permission gating and active-user audience paging.</Description>
+    <Description>ABP Identity integration for Dignite.Abp.Notifications: gates recipients by permission through IUserRoleFinder and IPermissionChecker.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.Identity.Domain" />
+    <PackageReference Include="Volo.Abp.Authorization" />
+    <PackageReference Include="Volo.Abp.Identity.Domain.Shared" />
   </ItemGroup>
 
   <ItemGroup>
