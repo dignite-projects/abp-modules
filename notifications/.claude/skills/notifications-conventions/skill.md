@@ -1,6 +1,6 @@
 ---
 name: notifications-conventions
-description: How the Dignite.Abp.Notifications module applies ABP — ABP's package layout (contracts and null defaults in Abstractions, the in-process implementation in Dignite.Abp.Notifications, remote publishing in Client, the definition store as Domain.Shared/Domain/EntityFrameworkCore), the definition catalog copied from ABP's dynamic permission store (static + dynamic definitions, async INotificationDefinitionManager), the payload carried as DataJson from the publish boundary, the four BasicAggregateRoot aggregates with no custom repository interfaces, INotificationStore as the query seam, hand-written MapToDtoAsync (no Mapperly/AutoMapper), explicit HttpApi controllers, the two-layer authorization model with INotificationPermissionChecker, the NotificationDeliveryRequestedEto and NotificationPublishRequestedEto distributed events, the distribution background job, tenant handling, and read-time localization. Read when writing or reviewing code under notifications/ and the generic abp-* skill doesn't say what THIS module does.
+description: How the Dignite.Abp.Notifications module applies ABP — ABP's package layout (contracts and null defaults in Abstractions, the in-process implementation in Dignite.Abp.Notifications, remote publishing in Client, the definition store as Domain.Shared/Domain/EntityFrameworkCore/MongoDB), the definition catalog copied from ABP's dynamic permission store (static + dynamic definitions, async INotificationDefinitionManager), the payload carried as DataJson from the publish boundary, the four BasicAggregateRoot aggregates with no custom repository interfaces, INotificationStore as the query seam, hand-written MapToDtoAsync (no Mapperly/AutoMapper), explicit HttpApi controllers, the two-layer authorization model with INotificationPermissionChecker, the NotificationDeliveryRequestedEto and NotificationPublishRequestedEto distributed events, the distribution background job, tenant handling, and read-time localization. Read when writing or reviewing code under notifications/ and the generic abp-* skill doesn't say what THIS module does.
 ---
 
 # notifications — Module Conventions
@@ -24,7 +24,7 @@ The core packages follow ABP's layout for a framework feature (design doc §4 an
 | `Dignite.Abp.Notifications.Abstractions` | Everything a business module or a notifier needs and everything another package implements: the definition API and its static/dynamic stores, routing (`NotificationRoutingOptions`, `INotificationChannelResolver`), `INotificationPublisher` / `INotificationStore` / `INotificationDistributor` / `INotificationPermissionChecker`, the info records, the payload types, both ETOs, `INotificationNotifier` — and the null defaults `NullNotificationPublisher`, `NullNotificationStore`, `AlwaysGrantedNotificationPermissionChecker`, `NullDynamicNotificationDefinitionStore` | `Volo.Abp.Authorization.Abstractions`, `Volo.Abp.BackgroundJobs.Abstractions` |
 | `Dignite.Abp.Notifications` | The in-process implementation: `DefaultNotificationPublisher`, `DefaultNotificationDistributor`, `NotificationDistributionDispatcher`, `NotificationDistributionJob(Args)`, the two event handlers, `NotificationSubscriptionManager`, `NotificationDistributionOptions` | `Volo.Abp.BackgroundJobs`, `Volo.Abp.EventBus` |
 | `Dignite.Abp.Notifications.Client` | `RemoteNotificationPublisher` | `Volo.Abp.AspNetCore.Mvc.Client(.Common)` (`RemotePermissionChecker`) |
-| `Dignite.Abp.Notifications.Domain.Shared` / `.Domain` / `.EntityFrameworkCore` | The definition store | `Volo.Abp.PermissionManagement.Domain.Shared` / `.Domain` / `.EntityFrameworkCore` |
+| `Dignite.Abp.Notifications.Domain.Shared` / `.Domain` / `.EntityFrameworkCore` / `.MongoDB` | The definition store | `Volo.Abp.PermissionManagement.Domain.Shared` / `.Domain` / `.EntityFrameworkCore` / `.MongoDB` |
 
 - **Placing a new type**: a contract another package implements, or a type a business module or a notifier touches,
   goes to Abstractions, with its null default next to it. Anything that runs the pipeline goes to
@@ -35,8 +35,8 @@ The core packages follow ABP's layout for a framework feature (design doc §4 an
   every process that hosts the module — in a publisher next to Client, the local publisher would even win and the
   publisher would distribute itself.
 - **Namespaces don't follow packages around.** Abstractions, the implementation, Domain.Shared and Domain share
-  `Dignite.Abp.Notifications` (ABP kept `Volo.Abp.Authorization` when it split `.Abstractions` out); only `.Client` and
-  `.EntityFrameworkCore` add their suffix, like ABP's. A type moved between these packages keeps its namespace.
+  `Dignite.Abp.Notifications` (ABP kept `Volo.Abp.Authorization` when it split `.Abstractions` out); only `.Client`,
+  `.EntityFrameworkCore` and `.MongoDB` add their suffix, like ABP's. A type moved between these packages keeps its namespace.
 - **Defaults that another package replaces register with `[Dependency(TryRegister = true)]`** (`NullNotificationStore`,
   `AlwaysGrantedNotificationPermissionChecker`, `NullDynamicNotificationDefinitionStore`), so whatever registered an
   implementation first keeps it. The one exception is `NullNotificationPublisher`: it is registered by

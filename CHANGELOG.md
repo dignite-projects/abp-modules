@@ -29,6 +29,13 @@ so it stays clear which part of the repository actually moved.
 - `Dignite.Abp.Notifications.Domain.Shared` (`netstandard2.0;netstandard2.1;net10.0`): the record column sizes
   (`NotificationDefinitionRecordConsts`, `NotificationGroupDefinitionRecordConsts`, moved from the definition store)
   and the event above.
+- `Dignite.Abp.Notifications.MongoDB` (`AbpNotificationsMongoDbModule`, namespace `Dignite.Abp.Notifications.MongoDB`):
+  the definition store on MongoDB, after `Volo.Abp.PermissionManagement.MongoDB` and `Volo.Abp.FeatureManagement.MongoDB`
+  — the EF Core package's counterpart for hosts whose Notification Center runs on `Dignite.NotificationCenter.MongoDB`.
+  `NotificationDefinitionStoreMongoDbContext` (`[IgnoreMultiTenancy]`, connection string `NotificationCenter`) keeps the
+  records in the `NotifDefinitionGroups` / `NotifDefinitions` collections with the EF Core tables' indexes (a unique
+  `Name` on both, `GroupName` on the definitions), and `ConfigureNotificationDefinitionStore()` maps them into a host's
+  own MongoDB context. The saver's unit of work is transactional, as in ABP, so MongoDB must run as a replica set.
 
 ### Changed
 

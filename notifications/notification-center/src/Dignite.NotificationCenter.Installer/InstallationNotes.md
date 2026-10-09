@@ -7,8 +7,8 @@ framework — the contracts (`Dignite.Abp.Notifications.Abstractions`) and the i
 (`Dignite.Abp.Notifications`) — as its underlying delivery layer. A business module references only
 `Dignite.Abp.Notifications.Abstractions`. A service that only publishes notifications for another process to
 distribute installs `Dignite.Abp.Notifications.Client` instead of this module, and both sides install
-`Dignite.Abp.Notifications.EntityFrameworkCore` so that the process serving the inbox knows the publishers'
-notification definitions — see "Split deployment" and "Definition catalog" in the README.
+`Dignite.Abp.Notifications.EntityFrameworkCore` (or `Dignite.Abp.Notifications.MongoDB`) so that the process serving
+the inbox knows the publishers' notification definitions — see "Split deployment" and "Definition catalog" in the README.
 
 ## Documentation
 

@@ -292,8 +292,12 @@ Angular 走 `/api/abp/application-localization`，由 Administration 合并外�
 `NotificationDefinitionsChangedEto` 只是通知别的服务「定义变了」，和 ABP 一样不是同步机制：动态 store 仍然靠公共 stamp
 重读，本模块没有它的处理器；只改组或只删除时不发（照 ABP）。§15 否决的「启动时发事件同步定义目录」仍然否决。
 
-MongoDB：NotificationCenter 支持 Mongo，定义存储应有 `Dignite.Abp.Notifications.MongoDB` 实现；cloud 不需要，作为后续项，
-不阻塞本稿。
+MongoDB：已提供 `Dignite.Abp.Notifications.MongoDB`（`AbpNotificationsMongoDbModule`），照
+`Volo.Abp.PermissionManagement.MongoDB` / `Volo.Abp.FeatureManagement.MongoDB`：`NotificationDefinitionStoreMongoDbContext`
+（`[IgnoreMultiTenancy]`、连接串名 `NotificationCenter`），集合 `NotifDefinitionGroups` / `NotifDefinitions`，索引与 EF 表相同
+（两者 `Name` 唯一，定义另有 `GroupName`），`ConfigureNotificationDefinitionStore()` 供宿主自己的 Mongo 上下文映射。Saver 的
+工作单元是事务性的（与 ABP 相同），Mongo 须是副本集。定义存储的测试改为 provider 无关的
+`Dignite.Abp.Notifications.Domain.TestBase` + EF Core / MongoDB 两个测试项目。cloud 不需要它。
 
 照抄：ABP 权限 / 功能 / 设置三套动态定义存储；cloud 里每个服务映射 `AdministrationService` 连接串保存自己的定义
 （VaultService 的 `VaultExtract.Enable` 就是这样进 `Cloud_Administration.AbpFeatures` 的）。
