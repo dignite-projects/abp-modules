@@ -58,6 +58,8 @@
     <!-- notifications-only -->
     <PackageVersion Include="Volo.Abp.Localization" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.SettingManagement.Domain" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.PermissionManagement.Domain" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.FeatureManagement.Domain" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.Features" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.Timing" Version="10.5.0" />
     <PackageVersion Include="Volo.Abp.Guids" Version="10.5.0" />
@@ -92,6 +94,14 @@
 
   <ItemGroup Label="System.Text.Json (only needed for netstandard targets; in-box on net10.0)">
     <PackageVersion Include="System.Text.Json" Version="10.0.11" />
+  </ItemGroup>
+
+  <!--
+    Polly: the retry policy of the notification definition store's startup save, the same one ABP's own definition
+    stores use (Volo.Abp.PermissionManagement.Domain 10.5.0 depends on Polly 8.6.3; keep them on one version).
+  -->
+  <ItemGroup Label="Retry policies (notifications definition store)">
+    <PackageVersion Include="Polly" Version="8.6.3" />
   </ItemGroup>
 
   <ItemGroup Label="Microsoft hosting abstractions">

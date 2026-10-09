@@ -62,6 +62,7 @@
     <Project Path="notifications/core/src/Dignite.Abp.Notifications/Dignite.Abp.Notifications.csproj" />
   </Folder>
   <Folder Name="/notifications/core/test/">
+    <Project Path="notifications/core/test/Dignite.Abp.Notifications.DefinitionStore.Tests/Dignite.Abp.Notifications.DefinitionStore.Tests.csproj" />
     <Project Path="notifications/core/test/Dignite.Abp.Notifications.TestProviderA/Dignite.Abp.Notifications.TestProviderA.csproj" />
     <Project Path="notifications/core/test/Dignite.Abp.Notifications.TestProviderB/Dignite.Abp.Notifications.TestProviderB.csproj" />
     <Project Path="notifications/core/test/Dignite.Abp.Notifications.Tests/Dignite.Abp.Notifications.Tests.csproj" />

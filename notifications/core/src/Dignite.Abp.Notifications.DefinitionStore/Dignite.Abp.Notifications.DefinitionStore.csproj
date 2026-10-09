@@ -7,7 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Polly" />
     <PackageReference Include="Volo.Abp.Ddd.Domain" />
+    <PackageReference Include="Volo.Abp.DistributedLocking.Abstractions" />
+    <PackageReference Include="Volo.Abp.Localization" />
+    <!-- Read for one startup warning only (their dynamic definition stores must be on wherever this store is read);
+         their modules are not depended on. -->
+    <PackageReference Include="Volo.Abp.FeatureManagement.Domain" />
+    <PackageReference Include="Volo.Abp.PermissionManagement.Domain" />
   </ItemGroup>
 
   <ItemGroup>
