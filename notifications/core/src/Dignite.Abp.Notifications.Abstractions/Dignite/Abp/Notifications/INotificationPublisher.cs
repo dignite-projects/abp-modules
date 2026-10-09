@@ -5,9 +5,10 @@ namespace Dignite.Abp.Notifications;
 
 /// <summary>
 /// Entry point business code calls to publish a notification. The host chooses the implementation:
-/// Dignite.Abp.Notifications.Distribution distributes in this process (small explicit fan-outs inline, larger ones
-/// through a background job — the threshold is <c>NotificationDistributionOptions</c>), and
-/// Dignite.Abp.Notifications.Remote hands the notification to the process that hosts the inbox.
+/// Dignite.Abp.Notifications distributes in this process (small explicit fan-outs inline, larger ones through a
+/// background job — the threshold is <c>NotificationDistributionOptions</c>), and Dignite.Abp.Notifications.Remote hands
+/// the notification to the process that hosts the inbox. With neither, <see cref="NullNotificationPublisher"/> logs a
+/// warning and drops the notification.
 /// </summary>
 public interface INotificationPublisher
 {

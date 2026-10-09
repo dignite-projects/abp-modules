@@ -477,7 +477,7 @@ internal sealed class GroupedDefinitionProvider : INotificationDefinitionProvide
     }
 }
 
-[DependsOn(typeof(AbpNotificationsModule))]
+[DependsOn(typeof(AbpNotificationsAbstractionsModule))]
 public class DuplicateGroupsStartupModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
@@ -492,7 +492,7 @@ public class DuplicateGroupsStartupModule : AbpModule
     }
 }
 
-[DependsOn(typeof(AbpNotificationsModule))]
+[DependsOn(typeof(AbpNotificationsAbstractionsModule))]
 public class GroupedDefinitionsStartupModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
@@ -552,7 +552,7 @@ public class AmbiguousDataTypeStartupModule : AbpModule
     }
 }
 
-[DependsOn(typeof(AbpNotificationsModule))]
+[DependsOn(typeof(AbpNotificationsAbstractionsModule))]
 public class ValidRegistrationsStartupModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
@@ -566,7 +566,7 @@ public class ValidRegistrationsStartupModule : AbpModule
     }
 }
 
-[DependsOn(typeof(AbpNotificationsDistributionModule))]
+[DependsOn(typeof(AbpNotificationsModule))]
 public class InvalidDistributionBatchStartupModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
@@ -581,7 +581,7 @@ public class AbstractionsOnlyStartupModule : AbpModule
 {
 }
 
-[DependsOn(typeof(AbpNotificationsModule))]
+[DependsOn(typeof(AbpNotificationsAbstractionsModule))]
 public class ProviderDependencyStartupModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)

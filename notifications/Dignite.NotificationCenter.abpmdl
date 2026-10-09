@@ -53,10 +53,6 @@
       "path": "core/src/Dignite.Abp.Notifications/Dignite.Abp.Notifications.abppkg",
       "folder": "core/src"
     },
-    "Dignite.Abp.Notifications.Distribution": {
-      "path": "core/src/Dignite.Abp.Notifications.Distribution/Dignite.Abp.Notifications.Distribution.abppkg",
-      "folder": "core/src"
-    },
     "Dignite.Abp.Notifications.DefinitionStore.Tests": {
       "path": "core/test/Dignite.Abp.Notifications.DefinitionStore.Tests/Dignite.Abp.Notifications.DefinitionStore.Tests.abppkg",
       "folder": "core/test"

@@ -6,7 +6,7 @@ namespace Dignite.Abp.Notifications;
 /// <remarks>
 /// The job name is fixed rather than derived from the type's full name, so the queue (for example the RabbitMQ queue
 /// <c>AbpBackgroundJobs.Dignite.Abp.Notifications.Distribute</c>) is a stable contract of this package. Only a process
-/// that installs Distribution registers the job, so only such a process consumes the queue.
+/// that installs this package registers the job, so only such a process consumes the queue.
 /// </remarks>
 [Serializable]
 [BackgroundJobName("Dignite.Abp.Notifications.Distribute")]

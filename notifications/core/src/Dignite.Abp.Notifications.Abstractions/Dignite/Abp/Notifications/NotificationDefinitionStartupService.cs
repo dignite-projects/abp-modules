@@ -19,7 +19,7 @@ namespace Dignite.Abp.Notifications;
 /// </summary>
 /// <remarks>
 /// The checks that depend on what the process delivers — channels no notifier here hosts, and stateless mode — belong to
-/// the process that delivers, so they run in Dignite.Abp.Notifications.Distribution. A publisher whose notifications are
+/// the process that delivers, so they run in the implementation package, Dignite.Abp.Notifications. A publisher whose notifications are
 /// delivered elsewhere still gets the routing-name check: a typo in its rules is a typo wherever it is delivered.
 /// Only this process's own (static) definitions count: its rules route what its modules define, and the check must not
 /// depend on what other processes have saved to a definition store by the time this one starts.

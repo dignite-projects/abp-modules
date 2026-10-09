@@ -22,10 +22,10 @@ namespace Dignite.Abp.Notifications.Push;
 /// Delivery is best-effort: no retry and no delivery state. Content is built once per device culture. A device a
 /// provider reports dead is removed from the store; one provider failing — or failing to have its dead devices
 /// removed — does not stop the others. Each failure is logged here with its provider (exception type only, never the
-/// message, like Core's handler), and rethrown once every provider has been tried so the delivery counts as failed.
+/// message, like the delivery handler), and rethrown once every provider has been tried so the delivery counts as failed.
 /// <para>
 /// The constructor never throws: a provider-name clash fails each push delivery instead, through the same best-effort
-/// path as any other delivery failure, rather than escaping Core's delivery handler while it resolves the notifier.
+/// path as any other delivery failure, rather than escaping the delivery handler while it resolves the notifier.
 /// (That handler builds only the notifier of the event's channel, so other channels are unaffected either way.)
 /// </para>
 /// </remarks>
@@ -226,8 +226,8 @@ public class PushNotifier :
             }
             catch (Exception exception)
             {
-                // Exception type only: a provider's message may echo request details, and Core's handler keeps the
-                // same rule. The provider name is what an operator needs to find the failing integration.
+                // Exception type only: a provider's message may echo request details, and the delivery handler keeps
+                // the same rule. The provider name is what an operator needs to find the failing integration.
                 Logger.LogWarning(
                     "Push provider '{Provider}' failed with {ExceptionType} while delivering to {DeviceCount} "
                     + "device(s) for notification '{NotificationName}' ({NotificationId}).",

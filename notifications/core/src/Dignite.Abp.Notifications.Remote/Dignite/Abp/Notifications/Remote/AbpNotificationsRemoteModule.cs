@@ -19,7 +19,7 @@ namespace Dignite.Abp.Notifications.Remote;
 /// which depends on it).
 /// </remarks>
 [DependsOn(
-    typeof(AbpNotificationsModule),
+    typeof(AbpNotificationsAbstractionsModule),
     typeof(AbpEventBusModule),
     typeof(AbpGuidsModule),
     typeof(AbpTimingModule)

@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Dignite.Abp.Notifications\Dignite.Abp.Notifications.csproj" />
+    <ProjectReference Include="..\Dignite.Abp.Notifications.Abstractions\Dignite.Abp.Notifications.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

@@ -142,7 +142,7 @@
     <ProjectReference Include="..\..\notification-center\src\Dignite.NotificationCenter.Application\Dignite.NotificationCenter.Application.csproj" />
     <ProjectReference Include="..\..\notification-center\src\Dignite.NotificationCenter.HttpApi\Dignite.NotificationCenter.HttpApi.csproj" />
     <ProjectReference Include="..\..\notification-center\src\Dignite.NotificationCenter.EntityFrameworkCore\Dignite.NotificationCenter.EntityFrameworkCore.csproj" />
-    <ProjectReference Include="..\..\core\src\Dignite.Abp.Notifications.Distribution\Dignite.Abp.Notifications.Distribution.csproj" />
+    <ProjectReference Include="..\..\core\src\Dignite.Abp.Notifications\Dignite.Abp.Notifications.csproj" />
     <ProjectReference Include="..\..\core\src\Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore\Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\..\core\src\Dignite.Abp.Notifications.SignalR\Dignite.Abp.Notifications.SignalR.csproj" />
     <ProjectReference Include="..\..\core\src\Dignite.Abp.Notifications.Identity\Dignite.Abp.Notifications.Identity.csproj" />

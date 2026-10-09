@@ -15,7 +15,7 @@ namespace Dignite.Abp.Notifications;
 /// Reconciles <see cref="NotificationRoutingOptions"/> with what this process delivers, in the host's starting phase:
 /// channels the rules name that no notifier here hosts, and — in stateless mode, where there is no inbox — definitions
 /// that resolve to no channel at all. Both checks are about the process that distributes, so they live with the
-/// distributor; Core's <c>NotificationDefinitionStartupService</c> keeps the check that holds everywhere (rules for
+/// distributor; Abstractions' <c>NotificationDefinitionStartupService</c> keeps the check that holds everywhere (rules for
 /// notifications nobody defines). Like that check, it reads this process's own definitions
 /// (<see cref="IStaticNotificationDefinitionStore"/>): the routing table configured here routes them.
 /// </summary>

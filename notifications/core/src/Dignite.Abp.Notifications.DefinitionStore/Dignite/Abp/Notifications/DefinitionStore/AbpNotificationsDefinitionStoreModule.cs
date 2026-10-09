@@ -28,7 +28,7 @@ namespace Dignite.Abp.Notifications.DefinitionStore;
 /// another module's switches — the README says so.
 /// </remarks>
 [DependsOn(
-    typeof(AbpNotificationsModule),
+    typeof(AbpNotificationsAbstractionsModule),
     typeof(AbpDddDomainModule),
     typeof(AbpCachingModule),
     typeof(AbpDistributedLockingAbstractionsModule),

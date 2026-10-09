@@ -8,8 +8,8 @@ namespace Dignite.Abp.Notifications;
 /// grants everything; the optional Identity integration replaces it with a real ABP authorization check.
 /// </summary>
 /// <remarks>
-/// <b>Tenant contract</b>: implementations must not switch tenants — evaluate against the ambient one. Distribution
-/// recipient eligibility switches to the notification's tenant before calling the definition manager. The ambient
+/// <b>Tenant contract</b>: implementations must not switch tenants — evaluate against the ambient one. The
+/// distributor's recipient eligibility switches to the notification's tenant before calling the definition manager. The ambient
 /// tenant reaches this service even though <see cref="NotificationDefinitionManager"/> resolves it from a fresh DI
 /// scope, because ABP's <c>ICurrentTenantAccessor</c> is an AsyncLocal singleton.
 /// </remarks>

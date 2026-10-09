@@ -3,11 +3,23 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace />
-    <Description>The core of Dignite.Abp.Notifications that business modules reference: notification definitions, routing, INotificationPublisher, and the INotificationStore / INotificationDistributor / INotificationPermissionChecker contracts. The pipeline that implements them is Dignite.Abp.Notifications.Distribution (in-process) or Dignite.Abp.Notifications.Remote (another process).</Description>
+    <Description>The in-process implementation of Dignite.Abp.Notifications: the local INotificationPublisher, the distributor, the distribution background job, the delivery and publish-request event handlers and NotificationSubscriptionManager. Installed by the process that hosts the inbox and the channels; business modules reference Dignite.Abp.Notifications.Abstractions instead.</Description>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="Volo.Abp.BackgroundJobs.Abstractions" />
+    <PackageReference Include="Volo.Abp.EventBus" />
+    <PackageReference Include="Volo.Abp.Guids" />
+    <PackageReference Include="Volo.Abp.Timing" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Dignite.Abp.Notifications.Abstractions\Dignite.Abp.Notifications.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Dignite.Abp.Notifications.Tests" />
   </ItemGroup>
 
 </Project>

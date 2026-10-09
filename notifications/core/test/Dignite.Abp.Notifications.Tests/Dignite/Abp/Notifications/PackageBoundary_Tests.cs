@@ -115,7 +115,7 @@ public class PackageBoundary_Tests
     }
 
     [DependsOn(
-        typeof(AbpNotificationsDistributionModule),
+        typeof(AbpNotificationsModule),
         typeof(AbpAutofacModule))]
     public class DistributionHostModule : IsolatedTestModule
     {
@@ -123,14 +123,14 @@ public class PackageBoundary_Tests
 
     [DependsOn(
         typeof(AbpNotificationsRemoteModule),
-        typeof(AbpNotificationsDistributionModule),
+        typeof(AbpNotificationsModule),
         typeof(AbpAutofacModule))]
     public class RemoteThenDistributionModule : IsolatedTestModule
     {
     }
 
     [DependsOn(
-        typeof(AbpNotificationsDistributionModule),
+        typeof(AbpNotificationsModule),
         typeof(AbpNotificationsRemoteModule),
         typeof(AbpAutofacModule))]
     public class DistributionThenRemoteModule : IsolatedTestModule

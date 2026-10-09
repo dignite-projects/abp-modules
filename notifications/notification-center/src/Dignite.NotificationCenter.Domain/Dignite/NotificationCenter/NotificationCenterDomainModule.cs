@@ -7,7 +7,7 @@ namespace Dignite.NotificationCenter;
 
 [DependsOn(
     typeof(NotificationCenterDomainSharedModule),
-    typeof(AbpNotificationsModule),
+    typeof(AbpNotificationsAbstractionsModule),
     typeof(AbpDddDomainModule),
     typeof(AbpGdprAbstractionsModule)
     )]
