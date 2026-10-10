@@ -215,6 +215,52 @@ This package loads `ckeditor5` lazily, the first time a `CKEditor` field is show
 `'ckeditor5'` anywhere in the host would pull the whole package into the main bundle. Type-only imports,
 as in the example above, are fine.
 
+## Customizing the read-only view
+
+The read-only view, `ff-ckeditor-view` (what a list cell or a detail page shows), displays the stored HTML -
+or the HTML a Markdown value is converted to - through Angular's `[innerHTML]`, sanitized by Angular as usual.
+To change what it displays, register a `CKEditorDisplayContributor` under the `CKEDITOR_DISPLAY_CONTRIBUTORS`
+multi provider: a function from the HTML to the HTML to display, given a context with the `field` and its
+`contentFormat`. Contributors run in registration order, each getting what the previous one returned, once
+whenever the view's value or field changes; their output still goes through the sanitizer. Only what is
+displayed changes, never the stored value. With none registered the view is unchanged. A view given no
+`fields` input skips them, since there is then no field to describe.
+
+The counterpart to the editor example above: the host stores image addresses relative
+(`<img src="/api/my-app/files/...">`) but serves its admin UI from another origin than its API, so in a list
+cell those images would not load. A contributor prefixes them with the API's host:
+
+```ts
+import { ApplicationConfig, inject } from '@angular/core';
+import { EnvironmentService } from '@abp/ng.core';
+import { provideFlexFields } from '@dignite/ng.flex-fields';
+import {
+  CKEDITOR_DISPLAY_CONTRIBUTORS,
+  CKEditorDisplayContributor,
+  provideCKEditorFieldType,
+} from '@dignite/ng.flex-fields-ckeditor';
+
+export function showFilesFromApiHost(): CKEditorDisplayContributor {
+  const environment = inject(EnvironmentService);
+
+  return html => {
+    const apiBase = environment.getApiUrl('MyApp').replace(/\/+$/, '');
+
+    return html.replaceAll('src="/api/my-app/files/', `src="${apiBase}/api/my-app/files/`);
+  };
+}
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideFlexFields(),
+    provideCKEditorFieldType(),
+    // useFactory runs in an injection context, so the contributor can inject() what it needs;
+    // a contributor that needs nothing can be registered with useValue.
+    { provide: CKEDITOR_DISPLAY_CONTRIBUTORS, multi: true, useFactory: showFilesFromApiHost },
+  ],
+};
+```
+
 ## License
 
 LGPL-3.0-only. See the [repository](https://github.com/dignite-projects/abp-modules).

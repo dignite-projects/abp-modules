@@ -1,8 +1,9 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges, inject } from '@angular/core';
 import { CoreModule } from '@abp/ng.core';
 import { FlexFieldValue } from '@dignite/ng.flex-fields';
 import { marked } from 'marked';
 import { CKEditorContentFormat } from './ckeditor-content-format';
+import { CKEDITOR_DISPLAY_CONTRIBUTORS, applyDisplayContributors } from './ckeditor-display-contributor';
 
 /**
  * Displays the value of a `CKEditor` field read-only: HTML as-is, or Markdown converted to HTML
@@ -15,13 +16,18 @@ import { CKEditorContentFormat } from './ckeditor-content-format';
  * (`{{showValue}}`, no `[innerHTML]` at all) - functionally broken for a rich-text field. This
  * component fixes both: real HTML rendering, sanitized by Angular's default security context rather
  * than bypassed.
+ *
+ * The host's `CKEDITOR_DISPLAY_CONTRIBUTORS` rewrite the HTML after any Markdown conversion and before
+ * it is bound, so the sanitizer sees their output too.
  */
 @Component({
   selector: 'ff-ckeditor-view',
   templateUrl: './ckeditor-view.component.html',
   imports: [CoreModule],
 })
-export class CKEditorViewComponent {
+export class CKEditorViewComponent implements OnChanges {
+  private readonly displayContributors = inject(CKEDITOR_DISPLAY_CONTRIBUTORS, { optional: true }) ?? [];
+
   /** Renders bare, without the label wrapper, for use inside a table cell. */
   @Input() showInList = false;
 
@@ -32,15 +38,34 @@ export class CKEditorViewComponent {
 
   @Input() value: unknown = '';
 
-  get html(): string {
+  /**
+   * The HTML bound to the view. Worked out when an input changes, not on every change detection, so a
+   * `CKEDITOR_DISPLAY_CONTRIBUTORS` entry runs once per value rather than on every pass.
+   */
+  html = '';
+
+  ngOnChanges(): void {
+    this.html = this.buildHtml();
+  }
+
+  private buildHtml(): string {
     if (typeof this.value !== 'string' || this.value.length === 0) {
       return '';
     }
 
     const contentFormat = Number(
       this.fields?.field?.configuration?.['CKEditor.ContentFormat'] ?? CKEditorContentFormat.Html,
-    );
+    ) as CKEditorContentFormat;
 
-    return contentFormat === CKEditorContentFormat.Markdown ? (marked.parse(this.value) as string) : this.value;
+    const html = contentFormat === CKEditorContentFormat.Markdown ? (marked.parse(this.value) as string) : this.value;
+
+    if (this.displayContributors.length === 0 || !this.fields?.field) {
+      return html;
+    }
+
+    return applyDisplayContributors(html, this.displayContributors, {
+      field: this.fields.field,
+      contentFormat,
+    });
   }
 }

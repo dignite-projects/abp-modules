@@ -16,6 +16,17 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Added
+
+#### flex-fields
+
+- `CKEDITOR_DISPLAY_CONTRIBUTORS` / `CKEditorDisplayContributor` (`@dignite/ng.flex-fields-ckeditor`): a multi provider
+  through which the host rewrites the HTML the read-only view (`ff-ckeditor-view`) displays, the counterpart of
+  `CKEDITOR_CONFIG_CONTRIBUTORS` for display. A contributor gets the HTML (a Markdown value already converted) and a
+  context (the field and its content format) and returns the HTML to show; contributors run in registration order,
+  once whenever the view's value or field changes, before Angular's sanitizer. With none registered nothing changes.
+  See the package README for an example that prefixes stored relative image addresses with the API host.
+
 ## [10.0.0-rc.26] - 2026-10-10
 
 ### Added

@@ -47,7 +47,8 @@ Markdown to HTML plus sanitization; no search partial, since `CKEditorFieldType.
 (`@dignite/ng.flex-fields-ckeditor`) uploads inline images only through a `CKEDITOR_UPLOAD_PROVIDER`
 the host registers — no bolt-on here ships or calls a file API of its own. Anything else host-specific
 about the editor (extra plugins, toolbar, how stored file addresses are shown while editing) goes through
-the generic `CKEDITOR_CONFIG_CONTRIBUTORS` multi provider, not a purpose-built option or token here.
+the generic `CKEDITOR_CONFIG_CONTRIBUTORS` multi provider, not a purpose-built option or token here;
+likewise how the read-only view (`ff-ckeditor-view`) shows the stored HTML, through `CKEDITOR_DISPLAY_CONTRIBUTORS`.
 (A file-picker field type used to live here as `FlexFields.FileExplorer{,.Web}` /
 `@dignite/ng.flex-fields-file-explorer`; it left
 with `Dignite.FileExplorer` in `10.0.0-rc.25` — see the root `CHANGELOG.md`.) Each bolt-on's own
