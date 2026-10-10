@@ -35,6 +35,7 @@ defines "the concrete one."
 | `Dignite.Abp.FlexFields.EntityFrameworkCore` | EF Core support (not ownership): `ConfigureFlexFieldsProperty`/`ConfigureFlexField`/`ConfigureFlexFieldIndex` model-builder extensions, the typed pivot-row shape (`FlexFieldIndexValue`), and abstract base classes for the index manager, query executor, and field repository. Ships no `DbContext` and no table of its own. |
 | `Dignite.Abp.FlexFields.MongoDB` | MongoDB support: queries and indexes the `FlexFieldDictionary` in place, so writes need almost no index synchronization. Deliberately has **no** counterpart to `FlexFieldIndexValue` — that shape is a relational pivot row. |
 | `@dignite/ng.flex-fields` (npm) | Angular UI: config / control / view / search components for all eight field types, the `FieldTypeResolver` registry, and `provideFlexFields()`. See [`angular/projects/flex-fields`](./angular/projects/flex-fields/README.md). |
+| `@dignite/ng.flex-fields-ckeditor` (npm) | Optional bolt-on: the `CKEditor` rich-text field type (`provideCKEditorFieldType()`). The host supplies image upload (`CKEDITOR_UPLOAD_PROVIDER`) and can change any editor's CKEditor 5 configuration, plugins included (`CKEDITOR_CONFIG_CONTRIBUTORS`). See [`angular/projects/flex-fields-ckeditor`](./angular/projects/flex-fields-ckeditor/README.md#customizing-the-editor-configuration). |
 
 ## Install
 

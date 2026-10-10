@@ -3,6 +3,7 @@
  */
 
 export * from './lib/ckeditor-config.component';
+export * from './lib/ckeditor-config-contributor';
 export * from './lib/ckeditor-configuration';
 export * from './lib/ckeditor-content-format';
 export * from './lib/ckeditor-control.component';
