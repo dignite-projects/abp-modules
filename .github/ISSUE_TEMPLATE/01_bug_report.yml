@@ -16,7 +16,7 @@ body:
       label: Which module?
       description: The three module trees are independent and never reference each other.
       options:
-        - "file-storing (Dignite.Abp.FileStoring / Dignite.FileExplorer)"
+        - "file-storing (Dignite.Abp.FileStoring)"
         - "notifications (Dignite.Abp.Notifications / Dignite.NotificationCenter)"
         - "flex-fields (Dignite.Abp.FlexFields / @dignite/ng.flex-fields)"
         - "Not sure / repo-wide"

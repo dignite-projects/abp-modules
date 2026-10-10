@@ -1,149 +1,123 @@
 ---
 name: file-storing-invariants
-description: Hard invariants of the Dignite.Abp.FileStoring module — handler-pipeline ordering, size limits binding before buffering, real-content MIME detection, tenant-scoped blob-name uniqueness and race-safe dedup, blob/DB consistency without an outbox, authorization ordering and per-resource batch checks, directory-cycle prevention, DI lifetime discipline, cancellation/tenant/PII/sorting, update-vs-patch, and the anti-scope list. Read BEFORE changing anything under file-storing/ that touches uploads, blob writes, directory moves, authorization, or a service's DI lifetime.
+description: Hard invariants of the Dignite.Abp.FileStoring module — IFileStorer as the single pipeline runner, size limits binding while copying, real-content MIME detection, generated blob names and no-overwrite saves, blob consistency through compensation, container-name validation, DI lifetime discipline, cancellation/tenant/PII, and the anti-scope list. Read BEFORE changing anything under file-storing/ that touches uploads, the handler pipeline, blob writes, MIME detection, or a service's DI lifetime.
 ---
 
-# Hard Invariants — Read Before Touching Uploads, Blobs, Directories, Authorization, or DI Lifetimes
+# Hard Invariants — Read Before Touching Uploads, the Pipeline, Blobs, or DI Lifetimes
 
-> For this module's *conventions* (aggregate shapes, custom repositories, Mapperly, permissions, settings,
-> localization) see the `file-storing-conventions` skill. Generic ABP conventions live in the repo-root
-> `abp-*` skills.
+> For this module's *conventions* (handler shape, configuration objects, error codes, localization) see the
+> `file-storing-conventions` skill. Generic ABP conventions live in the repo-root `abp-*` skills.
 
 ## What this module is (and isn't)
 
-`Dignite.Abp.FileStoring` is a thin, correct layer **on top of ABP BlobStoring**: files are uploaded through a
-per-container `IFileHandler` pipeline into ABP's blob containers, and `file-explorer` is a DDD backend
-(directories + persisted `FileDescriptor` metadata + REST API) over that. It is a **library for consuming apps**,
-not a standalone storage product. The north star is: stay a thin, safe layer on ABP BlobStoring and ABP
-conventions — don't reinvent blob storage, don't grow a distributed delivery/outbox platform, don't hand-roll
-what ABP already gives you (mapping → Mapperly, UoW → ABP, auditing → ABP audit interfaces). This repo was
-**extracted from `dignite-abp`** (treated as a frozen source); it is at `10.0.0-rc.1` with a known backlog, so
-correctness of the pipeline, the blob/DB relationship, and authorization matters more than new surface area.
+`Dignite.Abp.FileStoring` is a thin, correct layer **on top of ABP BlobStoring**: an upload goes through a
+per-container `IFileHandler` pipeline and into an ABP blob container, run by `IFileStorer`. It is a **library for
+consuming apps**, not a storage product and not a file manager. It keeps **no file metadata, no directories, no HTTP
+API and no UI** — the application that stores a file owns its record of it and its authorization (Site's media
+library, Campus Support's attachments). File Explorer, the DDD file browser that used to sit on top of this, left in
+`10.0.0-rc.25` for the `site` repository; see [`docs/core-only-decision.md`](../../../docs/core-only-decision.md). The
+north star: stay a thin, safe layer on ABP BlobStoring and ABP conventions — don't reinvent blob storage, don't grow a
+metadata or delivery platform.
 
-## 1. The handler pipeline runs on the stream *before* the blob is stored — and limits must bind before buffering
+## 1. `IFileStorer` is the one pipeline runner — and limits bind while copying, before anything is buffered whole
 
-An `IFileHandler` sees only its `FileHandlerContext` (`FileName`, `MimeType`, the mutable `BlobStream`, the
-container `BlobContainerConfiguration`). `FileDescriptorManager` resolves the container's ordered
-`TypeList<IFileHandler>` and runs each `ExecuteAsync` over the upload stream **before** the blob is written —
-validators (`FileSizeLimitHandler`, `FileTypeCheckHandler`) inspect, transforms (`ImageResizeHandler`) replace
-`context.BlobStream`. Keep this ordering.
+`FileStorer.StoreAsync` is the only code that executes a container's `TypeList<IFileHandler>`. Its order is the
+contract: **validate the container name → copy into a buffer capped at the container's limit → detect the MIME type
+from the content → run the handlers in configured order → SHA-256 → generate the blob name → save**. Keep it. Don't
+add a second loop over `FileHandlers` somewhere else — a caller that needs the pipeline calls `IFileStorer`.
 
-- **A size/quota limit must bind before the whole stream is buffered into memory.** Copying a remote stream
-  fully into memory and *then* running `FileSizeLimitHandler` means a large request has already allocated at
-  scale before rejection. Enforce request-body size at the HTTP layer **and** cap while streaming — don't rely on
-  a post-buffer check. 
-- **Image handlers must bound work before decoding.** `ImageResizeHandler` must cap max pixel count, max
-  width/height, and compression ratio, and time-box the decode, *before* fully decoding an attacker-supplied
-  image — otherwise a decompression bomb consumes CPU/RAM. The same bounds apply to any on-the-fly
-  resize endpoint (which should also cache; see the `file-storing-conventions` skill).
-- **Why**: these are the paths where an unauthenticated or low-privilege caller can turn a single request into a
-  denial of service. The handler seam exists precisely so these checks live in one place — keep them there.
+- **The size limit binds during the copy.** `CopyToBufferAsync` throws `FileTooLarge` as soon as the bytes read pass
+  the limit, and rejects a seekable source whose remaining length already exceeds it without reading. A container with
+  no `AddFileSizeLimitHandler` still gets `FileConsts.DefaultMaxFileSizeInBytes` — never copy without a cap.
+  `FileSizeLimitHandler` stays as a post-transform check; it is not the primary guard. Hosts still enforce a request
+  body limit at the HTTP layer.
+- **Why a buffer at all**: the handlers (`ImageResizeHandler` identifies, then decodes) and the signature probe need a
+  re-readable stream, and the hash must describe the stored bytes. The buffer is in memory and bounded by the limit;
+  limits above ~2 GB are not supported by this design (a spill-to-disk buffer would be the change, not removing the
+  cap).
+- **Image handlers must bound work before decoding.** `ImageResizeHandler` caps pixel count, width/height and
+  compression ratio and time-boxes the decode (linked with `FileHandlerContext.CancellationToken`) *before* fully
+  decoding — otherwise a decompression bomb consumes CPU/RAM.
+- **Stream ownership**: the caller's stream is read once and never disposed. Every stream created during the store —
+  the buffer and whatever a handler assigns to `context.BlobStream` — is the storer's and is disposed at the end. A
+  handler that replaces the stream leaves the one it received open.
 
-## 2. Never trust the client-supplied MIME type or extension for a security decision — detect the real content
+## 2. Never trust the client-supplied MIME type or extension — detect the real content
 
-`FileTypeCheckHandler` and the image handlers must decide from the **actual bytes**, not the request's
-`Content-Type` or file extension. A caller can send `image/png` for an executable; the on-wire MIME is a hint for
-convenience, never the basis for "is this allowed / is this an image." Sniff the real format
-(`ImageFormatHelper` / a content probe) before accepting or transforming. 
+`IFileStorer` takes **no MIME type parameter**. `IMimeTypeDetector` (default `MimeTypeDetector`) decides from the
+bytes' signature and reconciles it with the extension: a contradiction (an executable named `.png`, text named
+`.pdf`, a ZIP named `.pdf`) is rejected with `FileErrorCodes.Files.ContentTypeMismatch`; within one kind the content
+wins (a PNG named `.jpg` is `image/png`); formats with no signature (text, CSV, JSON, SVG) fall back to the extension;
+an extension whose format always has a signature but whose content has none is rejected. So when
+`FileTypeCheckHandler` checks the extension, the extension has already been proven consistent with the content, and
+`FileHandlerContext.MimeType` is the detected type. After a handler replaced the stream, the type is detected again.
 
-## 3. Blob-name uniqueness and content identity are `(tenant, container)`-scoped, and dedup must be concurrency-safe
+- Don't weaken a signature check into a 2-byte prefix match that text can satisfy (see `IsBmp` /
+  `IsPortableExecutable`): a false positive rejects legitimate text uploads.
+- Every type in `ImageFormatHelper.AllowedImageUploadFormats` must stay detectable (tested in
+  `FileStorerImaging_Tests`).
 
-- **Unique blob name per `(TenantId, ContainerName, BlobName)` is a hard invariant**, backed by a unique index. Never generate or accept a blob name without going through `IBlobNameGenerator` and the uniqueness
-  guarantee; never write a "global" name check that ignores tenant/container.
-- **MD5/content dedup is `(TenantId, ContainerName, Md5)` filtered-unique** (empty MD5 rows excluded). A naive
-  "query `Md5ExistsAsync` then insert" is **not** concurrency-safe — two parallel uploads both see "absent" and
-  both insert. The database unique constraint is the arbiter; handle its violation rather than trusting the
-  pre-check. The audit recommends **SHA-256** over MD5 for collision resistance — prefer it for new work.
-- **Reference-based dedup (`ReferBlobName`)** lets a new `FileDescriptor` point at an existing physical blob
-  instead of re-storing it. Therefore **a blob may not be physically deleted while any descriptor references
-  it** — check `ReferencingAnyAsync` before deleting bytes, or you orphan the referrers.
-- **Why**: uniqueness and dedup are the load-bearing correctness properties of a blob store; getting them
-  tenant-scoped and race-safe is what keeps one tenant from reading/colliding with another's files.
+## 3. Blob names are generated, and a save never overwrites
 
-## 4. Blob and database must not drift — order writes and compensate on failure
+- Blob names come from the container's `IBlobNameGenerator` (`SetBlobNameGenerator<T>()`, default
+  `RandomBlobNameGenerator` = a GUID). Callers don't choose names.
+- `SaveAsync` is called with `overrideExisting: false`. A collision surfaces as `BlobAlreadyExistsException` and is
+  **never** compensated by deleting — that blob belongs to someone else.
+- **Content dedup is not core's job.** `StoredFileInfo.Hash` (SHA-256, upper-case hex, of the stored bytes) is what a
+  metadata layer dedups on, tenant- and container-scoped, with its own unique index as the arbiter. If a caller
+  dedups by pointing a new record at an existing blob, *it* must not delete that blob while any record references it.
 
-Writing the `FileDescriptor` row and writing the blob bytes are **not** one atomic transaction (there is no
-distributed outbox here, by design — see §10). So the manager owns consistency through ordering and
-compensation:
+## 4. Blob and metadata must not drift — ordering and compensation, no outbox
 
-- A failed DB commit must not leave an **orphan blob** (bytes with no descriptor).
-- An **overwrite** must not delete the old blob before the replacement is durably stored — a mid-way failure
-  would lose the original.
-- A **delete** must remove bytes and row together, guarded by the reference check in §3.
+Core's part: when `SaveAsync` fails after it may have written bytes, `FileStorer` deletes that blob on an
+**independent, bounded token** (`CompensationTimeout`) — the request token may already be cancelled, which is exactly
+when cleanup matters (tested: `StoreAsync_Should_Still_Compensate_When_Cancelled_During_The_Save`). Compensation is
+best-effort and never hides the original exception.
 
-Pick a deterministic order, compensate on each failure branch, and (audit recommendation) back it with a
-background orphan-cleanup sweep rather than assuming every path is failure-free. (Audit P1-5.) **Do not** "solve"
-this by adding an ETO/outbox — that's the wrong scale for an in-request file write; fix the ordering.
+The caller's part (document it, don't build it into core): store the blob **first**, then write the metadata row
+(with `autoSave` or inside a unit of work it controls), and on a failed write call `IFileStorer.DeleteAsync` for the
+returned blob name. An overwrite must not delete the old blob before the replacement is durably stored. **Do not**
+"solve" this with an ETO/outbox — that's the wrong scale for an in-request file write.
 
-## 5. Authorization: no bypass via temporary ownership; authorize every resource; the container decides the permission
+## 5. `ContainerNameValidator` must actually validate
 
-The generic ABP authorization model is in the `abp-authorization` skill and this module's two-layer model is in
-`file-storing-conventions`; the invariants on top of them:
+Both `StoreAsync` and `DeleteAsync` run it first. An unregistered container name (one that resolves to the default
+configuration) is rejected with `FileErrorCodes.Containers.NotFound` — don't let unknown containers fall through to
+the default container. Authorization (who may store into or delete from a container) is the calling application's;
+core has no permissions.
 
-- **The create-permission check must run before the caller becomes the resource's owner.** Constructing a
-  `FileDescriptor` with `CreatorId = current user` and *then* authorizing lets the "creator can act on their own
-  resource" branch satisfy the check for free — the configured `CreateFilePermissionName` becomes a no-op. Order
-  the check before ownership is established. 
-- **Batch operations authorize each resource.** `DeleteByEntityIdAsync`-style paths must run the resource-based
-  check per file, not just verify `FileExplorerPermissions.Files.Management` once.
-- **Container config is the source of truth** for which permission gates each operation
-  (`BlobContainerAuthorizationConfiguration`), plus the optional per-associated-entity handler
-  `IFileDescriptorEntityAuthorizationHandler`. Gate through those, not ad-hoc `[Authorize]` on internal paths.
-- **`ContainerNameValidator` must actually validate.** An empty/no-op validator combined with permissive
-  defaults means an **unregistered** container can be reached by anyone who can guess a blob name. Validate
-  container names; don't let unknown containers resolve to "allow." 
+## 6. (moved) Directory-tree integrity
 
-## 6. Directory-tree integrity: no self/descendant cycles, validate the parent, block non-empty deletion
-
-`DirectoryManager` owns these — never mutate `DirectoryDescriptor.ParentId` directly to route around them
-(the aggregate's public `ParentId` setter is a known gap; see the `file-storing-conventions` skill):
-
-- **A directory may not move into itself or any descendant.** A cycle makes the recursive tree walk
-  (`DirectoryListExtensions`) recurse until it `StackOverflow`s and takes down the process — this is a P0. Moves
-  must reject self/descendant targets (`MoveAsync_ShouldRejectMovingDirectoryInto{Itself,Descendant}`).
-- **Validate the parent before create/move**: it must exist and share tenant, owner, and container (issue #46,
-  `CreateAsync_ShouldReject…`).
-- **Non-empty directories can't be silently deleted** — require an empty check or an explicit cascade policy.
+Directories were File Explorer's and moved with it to the `site` repository. Nothing here models them.
 
 ## 7. DI lifetime discipline — never let a Singleton capture per-request state
 
 Before marking a service `ISingletonDependency`, check every constructor dependency (transitively) for anything
-backed by a repository, `DbContext`, or other per-request/per-unit-of-work state (the custom repositories are
-exactly this). If it's request-scoped, the service must be `ITransientDependency` (or resolve the scoped
-dependency from `IServiceProvider` on demand). Autofac won't fail this at startup; it fails under concurrent load
-with thread-unsafe `DbContext` use. The `IFileHandler` implementations are correctly transient — keep new
-handlers/managers transient unless you've proven every dependency is safe to capture.
+per-request. `FileStorer`, `MimeTypeDetector`, the handlers and `ContainerNameValidator` are transient; `FileStorer`
+resolves handlers in a scope of its own per call. Keep new handlers/services transient unless every dependency is
+proven safe to capture.
 
-## 8. Cancellation, tenant scope, PII, and sort input
+## 8. Cancellation, tenant scope, PII
 
-- **Flow `CancellationToken`** through stream copies, blob I/O, image decode, and repository queries. Several
-  paths dropped it — don't reintroduce that. The repository
-  methods already take one; pass it on.
-- **Preserve tenant scope** on every query, write, and (if ever added) background job. Uniqueness/dedup/listing
-  indexes are all `TenantId`-leading (see the `file-storing-conventions` skill and `abp-multi-tenancy`); a query
-  that drops `TenantId` leaks or collides across tenants.
-- **Don't log file contents, blob bytes, recipient/owner IDs, or verbose PII** outside Development. PII logging
-  was restricted to development for a reason (issue #243182b); keep it that way.
-- **Dynamic-LINQ `sorting` must be validated against a column allowlist** — never pass a raw client sort string
-  to the query . EF and MongoDB must apply the **same**
-  default order (`CreationTime` descending).
+- **Flow `CancellationToken`** through the copy, the handlers (`FileHandlerContext.CancellationToken`), image decode
+  and blob I/O. The one deliberate exception is the compensating delete in §4.
+- **Tenant scope** is ABP BlobStoring's: `IBlobContainer` scopes blobs by the current tenant per the container's
+  `IsMultiTenant`. Don't add a parallel tenant mechanism, and don't change tenant inside the storer.
+- **Don't log file contents, blob bytes or file names with personal data** outside Development.
 
-## 9. Update vs patch — don't silently clear metadata
+## 9. (moved) Update vs patch
 
-The update path must distinguish a **full update** from a **patch**. A rename that unconditionally overwrites
-`DirectoryId`/`Name`/`CellName` wipes fields the client never sent (the Angular rename sends only `{ name }`),
-clearing the directory relationship and `FileCell` info. Split the two, and **re-validate** directory,
-container, tenant, owner, and file-grid constraints on update — an update must not be a back door around the
-create-time invariants. 
+Metadata updates were File Explorer's and moved with it. Core stores immutable blobs: to change content, store a new
+blob and let the caller repoint and delete.
 
 ## 10. Keep it thin — the anti-scope list
 
-These have been deliberately kept out; don't add them without a real, in-repo need:
+These are deliberately kept out; don't add them without a real, in-repo need:
 
-- **No distributed events / outbox / ETOs** in the modules — the pipeline is inline. Blob/DB consistency is §4's
-  ordering+compensation, not at-least-once transport.
-- **No new per-aggregate storage abstraction** beyond the two custom repositories — add query methods to
-  `IFileDescriptorRepository`/`IDirectoryDescriptorRepository` and implement in both providers, rather than
-  inventing a new seam.
-- **Don't couple the FileStoring core to `file-explorer`** — core must keep working standalone (see
-  [`file-storing/CLAUDE.md`](../../../CLAUDE.md) Structure).
+- **No distributed events / outbox / ETOs.** The pipeline is inline; consistency is §4's ordering and compensation.
+- **No metadata, no persistence, no HTTP API, no UI in this module.** Descriptors, directories, dedup records,
+  controllers, permissions and pickers belong to the application that owns the files (Site's media library, Support's
+  attachments) — see [`docs/core-only-decision.md`](../../../docs/core-only-decision.md).
+- **No dependency beyond ABP BlobStoring (+ ABP Imaging for `.Imaging`)** — no EF Core, no MongoDB, no ASP.NET Core.
+  When this repository moves to ABP ≥ 10.8, stream-only transforms are candidates for ABP's own
+  `IBlobPipelineContributor` rather than for new machinery here.

@@ -1,8 +1,8 @@
 # Dignite ABP Modules — monorepo guide
 
 Three independently installable **ABP Framework** module trees, developed together and released in
-lockstep, plus one shared, domain-agnostic infrastructure tree (`aspnetcore-mcp/`) that modules here
-and in other repositories depend on.
+lockstep, plus one shared, domain-agnostic infrastructure tree (`aspnetcore-mcp/`) that modules in
+other repositories depend on.
 
 ## Repository-wide invariants
 
@@ -17,6 +17,14 @@ These are the things most likely to be broken by an otherwise reasonable-looking
    store) while the module was still pre-release, with a Migrate section in the CHANGELOG. Adopting an
    ABP convention before the first stable release is the only reason a rename has ever been accepted;
    it is not a precedent for renaming after a layout change.
+   - **Removal on record, `10.0.0-rc.25`:** `Dignite.FileExplorer.*` (Domain.Shared, Domain,
+     Application.Contracts, Application, HttpApi, HttpApi.Client, EntityFrameworkCore, MongoDB, Mcp,
+     Installer), `Dignite.Abp.FlexFields.FileExplorer` / `.FileExplorer.Web`, and the npm packages
+     `@dignite/ng.file-explorer` / `@dignite/ng.flex-fields-file-explorer` are no longer published from
+     this repository. The file browser became a Site feature in the `site` repository, under the Site
+     namespace — new package identities there, not these IDs continued
+     ([`file-storing/docs/core-only-decision.md`](file-storing/docs/core-only-decision.md)). Removing a
+     package is not renaming one: the remaining IDs are untouched, and a removed ID is never reused here.
 
 2. **The three modules never reference each other.** `file-storing/`, `notifications/`, and
    `flex-fields/` share this repository for development and release only. A `ProjectReference`
@@ -33,14 +41,14 @@ These are the things most likely to be broken by an otherwise reasonable-looking
    - `aspnetcore-mcp/` (`Dignite.Abp.AspNetCore.Mcp`) is such a judged-fresh shared tree, and it is
      not a fourth module: it hosts the one MCP server an application can have and carries no domain
      model. It passed the test the Razor tree failed because every piece of it is needed by every
-     MCP-contributing module — `Dignite.FileExplorer.Mcp` here, `Dignite.Site.Mcp` and
-     `Dignite.Vault.Extract.Mcp` in their own repositories — and duplicating it is exactly how two of
-     them had already drifted apart (see its README). The direction is one-way: a module's `*.Mcp`
+     MCP-contributing module — `Dignite.Site.Mcp` and `Dignite.Vault.Extract.Mcp` in their own
+     repositories (and `Dignite.FileExplorer.Mcp` here, until File Explorer left in rc.25) — and
+     duplicating it is exactly how two of them had already drifted apart (see its README). The direction is one-way: a module's `*.Mcp`
      project may reference `aspnetcore-mcp/`; `aspnetcore-mcp/` never references a module. Each
      contributing module claims its own MCP namespace (tool-name prefix + resource URI scheme) via
      `AddAbpMcpModule`, and the server refuses to start on any overlap.
 
 3. **Library package versions live in the root `Directory.Packages.props`**, never inline in a
-   library `.csproj`. The demo hosts (`file-storing/host/`, `notifications/host/`,
-   `flex-fields/demo/`) are the deliberate exception — each opts out of central package management
-   and pins inline.
+   library `.csproj`. The demo hosts (`notifications/host/`, `flex-fields/demo/`) are the deliberate
+   exception — each opts out of central package management and pins inline. `file-storing/` has no
+   demo host: it is a library layer with no API or UI to demonstrate.

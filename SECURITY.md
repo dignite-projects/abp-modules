@@ -26,7 +26,7 @@ Instead, use GitHub's private vulnerability reporting for this repository:
 2. Fill in the advisory form with as much detail as you can:
    - A description of the issue and its impact
    - Steps to reproduce (a minimal proof of concept helps a lot)
-   - Affected package (e.g. `Dignite.Abp.FileStoring`, `Dignite.FileExplorer.HttpApi`,
+   - Affected package (e.g. `Dignite.Abp.FileStoring`, `Dignite.Abp.FileStoring.Imaging`,
      `Dignite.Abp.Notifications`, `Dignite.NotificationCenter.HttpApi`, a specific persistence
      provider) and version / commit
    - Any suggested remediation, if you have one

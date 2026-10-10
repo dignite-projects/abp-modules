@@ -58,7 +58,7 @@ it:
 - every **tool** and **prompt** name must start with `{name}_` (`my_module_list_items`);
 - every **resource** URI must use the module's scheme — by default the name with `_` turned into `-`
   (`my-module://…`), or set one with `UseUriScheme(...)`;
-- module names are lower-case snake_case and must not nest (`file` and `file_explorer` cannot coexist);
+- module names are lower-case snake_case and must not nest (`vault` and `vault_extract` cannot coexist);
 - two modules may not share a URI scheme;
 - a tool, resource or prompt registered outside `AddAbpMcpModule` (the SDK's raw `WithTools<T>()`) is
   rejected, since no namespace owns it - unless the host sets `AbpMcpServerOptions.AllowUnownedPrimitives`,
@@ -68,9 +68,8 @@ it:
 Because the rules are checked against a module's own registrations, a module's tests catch a violation
 before any host combines it with another module.
 
-Registered namespaces in this ecosystem: `site` (Dignite.Site), `file_explorer`
-(Dignite.FileExplorer.Mcp, scheme `file-explorer`), `vault_extract` (Dignite.Vault.Extract, scheme
-`vault-extract`).
+Registered namespaces in this ecosystem: `site` (Dignite.Site), `vault_extract` (Dignite.Vault.Extract,
+scheme `vault-extract`).
 
 ### Dynamic resources in `resources/list`
 

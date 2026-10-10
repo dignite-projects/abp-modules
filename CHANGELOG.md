@@ -16,6 +16,86 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Added
+
+#### file-storing
+
+- `IFileStorer` (default `FileStorer`, transient) in `Dignite.Abp.FileStoring` — the runner of a container's
+  `IFileHandler` pipeline, which until now existed only inside File Explorer's `FileDescriptorManager`.
+  `StoreAsync(containerName, fileName, stream, cancellationToken)` validates the container name, copies the upload
+  into a buffer capped at the container's size limit, detects the MIME type from the content, runs the handlers in
+  their configured order, hashes the result with SHA-256, names it with the container's `IBlobNameGenerator` and saves
+  it without overwriting, deleting a partially written blob again when the save fails. It returns
+  `StoredFileInfo { BlobName, Size, MimeType, Hash }`, all describing the stored (post-handler) bytes.
+  `DeleteAsync(containerName, blobName, cancellationToken)` removes a blob. `StoreAsync<TContainer>` /
+  `DeleteAsync<TContainer>` extensions take a typed container. Content dedup and file metadata stay with the caller:
+  store first, write your row, and call `DeleteAsync` if the row fails. See
+  [`file-storing/docs/core-only-decision.md`](file-storing/docs/core-only-decision.md).
+- `IMimeTypeDetector` (default `MimeTypeDetector`): MIME type from the content's signature, reconciled with the file
+  extension. A file whose content contradicts its extension (an executable named `.png`, text named `.pdf`) is
+  rejected with the new error code `Dignite.Abp.File:0005`; formats without a signature (text, CSV, JSON, SVG) fall
+  back to the extension, unknown ones to `application/octet-stream`.
+- `SetBlobNameGenerator<T>()` / `GetBlobNameGeneratorType()` and `BlobContainerConfigurationNames.BlobNameGenerator`
+  (same `"BlobNameGenerator"` key) now live in core; they were part of `Dignite.FileExplorer.Domain`.
+- `FileConsts.DefaultMaxFileSizeInBytes` (100 MB): the cap `IFileStorer` applies to a container without
+  `AddFileSizeLimitHandler`.
+- `FileHandlerContext.CancellationToken`, the store operation's token, as on ABP's `BlobPipelineContext`.
+
+#### flex-fields
+
+- `CKEditorUploadProvider` / `CKEDITOR_UPLOAD_PROVIDER` (`@dignite/ng.flex-fields-ckeditor`): the host registers how an
+  inline image is uploaded (`upload(file, containerName)` resolving to the URL to embed). The package ships no
+  implementation.
+
+### Changed
+
+#### file-storing
+
+- **The MIME type comes from the content.** Under `IFileStorer`, `FileHandlerContext.MimeType` and
+  `StoredFileInfo.MimeType` are detected from the bytes; the API takes no caller-supplied MIME type at all, and
+  `FileTypeCheckHandler`'s extension check runs only after the extension has been checked against the content.
+- **The size limit binds while copying.** `IFileStorer` stops reading an upload as soon as it passes the container's
+  limit (and rejects a seekable stream whose length is over the limit before reading it), instead of buffering it
+  whole and checking afterwards.
+- `ImageResizeHandler` links the operation's cancellation token into its decode timeout and passes it to ABP's image
+  resizer and compressor. A caller's cancellation now surfaces as `OperationCanceledException`, not as the
+  decode-timeout error.
+- `FileHandlerContext`'s constructor takes an optional trailing `CancellationToken` — source compatible, but code
+  compiled against rc.24 must be recompiled.
+
+#### flex-fields
+
+- **Breaking — the CKEditor image upload target is the host's.** The adapter no longer posts to
+  `POST /api/file-explorer/files` with apiName `FileExplorer`; `CKEditorUploadAdapter` takes the host's
+  `CKEditorUploadProvider`. Without a registered `CKEDITOR_UPLOAD_PROVIDER` the upload-image button is omitted, as it
+  already was for a field with no `CKEditor.ImagesContainerName`.
+
+  > **Migrate:** a host that relied on the File Explorer upload registers a provider for its own file API
+  > (`{ provide: CKEDITOR_UPLOAD_PROVIDER, useExisting: MyUploadProvider }`); see the package README.
+
+### Removed
+
+#### file-storing
+
+- **File Explorer has left this repository.** `file-storing/` is now only the enhancement layer on ABP BlobStoring
+  (`Dignite.Abp.FileStoring`, `Dignite.Abp.FileStoring.Imaging`). These packages are no longer published from here,
+  starting with this version:
+  - NuGet: `Dignite.FileExplorer.Domain.Shared`, `.Domain`, `.Application.Contracts`, `.Application`, `.HttpApi`,
+    `.HttpApi.Client`, `.EntityFrameworkCore`, `.MongoDB`, `.Mcp`, `.Installer`.
+  - npm: `@dignite/ng.file-explorer`.
+
+  The file browser is the CMS media library; it moves to the [`site`](https://github.com/dignite-projects/site)
+  repository as a Site feature, under the Site namespace (a new package identity, not a continuation of these IDs).
+  An application that only needs files stored safely (attachments, uploads tied to its own entities) uses
+  `IFileStorer` from core and keeps its own metadata. The demo host (`Dignite.FileExplorer.Web.Host`) and the
+  module's Angular workspace are gone with it; the module's solution is `file-storing/Dignite.Abp.FileStoring.slnx`.
+
+#### flex-fields
+
+- The FileExplorer field type: NuGet `Dignite.Abp.FlexFields.FileExplorer` and `Dignite.Abp.FlexFields.FileExplorer.Web`,
+  npm `@dignite/ng.flex-fields-file-explorer`. A media-picker field belongs with the media library and moves to the
+  `site` repository with it. The flex-fields demo no longer seeds an `images` field.
+
 ## [10.0.0-rc.24] - 2026-10-09
 
 ### Added

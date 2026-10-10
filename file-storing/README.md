@@ -6,55 +6,65 @@
 > them. Formerly developed at `dignite-projects/abp-file-storing`; **no package ID changed** in the
 > move.
 
-The file storing and file explorer modules, extracted from `dignite-abp`.
+A thin enhancement layer on [ABP BlobStoring](https://abp.io/docs/latest/framework/infrastructure/blob-storing):
+per-container upload rules, and one service that applies them and stores the result.
 
-The layout is:
+- `core/src/Dignite.Abp.FileStoring` — the `IFileHandler` pipeline (`FileSizeLimitHandler`,
+  `FileTypeCheckHandler`), `IFileStorer`, content-based MIME detection.
+- `core/src/Dignite.Abp.FileStoring.Imaging` — `ImageResizeHandler`, an optional upload-time resize.
 
-- `core/src/Dignite.Abp.FileStoring`: file upload infrastructure on top of ABP Blob Storing.
-- `core/src/Dignite.Abp.FileStoring.Imaging`: optional upload-time image processing.
-- `file-explorer/src/Dignite.FileExplorer.*`: DDD file explorer backend.
-- `file-explorer/src/Dignite.FileExplorer.Mcp`: optional MCP tools over the file explorer, for AI clients.
-- `angular/projects/file-explorer`: Angular UI package.
+There is no metadata layer, API or UI here. An application keeps its own file records and authorization and
+uses `IFileStorer` to put bytes into a container. (File Explorer, the DDD file browser that used to ship from
+this folder, moved to the `site` repository as part of Site in `10.0.0-rc.25` — see
+[`docs/core-only-decision.md`](docs/core-only-decision.md).)
 
-`dignite-abp` is treated as a frozen source repository and is not modified by this extraction.
+## Usage
 
-## MCP tools (`Dignite.FileExplorer.Mcp`)
-
-Optional. Depend on `FileExplorerMcpModule` to let an AI client use the file explorer through the
-application's MCP server (see [`aspnetcore-mcp/`](../aspnetcore-mcp/README.md)). Its tools are named
-`file_explorer_*`: list containers, list/create directories, list/get/upload/update/delete files. Every
-call goes through the file explorer application services, so each container's own authorization
-configuration applies exactly as it does over HTTP.
-
-**Nothing is exposed until the host lists it.** Blob containers cannot be enumerated, and which ones an
-AI client should touch is a deployment decision:
+Depend on `DigniteAbpFileStoringModule` (or `DigniteAbpFileStoringImagingModule`) and configure a container:
 
 ```csharp
-Configure<FileExplorerMcpOptions>(options =>
+Configure<AbpBlobStoringOptions>(options =>
 {
-    options.Containers.Add("site-images", "Images used in site content.");
-    options.MaxUploadSize = 5 * 1024 * 1024; // the default
+    options.Containers.Configure<AttachmentsContainer>(container =>
+    {
+        container.UseFileSystem(fs => fs.BasePath = "...");
+        container.AddFileSizeLimitHandler(h => h.MaxFileSize = 20); // MB
+        container.AddFileTypeCheckHandler(h => h.AllowedFileTypeNames = [".pdf", ".png", ".jpg"]);
+    });
 });
 ```
 
-Uploads travel as base64 inside a JSON-RPC message, so they suit small files only. The module raises the
-MCP endpoint's request-body limit just enough for `MaxUploadSize`, so a larger request is refused before it
-is read; the container's own size limit applies when it is stricter. File
-URLs in tool results point at the HTTP API's file endpoint (`FileExplorerRemoteServiceConsts.FilesRoutePrefix`),
-so the host also needs `FileExplorerHttpApiModule` for them to resolve.
+Store an upload:
 
-## Host secrets
+```csharp
+var stored = await _fileStorer.StoreAsync<AttachmentsContainer>(file.FileName, file.GetStream(), cancellationToken);
 
-`host/Dignite.FileExplorer.Web.Host/appsettings.json` contains no certificate or encryption passphrases. Configure these values with .NET user-secrets, environment variables, or a secret store instead:
-
-```text
-AuthServer:CertificatePassPhrase
-StringEncryption:DefaultPassPhrase
-Identity:AdminPassword
+try
+{
+    await _attachmentRepository.InsertAsync(
+        new Attachment(GuidGenerator.Create(), ticketId, stored.BlobName, file.FileName, stored.MimeType, stored.Size, stored.Hash),
+        autoSave: true,
+        cancellationToken);
+}
+catch
+{
+    await _fileStorer.DeleteAsync<AttachmentsContainer>(stored.BlobName);
+    throw;
+}
 ```
 
-For a first-run Development database, `Identity:AdminPassword` is optional and ABP's development password is used; set the value explicitly before sharing the environment. Non-Development database migration requires `Identity:AdminPassword` and fails when it is missing. For Docker or other deployments, use the corresponding double-underscore environment variable names (for example, `AuthServer__CertificatePassPhrase`).
+What `StoreAsync` guarantees:
 
-Data Protection keys are persisted under `DataProtection:KeysPath` (default: `data-protection-keys`). The Docker compose deployment mounts this directory to the durable `host_data_protection_keys` volume. In a multi-instance deployment, point `DataProtection:KeysPath` at a shared durable filesystem available to every API instance.
+- **The size limit binds while reading.** The upload is copied into a buffer that is never allowed past the
+  container's `AddFileSizeLimitHandler` limit (100 MB, `FileConsts.DefaultMaxFileSizeInBytes`, when none is set).
+  Still enforce a request-body limit at the HTTP layer.
+- **The MIME type comes from the content.** `IMimeTypeDetector` reads the file's signature; a file whose content
+  contradicts its extension is rejected (`Dignite.Abp.File:0005`). The API does not accept a MIME type from the
+  caller.
+- **Handlers run in the configured order** on the buffered content; `StoredFileInfo` describes what was stored
+  after them (a resized image reports its resized size and hash).
+- **No partial blobs.** A save that fails after writing is followed by a delete of that blob. A name collision
+  (`BlobAlreadyExistsException`, only possible with a custom `IBlobNameGenerator`) is never "compensated" by deleting
+  the existing blob.
 
-The seeded `Host_App` OpenIddict client uses Authorization Code with PKCE and Refresh Token grants, plus ABP's Link Login and Impersonation extensions. Password and Client Credentials grants are intentionally disabled because the Angular SPA is a public client and does not need either flow. Swagger uses Authorization Code only.
+Dedup by content is up to you: compare `StoredFileInfo.Hash` (SHA-256, upper-case hex) with your own records.
