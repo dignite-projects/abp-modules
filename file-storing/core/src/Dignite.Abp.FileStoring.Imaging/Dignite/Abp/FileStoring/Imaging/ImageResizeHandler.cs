@@ -32,8 +32,9 @@ public class ImageResizeHandler : IFileHandler, ITransientDependency
             );
         }
 
-        using var decodeTimeout = new CancellationTokenSource(
-            TimeSpan.FromSeconds(configuration.DecodeTimeoutSeconds));
+        // Bounded by the decode timeout and by the store operation's own cancellation.
+        using var decodeTimeout = CancellationTokenSource.CreateLinkedTokenSource(context.CancellationToken);
+        decodeTimeout.CancelAfter(TimeSpan.FromSeconds(configuration.DecodeTimeoutSeconds));
 
         try
         {
@@ -91,7 +92,8 @@ public class ImageResizeHandler : IFileHandler, ITransientDependency
                     var resizeResult = await _imageResizer.ResizeAsync(
                         context.BlobStream,
                         new ImageResizeArgs((uint)configuration.ImageWidth, (uint)configuration.ImageHeight, ImageResizeMode.Max),
-                        detectedFormat.DefaultMimeType
+                        detectedFormat.DefaultMimeType,
+                        decodeTimeout.Token
                     );
 
                     if (resizeResult.State == ImageProcessState.Done)
@@ -113,7 +115,8 @@ public class ImageResizeHandler : IFileHandler, ITransientDependency
 
                 var compressResult = await _imageCompressor.CompressAsync(
                     context.BlobStream,
-                    mimeType: detectedFormat.DefaultMimeType
+                    mimeType: detectedFormat.DefaultMimeType,
+                    cancellationToken: decodeTimeout.Token
                 );
 
                 if (compressResult.State == ImageProcessState.Done)
@@ -126,7 +129,8 @@ public class ImageResizeHandler : IFileHandler, ITransientDependency
                 }
             }
         }
-        catch (OperationCanceledException) when (decodeTimeout.IsCancellationRequested)
+        catch (OperationCanceledException) when (
+            decodeTimeout.IsCancellationRequested && !context.CancellationToken.IsCancellationRequested)
         {
             throw new BusinessException(
                 code: FileStoringImagingErrorCodes.ImageDecodeTimeout,

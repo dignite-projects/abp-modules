@@ -6,6 +6,28 @@ namespace Dignite.Abp.FileStoring;
 
 public static class BlobContainerConfigurationExtensions
 {
+    /// <summary>
+    /// Makes <see cref="IFileStorer"/> name the container's blobs with <typeparamref name="TBlobNameGenerator"/>
+    /// instead of <see cref="RandomBlobNameGenerator"/>. The generator is resolved from DI, so register it
+    /// (e.g. with <c>ITransientDependency</c>).
+    /// </summary>
+    public static void SetBlobNameGenerator<TBlobNameGenerator>(
+        this BlobContainerConfiguration containerConfiguration)
+        where TBlobNameGenerator : IBlobNameGenerator
+    {
+        containerConfiguration.SetConfiguration(
+            BlobContainerConfigurationNames.BlobNameGenerator,
+            typeof(TBlobNameGenerator));
+    }
+
+    public static Type GetBlobNameGeneratorType(
+        this BlobContainerConfiguration containerConfiguration)
+    {
+        return containerConfiguration.GetConfigurationOrDefault(
+            BlobContainerConfigurationNames.BlobNameGenerator,
+            typeof(RandomBlobNameGenerator))!;
+    }
+
     public static FileSizeLimitHandlerConfiguration GetFileSizeLimitConfiguration(
         this BlobContainerConfiguration containerConfiguration)
     {
