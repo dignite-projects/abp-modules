@@ -163,7 +163,7 @@ breaking `site`'s restore.
    by module so readers can tell which half of the repo changed.
 2. In that same commit, bump `<Version>` in `Directory.Build.props` and `version` in every Angular
    `package.json` tracked by
-   [`verify-version-lockstep.ps1`](./.github/scripts/verify-version-lockstep.ps1) (currently five
+   [`verify-version-lockstep.ps1`](./.github/scripts/verify-version-lockstep.ps1) (currently three
    packages) to `x.y.z`, along with every `@dignite/*` dependency pin inside those files. This is
    the only time these values move; they then stay on `x.y.z` until the commit that cuts the *next*
    release.
