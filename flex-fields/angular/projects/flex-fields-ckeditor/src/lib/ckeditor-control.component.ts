@@ -10,6 +10,7 @@ import { CKEDITOR5_STYLE } from './ckeditor-style';
 import { CKEditorContentFormat } from './ckeditor-content-format';
 import { CKEditorMode } from './ckeditor-mode';
 import { buildEditorConfig, resolveEditorClass } from './ckeditor-editor-config';
+import { CKEDITOR_CONFIG_CONTRIBUTORS, applyEditorConfigContributors } from './ckeditor-config-contributor';
 import { CKEditorConfiguration } from './ckeditor-configuration';
 import { CKEditorUploadAdapter } from './ckeditor-upload-adapter';
 import { CKEDITOR_UPLOAD_PROVIDER } from './ckeditor-upload-provider';
@@ -20,7 +21,8 @@ import { CKEDITOR_UPLOAD_PROVIDER } from './ckeditor-upload-provider';
  * The editor class (Mode), plugin list (ContentFormat's Markdown swap), and image-upload wiring
  * (ImagesContainerName, plus the host's `CKEDITOR_UPLOAD_PROVIDER`) are all decided once, at editor-creation time, from this field's own
  * configuration - see `ckeditor-editor-config.ts` for why none of the three is runtime-togglable
- * afterwards. `ngOnInit` doing this exactly once (rather than reacting to `fields` re-assignment) is
+ * afterwards. The host's `CKEDITOR_CONFIG_CONTRIBUTORS` then get the composed configuration, once, at
+ * the same moment. `ngOnInit` doing this exactly once (rather than reacting to `fields` re-assignment) is
  * safe because the host dispatcher always creates a fresh component instance for a changed field
  * rather than reusing an existing one.
  */
@@ -38,6 +40,7 @@ import { CKEDITOR_UPLOAD_PROVIDER } from './ckeditor-upload-provider';
 })
 export class CKEditorControlComponent extends FieldTypeControlBase implements OnInit, OnDestroy {
   private readonly uploadProvider = inject(CKEDITOR_UPLOAD_PROVIDER, { optional: true });
+  private readonly configContributors = inject(CKEDITOR_CONFIG_CONTRIBUTORS, { optional: true }) ?? [];
   private readonly styleLoader = inject(FlexFieldsStyleLoader);
 
   /**
@@ -115,12 +118,19 @@ export class CKEditorControlComponent extends FieldTypeControlBase implements On
     ) as CKEditorContentFormat;
     const containerName = (configuration['CKEditor.ImagesContainerName'] as string) ?? '';
 
+    const editorConfig = buildEditorConfig(module, {
+      mode,
+      contentFormat,
+      imageUploadEnabled: containerName.length > 0 && this.uploadProvider !== null,
+    });
+
     this.editor.set({
       editorClass: resolveEditorClass(module, mode),
-      editorConfig: buildEditorConfig(module, {
+      editorConfig: applyEditorConfigContributors(editorConfig, this.configContributors, {
+        ckeditor5: module,
+        field: this.fieldValue!.field,
         mode,
         contentFormat,
-        imageUploadEnabled: containerName.length > 0 && this.uploadProvider !== null,
       }),
     });
   }
