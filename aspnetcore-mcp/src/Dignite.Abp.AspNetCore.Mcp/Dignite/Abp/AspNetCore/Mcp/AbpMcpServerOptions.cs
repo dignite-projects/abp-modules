@@ -42,7 +42,7 @@ public class AbpMcpServerOptions
     /// The largest request body the endpoint accepts, in bytes - enforced by routing before the body is
     /// read, so an oversized request is refused with <c>413</c> instead of being buffered and parsed first.
     /// Defaults to 4 MB, ample for JSON-RPC tool arguments. A module whose tools take larger arguments
-    /// raises it for itself (Dignite.FileExplorer.Mcp does, to fit its base64 uploads). <c>null</c> leaves the
+    /// raises it for itself (a module that accepts base64 uploads would). <c>null</c> leaves the
     /// server's own limit (Kestrel: 30 MB) in place.
     /// </summary>
     public long? MaxRequestBodySize { get; set; } = 4 * 1024 * 1024;
