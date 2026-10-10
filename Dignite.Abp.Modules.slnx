@@ -17,33 +17,6 @@
     <Project Path="file-storing/core/test/Dignite.Abp.FileStoring.Imaging.Tests/Dignite.Abp.FileStoring.Imaging.Tests.csproj" />
     <Project Path="file-storing/core/test/Dignite.Abp.FileStoring.Tests/Dignite.Abp.FileStoring.Tests.csproj" />
   </Folder>
-  <Folder Name="/file-storing/file-explorer/" />
-  <Folder Name="/file-storing/file-explorer/src/">
-    <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.Application.Contracts/Dignite.FileExplorer.Application.Contracts.csproj" />
-    <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.Application/Dignite.FileExplorer.Application.csproj" />
-    <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.Domain.Shared/Dignite.FileExplorer.Domain.Shared.csproj" />
-    <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.Domain/Dignite.FileExplorer.Domain.csproj" />
-    <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.EntityFrameworkCore/Dignite.FileExplorer.EntityFrameworkCore.csproj" />
-    <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.HttpApi.Client/Dignite.FileExplorer.HttpApi.Client.csproj" />
-    <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.Installer/Dignite.FileExplorer.Installer.csproj" />
-    <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.HttpApi/Dignite.FileExplorer.HttpApi.csproj" />
-    <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.Mcp/Dignite.FileExplorer.Mcp.csproj" />
-    <Project Path="file-storing/file-explorer/src/Dignite.FileExplorer.MongoDB/Dignite.FileExplorer.MongoDB.csproj" />
-  </Folder>
-  <Folder Name="/file-storing/file-explorer/test/">
-    <Project Path="file-storing/file-explorer/test/Dignite.FileExplorer.Update.Tests/Dignite.FileExplorer.Update.Tests.csproj" />
-    <Project Path="file-storing/file-explorer/test/Dignite.FileExplorer.Mcp.Tests/Dignite.FileExplorer.Mcp.Tests.csproj" />
-    <Project Path="file-storing/file-explorer/test/Dignite.FileExplorer.Authorization.Tests/Dignite.FileExplorer.Authorization.Tests.csproj" />
-    <Project Path="file-storing/file-explorer/test/Dignite.FileExplorer.DirectorySafety.Tests/Dignite.FileExplorer.DirectorySafety.Tests.csproj" />
-    <Project Path="file-storing/file-explorer/test/Dignite.FileExplorer.Application.Tests/Dignite.FileExplorer.Application.Tests.csproj" />
-    <Project Path="file-storing/file-explorer/test/Dignite.FileExplorer.Domain.Tests/Dignite.FileExplorer.Domain.Tests.csproj" />
-    <Project Path="file-storing/file-explorer/test/Dignite.FileExplorer.EntityFrameworkCore.Tests/Dignite.FileExplorer.EntityFrameworkCore.Tests.csproj" />
-    <Project Path="file-storing/file-explorer/test/Dignite.FileExplorer.MongoDB.Tests/Dignite.FileExplorer.MongoDB.Tests.csproj" />
-    <Project Path="file-storing/file-explorer/test/Dignite.FileExplorer.TestBase/Dignite.FileExplorer.TestBase.csproj" />
-  </Folder>
-  <Folder Name="/file-storing/host/">
-    <Project Path="file-storing/host/Dignite.FileExplorer.Web.Host/Dignite.FileExplorer.Web.Host.csproj" />
-  </Folder>
 
   <Folder Name="/notifications/" />
   <Folder Name="/notifications/core/" />
