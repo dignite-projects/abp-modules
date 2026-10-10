@@ -16,6 +16,8 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+## [10.0.0-rc.25] - 2026-10-10
+
 ### Added
 
 #### file-storing
