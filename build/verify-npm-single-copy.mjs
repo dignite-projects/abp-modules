@@ -13,7 +13,7 @@
  * Both modes exist because of the failure mode issue #211 describes, which nothing else in this
  * repository could see:
  *
- * - The five Angular packages ship in lockstep, and two of them depend on their siblings. If such a
+ * - The Angular packages ship in lockstep, and one of them depends on a sibling. If such a
  *   range is wider than the release version (`^10.0.0-rc.4` long after everything ships
  *   `10.0.0-rc.13`), a resolver may satisfy it with an older sibling rather than deduplicating
  *   against the copy already at the root.
@@ -68,12 +68,10 @@ if (mode !== 'packed' && mode !== 'published') {
   usageError();
 }
 
-/** Every package this repository publishes, including the two that depend on siblings. */
+/** Every package this repository publishes, including the one that depends on a sibling. */
 const packages = [
-  '@dignite/ng.file-explorer',
   '@dignite/ng.notification-center',
   '@dignite/ng.flex-fields',
-  '@dignite/ng.flex-fields-file-explorer',
   '@dignite/ng.flex-fields-ckeditor',
 ];
 
@@ -316,7 +314,7 @@ const registryServesVersion = async (registry, name, version) => {
  * and left the GitHub Release uncreated because it is a later step in the same job.
  *
  * Retrying `yarn install` is the wrong instrument for this: yarn aborts on the first name it cannot
- * resolve, so its exit code cannot distinguish "one of five is still propagating" from "the published
+ * resolve, so its exit code cannot distinguish "one of them is still propagating" from "the published
  * set is broken", and each attempt burns a full resolution pass before sleeping. Waiting on the
  * registry itself makes that distinction structural - past this point, a `yarn install` failure is
  * about resolution, which is the only thing this check is qualified to judge.
@@ -377,7 +375,7 @@ const runPackedMode = rootDirectory => {
   }
 
   // `resolutions`, not just `dependencies`: a package that depends on a sibling (e.g.
-  // flex-fields-file-explorer on flex-fields) declares that edge as a plain semver range inside its
+  // flex-fields-ckeditor on flex-fields) declares that edge as a plain semver range inside its
   // own packed package.json, not as a `file:` path - it doesn't know at pack time that this check will
   // ever run. Yarn Classic resolves a `file:` request and a semver-range request for the same package
   // name as two independent lookups rather than reusing one to satisfy the other, so without an

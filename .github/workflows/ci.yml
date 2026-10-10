@@ -35,7 +35,6 @@ jobs:
           node-version-file: '.nvmrc'
           cache: yarn
           cache-dependency-path: |
-            file-storing/angular/yarn.lock
             notifications/angular/yarn.lock
             flex-fields/angular/yarn.lock
 
@@ -71,7 +70,7 @@ jobs:
             exit 1
           fi
 
-      # Includes all three demo hosts (file-storing/host/..., notifications/host/..., flex-fields/demo/...) - each opts out of
+      # Includes both demo hosts (notifications/host/..., flex-fields/demo/...) - each opts out of
       # central package management on its own (common.props / its own nested Directory.Build.props)
       # and pins its own inline package versions.
       - name: Build
@@ -91,35 +90,6 @@ jobs:
 
       - name: Run FileStoring Imaging (core) tests
         run: dotnet test file-storing/core/test/Dignite.Abp.FileStoring.Imaging.Tests/Dignite.Abp.FileStoring.Imaging.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/file-storing
-
-      # Dignite.FileExplorer.TestBase is shared test infrastructure (no runner) - it is exercised
-      # indirectly via the projects below, never run directly.
-      - name: Run FileExplorer (domain) tests
-        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.Domain.Tests/Dignite.FileExplorer.Domain.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/file-storing
-
-      - name: Run FileExplorer (EF Core) tests
-        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.EntityFrameworkCore.Tests/Dignite.FileExplorer.EntityFrameworkCore.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/file-storing
-
-      # MongoDB provider - starts an embedded mongod via MongoSandbox (MongoSandbox8.runtime.linux-x64
-      # is pinned in Directory.Packages.props and resolves fine on this runner); no external
-      # MongoDB install needed.
-      - name: Run FileExplorer (MongoDB) tests
-        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.MongoDB.Tests/Dignite.FileExplorer.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/file-storing
-
-      - name: Run FileExplorer (application) tests
-        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.Application.Tests/Dignite.FileExplorer.Application.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/file-storing
-
-      - name: Run authorization denial tests
-        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.Authorization.Tests/Dignite.FileExplorer.Authorization.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/file-storing
-
-      - name: Run directory safety tests
-        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.DirectorySafety.Tests/Dignite.FileExplorer.DirectorySafety.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/file-storing
-
-      - name: Run update authorization tests
-        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.Update.Tests/Dignite.FileExplorer.Update.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/file-storing
-
-      - name: Run FileExplorer MCP tools tests
-        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.Mcp.Tests/Dignite.FileExplorer.Mcp.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/file-storing
 
       # --- notifications tests ---
       # Dignite.Abp.Notifications.Domain.TestBase and Dignite.NotificationCenter.TestBase are
@@ -164,7 +134,7 @@ jobs:
           path: ./artifacts-ci/coverage
           if-no-files-found: error
 
-      # Projects with IsPackable=false (all three demo hosts + test projects) are skipped automatically.
+      # Projects with IsPackable=false (both demo hosts + test projects) are skipped automatically.
       # Every packable project in the aggregate solution is produced - deliberately not counted here, a
       # number in this comment had already drifted (it said 33 while 38 were being packed).
       - name: Pack NuGet packages
@@ -185,59 +155,6 @@ jobs:
       - name: Smoke-test aspnetcore-mcp NuGet packages
         shell: pwsh
         run: ./aspnetcore-mcp/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}'
-
-      # --- file-storing Angular (angular/projects/file-explorer) ---
-      - name: Install file-storing Angular dependencies
-        working-directory: file-storing/angular
-        run: yarn install --frozen-lockfile
-
-      # @abp/ng.components pins ng-zorro-antd at <21.1.0 while this demo app used to ask for
-      # ^21.3.3 (narrowed to ~21.0.2 for exactly this reason); @angular/cdk reaches the same
-      # package by the same route and carries the same risk. Two copies are two module-scoped
-      # NZ_CONFIG/NzConfigService tokens - see build/check-angular-package-duplicates.mjs.
-      - name: Check file-storing Angular package duplicates
-        run: node ./build/check-angular-package-duplicates.mjs file-storing/angular/node_modules ng-zorro-antd @angular/cdk
-
-      - name: Lint file-storing Angular projects
-        working-directory: file-storing/angular
-        run: yarn lint --max-warnings=0
-
-      - name: Run file-storing Angular unit tests
-        working-directory: file-storing/angular
-        run: yarn test --watch=false
-
-      - name: Build file-storing Angular library
-        working-directory: file-storing/angular
-        run: yarn build:lib
-
-      # ng-packagr emits an external for every bare specifier it does not bundle, but never checks
-      # that the external is declared - a library can publish a bundle importing a package its own
-      # package.json does not name, and nothing fails until a consumer builds. The smoke test below
-      # cannot see it: it seeds the throwaway consumer from the demo app's dependency list, so the
-      # undeclared package is already installed.
-      - name: Check file-storing Angular package dependencies
-        run: node ./build/check-angular-package-deps.mjs file-storing/angular/dist/file-explorer
-
-      - name: Build file-storing Angular demo
-        working-directory: file-storing/angular
-        run: yarn build:prod
-
-      - name: Pack file-storing Angular library
-        shell: pwsh
-        working-directory: file-storing/angular
-        run: |
-          New-Item -ItemType Directory -Force ../../artifacts-ci/npm/file-storing | Out-Null
-          npm pack ./dist/file-explorer --pack-destination ../../artifacts-ci/npm/file-storing
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-      - name: Smoke-test file-storing Angular package
-        shell: pwsh
-        run: |
-          $tarballs = @(Get-ChildItem ./artifacts-ci/npm/file-storing/*.tgz)
-          if ($tarballs.Count -ne 1) {
-            throw "Expected one file-explorer Angular package tarball, found $($tarballs.Count)."
-          }
-          node ./file-storing/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
 
       # --- notifications Angular (angular/projects/notification-center) ---
       - name: Install notifications Angular dependencies
@@ -261,6 +178,11 @@ jobs:
         working-directory: notifications/angular
         run: yarn build:lib
 
+      # ng-packagr emits an external for every bare specifier it does not bundle, but never checks
+      # that the external is declared - a library can publish a bundle importing a package its own
+      # package.json does not name, and nothing fails until a consumer builds. The smoke test below
+      # cannot see it: it seeds the throwaway consumer from the demo app's dependency list, so the
+      # undeclared package is already installed.
       - name: Check notifications Angular package dependencies
         run: node ./build/check-angular-package-deps.mjs notifications/angular/dist/notification-center
 
@@ -316,13 +238,6 @@ jobs:
       - name: Check flex-fields Angular package dependencies
         run: node ./build/check-angular-package-deps.mjs flex-fields/angular/dist/flex-fields
 
-      # Must run after "Build flex-fields Angular library" - flex-fields-file-explorer resolves
-      # @dignite/ng.flex-fields straight from that library's dist output (see the comment in
-      # flex-fields-file-explorer's tsconfig.lib.json for why it can't go through node_modules).
-      - name: Build flex-fields-file-explorer Angular library
-        working-directory: flex-fields/angular
-        run: yarn build:lib:file-explorer
-
       # Built here only since 10.0.0-rc.12: release.yml has always built and published it, but ci.yml
       # never did, so a PR breaking the ckeditor adapter stayed green until tag time.
       - name: Build flex-fields-ckeditor Angular library
@@ -330,7 +245,7 @@ jobs:
         run: yarn build:lib:ckeditor
 
       - name: Check flex-fields adapters Angular package dependencies
-        run: node ./build/check-angular-package-deps.mjs flex-fields/angular/dist/flex-fields-file-explorer flex-fields/angular/dist/flex-fields-ckeditor
+        run: node ./build/check-angular-package-deps.mjs flex-fields/angular/dist/flex-fields-ckeditor
 
       - name: Build flex-fields Angular demo
         working-directory: flex-fields/angular
@@ -352,23 +267,6 @@ jobs:
             throw "Expected one flex-fields Angular package tarball, found $($tarballs.Count)."
           }
           node ./flex-fields/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
-
-      - name: Pack flex-fields-file-explorer Angular library
-        shell: pwsh
-        working-directory: flex-fields/angular
-        run: |
-          New-Item -ItemType Directory -Force ../../artifacts-ci/npm/flex-fields-file-explorer | Out-Null
-          npm pack ./dist/flex-fields-file-explorer --pack-destination ../../artifacts-ci/npm/flex-fields-file-explorer
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-      - name: Smoke-test flex-fields-file-explorer Angular package
-        shell: pwsh
-        run: |
-          $tarballs = @(Get-ChildItem ./artifacts-ci/npm/flex-fields-file-explorer/*.tgz)
-          if ($tarballs.Count -ne 1) {
-            throw "Expected one flex-fields-file-explorer Angular package tarball, found $($tarballs.Count)."
-          }
-          node ./flex-fields/.github/scripts/smoke-test-file-explorer-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
 
   # Not a required check: Codecov's upload latency is Codecov's, not ours (observed anywhere from a
   # few seconds to 4+ minutes per module, most likely tokenless-upload rate limiting), and it must

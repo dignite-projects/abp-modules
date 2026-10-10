@@ -1,12 +1,12 @@
-# Release workflow. The NuGet version in Directory.Build.props and the npm versions in all five
-# Angular library package.json files are kept in lockstep; a pushed v* tag must match all six,
+# Release workflow. The NuGet version in Directory.Build.props and the npm versions in all three
+# Angular library package.json files are kept in lockstep; a pushed v* tag must match all four,
 # but tags do not drive the number.
 #
 # Tagged releases are public: NuGet packages go to NuGet.org through Trusted Publishing (GitHub
-# OIDC -> short-lived API key), and all five Angular packages go to npm through npm Trusted
+# OIDC -> short-lived API key), and all three Angular packages go to npm through npm Trusted
 # Publishing (OIDC) too - no long-lived NPM_TOKEN secret. The npm dist-tag is `latest` for a stable
 # release, and for a pre-release too until the first stable release exists, `next` after that - see
-# build/resolve-npm-dist-tag.mjs. Each of the five packages has its own Trusted Publisher configured on
+# build/resolve-npm-dist-tag.mjs. Each of the three packages has its own Trusted Publisher configured on
 # npmjs.com, scoped to this repo and this workflow file.
 # Pre-release NuGet packages are also mirrored to GitHub Packages under the same @dignite/*
 # names; pre-release Angular packages are mirrored too, but GitHub Packages' npm registry requires
@@ -131,30 +131,6 @@ jobs:
       - name: Run FileStoring Imaging (core) tests
         run: dotnet test file-storing/core/test/Dignite.Abp.FileStoring.Imaging.Tests/Dignite.Abp.FileStoring.Imaging.Tests.csproj --no-build --configuration Release --verbosity normal
 
-      - name: Run FileExplorer (domain) tests
-        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.Domain.Tests/Dignite.FileExplorer.Domain.Tests.csproj --no-build --configuration Release --verbosity normal
-
-      - name: Run FileExplorer (EF Core) tests
-        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.EntityFrameworkCore.Tests/Dignite.FileExplorer.EntityFrameworkCore.Tests.csproj --no-build --configuration Release --verbosity normal
-
-      - name: Run FileExplorer (MongoDB) tests
-        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.MongoDB.Tests/Dignite.FileExplorer.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal
-
-      - name: Run FileExplorer (application) tests
-        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.Application.Tests/Dignite.FileExplorer.Application.Tests.csproj --no-build --configuration Release --verbosity normal
-
-      - name: Run authorization denial tests
-        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.Authorization.Tests/Dignite.FileExplorer.Authorization.Tests.csproj --no-build --configuration Release --verbosity normal
-
-      - name: Run directory safety tests
-        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.DirectorySafety.Tests/Dignite.FileExplorer.DirectorySafety.Tests.csproj --no-build --configuration Release --verbosity normal
-
-      - name: Run update authorization tests
-        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.Update.Tests/Dignite.FileExplorer.Update.Tests.csproj --no-build --configuration Release --verbosity normal
-
-      - name: Run FileExplorer MCP tools tests
-        run: dotnet test file-storing/file-explorer/test/Dignite.FileExplorer.Mcp.Tests/Dignite.FileExplorer.Mcp.Tests.csproj --no-build --configuration Release --verbosity normal
-
       # --- notifications tests ---
       - name: Run Notifications (core) tests
         run: dotnet test notifications/core/test/Dignite.Abp.Notifications.Tests/Dignite.Abp.Notifications.Tests.csproj --no-build --configuration Release --verbosity normal
@@ -181,7 +157,7 @@ jobs:
       - name: Run FlexFields (MongoDB) tests
         run: dotnet test flex-fields/test/Dignite.Abp.FlexFields.MongoDB.Tests/Dignite.Abp.FlexFields.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal
 
-      # Projects with IsPackable=false (all three demo hosts + test projects) are skipped automatically.
+      # Projects with IsPackable=false (both demo hosts + test projects) are skipped automatically.
       # Every packable project in the aggregate solution is produced - deliberately not counted here, a
       # number in this comment had already drifted (it said 33 while 38 were being packed).
       - name: Pack NuGet packages
@@ -202,44 +178,6 @@ jobs:
       - name: Smoke-test aspnetcore-mcp NuGet packages
         shell: pwsh
         run: ./aspnetcore-mcp/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts '${{ steps.version.outputs.version }}'
-
-      # --- file-storing Angular ---
-      - name: Install file-storing Angular dependencies
-        working-directory: file-storing/angular
-        run: yarn install --frozen-lockfile
-
-      - name: Lint file-storing Angular projects
-        working-directory: file-storing/angular
-        run: yarn lint --max-warnings=0
-
-      - name: Run file-storing Angular unit tests
-        working-directory: file-storing/angular
-        run: yarn test --watch=false
-
-      - name: Build file-storing Angular library
-        working-directory: file-storing/angular
-        run: yarn build:lib
-
-      - name: Build file-storing Angular demo
-        working-directory: file-storing/angular
-        run: yarn build:prod
-
-      - name: Pack file-storing Angular library
-        shell: pwsh
-        working-directory: file-storing/angular
-        run: |
-          New-Item -ItemType Directory -Force ../../artifacts/npm/file-storing | Out-Null
-          npm pack ./dist/file-explorer --pack-destination ../../artifacts/npm/file-storing
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-      - name: Smoke-test file-storing Angular package
-        shell: pwsh
-        run: |
-          $tarballs = @(Get-ChildItem ./artifacts/npm/file-storing/*.tgz)
-          if ($tarballs.Count -ne 1) {
-            throw "Expected one file-explorer Angular package tarball, found $($tarballs.Count)."
-          }
-          node ./file-storing/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
 
       # --- notifications Angular ---
       - name: Install notifications Angular dependencies
@@ -288,13 +226,6 @@ jobs:
         working-directory: flex-fields/angular
         run: yarn build:lib
 
-      # Must run after "Build flex-fields Angular library" - flex-fields-file-explorer resolves
-      # @dignite/ng.flex-fields straight from that library's dist output (see the comment in
-      # flex-fields-file-explorer's tsconfig.lib.json for why it can't go through node_modules).
-      - name: Build flex-fields-file-explorer Angular library
-        working-directory: flex-fields/angular
-        run: yarn build:lib:file-explorer
-
       - name: Build flex-fields-ckeditor Angular library
         working-directory: flex-fields/angular
         run: yarn build:lib:ckeditor
@@ -320,25 +251,8 @@ jobs:
           }
           node ./flex-fields/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
 
-      - name: Pack flex-fields-file-explorer Angular library
-        shell: pwsh
-        working-directory: flex-fields/angular
-        run: |
-          New-Item -ItemType Directory -Force ../../artifacts/npm/flex-fields-file-explorer | Out-Null
-          npm pack ./dist/flex-fields-file-explorer --pack-destination ../../artifacts/npm/flex-fields-file-explorer
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-      - name: Smoke-test flex-fields-file-explorer Angular package
-        shell: pwsh
-        run: |
-          $tarballs = @(Get-ChildItem ./artifacts/npm/flex-fields-file-explorer/*.tgz)
-          if ($tarballs.Count -ne 1) {
-            throw "Expected one flex-fields-file-explorer Angular package tarball, found $($tarballs.Count)."
-          }
-          node ./flex-fields/.github/scripts/smoke-test-file-explorer-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
-
-      # No smoke-test-*.mjs script exists yet for this one (the existing scripts hardcode the
-      # @dignite/ng.flex-fields / file-explorer dependency shape) - it is now packed and published
+      # No smoke-test-*.mjs script exists yet for this one (the existing script hardcodes the
+      # @dignite/ng.flex-fields dependency shape) - it is now packed and published
       # to npmjs like its siblings, just not install-tested in CI yet.
       - name: Pack flex-fields-ckeditor Angular library
         shell: pwsh
@@ -348,7 +262,7 @@ jobs:
           npm pack ./dist/flex-fields-ckeditor --pack-destination ../../artifacts/npm/flex-fields-ckeditor
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      # The real pre-publish gate for issue #211: installs the five tarballs the pack steps above
+      # The real pre-publish gate for issue #211: installs the three tarballs the pack steps above
       # just produced with Yarn Classic, using `file:` dependencies so each package's transitive
       # `@dignite/*` edges get resolved the same way they would against a registry - a `file:`
       # dependency's version comes from the tarball's own package.json, and Yarn Classic decides
@@ -361,38 +275,6 @@ jobs:
       - name: Verify packed Angular packages install as a single copy each
         shell: bash
         run: node ./build/verify-npm-single-copy.mjs packed ./artifacts/npm
-
-      # --- file-storing HTTP E2E smoke test (file-explorer's demo host only; notifications has no
-      #     equivalent host-level E2E script) ---
-      - name: Migrate file-storing host database for HTTP E2E smoke test
-        run: dotnet run --project file-storing/host/Dignite.FileExplorer.Web.Host/Dignite.FileExplorer.Web.Host.csproj --no-build --configuration Release -- --migrate-database
-
-      - name: Start file-storing host for HTTP E2E smoke test
-        shell: bash
-        run: |
-          nohup dotnet run --project file-storing/host/Dignite.FileExplorer.Web.Host/Dignite.FileExplorer.Web.Host.csproj --no-build --configuration Release -- --urls http://127.0.0.1:5000 > host-e2e.log 2>&1 &
-          echo $! > host-e2e.pid
-          for attempt in {1..60}; do
-            if curl --fail --silent http://127.0.0.1:5000/health-status > /dev/null; then
-              exit 0
-            fi
-            sleep 2
-          done
-          cat host-e2e.log
-          exit 1
-
-      - name: Run file-storing HTTP E2E and proxy smoke test
-        env:
-          FILE_EXPLORER_BASE_URL: http://127.0.0.1:5000
-        run: node ./file-storing/.github/scripts/smoke-test-file-explorer-http.mjs
-
-      - name: Stop file-storing host after HTTP E2E smoke test
-        if: always()
-        shell: bash
-        run: |
-          if [ -f host-e2e.pid ]; then
-            kill "$(cat host-e2e.pid)" || true
-          fi
 
       - name: Upload release packages
         uses: actions/upload-artifact@v7
@@ -443,7 +325,7 @@ jobs:
           gh_packages_npmrc="$(mktemp)"
           echo "@dignite-projects:registry=https://npm.pkg.github.com" >> "$gh_packages_npmrc"
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> "$gh_packages_npmrc"
-          for dir in file-storing notifications flex-fields flex-fields-ckeditor flex-fields-file-explorer; do
+          for dir in notifications flex-fields flex-fields-ckeditor; do
             tarball=$(ls ./artifacts/npm/"$dir"/*.tgz)
             workdir=$(mktemp -d)
             tar -xzf "$tarball" -C "$workdir"
@@ -512,19 +394,11 @@ jobs:
       - name: Publish tagged Angular packages to npm
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          npm publish ./artifacts/npm/file-storing/*.tgz \
-            --access public \
-            --tag '${{ steps.channel.outputs.npm-tag }}' \
-            --provenance
           npm publish ./artifacts/npm/notifications/*.tgz \
             --access public \
             --tag '${{ steps.channel.outputs.npm-tag }}' \
             --provenance
           npm publish ./artifacts/npm/flex-fields/*.tgz \
-            --access public \
-            --tag '${{ steps.channel.outputs.npm-tag }}' \
-            --provenance
-          npm publish ./artifacts/npm/flex-fields-file-explorer/*.tgz \
             --access public \
             --tag '${{ steps.channel.outputs.npm-tag }}' \
             --provenance
@@ -538,7 +412,7 @@ jobs:
       # second half: it verifies the *published* outcome, which only exists from this point on and
       # which the packed check structurally cannot see - a dist-tag pointing at the wrong version, or
       # any other resolution difference that only shows up against the real registry rather than a
-      # local tarball. All three Angular workspaces here and every downstream consumer install with
+      # local tarball. Both Angular workspaces here and every downstream consumer install with
       # Yarn Classic, same as the packed check, so this stays a like-for-like comparison against it.
       #
       # Deliberately after publishing rather than before: it resolves the real versions from npmjs,

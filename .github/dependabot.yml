@@ -34,29 +34,6 @@ updates:
         versions: [">= 3.0.0"]
 
   - package-ecosystem: nuget
-    directory: "/file-storing/host/Dignite.FileExplorer.Web.Host"
-    schedule:
-      interval: monthly
-    groups:
-      abp:
-        patterns:
-          - "Volo.Abp.*"
-      microsoft:
-        patterns:
-          - "Microsoft.*"
-          - "System.*"
-      others:
-        patterns:
-          - "*"
-    ignore:
-      - dependency-name: "Volo.Abp.*"
-        update-types: ["version-update:semver-minor", "version-update:semver-major"]
-      - dependency-name: "Volo.Abp.Studio.Client.AspNetCore"
-        versions: [">= 3.0.9"]
-      - dependency-name: "Microsoft.OpenApi"
-        versions: [">= 3.0.0"]
-
-  - package-ecosystem: nuget
     directory: "/notifications/host/Dignite.NotificationCenter.Web.Host"
     schedule:
       interval: monthly
@@ -101,45 +78,6 @@ updates:
         versions: [">= 3.0.9"]
       - dependency-name: "Microsoft.OpenApi"
         versions: [">= 3.0.0"]
-
-  - package-ecosystem: npm
-    directory: "/file-storing/angular"
-    schedule:
-      interval: monthly
-    groups:
-      angular:
-        patterns:
-          - "@angular/*"
-          - "@angular-eslint/*"
-          - "@angular-devkit/*"
-      abp-ng:
-        patterns:
-          - "@abp/ng.*"
-      others:
-        patterns:
-          - "*"
-    ignore:
-      - dependency-name: "@abp/ng.*"
-        update-types: ["version-update:semver-minor", "version-update:semver-major"]
-      - dependency-name: "@angular/*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@angular-eslint/*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@angular-devkit/*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "ng-packagr"
-        update-types: ["version-update:semver-major"]
-      # eslint 9+ switched to flat config, a breaking change unrelated to Angular/ABP; needs a
-      # deliberate config migration, not an auto-bump.
-      - dependency-name: "eslint"
-        update-types: ["version-update:semver-major"]
-      # @angular/compiler-cli's peer range is narrow (e.g. 21.2.19 wants >=5.9 <6.1) - a major
-      # jump breaks the Angular compiler outright.
-      - dependency-name: "typescript"
-        update-types: ["version-update:semver-major"]
-      # ng-zorro-antd's major version tracks Angular's own (22.0.1 requires @angular/core ^22.0.0).
-      - dependency-name: "ng-zorro-antd"
-        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: npm
     directory: "/notifications/angular"
