@@ -13,10 +13,11 @@ public class CKEditorConfiguration : FieldConfigurationBase
     }
 
     /// <summary>
-    /// Blob container the image-upload adapter posts to. No default - unset simply means the Angular
-    /// control omits the image-upload toolbar button entirely, rather than the FileExplorer field
-    /// type's harder failure mode of the whole control being unusable, since a CKEditor field is still
-    /// perfectly usable with no image support at all.
+    /// Blob container the image-upload adapter posts to, passed to the host's upload API as the
+    /// <c>containerName</c> query parameter. No default - unset simply means the Angular control omits
+    /// the image-upload toolbar button entirely, since a CKEditor field is still perfectly usable with
+    /// no image support at all. The upload API itself is the host's to provide (see the
+    /// <c>@dignite/ng.flex-fields-ckeditor</c> README); without it the button is omitted as well.
     /// </summary>
     public string? ImagesContainerName {
         get => ConfigurationDictionary.GetConfiguration<string?>(CKEditorConfigurationNames.ImagesContainerName, null);

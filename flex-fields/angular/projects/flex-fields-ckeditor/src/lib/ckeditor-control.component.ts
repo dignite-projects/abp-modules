@@ -1,6 +1,6 @@
 import { Component, Input, OnDestroy, OnInit, ViewEncapsulation, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CoreModule, RestService } from '@abp/ng.core';
+import { CoreModule } from '@abp/ng.core';
 import { AbstractControl, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import type { EditorRelaxedConstructor } from '@ckeditor/ckeditor5-integrations-common';
@@ -12,12 +12,13 @@ import { CKEditorMode } from './ckeditor-mode';
 import { buildEditorConfig, resolveEditorClass } from './ckeditor-editor-config';
 import { CKEditorConfiguration } from './ckeditor-configuration';
 import { CKEditorUploadAdapter } from './ckeditor-upload-adapter';
+import { CKEDITOR_UPLOAD_PROVIDER } from './ckeditor-upload-provider';
 
 /**
  * Edits the value of a `CKEditor` field.
  *
  * The editor class (Mode), plugin list (ContentFormat's Markdown swap), and image-upload wiring
- * (ImagesContainerName) are all decided once, at editor-creation time, from this field's own
+ * (ImagesContainerName, plus the host's `CKEDITOR_UPLOAD_PROVIDER`) are all decided once, at editor-creation time, from this field's own
  * configuration - see `ckeditor-editor-config.ts` for why none of the three is runtime-togglable
  * afterwards. `ngOnInit` doing this exactly once (rather than reacting to `fields` re-assignment) is
  * safe because the host dispatcher always creates a fresh component instance for a changed field
@@ -36,7 +37,7 @@ import { CKEditorUploadAdapter } from './ckeditor-upload-adapter';
   imports: [CommonModule, CoreModule, ReactiveFormsModule, CKEditorModule],
 })
 export class CKEditorControlComponent extends FieldTypeControlBase implements OnInit, OnDestroy {
-  private readonly restService = inject(RestService);
+  private readonly uploadProvider = inject(CKEDITOR_UPLOAD_PROVIDER, { optional: true });
   private readonly styleLoader = inject(FlexFieldsStyleLoader);
 
   /**
@@ -77,7 +78,7 @@ export class CKEditorControlComponent extends FieldTypeControlBase implements On
     const seeded = this.hasStoredValue ? String(this.selectedValue) : initialContent;
 
     // CKEditorComponent (from @ckeditor/ckeditor5-angular) implements ControlValueAccessor itself
-    // (unlike FileExplorerPickerComponent), so binding [formControlName] directly on <ckeditor> in the
+    // (unlike a picker-style field type), so binding [formControlName] directly on <ckeditor> in the
     // template is enough - no manual (change) => setValue() plumbing needed.
     return this.fb.control(seeded, validators);
   }
@@ -119,18 +120,19 @@ export class CKEditorControlComponent extends FieldTypeControlBase implements On
       editorConfig: buildEditorConfig(module, {
         mode,
         contentFormat,
-        imageUploadEnabled: containerName.length > 0,
+        imageUploadEnabled: containerName.length > 0 && this.uploadProvider !== null,
       }),
     });
   }
 
   onReady(editor: Editor): void {
     const containerName = (this.fieldValue!.field.configuration['CKEditor.ImagesContainerName'] as string) ?? '';
-    if (!containerName) {
+    const uploadProvider = this.uploadProvider;
+    if (!containerName || !uploadProvider) {
       return;
     }
 
     editor.plugins.get('FileRepository').createUploadAdapter = loader =>
-      new CKEditorUploadAdapter(loader, containerName, this.restService);
+      new CKEditorUploadAdapter(loader, containerName, uploadProvider);
   }
 }

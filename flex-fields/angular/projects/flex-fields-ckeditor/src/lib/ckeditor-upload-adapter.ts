@@ -1,31 +1,17 @@
-import { firstValueFrom } from 'rxjs';
-import { RestService } from '@abp/ng.core';
+import { firstValueFrom, from } from 'rxjs';
 import type { FileLoader, UploadAdapter, UploadResponse } from 'ckeditor5';
+import { CKEditorUploadProvider } from './ckeditor-upload-provider';
 
 /**
- * Minimal shape of Dignite.FileExplorer's `FileDescriptorDto` this adapter actually reads. Declared
- * locally rather than imported from `@dignite/ng.file-explorer`: that package's proxy service is not
- * part of its public API (see its `public-api.ts`), and pulling in the whole package for one REST call
- * would be exactly the dependency weight `@dignite/ng.flex-fields-file-explorer`'s own README says to
- * avoid paying for unless you need the picker UI.
- */
-interface UploadedFileDescriptor {
-  url?: string;
-}
-
-/**
- * CKEditor 5 image-upload adapter posting to Dignite.FileExplorer's existing file upload API. The wire
- * contract here is copied from the actual, working call in `@dignite/ng.file-explorer`'s own
- * `FileExplorerModalComponent.uploadFile()` (a `FormData` with a single `file` field, `containerName`
- * as a query param, `POST /api/file-explorer/files`, response is a `FileDescriptorDto` with `url`) -
- * not inferred from the legacy dignite-abp CKEditor integration. Wired in by
- * `CKEditorControlComponent.onReady`, only when `CKEditor.ImagesContainerName` is set.
+ * CKEditor 5 image-upload adapter that hands the file to the host's {@link CKEditorUploadProvider}.
+ * Wired in by `CKEditorControlComponent.onReady`, only when the host registered a provider under
+ * `CKEDITOR_UPLOAD_PROVIDER` and the field's `CKEditor.ImagesContainerName` is set.
  */
 export class CKEditorUploadAdapter implements UploadAdapter {
   constructor(
     private readonly loader: FileLoader,
     private readonly containerName: string,
-    private readonly restService: RestService,
+    private readonly uploadProvider: CKEditorUploadProvider,
   ) {}
 
   async upload(): Promise<UploadResponse> {
@@ -34,26 +20,12 @@ export class CKEditorUploadAdapter implements UploadAdapter {
       throw new Error('No file to upload.');
     }
 
-    const body = new FormData();
-    body.append('file', file, file.name);
-
-    const descriptor = await firstValueFrom(
-      this.restService.request<FormData, UploadedFileDescriptor>(
-        {
-          method: 'POST',
-          url: '/api/file-explorer/files',
-          params: { containerName: this.containerName },
-          body,
-        },
-        { apiName: 'FileExplorer' },
-      ),
-    );
-
-    if (!descriptor.url) {
+    const url = await firstValueFrom(from(this.uploadProvider.upload(file, this.containerName)));
+    if (!url) {
       throw new Error('Upload succeeded but the server did not return a file URL.');
     }
 
-    return { default: descriptor.url };
+    return { default: url };
   }
 
   abort(): void {
