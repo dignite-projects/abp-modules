@@ -29,7 +29,7 @@
     <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
     <PackageVersion Include="SQLitePCLRaw.core" Version="2.1.12" />
     <PackageVersion Include="SQLitePCLRaw.provider.e_sqlite3" Version="2.1.12" />
-    <PackageVersion Include="Scriban" Version="7.2.7" />
+    <PackageVersion Include="Scriban" Version="7.5.0" />
   </ItemGroup>
 
   <ItemGroup Label="ABP 10.5.0">
@@ -87,7 +87,7 @@
     manifest generation for embedded wwwroot content (ABP's AddEmbedded/ManifestEmbeddedFileProvider).
   -->
   <ItemGroup Label="Embedded static and localization resources">
-    <PackageVersion Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.11" />
+    <PackageVersion Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.12" />
   </ItemGroup>
 
   <ItemGroup Label="System.Text.Json (only needed for netstandard targets; in-box on net10.0)">
@@ -137,7 +137,7 @@
   </ItemGroup>
 
   <ItemGroup Label="SourceLink">
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.400" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.401" />
   </ItemGroup>
 
   <!--
@@ -150,7 +150,7 @@
     output is new here, not an existing pattern being extended.
   -->
   <ItemGroup Label="CKEditor bolt-on: Markdown/HTML conversion and sanitization (Dignite.Abp.FlexFields.CKEditor.Web only)">
-    <PackageVersion Include="Markdig" Version="1.3.2" />
+    <PackageVersion Include="Markdig" Version="1.4.0" />
     <PackageVersion Include="HtmlSanitizer" Version="9.2.1039" />
   </ItemGroup>
 
