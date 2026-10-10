@@ -8,16 +8,9 @@ using Dignite.Abp.FlexFields.Demo.Entities;
 using Dignite.Abp.FlexFields.Demo.Services.FlexFields;
 using Dignite.Abp.FlexFields.EntityFrameworkCore;
 using Dignite.Abp.FlexFields.CKEditor.Web;
-using Dignite.Abp.FlexFields.FileExplorer.Web;
 using Dignite.Abp.FlexFields.Web;
 using Dignite.Abp.FlexFields.Demo.Localization;
 using Dignite.Abp.FlexFields.Demo.HealthChecks;
-using Dignite.Abp.FileStoring;
-using Dignite.FileExplorer;
-using Dignite.FileExplorer.EntityFrameworkCore;
-using Dignite.FileExplorer.Permissions;
-using Volo.Abp.BlobStoring;
-using Volo.Abp.BlobStoring.Database;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using OpenIddict.Validation.AspNetCore;
 using Volo.Abp;
@@ -81,12 +74,6 @@ namespace Dignite.Abp.FlexFields.Demo;
     typeof(AbpAspNetCoreSerilogModule),
     typeof(AbpStudioClientAspNetCoreModule),
 
-    // FileExplorer module packages - backs the FileExplorer bolt-on field type; see the csproj
-    // comment on why this demo (uniquely) references another module tree.
-    typeof(FileExplorerApplicationModule),
-    typeof(FileExplorerHttpApiModule),
-    typeof(FileExplorerEntityFrameworkCoreModule),
-
     // theme
     typeof(AbpAspNetCoreMvcUiLeptonXLiteThemeModule),
 
@@ -131,14 +118,8 @@ namespace Dignite.Abp.FlexFields.Demo;
     // Controllers/ProductsWebController.cs and Views/ProductsWeb/Index.cshtml.
     typeof(FlexFieldsWebModule),
 
-    // FileExplorer field type bolt-on (references only FlexFields.Abstractions - see its own doc
-    // comment) plus its SSR view - one module dependency for both, per its own doc comment. It's this
-    // demo's separate FileExplorer *module* reference (above, FileExplorerApplicationModule etc.) that
-    // supplies the backend the Angular picker actually talks to.
-    typeof(FlexFieldsFileExplorerWebModule),
-
     // CKEditor field type bolt-on plus its SSR view (Markdig + HtmlSanitizer flow through
-    // transitively) - one module dependency for both, same pattern as FlexFieldsFileExplorerWebModule.
+    // transitively) - one module dependency for both.
     typeof(FlexFieldsCKEditorWebModule)
 )]
 public class DemoModule : AbpModule
@@ -207,8 +188,7 @@ public class DemoModule : AbpModule
         // This host is mostly API + Swagger, plus the one plain (no Theme.Shared, no bundling)
         // FlexFields.Web demo page - it has never run `abp install-libs`, so wwwroot/libs does not
         // exist. Without this, AbpMvcLibsOptions' dev-time check intercepts every request - including
-        // /swagger - with a "Libs Folder is Missing" error page. Mirrors
-        // file-storing/host/Dignite.FileExplorer.Web.Host/HostModule.cs.
+        // /swagger - with a "Libs Folder is Missing" error page.
         Configure<AbpMvcLibsOptions>(options =>
         {
             options.CheckLibs = false;
@@ -219,7 +199,6 @@ public class DemoModule : AbpModule
         ConfigureHealthChecks(context);
         ConfigureSwagger(context.Services, configuration);
         ConfigureAutoApiControllers();
-        ConfigureBlobStoring();
         ConfigureLocalization();
         ConfigureCors(context, configuration);
         ConfigureDataProtection(context);
@@ -237,53 +216,6 @@ public class DemoModule : AbpModule
     private void ConfigureHealthChecks(ServiceConfigurationContext context)
     {
         context.Services.AddDemoHealthChecks();
-    }
-
-    // The FileExplorer field type has no fallback container of its own (an unconfigured field just
-    // shows a "not configured" warning - see FileExplorerControlComponent.isContainerConfigured), so
-    // the seeded "images" ProductField points its FileExplorer.FileContainerName at this container by
-    // name; it needs to exist and be authorized before that field is usable in the demo.
-    private void ConfigureBlobStoring()
-    {
-        Configure<AbpBlobStoringOptions>(options =>
-        {
-            options.Containers.Configure("images", container =>
-            {
-                container.UseDatabase();
-                container.AddFileSizeLimitHandler(config =>
-                {
-                    config.MaxFileSize = 10 * 1024 * 1024;
-                });
-                container.AddFileTypeCheckHandler(config =>
-                {
-                    config.AllowedFileTypeNames = new[]
-                    {
-                        ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".csv",
-                        ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp",
-                    };
-                });
-                container.SetAuthorizationConfiguration(config =>
-                {
-                    config.CreateDirectoryPermissionName = FileExplorerPermissions.Files.Management;
-                    config.CreateFilePermissionName = FileExplorerPermissions.Files.Management;
-                    config.UpdateFilePermissionName = FileExplorerPermissions.Files.Management;
-                    config.DeleteFilePermissionName = FileExplorerPermissions.Files.Management;
-                    // GetFilePermissionName deliberately left unset: FileDescriptorAuthorizationHandler
-                    // treats an unset Get permission as "public read" (see its own comment - "When
-                    // permissions are not set, all users will be authorized to get files"). Uploads/
-                    // edits/deletes still require FileExplorerPermissions.Files.Management above; this
-                    // only opens reads. Required for CKEditor's inline images specifically: CKEditor
-                    // embeds the plain absolute file URL as <img src>, both while live-editing and in the
-                    // read-only view/SSR renderers - there is no way to attach an Authorization header to
-                    // a bare <img> tag, and gating this container's reads left the images unloadable
-                    // (blank/broken) from the Angular dev server's origin, where the auth cookie's
-                    // SameSite policy does not carry across the http:4200/https:44330 scheme mismatch.
-                    // The FileExplorer field's own picker preview sidesteps this by fetching the bytes
-                    // through the authenticated HttpClient and rendering a blob: URL instead - not an
-                    // option for arbitrary HTML CKEditor renders.
-                });
-            });
-        });
     }
 
     private void ConfigureStudio(IHostEnvironment hostingEnvironment)

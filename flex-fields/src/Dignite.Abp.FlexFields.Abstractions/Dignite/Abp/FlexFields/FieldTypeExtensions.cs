@@ -7,7 +7,7 @@ public static class FieldTypeExtensions
     /// <para>
     /// This is <see cref="IFieldType.IndexValueType"/> restated as the question a caller actually asks, and
     /// it is deliberately the module's answer to give rather than something each downstream re-derives. A
-    /// field type with no index slot (<c>FileExplorer</c>, or a RichText/Matrix type a downstream adds) is
+    /// field type with no index slot (<c>CKEditor</c>, or a RichText/Matrix type a downstream adds) is
     /// skipped by <c>FlexFieldIndexManagerBase</c> <b>regardless of a field's <c>Searchable</c> flag</b>, so
     /// a downstream that lets an admin mark such a field searchable is offering a setting that silently
     /// does nothing. Two places need this: a field designer, to disable the setting, and the code that

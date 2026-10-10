@@ -17,7 +17,7 @@
     inline versions, so a direct reference is how we force a patched version). Each entry
     lifts a transitive package to its first patched release; drop it once the upstream
     ABP/Swashbuckle/MagicOnion/EF Core graph rolls forward past it. Same pins as
-    file-storing/host/Dignite.FileExplorer.Web.Host/ - both hosts pull the same vulnerable
+    flex-fields/demo/Dignite.Abp.FlexFields.Demo/ - both hosts pull the same vulnerable
     transitive packages through the same ABP modules.
       MessagePack                3.1.1  -> 3.1.7   (GHSA-hv8m-jj95-wg3x et al.; via Volo.Abp.Studio.Client.AspNetCore -> MagicOnion)
       Microsoft.OpenApi          2.3.0  -> 2.7.5   (GHSA-v5pm-xwqc-g5wc; via Volo.Abp.Swashbuckle -> Swashbuckle.AspNetCore)

@@ -7,6 +7,7 @@ public static class FileErrorCodes
         public const string FileTooLarge = "Dignite.Abp.File:0001";
         public const string InvalidImageType = "Dignite.Abp.File:0002";
         public const string MissingFileExtension = "Dignite.Abp.File:0003";
+        public const string ContentTypeMismatch = "Dignite.Abp.File:0005";
     }
 
     public static class Containers

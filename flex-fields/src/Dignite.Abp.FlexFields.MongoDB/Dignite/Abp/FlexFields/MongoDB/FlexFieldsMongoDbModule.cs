@@ -11,7 +11,7 @@ namespace Dignite.Abp.FlexFields.MongoDB;
 /// <see cref="FlexFieldsMongoDbContextExtensions"/>. The dependency declarations exist so
 /// <c>FlexFieldConsts</c> and the field-type registrations are in the graph.
 /// <para>
-/// Contrast a module that owns entities (this repository's <c>FileExplorerMongoDbModule</c>, say), which
+/// Contrast a module that owns entities (this repository's <c>NotificationCenterMongoDbModule</c>, say), which
 /// calls <c>AddMongoDbContext</c> and registers repositories. FlexFields has no
 /// <c>ConnectionStringName</c> and no collection-name prefix, because it has nothing to name.
 /// </para>

@@ -10,7 +10,6 @@ import { provideThemeLeptonX } from '@abp/ng.theme.lepton-x';
 import { provideSideMenuLayout } from '@abp/ng.theme.lepton-x/layouts';
 import { provideLogo, withEnvironmentOptions } from "@abp/ng.theme.shared";
 import { provideFlexFields } from '@dignite/ng.flex-fields';
-import { provideFileExplorerFieldType } from '@dignite/ng.flex-fields-file-explorer';
 import { provideCKEditorFieldType } from '@dignite/ng.flex-fields-ckeditor';
 import { ApplicationConfig } from '@angular/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -44,14 +43,9 @@ export const appConfig: ApplicationConfig = {
     // Registers the eight built-in field types' FieldTypeResolver - without this, <ff-flex-field-*>
     // renders nothing, because the registry it looks the field type up in is empty.
     provideFlexFields(),
-    // Bolt-on: the FileExplorer field type, demonstrating a field type registered from outside
-    // the flex-fields package itself. Requires @dignite/ng.file-explorer's picker to actually
-    // browse/upload files, which needs a running FileExplorer backend - see this demo's README
-    // for the current state of that wiring.
-    provideFileExplorerFieldType(),
-    // Bolt-on: rich text edited with CKEditor 5, HTML or per-field Markdown. Image upload (when a
-    // field configures CKEditor.ImagesContainerName) posts straight to Dignite.FileExplorer's REST
-    // API via RestService - no @dignite/ng.file-explorer dependency needed for that alone.
+    // Bolt-on: rich text edited with CKEditor 5, HTML or per-field Markdown - a field type registered
+    // from outside the flex-fields package itself. No image upload here: that needs an upload API the
+    // host provides through CKEDITOR_UPLOAD_PROVIDER, and this demo has none.
     provideCKEditorFieldType(),
   ]
 };

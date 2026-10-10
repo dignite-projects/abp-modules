@@ -11,17 +11,7 @@ $ErrorActionPreference = 'Stop'
 $artifacts = (Resolve-Path -LiteralPath $ArtifactsPath).Path
 $packageIds = @(
     'Dignite.Abp.FileStoring',
-    'Dignite.Abp.FileStoring.Imaging',
-    'Dignite.FileExplorer.Domain.Shared',
-    'Dignite.FileExplorer.Domain',
-    'Dignite.FileExplorer.Application.Contracts',
-    'Dignite.FileExplorer.Application',
-    'Dignite.FileExplorer.EntityFrameworkCore',
-    'Dignite.FileExplorer.MongoDB',
-    'Dignite.FileExplorer.HttpApi',
-    'Dignite.FileExplorer.HttpApi.Client',
-    'Dignite.FileExplorer.Mcp',
-    'Dignite.FileExplorer.Installer'
+    'Dignite.Abp.FileStoring.Imaging'
 )
 
 foreach ($packageId in $packageIds) {
@@ -63,20 +53,12 @@ namespace PackageSmoke;
 
 public static class PackageSurface
 {
-    public static readonly Type[] ModuleTypes =
+    public static readonly Type[] PublicTypes =
     [
         typeof(Dignite.Abp.FileStoring.DigniteAbpFileStoringModule),
         typeof(Dignite.Abp.FileStoring.Imaging.DigniteAbpFileStoringImagingModule),
-        typeof(Dignite.FileExplorer.FileExplorerDomainSharedModule),
-        typeof(Dignite.FileExplorer.FileExplorerDomainModule),
-        typeof(Dignite.FileExplorer.FileExplorerApplicationContractsModule),
-        typeof(Dignite.FileExplorer.FileExplorerApplicationModule),
-        typeof(Dignite.FileExplorer.EntityFrameworkCore.FileExplorerEntityFrameworkCoreModule),
-        typeof(Dignite.FileExplorer.MongoDB.FileExplorerMongoDbModule),
-        typeof(Dignite.FileExplorer.FileExplorerHttpApiModule),
-        typeof(Dignite.FileExplorer.FileExplorerHttpApiClientModule),
-        typeof(Dignite.FileExplorer.FileExplorerMcpModule),
-        typeof(Dignite.FileExplorer.FileExplorerInstallerModule)
+        typeof(Dignite.Abp.FileStoring.IFileStorer),
+        typeof(Dignite.Abp.FileStoring.StoredFileInfo)
     ];
 }
 '@

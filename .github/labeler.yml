@@ -20,7 +20,6 @@
 "area: angular":
   - changed-files:
       - any-glob-to-any-file:
-          - 'file-storing/angular/**'
           - 'notifications/angular/**'
           - 'flex-fields/angular/**'
 

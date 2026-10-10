@@ -10,7 +10,7 @@ namespace Dignite.Abp.FlexFields.CKEditor;
 /// <see cref="CKEditorConfiguration.ContentFormat"/> is <see cref="CKEditorContentFormat.Markdown"/>.
 ///
 /// <para>
-/// <b>Not indexable on purpose</b>, the same reasoning as <c>FileExplorerFieldType</c>:
+/// <b>Not indexable on purpose</b>:
 /// <see cref="IFieldType.IndexValueType"/>'s own doc names RichText as the canonical null example, and
 /// free-text rich content has no sensible typed index column to land in. No override of
 /// <see cref="FieldTypeBase.GetSearchableValues"/> is needed - the base implementation already yields
@@ -21,8 +21,8 @@ namespace Dignite.Abp.FlexFields.CKEditor;
 /// <b>Zero reference to any rendering, sanitization or Markdown library.</b> This project stores and
 /// validates a plain string only; converting Markdown to HTML and sanitizing it for display is
 /// <c>Dignite.Abp.FlexFields.CKEditor.Web</c>'s job server-side, or the Angular control/view
-/// components' job client-side - the same boundary <c>FileExplorerFieldType</c> keeps against
-/// <c>Dignite.FileExplorer</c>.
+/// components' job client-side. Likewise no reference to any file or upload API: inline images go to
+/// whatever upload endpoint the host names to the Angular control.
 /// </para>
 /// </summary>
 public class CKEditorFieldType : FieldTypeBase

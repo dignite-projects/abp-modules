@@ -11,18 +11,16 @@ dotnet build Dignite.Abp.Modules.slnx
 dotnet test Dignite.Abp.Modules.slnx
 
 # One module in isolation (same projects, smaller graph)
-dotnet build file-storing/Dignite.FileExplorer.slnx
+dotnet build file-storing/Dignite.Abp.FileStoring.slnx
 dotnet build notifications/Dignite.NotificationCenter.slnx
 ```
 
-The Angular libraries live in three Angular CLI workspaces, installed with Yarn Classic (v1) and built
-separately from MSBuild. Build `file-storing` first: `flex-fields/angular` installs
-`@dignite/ng.file-explorer` from `file-storing/angular/dist/file-explorer`.
+The Angular libraries live in two Angular CLI workspaces, installed with Yarn Classic (v1) and built
+separately from MSBuild. (`file-storing/` has none: it is a .NET library layer only.)
 
 ```bash
-cd file-storing/angular  && yarn install && yarn build:lib
 cd notifications/angular && yarn install && yarn build:lib
-cd flex-fields/angular   && yarn install && yarn build:lib && yarn build:lib:file-explorer && yarn build:lib:ckeditor
+cd flex-fields/angular   && yarn install && yarn build:lib && yarn build:lib:ckeditor
 ```
 
 ## Code conventions
@@ -132,12 +130,10 @@ safe to upgrade, which is the opposite of what this project's positioning needs.
 | Property | Segments | Purpose |
 |----------|----------|---------|
 | `<Version>` in [`Directory.Build.props`](./Directory.Build.props) | 3-segment SemVer (+ optional pre-release suffix) | The NuGet package version for **every packable project across all three modules**, and the value a `v*` tag must match. **This is the release version.** |
-| `version` in [`file-storing/angular/projects/file-explorer/package.json`](./file-storing/angular/projects/file-explorer/package.json) | Same value as `<Version>` | npm version for `@dignite/ng.file-explorer`. |
 | `version` in [`notifications/angular/projects/notification-center/package.json`](./notifications/angular/projects/notification-center/package.json) | Same value as `<Version>` | npm version for `@dignite/ng.notification-center`. |
 | `version` in [`flex-fields/angular/projects/flex-fields/package.json`](./flex-fields/angular/projects/flex-fields/package.json) | Same value as `<Version>` | npm version for `@dignite/ng.flex-fields`. |
-| `version` in [`flex-fields/angular/projects/flex-fields-file-explorer/package.json`](./flex-fields/angular/projects/flex-fields-file-explorer/package.json) | Same value as `<Version>` | npm version for `@dignite/ng.flex-fields-file-explorer`. |
 | `version` in [`flex-fields/angular/projects/flex-fields-ckeditor/package.json`](./flex-fields/angular/projects/flex-fields-ckeditor/package.json) | Same value as `<Version>` | npm version for `@dignite/ng.flex-fields-ckeditor`. |
-| `@dignite/*` entries in those `package.json` files' `dependencies` / `peerDependencies` | Same value as `<Version>`, exact — never a `^` range | One package from this repository depending on another (the two `flex-fields-*` bolt-ons on `@dignite/ng.flex-fields` and `@dignite/ng.file-explorer`). A range would only ever admit an *older* sibling, which is how a host ends up with two copies of `@dignite/ng.flex-fields` — see issue #211. |
+| `@dignite/*` entries in those `package.json` files' `dependencies` / `peerDependencies` | Same value as `<Version>`, exact — never a `^` range | One package from this repository depending on another (the `flex-fields-ckeditor` bolt-on on `@dignite/ng.flex-fields`). A range would only ever admit an *older* sibling, which is how a host ends up with two copies of `@dignite/ng.flex-fields` — see issue #211. |
 | `<AssemblyVersion>` | 4-segment | Pinned at `1.0.0.0` and **never** bumped with `<Version>`, avoiding assembly-binding churn. Load-bearing for notifications specifically — see [`notifications-invariants`](./notifications/.claude/skills/notifications-invariants/SKILL.md) §1. Don't "fix" this to match `<Version>`. |
 | Git tag | `vX.Y.Z[-suffix]` | Created on the release commit; the release workflow reads `<Version>` and fails if the tag doesn't match — tags do not drive the version number. |
 | `## [x.y.z]` heading in [`CHANGELOG.md`](./CHANGELOG.md) | 3-segment SemVer (+ optional pre-release suffix) | Human-facing release notes, extracted verbatim into the GitHub Release body. |

@@ -7,10 +7,10 @@ developed together in one repository and released in lockstep.
 
 | Module | What it is | Docs |
 |---|---|---|
-| [`file-storing/`](file-storing/) | An extensible **file-upload framework** layered on ABP BlobStoring (per-container `IFileHandler` pipeline: size limits, type checking, image resizing), plus an optional DDD **File Explorer** backend (directory tree, persisted file metadata, REST API) and an Angular UI library. | [README](file-storing/README.md) |
+| [`file-storing/`](file-storing/) | A thin **upload layer** on ABP BlobStoring: a per-container `IFileHandler` pipeline (size limits, type checking, image resizing) and `IFileStorer`, which runs it with a streaming size cap and content-based MIME detection. No metadata, API or UI — the application that owns the files keeps those. | [README](file-storing/README.md) |
 | [`notifications/`](notifications/) | An extensible, event-driven **notification framework** with pluggable channel notifiers (SignalR, email), plus an optional **Notification Center** (persistent inbox, subscriptions, read/unread state, REST API) with MVC and Angular UI libraries. | [README](notifications/README.md) |
 | [`flex-fields/`](flex-fields/) | Runtime-defined (**"flex"**) fields — a constraint kernel supplying field types, configuration, validation, a per-entity value bag and a derived query index, with EF Core and MongoDB providers, plus an Angular UI library. It owns no domain model: each consuming application defines its own fields. | [README](flex-fields/README.md) |
-| [`aspnetcore-mcp/`](aspnetcore-mcp/) | Shared infrastructure, not a module: hosts the one **MCP (Model Context Protocol) server** an ABP application can have, and lets each module contribute AI-callable tools to it inside its own namespace (`Dignite.FileExplorer.Mcp` does, for files). | [README](aspnetcore-mcp/README.md) |
+| [`aspnetcore-mcp/`](aspnetcore-mcp/) | Shared infrastructure, not a module: hosts the one **MCP (Model Context Protocol) server** an ABP application can have, and lets each module contribute AI-callable tools to it inside its own namespace (`Dignite.Site` and `Dignite.Vault.Extract` do, from their own repositories). | [README](aspnetcore-mcp/README.md) |
 
 Each module is **independently installable** — no module references another; a module's optional
 `*.Mcp` package depends only on the shared `aspnetcore-mcp/` tree. They share this
@@ -48,9 +48,9 @@ abp-modules/
 ├── .github/workflows/           # one build+test workflow, one lockstep release workflow
 ├── aspnetcore-mcp/              # shared MCP server infrastructure (no domain model)
 ├── file-storing/
-│   ├── Dignite.FileExplorer.slnx         # focused solution for this module alone
-│   ├── core/  file-explorer/             # the published class libraries
-│   ├── host/  angular/                   # local-dev demo app + Angular workspace
+│   ├── Dignite.Abp.FileStoring.slnx      # focused solution for this module alone
+│   ├── core/                             # the published class libraries (no demo host)
+│   ├── docs/core-only-decision.md        # why there is no File Explorer / FileService here
 │   └── .claude/skills/                   # module-specific conventions & invariants
 ├── notifications/
 │   ├── Dignite.NotificationCenter.slnx   # focused solution for this module alone
@@ -64,7 +64,7 @@ abp-modules/
     └── docs/flexfields-design.md         # design rationale
 ```
 
-`host/` (or `demo/`) and `angular/` under each module are **local-dev demos only** — they run and
+`host/` (or `demo/`) and `angular/` under a module are **local-dev demos only** — they run and
 exercise the stack end to end, and are never packed or published (`IsPackable=false`). A real
 consuming application brings its own host.
 
@@ -80,7 +80,7 @@ dotnet test Dignite.Abp.Modules.slnx
 To work on one module in isolation, use its own solution — same projects, smaller graph:
 
 ```bash
-dotnet build file-storing/Dignite.FileExplorer.slnx
+dotnet build file-storing/Dignite.Abp.FileStoring.slnx
 dotnet build notifications/Dignite.NotificationCenter.slnx
 ```
 
@@ -93,7 +93,6 @@ in-memory SQLite for the EF Core ones, so no local database install is needed.
 The Angular libraries are separate Node packages, outside MSBuild:
 
 ```bash
-cd file-storing/angular  && npx yarn && npx yarn build:lib
 cd notifications/angular && npx yarn && npx yarn build:lib
 cd flex-fields/angular   && npx yarn && npx yarn build:lib
 ```

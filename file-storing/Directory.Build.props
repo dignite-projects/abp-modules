@@ -2,14 +2,12 @@
 
   <!-- MSBuild imports only the NEAREST Directory.Build.props per project and stops walking up, so
        this file must explicitly import the repo root's to inherit the lockstep <Version> /
-       <AssemblyVersion> / shared metadata.
-       (host/Dignite.FileExplorer.Web.Host/ still opts out of central package management via its
-       own ..\..\common.props import, unaffected by this change.) -->
+       <AssemblyVersion> / shared metadata. -->
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
   <PropertyGroup>
     <Product>Dignite Abp File Storing</Product>
-    <PackageTags>abp;file-storing;blob-storing;file-explorer;aspnetcore</PackageTags>
+    <PackageTags>abp;file-storing;blob-storing;upload;aspnetcore</PackageTags>
   </PropertyGroup>
 
   <!-- Each module keeps its OWN README.md as the packed PackageReadmeFile, deliberately: the root

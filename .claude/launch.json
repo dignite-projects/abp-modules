@@ -8,19 +8,6 @@
       "port": 4200
     },
     {
-      "name": "file-storing-angular",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["yarn", "--cwd", "file-storing/angular", "start"],
-      "port": 4200
-    },
-    {
-      "name": "file-storing-host",
-      "runtimeExecutable": "dotnet",
-      "runtimeArgs": ["run", "--project", "file-storing/host/Dignite.FileExplorer.Web.Host"],
-      "port": 44390,
-      "url": "https://localhost:44390"
-    },
-    {
       "name": "notifications-host",
       "runtimeExecutable": "dotnet",
       "runtimeArgs": ["run", "--project", "notifications/host/Dignite.NotificationCenter.Web.Host"],

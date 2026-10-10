@@ -67,7 +67,7 @@ holds a commercial CKEditor license and wants those terms instead can register i
 |---|---|
 | `CKEditor.Mode` | `Basic` (0, `BalloonEditor` — floating toolbar on selection, no persistent toolbar bar) or `Full` (1, `ClassicEditor`). Default `Full`. Named for editing power, not the underlying CKEditor 5 editor class — see below. |
 | `CKEditor.ContentFormat` | `Html` (0) or `Markdown` (1, GitHub Flavored). Default `Html`. Decided once, at editor-creation time — not a runtime toggle (see `ckeditor-editor-config.ts`). Applies in both Mode values — it's about which data format the field stores, not which toolbar buttons show. |
-| `CKEditor.ImagesContainerName` | Blob container the image-upload adapter posts to, via `Dignite.FileExplorer`'s existing upload API. Unset simply omits the upload-image toolbar button. Full mode only — see below; the config designer hides this field and clears any stored value the moment Mode is switched to Basic. |
+| `CKEditor.ImagesContainerName` | Blob container the image-upload adapter passes to the host's `CKEDITOR_UPLOAD_PROVIDER` (see [Image upload](#image-upload)). Unset simply omits the upload-image toolbar button. Full mode only — see below; the config designer hides this field and clears any stored value the moment Mode is switched to Basic. |
 | `CKEditor.InitialContent` | Seed value for a newly-created field with no stored value yet. |
 
 `Mode`/`ContentFormat` are stored as their **numeric ordinal** (matching the server's
@@ -79,13 +79,53 @@ holds a commercial CKEditor license and wants those terms instead can register i
 `Basic` is a deliberately lightweight, inline-text-only experience: heading, bold/italic/underline/
 strikethrough, link, bulleted/numbered lists, and code block — nothing else, regardless of
 `ContentFormat`. `Full` gets the complete set on top of that: blockquote, table, image upload (when
-`ImagesContainerName` is configured), undo/redo, and a `Source` toolbar button (CKEditor 5's
+`ImagesContainerName` is configured and the host registered an upload provider), undo/redo, and a `Source` toolbar button (CKEditor 5's
 `SourceEditing` plugin, GPL) for viewing/editing the raw stored value directly — HTML, or for a
 Markdown-`ContentFormat` field, the raw Markdown text. `SourceEditing` is Full-only regardless: CKEditor
 5's own plugin only supports `ClassicEditor` in the first place. `Basic`/`Full` map to CKEditor 5's
 `BalloonEditor`/`ClassicEditor` editor classes respectively, but are named for the editing-power
 difference that actually matters when choosing a mode, not the editor-shell implementation detail. See
 `buildEditorConfig` in `ckeditor-editor-config.ts` for the exact plugin/toolbar composition.
+
+## Image upload
+
+This package ships no upload API and no default uploader. Inline image upload is the **host
+application's** to provide: implement `CKEditorUploadProvider` (upload a `File` into the given
+container, resolve to the URL the editor should embed) against your own file API and register it under
+the `CKEDITOR_UPLOAD_PROVIDER` token:
+
+```ts
+@Injectable({ providedIn: 'root' })
+export class MyCKEditorUploadProvider implements CKEditorUploadProvider {
+  private readonly restService = inject(RestService);
+
+  upload(file: File, containerName: string): Observable<string> {
+    const body = new FormData();
+    body.append('file', file, file.name);
+    return this.restService
+      .request<FormData, { url: string }>(
+        { method: 'POST', url: '/api/my-app/files', params: { containerName }, body },
+        { apiName: 'MyApp' },
+      )
+      .pipe(map(result => result.url));
+  }
+}
+
+// app.config.ts
+providers: [
+  provideFlexFields(),
+  provideCKEditorFieldType(),
+  { provide: CKEDITOR_UPLOAD_PROVIDER, useExisting: MyCKEditorUploadProvider },
+]
+```
+
+The upload-image toolbar button appears only when **both** a provider is registered and the field
+configures `CKEditor.ImagesContainerName` (Full mode). The provider decides the endpoint, the API name
+and how the URL is read from the response; nothing about the wire format is fixed here.
+
+Up to `10.0.0-rc.24` the adapter was hard-wired to `Dignite.FileExplorer`'s `POST /api/file-explorer/files`
+(apiName `FileExplorer`). That module has left this repository, so a host that relied on it must now
+register a provider for whatever file API it uses.
 
 ## License
 

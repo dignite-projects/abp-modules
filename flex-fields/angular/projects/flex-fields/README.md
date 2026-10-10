@@ -93,8 +93,6 @@ token, each documented in its own README:
 
 - [`@dignite/ng.flex-fields-ckeditor`](https://github.com/dignite-projects/abp-modules/blob/main/flex-fields/angular/projects/flex-fields-ckeditor/README.md#styles) — one entry, for
   CKEditor 5's UI stylesheet.
-- [`@dignite/ng.flex-fields-file-explorer`](https://github.com/dignite-projects/abp-modules/blob/main/flex-fields/angular/projects/flex-fields-file-explorer/README.md#styles) — no entry
-  of its own.
 
 **Maintainers:** the `StyleBundle` constant lives in the package whose component renders the
 CSS, not centrally — `NZ_SELECT_STYLE` here (`src/lib/utils/style-loader.service.ts`), `CKEDITOR5_STYLE`
