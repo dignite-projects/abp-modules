@@ -15,8 +15,8 @@
 }
 @if (Model.ShowInList)
 {
-    @* Bare and sanitized, matching FileExplorer.cshtml's ShowInList branch pattern - a rich-text
-       field's list cell reasonably shows real formatting rather than escaping it to plain text. *@
+    @* Bare and sanitized - a rich-text field's list cell reasonably shows real formatting rather
+       than escaping it to plain text. *@
     @Html.Raw(safeHtml)
 }
 else

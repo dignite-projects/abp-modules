@@ -40,11 +40,14 @@ before changing any contract; it records what was rejected and why.
 | `FlexFields.Web` | `<flex-field-view>`/`<flex-field-search>` TagHelpers + default `.cshtml` per built-in type — SSR counterpart to the Angular library's `<ff-flex-field-view>`/`<ff-flex-field-search>`. No config/control TagHelpers | Abstractions |
 | `FlexFields.Installer` | ABP Studio/Suite install entry point, embeds the module's `.abpmdl` | `Volo.Abp.VirtualFileSystem` |
 
-Bolt-on field types (optional, not part of the eight above): `FlexFields.FileExplorer` (the field type
-itself, references only Abstractions) and `FlexFields.FileExplorer.Web` (its `<flex-field-view>`
-rendering — file name/size/MIME type/link, read straight out of the value the Angular picker already
-denormalized at pick time; no search partial, since `FileExplorerFieldType.IndexValueType` is `null`).
-Depending on `.FileExplorer.Web` alone pulls in `.FileExplorer` and `.Web` too. Each bolt-on's own
+Bolt-on field types (optional, not part of the eight above): `FlexFields.CKEditor` (the field type
+itself, references only Abstractions) and `FlexFields.CKEditor.Web` (its `<flex-field-view>` rendering —
+Markdown to HTML plus sanitization; no search partial, since `CKEditorFieldType.IndexValueType` is
+`null`). Depending on `.CKEditor.Web` alone pulls in `.CKEditor` and `.Web` too. The Angular half
+(`@dignite/ng.flex-fields-ckeditor`) uploads inline images only through a `CKEDITOR_UPLOAD_PROVIDER`
+the host registers — no bolt-on here ships or calls a file API of its own. (A file-picker field type
+used to live here as `FlexFields.FileExplorer{,.Web}` / `@dignite/ng.flex-fields-file-explorer`; it left
+with `Dignite.FileExplorer` in `10.0.0-rc.25` — see the root `CHANGELOG.md`.) Each bolt-on's own
 `.Web` counterpart is the pattern for any future one: a small project next to the field type itself,
 depending on it plus `FlexFields.Web`, shipping one view at the same
 `Views/Shared/FlexFields/{ControlName}.cshtml` convention path.
@@ -167,9 +170,9 @@ mapping lives entirely outside the kernel, the server-side mirror of how `FieldT
   (the real `ApplicationPartFactory`) instead. Found by actually running the render pipeline in a test,
   not by compiling it; see `Dignite.Abp.FlexFields.Web.Tests`.
 - The "downstream overrides one built-in type, or adds a custom type, at the same conventional path"
-  claim two bullets up is not theoretical: `FlexFields.FileExplorer.Web` is exactly that, for the
-  `FileExplorer` bolt-on (see the package table above) - a separate small project, not a fork of
-  `.Web`, shipping one view at `Views/Shared/FlexFields/FileExplorer.cshtml`.
+  claim two bullets up is not theoretical: `FlexFields.CKEditor.Web` is exactly that, for the
+  `CKEditor` bolt-on (see the package table above) - a separate small project, not a fork of
+  `.Web`, shipping one view at `Views/Shared/FlexFields/CKEditor.cshtml`.
 
 ## The demo
 
@@ -195,14 +198,11 @@ describes, wired to a real feature instead of the test project's throwaway `Test
   attribute you add. The rename is why it's `SearchAsync`, at `POST /api/app/product/search`. Also
   where `INormalizesValue.Normalize` runs over the bag, before validating and saving.
 - **`Data/ProductDemoDataSeedContributor.cs`** — seeds one `ProductField` per built-in field type
-  (including `Table` and `Matrix`, whose values two of the products carry for real) plus the
-  FileExplorer bolt-on and two CKEditor ones — eleven fields — and five products, so a first
+  (including `Table` and `Matrix`, whose values two of the products carry for real) plus two
+  CKEditor bolt-on ones — ten fields — and five products, so a first
   `dotnet run -- --migrate-database`
-  leaves the demo immediately browsable instead of empty. One product's `images` field gets a real
-  uploaded file (`FileDescriptorManager.CreateAsync` directly, bypassing the `[Authorize]`-gated app
-  service the same way the field/product repositories are used directly elsewhere in this class) into
-  the already-configured `"images"` container, not a fabricated value — so `FlexFields.FileExplorer.Web`
-  has genuine data to render, and the other four products exercise the "no files" path.
+  leaves the demo immediately browsable instead of empty. The demo has no file-upload API, so its
+  CKEditor fields show no image-upload button (that needs a host-registered `CKEDITOR_UPLOAD_PROVIDER`).
 - **`Controllers/ProductsWebController.cs`** + **`Views/ProductsWeb/Index.cshtml`** — the SSR
   counterpart to the Angular admin's products page, at `/ProductsWeb`: `<flex-field-view>` for the
   results table (`show-in-list`) and one full detail block, `<flex-field-search>` for the filter form.

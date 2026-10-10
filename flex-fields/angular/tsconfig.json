@@ -18,9 +18,6 @@
       "@dignite/ng.flex-fields": [
         "projects/flex-fields/src/public-api.ts"
       ],
-      "@dignite/ng.flex-fields-file-explorer": [
-        "projects/flex-fields-file-explorer/src/public-api.ts"
-      ],
       "@dignite/ng.flex-fields-ckeditor": [
         "projects/flex-fields-ckeditor/src/public-api.ts"
       ]

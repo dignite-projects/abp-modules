@@ -4,8 +4,7 @@
        up, so having this file inside the project (together with the sibling Directory.Packages.props that
        sets ManagePackageVersionsCentrally=false) is what isolates the host from the repo-root
        Directory.Build.props / Directory.Packages.props — no separate empty "blocker" file is needed.
-       Mirrors file-storing/host/Dignite.FileExplorer.Web.Host/ and
-       notifications/host/Dignite.NotificationCenter.Web.Host/. -->
+       Mirrors notifications/host/Dignite.NotificationCenter.Web.Host/. -->
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
     <Version>1.0.0</Version>

@@ -7,9 +7,9 @@ namespace Dignite.Abp.FlexFields.CKEditor.Web;
 /// <summary>
 /// Reads a CKEditor field's raw stored value leniently: a fresh in-memory value is a plain string, one
 /// that has round-tripped through JSON storage is a <see cref="JsonElement"/>. Simpler than
-/// FileExplorer.Web's own FileDescriptorValueReader (and Dignite.Abp.FlexFields.Web's own internal
-/// FlexFieldValueReader, which is internal to that assembly and so not reusable from here) because a
-/// CKEditor value is always a bare string - HTML or Markdown source - never an array of objects.
+/// Dignite.Abp.FlexFields.Web's own internal FlexFieldValueReader (which is internal to that assembly
+/// and so not reusable from here) because a CKEditor value is always a bare string - HTML or Markdown
+/// source - never an array of objects.
 /// </summary>
 internal static class CKEditorValueReader
 {
