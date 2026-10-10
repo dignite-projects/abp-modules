@@ -247,6 +247,12 @@ jobs:
       - name: Check flex-fields adapters Angular package dependencies
         run: node ./build/check-angular-package-deps.mjs flex-fields/angular/dist/flex-fields-ckeditor
 
+      # `yarn test` above covers the core library only. These specs resolve @dignite/ng.flex-fields from
+      # dist/flex-fields (the library's tsconfig.spec.json), so they run after `yarn build:lib`.
+      - name: Run flex-fields-ckeditor Angular unit tests
+        working-directory: flex-fields/angular
+        run: yarn test:ckeditor --watch=false
+
       - name: Build flex-fields Angular demo
         working-directory: flex-fields/angular
         run: yarn build:prod
