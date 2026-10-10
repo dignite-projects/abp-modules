@@ -16,6 +16,18 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Added
+
+#### flex-fields
+
+- `CKEDITOR_CONFIG_CONTRIBUTORS` / `CKEditorConfigContributor` (`@dignite/ng.flex-fields-ckeditor`): a multi provider
+  through which the host changes the CKEditor 5 configuration each `CKEditor` field's editor is created with — extra
+  plugins, toolbar, any other `EditorConfig` option. A contributor gets the composed configuration and a context (the
+  loaded `ckeditor5` package, the field, its mode and content format) and changes it in place or returns a
+  replacement; contributors run in registration order, once per editor. With none registered nothing changes. See the
+  package README for an example that shows stored relative image addresses from the API host while editing, keeping
+  `getData()` relative.
+
 ## [10.0.0-rc.25] - 2026-10-10
 
 ### Added

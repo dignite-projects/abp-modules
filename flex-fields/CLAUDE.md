@@ -45,8 +45,11 @@ itself, references only Abstractions) and `FlexFields.CKEditor.Web` (its `<flex-
 Markdown to HTML plus sanitization; no search partial, since `CKEditorFieldType.IndexValueType` is
 `null`). Depending on `.CKEditor.Web` alone pulls in `.CKEditor` and `.Web` too. The Angular half
 (`@dignite/ng.flex-fields-ckeditor`) uploads inline images only through a `CKEDITOR_UPLOAD_PROVIDER`
-the host registers — no bolt-on here ships or calls a file API of its own. (A file-picker field type
-used to live here as `FlexFields.FileExplorer{,.Web}` / `@dignite/ng.flex-fields-file-explorer`; it left
+the host registers — no bolt-on here ships or calls a file API of its own. Anything else host-specific
+about the editor (extra plugins, toolbar, how stored file addresses are shown while editing) goes through
+the generic `CKEDITOR_CONFIG_CONTRIBUTORS` multi provider, not a purpose-built option or token here.
+(A file-picker field type used to live here as `FlexFields.FileExplorer{,.Web}` /
+`@dignite/ng.flex-fields-file-explorer`; it left
 with `Dignite.FileExplorer` in `10.0.0-rc.25` — see the root `CHANGELOG.md`.) Each bolt-on's own
 `.Web` counterpart is the pattern for any future one: a small project next to the field type itself,
 depending on it plus `FlexFields.Web`, shipping one view at the same

@@ -127,6 +127,94 @@ Up to `10.0.0-rc.24` the adapter was hard-wired to `Dignite.FileExplorer`'s `POS
 (apiName `FileExplorer`). That module has left this repository, so a host that relied on it must now
 register a provider for whatever file API it uses.
 
+## Customizing the editor configuration
+
+Each editor is created with the configuration `buildEditorConfig` composes from the field's
+configuration keys. To change it — add a plugin, change the toolbar, set any other CKEditor 5
+`EditorConfig` option — register a `CKEditorConfigContributor` under the `CKEDITOR_CONFIG_CONTRIBUTORS`
+multi provider. A contributor receives the composed configuration and a context (the loaded `ckeditor5`
+package, the `field` being edited, its `mode` and `contentFormat`); it either changes the configuration in
+place or returns the one to use instead. Contributors run once per editor, at creation, in registration
+order; with none registered the configuration is unchanged.
+
+An example. A host stores image addresses relative (`<img src="/api/my-app/files/...">`) but serves its
+admin UI from another origin than its API, so in the editor those images would not load. A small plugin
+shows them from the API's host in the editing view only — the data pipeline is untouched, so
+`getData()`, and with it the form value that is saved, keeps the relative address:
+
+```ts
+import { ApplicationConfig, inject } from '@angular/core';
+import { EnvironmentService } from '@abp/ng.core';
+import type { DowncastAttributeEvent, Editor, ModelElement } from 'ckeditor5';
+import { provideFlexFields } from '@dignite/ng.flex-fields';
+import {
+  CKEDITOR_CONFIG_CONTRIBUTORS,
+  CKEditorConfigContributor,
+  provideCKEditorFieldType,
+} from '@dignite/ng.flex-fields-ckeditor';
+
+const FILE_PATH = '/api/my-app/files/';
+
+export function showFilesFromApiHost(): CKEditorConfigContributor {
+  const environment = inject(EnvironmentService);
+
+  return config => {
+    const apiBase = environment.getApiUrl('MyApp').replace(/\/+$/, '');
+
+    // A CKEditor 5 plugin can be a plain function of the editor.
+    function ShowFilesFromApiHost(editor: Editor): void {
+      // 'editingDowncast' only: what the user sees. 'dataDowncast' (getData) keeps the image plugin's
+      // own converter, which writes the model's src - the relative address - as it is.
+      editor.conversion.for('editingDowncast').add(dispatcher => {
+        for (const imageType of ['imageBlock', 'imageInline']) {
+          dispatcher.on<DowncastAttributeEvent<ModelElement>>(
+            `attribute:src:${imageType}`,
+            (evt, data, conversionApi) => {
+              // Runs before the image plugin's own src converter (priority 'high') and consumes the
+              // change, so that one skips it.
+              if (!conversionApi.consumable.consume(data.item, evt.name)) {
+                return;
+              }
+
+              const src = (data.attributeNewValue as string | null) ?? '';
+              const view = conversionApi.mapper.toViewElement(data.item)!;
+              const img = editor.plugins.get('ImageUtils').findViewImgElement(view)!;
+              conversionApi.writer.setAttribute('src', src.startsWith(FILE_PATH) ? apiBase + src : src, img);
+            },
+            { priority: 'high' },
+          );
+        }
+      });
+    }
+
+    config.extraPlugins = [...(config.extraPlugins ?? []), ShowFilesFromApiHost];
+  };
+}
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideFlexFields(),
+    provideCKEditorFieldType(),
+    // useFactory runs in an injection context, so the contributor can inject() what it needs;
+    // a contributor that needs nothing can be registered with useValue.
+    { provide: CKEDITOR_CONFIG_CONTRIBUTORS, multi: true, useFactory: showFilesFromApiHost },
+  ],
+};
+```
+
+To add one of CKEditor 5's own plugins, take it from `context.ckeditor5` rather than importing it:
+
+```ts
+const withAlignment: CKEditorConfigContributor = (config, { ckeditor5 }) => {
+  config.extraPlugins = [...(config.extraPlugins ?? []), ckeditor5.Alignment];
+  (config.toolbar as string[]).push('|', 'alignment');
+};
+```
+
+This package loads `ckeditor5` lazily, the first time a `CKEditor` field is shown; a value import from
+`'ckeditor5'` anywhere in the host would pull the whole package into the main bundle. Type-only imports,
+as in the example above, are fine.
+
 ## License
 
 LGPL-3.0-only. See the [repository](https://github.com/dignite-projects/abp-modules).
