@@ -261,9 +261,10 @@ paket-files/
 **/.abpstudio/
 **/*.abppkg.analyze.json
 
-# Fody: FodyWeavers.xsd is regenerated next to FodyWeavers.xml on every Release build (schema for
-# editor validation only). The hand-written FodyWeavers.xml itself IS tracked.
+# Fody: FodyWeavers.xsd (and any FodyWeavers.xml Fody drops) are generated. The weaver config lives
+# inline in Directory.Build.props (WeaverConfiguration), so no FodyWeavers.xml is ever tracked.
 FodyWeavers.xsd
+FodyWeavers.xml
 
 # VS Code files for those working on multiple tools
 .vscode/*
