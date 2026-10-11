@@ -1,0 +1,8 @@
+{
+  "culture": "zh-Hant",
+  "texts": {
+    "Dignite.Abp.BlobStoring:ContentTooLarge": "內容過大！不能超過 {MaxSizeInBytes} 位元組。",
+    "Dignite.Abp.BlobStoring:ContentTypeMismatch": "內容與副檔名 {Extension} 不符！",
+    "Dignite.Abp.BlobStoring:ContentTypeNotAllowed": "不支援該內容類型（{ContentType}）！"
+  }
+}

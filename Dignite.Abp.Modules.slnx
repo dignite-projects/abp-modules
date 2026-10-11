@@ -7,15 +7,12 @@
     <Project Path="aspnetcore-mcp/test/Dignite.Abp.AspNetCore.Mcp.Tests/Dignite.Abp.AspNetCore.Mcp.Tests.csproj" />
   </Folder>
 
-  <Folder Name="/file-storing/" />
-  <Folder Name="/file-storing/core/" />
-  <Folder Name="/file-storing/core/src/">
-    <Project Path="file-storing/core/src/Dignite.Abp.FileStoring.Imaging/Dignite.Abp.FileStoring.Imaging.csproj" />
-    <Project Path="file-storing/core/src/Dignite.Abp.FileStoring/Dignite.Abp.FileStoring.csproj" />
+  <Folder Name="/blob-storing/" />
+  <Folder Name="/blob-storing/src/">
+    <Project Path="blob-storing/src/Dignite.Abp.BlobStoring.Pipeline/Dignite.Abp.BlobStoring.Pipeline.csproj" />
   </Folder>
-  <Folder Name="/file-storing/core/test/">
-    <Project Path="file-storing/core/test/Dignite.Abp.FileStoring.Imaging.Tests/Dignite.Abp.FileStoring.Imaging.Tests.csproj" />
-    <Project Path="file-storing/core/test/Dignite.Abp.FileStoring.Tests/Dignite.Abp.FileStoring.Tests.csproj" />
+  <Folder Name="/blob-storing/test/">
+    <Project Path="blob-storing/test/Dignite.Abp.BlobStoring.Pipeline.Tests/Dignite.Abp.BlobStoring.Pipeline.Tests.csproj" />
   </Folder>
 
   <Folder Name="/notifications/" />
