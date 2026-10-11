@@ -9,9 +9,13 @@ using Volo.Abp.BlobStoring;
 namespace Dignite.Abp.BlobStoring.Pipeline;
 
 /// <summary>
-/// Capped buffering shared by the contributors that need a seekable, length-aware stream.
+/// Capped buffering for <see cref="IBlobPipelineContributor"/>s that need to re-read the content: the contributors
+/// of this package, and contributors in other packages (such as <c>Dignite.Abp.BlobStoring.Imaging</c>) that inspect
+/// or transform it. Every copy is bounded, so content is never buffered without a limit, and a copy that becomes the
+/// content is assigned to <see cref="BlobPipelineContext.BlobStream"/>, so the pipeline owns and disposes it as the
+/// <see cref="IBlobPipelineContributor"/> contract requires.
 /// </summary>
-internal static class BlobStreamBuffering
+public static class BlobStreamBuffering
 {
     private const int CopyBufferSize = 81920;
 
@@ -79,6 +83,10 @@ internal static class BlobStreamBuffering
         return buffer;
     }
 
+    /// <summary>
+    /// The <see cref="BlobStoringPipelineErrorCodes.ContentTooLarge"/> exception for a limit of
+    /// <paramref name="maxBytes"/>, with the limit as <c>MaxSizeInBytes</c> data.
+    /// </summary>
     public static BusinessException CreateContentTooLargeException(long maxBytes)
     {
         return new BusinessException(
