@@ -253,6 +253,10 @@ so it stays clear which part of the repository actually moved.
 
 #### flex-fields
 
+- The `Dignite.Abp.FlexFields.Installer` package now ships the module manifest (`content/Dignite.Abp.FlexFields.abpmdl`)
+  instead of the demo application's: it listed only `Dignite.Abp.FlexFields.Demo` plus the demo template's ABP module
+  imports, so ABP Studio saw the demo, not the module. It now lists the `src`, `test` and `demo` packages, as the
+  notifications manifest does, and `Dignite.Abp.FlexFields.CKEditor` has the `.abppkg` it was missing.
 - CI and the release workflow now run `Dignite.Abp.FlexFields.Web.Tests`; they were never run before.
 - The NuGet package smoke test now also covers `Dignite.Abp.FlexFields.Web`, `.CKEditor` and `.CKEditor.Web`.
 - The demo's `etc/scripts/initialize-solution.ps1` builds `Dignite.Abp.FlexFields.slnx` from the module root instead of
