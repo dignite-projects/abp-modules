@@ -15,6 +15,9 @@ $packageIds = @(
     'Dignite.Abp.FlexFields.Domain',
     'Dignite.Abp.FlexFields.EntityFrameworkCore',
     'Dignite.Abp.FlexFields.MongoDB',
+    'Dignite.Abp.FlexFields.Web',
+    'Dignite.Abp.FlexFields.CKEditor',
+    'Dignite.Abp.FlexFields.CKEditor.Web',
     'Dignite.Abp.FlexFields.Installer'
 )
 
@@ -64,6 +67,9 @@ public static class PackageSurface
         typeof(Dignite.Abp.FlexFields.FlexFieldsDomainModule),
         typeof(Dignite.Abp.FlexFields.EntityFrameworkCore.FlexFieldsEntityFrameworkCoreModule),
         typeof(Dignite.Abp.FlexFields.MongoDB.FlexFieldsMongoDbModule),
+        typeof(Dignite.Abp.FlexFields.Web.FlexFieldsWebModule),
+        typeof(Dignite.Abp.FlexFields.CKEditor.FlexFieldsCKEditorModule),
+        typeof(Dignite.Abp.FlexFields.CKEditor.Web.FlexFieldsCKEditorWebModule),
         typeof(Dignite.Abp.FlexFields.FlexFieldsInstallerModule)
     ];
 }

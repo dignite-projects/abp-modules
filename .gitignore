@@ -264,7 +264,6 @@ paket-files/
 # Fody: FodyWeavers.xsd is regenerated next to FodyWeavers.xml on every Release build (schema for
 # editor validation only). The hand-written FodyWeavers.xml itself IS tracked.
 FodyWeavers.xsd
-**/FodyWeavers.xsd
 
 # VS Code files for those working on multiple tools
 .vscode/*
@@ -307,7 +306,3 @@ dist/
 # is intentionally tracked - only these specific runtime files are local state.
 **/.claude/settings.local.json
 **/.claude/scheduled_tasks.lock
-
-
-# ABP Studio
-**/.abpstudio/

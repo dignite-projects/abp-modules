@@ -19,6 +19,7 @@ body:
         - "blob-storing (Dignite.Abp.BlobStoring.*)"
         - "notifications (Dignite.Abp.Notifications / Dignite.NotificationCenter)"
         - "flex-fields (Dignite.Abp.FlexFields / @dignite/ng.flex-fields)"
+        - "aspnetcore-mcp (Dignite.Abp.AspNetCore.Mcp)"
         - "Not sure / repo-wide"
     validations:
       required: true

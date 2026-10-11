@@ -1,4 +1,4 @@
-# Runs the whole test suite across both module trees via the aggregate solution. Test projects
+# Runs the whole test suite across every module tree via the aggregate solution. Test projects
 # without a runner (the shared *.TestBase projects) are skipped automatically. The MongoDB provider
 # tests spin up an embedded mongod via MongoSandbox, so no external MongoDB is required.
 #

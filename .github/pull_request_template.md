@@ -13,6 +13,7 @@ Resolves #xxxx (write the related issue number if there is one)
 - [ ] `blob-storing/` (Dignite.Abp.BlobStoring.*)
 - [ ] `notifications/` (Dignite.Abp.Notifications / Dignite.NotificationCenter)
 - [ ] `flex-fields/` (Dignite.Abp.FlexFields / @dignite/ng.flex-fields)
+- [ ] `aspnetcore-mcp/` (Dignite.Abp.AspNetCore.Mcp)
 - [ ] Repo-wide (build, CI, docs, shared config)
 
 ### Checklist

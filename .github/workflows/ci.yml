@@ -71,8 +71,8 @@ jobs:
           fi
 
       # Includes both demo hosts (notifications/host/..., flex-fields/demo/...) - each opts out of
-      # central package management on its own (common.props / its own nested Directory.Build.props)
-      # and pins its own inline package versions.
+      # central package management on its own (each host's own Directory.Build.props /
+      # Directory.Packages.props) and pins its own inline package versions.
       - name: Build
         run: dotnet build Dignite.Abp.Modules.slnx --no-restore --configuration Release
 
@@ -120,6 +120,9 @@ jobs:
 
       - name: Run FlexFields (MongoDB) tests
         run: dotnet test flex-fields/test/Dignite.Abp.FlexFields.MongoDB.Tests/Dignite.Abp.FlexFields.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/flex-fields
+
+      - name: Run FlexFields (Web) tests
+        run: dotnet test flex-fields/test/Dignite.Abp.FlexFields.Web.Tests/Dignite.Abp.FlexFields.Web.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/flex-fields
 
       # Coverage is uploaded to Codecov from the separate upload-coverage job below, not here:
       # codecov-action's upload latency is dominated by Codecov's own service (observed anywhere from
@@ -326,5 +329,14 @@ jobs:
         with:
           directory: ./artifacts-ci/coverage/flex-fields
           flags: flex-fields
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload aspnetcore-mcp coverage to Codecov
+        uses: codecov/codecov-action@v7
+        continue-on-error: true
+        with:
+          directory: ./artifacts-ci/coverage/aspnetcore-mcp
+          flags: aspnetcore-mcp
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}

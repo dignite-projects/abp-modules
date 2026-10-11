@@ -3,7 +3,7 @@
 //
 // Angular libraries register through module-scoped `new InjectionToken(...)` values, so two copies
 // of the same package are two distinct DI keys, not a wasted-bytes problem. `verify-npm-single-copy.mjs`
-// already guards this for the five `@dignite/*` packages this repository publishes (issue #211:
+// already guards this for the three `@dignite/*` packages this repository publishes (issue #211:
 // `FLEX_FIELD_TYPES` split across two copies of `@dignite/ng.flex-fields` made `provideCKEditorFieldType()`
 // register into one copy while `FieldTypeResolver` read the other, so a field type looked unregistered
 // at runtime with nothing failing at install or build time). This script is the same check for the
@@ -38,7 +38,7 @@
 // (`ng-zorro-antd`, or a fully-qualified `@angular/cdk`). There is no bare-word-means-scope guess: a
 // leading `@` with no `/` is the one shape npm reserves for a scope, everything else is matched
 // exactly, which is what makes an unscoped package name like `ng-zorro-antd` expressible at all.
-// There is no default target list - unlike `verify-npm-single-copy.mjs`'s fixed five `@dignite/*`
+// There is no default target list - unlike `verify-npm-single-copy.mjs`'s fixed three `@dignite/*`
 // packages, what to check here varies per workspace (see ci.yml), so it must be named explicitly
 // rather than silently checking nothing when a caller forgets an argument.
 

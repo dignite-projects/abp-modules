@@ -1288,7 +1288,7 @@ commit together.
 
 ## Build & test
 
-Run these from this `notifications/` directory. To build both modules in this repository at once,
+Run these from this `notifications/` directory. To build every module in this repository at once,
 use the aggregate `Dignite.Abp.Modules.slnx` at the repository root instead.
 
 ```bash
