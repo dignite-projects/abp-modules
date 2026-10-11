@@ -5,9 +5,9 @@
 # will error. "documentation" usually exists by default; create the "module: *" and "area: *" ones
 # once. The three module trees are independent, so most PRs match exactly one "module:" label.
 
-"module: file-storing":
+"module: blob-storing":
   - changed-files:
-      - any-glob-to-any-file: 'file-storing/**'
+      - any-glob-to-any-file: 'blob-storing/**'
 
 "module: notifications":
   - changed-files:

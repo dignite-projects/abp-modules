@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>Everyday IBlobPipelineContributor implementations for ABP BlobStoring: size cap, content-type validation, GZip, plus content-based MIME detection.</Description>
+    <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Dignite\Abp\BlobStoring\Pipeline\Localization\Resources\*.json" />
+    <Content Remove="Dignite\Abp\BlobStoring\Pipeline\Localization\Resources\*.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.BlobStoring" />
+    <PackageReference Include="FileSignatures" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" />
+  </ItemGroup>
+
+</Project>

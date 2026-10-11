@@ -1,0 +1,9 @@
+{
+  "culture": "zh-Hant",
+  "texts": {
+    "Dignite.Abp.BlobStoring.Imaging:ImageTooLarge": "圖片過大，無法處理！不能超過 {MaxWidth}x{MaxHeight} 像素（總計 {MaxPixels} 像素）。",
+    "Dignite.Abp.BlobStoring.Imaging:ImageTooSmall": "圖片過小！寬度至少為 {MinWidth} 像素，高度至少為 {MinHeight} 像素。",
+    "Dignite.Abp.BlobStoring.Imaging:ImageDecodeTimeout": "圖片處理逾時（超過 {DecodeTimeoutSeconds} 秒）！",
+    "Dignite.Abp.BlobStoring.Imaging:ImageProcessingFailed": "無法處理該圖片！"
+  }
+}

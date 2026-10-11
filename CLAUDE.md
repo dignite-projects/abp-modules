@@ -11,22 +11,32 @@ These are the things most likely to be broken by an otherwise reasonable-looking
 1. **PackageIds and root namespaces never change to match the layout.** Every package keeps the ID it
    has always had; living in a subdirectory changed nothing for consumers (PackageId follows
    AssemblyName, not the folder). Never rename a package or root namespace to "match" the folders.
-   The one rename on record is `10.0.0-rc.24`, which moved the notifications packages to ABP's own
+   Two renames are on record. `10.0.0-rc.24` moved the notifications packages to ABP's own
    naming (`.Abstractions` for contracts, the unsuffixed id for the default implementation, `.Client`
    for the remote publisher, `.Domain.Shared` / `.Domain` / `.EntityFrameworkCore` for the definition
    store) while the module was still pre-release, with a Migrate section in the CHANGELOG. Adopting an
    ABP convention before the first stable release is the only reason a rename has ever been accepted;
    it is not a precedent for renaming after a layout change.
+   - **Rename on record, `10.0.0-rc.28`:** `file-storing/` became `blob-storing/`, and its packages
+     `Dignite.Abp.FileStoring` / `Dignite.Abp.FileStoring.Imaging` became `Dignite.Abp.BlobStoring.Pipeline` /
+     `Dignite.Abp.BlobStoring.Imaging` (`Dignite.Abp.BlobStoring.<Addition>`, mirroring
+     `Volo.Abp.BlobStoring.<Provider>`), together with the removal of the `IFileHandler` pipeline that ABP 10.7's
+     `IBlobPipelineContributor` replaced. This is the **same exception** as rc.24 — a pre-release module adopting an
+     ABP naming convention, with a Migrate section in the CHANGELOG — not a new precedent: the folder moving
+     was not the reason, and a rename after the first stable release is not allowed
+     ([`blob-storing/docs/pipeline-contributors-decision.md`](blob-storing/docs/pipeline-contributors-decision.md)).
    - **Removal on record, `10.0.0-rc.25`:** `Dignite.FileExplorer.*` (Domain.Shared, Domain,
      Application.Contracts, Application, HttpApi, HttpApi.Client, EntityFrameworkCore, MongoDB, Mcp,
      Installer), `Dignite.Abp.FlexFields.FileExplorer` / `.FileExplorer.Web`, and the npm packages
      `@dignite/ng.file-explorer` / `@dignite/ng.flex-fields-file-explorer` are no longer published from
      this repository. The file browser became a Site feature in the `site` repository, under the Site
      namespace — new package identities there, not these IDs continued
-     ([`file-storing/docs/core-only-decision.md`](file-storing/docs/core-only-decision.md)). Removing a
+     ([`blob-storing/docs/core-only-decision.md`](blob-storing/docs/core-only-decision.md)). Removing a
      package is not renaming one: the remaining IDs are untouched, and a removed ID is never reused here.
+   - **Removal on record, `10.0.0-rc.28`:** the `Dignite.Abp.FileStoring*` IDs are retired by the rename above, not
+     reused for anything else.
 
-2. **The three modules never reference each other.** `file-storing/`, `notifications/`, and
+2. **The three modules never reference each other.** `blob-storing/`, `notifications/`, and
    `flex-fields/` share this repository for development and release only. A `ProjectReference`
    across those boundaries is a bug — nothing catches it: the aggregate `.slnx` contains all three,
    so it compiles fine.
@@ -50,5 +60,5 @@ These are the things most likely to be broken by an otherwise reasonable-looking
 
 3. **Library package versions live in the root `Directory.Packages.props`**, never inline in a
    library `.csproj`. The demo hosts (`notifications/host/`, `flex-fields/demo/`) are the deliberate
-   exception — each opts out of central package management and pins inline. `file-storing/` has no
-   demo host: it is a library layer with no API or UI to demonstrate.
+   exception — each opts out of central package management and pins inline. `blob-storing/` has no
+   demo host: it is a library of pipeline contributors with no API or UI to demonstrate.

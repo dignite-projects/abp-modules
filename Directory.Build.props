@@ -40,7 +40,7 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
-  <!-- Product / PackageTags are module-specific: file-storing/Directory.Build.props and
+  <!-- Product / PackageTags are module-specific: blob-storing/Directory.Build.props and
        notifications/Directory.Build.props each override them in a thin file that explicitly
        imports this one (MSBuild imports only the NEAREST Directory.Build.props per project and
        stops walking up, so each module needs that explicit import to inherit the settings above). -->

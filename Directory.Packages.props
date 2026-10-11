@@ -24,9 +24,10 @@
   <ItemGroup Label="ABP 10.7.0">
     <PackageVersion Include="Volo.Abp.Core" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.BlobStoring" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.BlobStoring.Memory" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Validation" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Imaging.Abstractions" Version="10.7.0" />
-    <PackageVersion Include="Volo.Abp.Imaging.ImageSharp" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Imaging.SkiaSharp" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Ddd.Domain" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Ddd.Application" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Ddd.Application.Contracts" Version="10.7.0" />
@@ -77,6 +78,22 @@
   -->
   <ItemGroup Label="Embedded static and localization resources">
     <PackageVersion Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.11" />
+  </ItemGroup>
+
+  <!-- FileSignatures (MIT): the signature engine behind Dignite.Abp.BlobStoring.Pipeline's MIME detector. -->
+  <ItemGroup Label="File format signatures (blob-storing MIME detection)">
+    <PackageVersion Include="FileSignatures" Version="7.3.0" />
+  </ItemGroup>
+
+  <!--
+    SkiaSharp native assets for Linux: Volo.Abp.Imaging.SkiaSharp 10.7.0 depends only on SkiaSharp 3.119.0, which
+    brings SkiaSharp.NativeAssets.Win32 and .macOS but not .Linux (ABP's own csproj adds it only when built on Linux,
+    so the published nuspec does not list it). The blob-storing Imaging tests reference it so they run on Linux CI
+    runners. Same version as ABP 10.7.0's Directory.Packages.props. Test-only: Dignite.Abp.BlobStoring.Imaging itself
+    references no image library.
+  -->
+  <ItemGroup Label="SkiaSharp Linux native assets (blob-storing Imaging tests only)">
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="3.119.0" />
   </ItemGroup>
 
   <ItemGroup Label="System.Text.Json (only needed for netstandard targets; in-box on net10.0)">

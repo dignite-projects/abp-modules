@@ -1,5 +1,5 @@
 # Recursively deletes every bin/ and obj/ folder under the repo, skipping node_modules (the Angular
-# workspaces under file-storing/angular and notifications/angular have their own bin/obj-named
+# workspaces under flex-fields/angular and notifications/angular have their own bin/obj-named
 # dependencies that must not be touched). Handy when a stale build or a provider swap leaves the
 # incremental build in a bad state. Adapted from the ABP Framework's delete-bin-obj.ps1.
 Clear-Host

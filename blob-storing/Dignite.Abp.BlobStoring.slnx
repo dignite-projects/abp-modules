@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Dignite.Abp.BlobStoring.Imaging/Dignite.Abp.BlobStoring.Imaging.csproj" />
+    <Project Path="src/Dignite.Abp.BlobStoring.Pipeline/Dignite.Abp.BlobStoring.Pipeline.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Dignite.Abp.BlobStoring.Imaging.Tests/Dignite.Abp.BlobStoring.Imaging.Tests.csproj" />
+    <Project Path="test/Dignite.Abp.BlobStoring.Pipeline.Tests/Dignite.Abp.BlobStoring.Pipeline.Tests.csproj" />
+  </Folder>
+</Solution>

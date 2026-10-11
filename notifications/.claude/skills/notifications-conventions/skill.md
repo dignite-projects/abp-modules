@@ -12,8 +12,8 @@ description: How the Dignite.Abp.Notifications module applies ABP — ABP's pack
 > are in [`notifications/CLAUDE.md`](../../../CLAUDE.md).
 >
 > Where this file and a generic `abp-*` skill disagree, **this file wins for code under `notifications/`**.
-> Note this module deliberately differs from `file-storing` on repositories, object mapping, controllers, and
-> distributed-event posture — don't cross-apply the other module's conventions.
+> Note this module's conventions on repositories, object mapping, controllers, and distributed-event posture are
+> its own — don't cross-apply another module's.
 
 ## Contracts in Abstractions, the default implementation in `Dignite.Abp.Notifications`, remote publishing in Client
 
@@ -167,7 +167,7 @@ that ride along with them are not. Check `notifications-invariants` §2 before m
 `NotificationAppService` does **not** use Mapperly or AutoMapper — mapping is a hand-written
 `protected virtual Task<TDto> MapToDtoAsync(...)` method on the AppService itself (asynchronous because it looks the
 definition up through the asynchronous definition manager). Follow this unless the DTO surface
-grows enough to justify a mapper. (This is the opposite of `file-storing`, which uses Mapperly — deliberately.)
+grows enough to justify a mapper.
 
 ### Go through the managers, not the repository
 
