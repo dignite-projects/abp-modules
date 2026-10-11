@@ -1,5 +1,12 @@
 # Decision: file-storing is core-only; there is no FileService
 
+> **Superseded, 2026-10-11** by [`pipeline-contributors-decision.md`](pipeline-contributors-decision.md). The decision
+> below that File Explorer and the FileService leave this module still stands; what changed is the "core" it keeps.
+> ABP's `IBlobPipelineContributor` arrived in ABP **10.7.0** (this text first said 10.8, which was wrong), the
+> `IFileHandler` pipeline and `IFileStorer` were replaced by contributors for it, and the packages were renamed
+> `Dignite.Abp.BlobStoring.*`. Read the rest as history: its names (`IFileStorer`, `IFileHandler`, `Dignite.Abp.FileStoring`)
+> no longer exist.
+
 **Status:** accepted, 2026-10-10 · **Applies from:** `10.0.0-rc.25`
 
 ## Decision
@@ -40,9 +47,9 @@ The plan we dropped was to host File Explorer as its own microservice that Site 
 | **FileService + tickets** (the service stores bytes; the owning service issues a signed ticket per upload/download) | Every upload and download becomes a two-service round trip, the ticket format becomes a cross-service contract, and the owning service still keeps its own metadata — so the FileService adds a hop without owning anything. |
 | **FileService + a definition store** (owners register containers and permission rules in the FileService) | The FileService would have to evaluate other services' authorization (e.g. "may this user see this ticket's attachment") from definitions alone, which it cannot; it ends up calling back to the owner anyway. |
 
-## Where core sits relative to ABP 10.8 `IBlobPipelineContributor`
+## Where core sits relative to ABP 10.7.0 `IBlobPipelineContributor`
 
-ABP 10.8 adds `IBlobPipelineContributor` (`BlobContainerConfiguration.PipelineContributors`): per-container
+ABP 10.7.0 adds `IBlobPipelineContributor` (`BlobContainerConfiguration.PipelineContributors`): per-container
 contributors that transform the content stream inside `IBlobContainer.SaveAsync`/`GetAsync`. It has the same shape as
 our `IFileHandler` (per-container ordered type list, a context with the stream to replace), and that confirms the
 direction: content processing belongs to the container, not to a metadata service.
@@ -55,9 +62,9 @@ They are not interchangeable yet, and this repository stays on ABP 10.5:
 - Our handlers validate *uploads* (size, type, image bounds); a contributor also runs for system writes that never were
   uploads.
 
-When the platform moves to ABP ≥ 10.8, the stream-only transforms (`ImageResizeHandler`'s resize/compress) can be
+When the platform moves to ABP ≥ 10.7.0, the stream-only transforms (`ImageResizeHandler`'s resize/compress) can be
 re-expressed as pipeline contributors, and `IFileStorer` shrinks to "cap, detect, hand to the container, report".
-Until then core keeps `IFileHandler` and does not depend on 10.8.
+Until then core keeps `IFileHandler` and does not depend on 10.7.0.
 
 ## Consequences
 
