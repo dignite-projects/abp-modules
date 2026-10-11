@@ -55,9 +55,8 @@ justification in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) and
 assuming a package is unaffected, and drop an entry from the allowlist as soon as its advisory is
 genuinely remediated.
 
-**Standing item:** the allowlisted Scriban advisory (GHSA-7jvp-hj45-2f2m) reaches
-`Dignite.Abp.Notifications.Emailing` and `.Emailing.Identity` — **packages this repository actually
-publishes**, not just a demo host. No patched Scriban exists upstream, so the entry is an accepted
-risk, not a resolved one; it still owes a real exploitability assessment or a replacement library.
-The `Web.Host`-only advisories (`MessagePack`, `Microsoft.OpenApi`, `SQLitePCLRaw`) have been closed
-by pinning fixed transitive versions directly in both demo hosts' `.csproj` files.
+**No allowlisted advisories at the moment.** The last one, Scriban's GHSA-7jvp-hj45-2f2m (which reached
+`Dignite.Abp.Notifications.Emailing` and `.Emailing.Identity`, packages this repository publishes), is fixed in
+Scriban 7.2.2, and ABP 10.7.0 resolves 7.2.5. The demo hosts' `MessagePack`, `Microsoft.OpenApi` and `SQLitePCLRaw`
+advisories, once closed by pinning fixed versions in their `.csproj` files, are likewise resolved by the ABP 10.7.0
+dependency graph itself, so those pins are gone too.
