@@ -37,6 +37,12 @@ so it stays clear which part of the repository actually moved.
   Microsoft.OpenApi (`Volo.Abp.Swashbuckle` 10.7.0 → Swashbuckle.AspNetCore 10.2.3 → 2.7.5), Scriban 7.2.5 and
   SQLitePCLRaw 2.1.12 are all past their advisories. Dependabot keeps ignoring Microsoft.OpenApi 3.x: Swashbuckle
   10.2.3 is still built against 2.x.
+- **The vulnerability gate in `ci.yml` / `release.yml` now checks every advisory line.** Its regex only inspected the
+  first advisory line of each package (and never matched a top-level package's row), so the three High
+  SixLabors.ImageSharp 3.1.11 advisories reaching `Dignite.Abp.FileStoring.Imaging` through
+  `Volo.Abp.Imaging.ImageSharp` 10.7.0 went unseen; they are now allowlisted by id, because the fixed releases (3.2.0,
+  4.1.3) require a Six Labors license key to build, and the entry goes when the package is rebuilt as
+  `Dignite.Abp.BlobStoring.Imaging`.
 
 #### notifications
 

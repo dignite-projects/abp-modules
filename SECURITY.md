@@ -55,8 +55,15 @@ justification in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) and
 assuming a package is unaffected, and drop an entry from the allowlist as soon as its advisory is
 genuinely remediated.
 
-**No allowlisted advisories at the moment.** The last one, Scriban's GHSA-7jvp-hj45-2f2m (which reached
-`Dignite.Abp.Notifications.Emailing` and `.Emailing.Identity`, packages this repository publishes), is fixed in
-Scriban 7.2.2, and ABP 10.7.0 resolves 7.2.5. The demo hosts' `MessagePack`, `Microsoft.OpenApi` and `SQLitePCLRaw`
-advisories, once closed by pinning fixed versions in their `.csproj` files, are likewise resolved by the ABP 10.7.0
-dependency graph itself, so those pins are gone too.
+**Standing item:** three High SixLabors.ImageSharp 3.1.11 advisories (GHSA-j3p4-wp97-rph4, GHSA-j9gm-c75j-xc9q,
+GHSA-jjfr-hcj7-qf5w) are allowlisted. They reach `Dignite.Abp.FileStoring.Imaging` — **a package this repository
+actually publishes** — through `Volo.Abp.Imaging.ImageSharp` 10.7.0, which still resolves 3.1.11. The fix is in
+ImageSharp 4.1.2; the 3.x backport is 3.2.0, but 3.2.0 and 4.1.3 introduce Six Labors license-key enforcement at build
+time, so pinning forward would force a license key on this repository's CI and on every consumer's build. The entry
+is an accepted risk, not a resolved one. The Imaging package is being rebuilt as `Dignite.Abp.BlobStoring.Imaging`,
+where the image library choice is decided; the entry goes when that lands or when ABP moves past 3.1.11 without the
+key requirement.
+
+The gate's severity regex used to inspect only the first advisory line of each package, so the continuation lines
+that list a package's further advisories were never checked, and it never matched a top-level package's row at all;
+it now checks every line's severity cell. That is how these three High advisories went unnoticed.
