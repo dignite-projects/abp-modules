@@ -31,7 +31,7 @@
     "@angular/localize": "~22.0.8",
     "@angular/platform-browser": "~22.0.8",
     "@angular/platform-browser-dynamic": "~22.0.8",
-    "@angular/router": "~22.0.8",
+    "@angular/router": "~22.2.0",
     "@microsoft/signalr": "^10.0.11",
     "rxjs": "~7.8.0",
     "tslib": "^2.0.0",
