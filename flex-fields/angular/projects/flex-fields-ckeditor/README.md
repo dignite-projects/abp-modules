@@ -4,7 +4,7 @@
 rich text edited with **[CKEditor 5](https://ckeditor.com)**, persisted as HTML or, per field, GitHub
 Flavored Markdown.
 
-> **Angular 21 · ABP 10.5 · CKEditor 5 · LGPL-3.0-only**
+> **Angular 22 · ABP 10.7 · CKEditor 5 · LGPL-3.0-only**
 
 A bolt-on, not a built-in: flex-fields ships with no knowledge of CKEditor, so consumers who never
 need a rich-text field never pay for its dependency weight. Install this package only if you do.

@@ -73,8 +73,34 @@ so it stays clear which part of the repository actually moved.
 - **Breaking - every NuGet package now targets ABP Framework 10.7.0 (was 10.5.0).** All `Volo.Abp.*` references in
   the root `Directory.Packages.props` and in both demo hosts moved to 10.7.0, so the packages' published
   dependencies are now `Volo.Abp.* >= 10.7.0`: a consuming host must be on ABP 10.7.0 or later. No source change was
-  needed to compile against it. The Angular packages are not part of this: they stay on `@abp/ng.*` ~10.5.0 and
-  Angular 21, because ABP 10.6 moved its Angular packages to Angular 22 and that upgrade has not been decided.
+  needed to compile against it. The Angular packages moved with it, in the next entry.
+- **Breaking - every Angular package now targets `@abp/ng.*` 10.7.0, Angular 22 and TypeScript 6 (was `@abp/ng.*`
+  10.5.0, Angular 21, TypeScript 5.9).** ABP 10.6 moved its Angular packages to Angular 22, so this is what matching
+  the NuGet packages' ABP 10.7.0 takes. The published peer ranges are now `@abp/ng.*` `~10.7.0` and `@angular/*`
+  `^22.0.0` (`@dignite/ng.notification-center`) or `~22.0.0` (`@dignite/ng.flex-fields`,
+  `@dignite/ng.flex-fields-ckeditor`): a consuming Angular host must be on Angular 22 and ABP 10.7. Both workspaces
+  follow ABP 10.7.0's own Angular app template (`@angular/*` ~22.0, `@abp/ng.theme.lepton-x` ~5.7.0, `ng-packagr`
+  ~22.0, TypeScript ~6.0.3). What else moved, and what deliberately did not:
+  - `ng-zorro-antd` ~21.0.2 → ~21.3.1 in the flex-fields demo, the range `@abp/ng.components` 10.7.0 depends on, so the
+    workspace still resolves one copy. It stays on the 21 line on Angular 22 for the same reason, and so does
+    `@angular/cdk` (~21.2.0, whose peer range accepts Angular 22): `ng-zorro-antd` 21.3 depends on `@angular/cdk`
+    `^21`, so a cdk 22 would sit beside it as a second copy. `@dignite/ng.flex-fields` keeps its `ng-zorro-antd`
+    `^21.0.0` and `@angular/cdk` `~21.2.0` peers; its README now says to declare `~21.3.1` / `~21.2` for one copy.
+  - `@ng-bootstrap/ng-bootstrap` (`~20.0.0` peer of `@dignite/ng.notification-center`) and `@swimlane/ngx-datatable`
+    (22.0.0) do not move: `@abp/ng.theme.shared` 10.7.0 still depends on exactly those lines, whose peer ranges stop
+    at Angular 21 and 20. Like ABP's own 10.7 template, the workspaces install them under Angular 22 with unmet-peer
+    warnings; both build and pass their tests that way.
+  - `@angular-eslint/*` stays on 21.4 with ESLint 8, as in ABP's 10.7 template: `@angular-eslint` 22 requires ESLint
+    9+ and its flat config. `zone.js` stays on ~0.16.2, which Angular 22 accepts (`~0.15.0 || ~0.16.0`) and nothing
+    in ABP 10.7 constrains. CKEditor (`ckeditor5` ^48, `@ckeditor/ckeditor5-angular` ^11.2) already accepts Angular
+    22. Node: Angular 22 needs `^22.22.3 || ^24.15.0 || >=26`; the repository's `.nvmrc` (22.23.2) already meets it.
+  - Angular's own v22 migrations were applied, each keeping v21 behaviour: every component now declares
+    `ChangeDetectionStrategy.Eager`, because Angular 22 changed the default for components that declare none
+    (ABP's upgrade guide lists stale loading states and lists as the symptom), and `strictTemplates: false` is now
+    written out because it defaults to true. TypeScript 6 changes two defaults the code was written against:
+    `baseUrl` is deprecated (the workspaces' `paths` are now relative to their tsconfig, as in ABP's template) and
+    `strict` defaults to true, so the root tsconfigs now set `"strict": false` explicitly. Beyond these, no library
+    source changed.
 - **The repository-wide security pins are gone, because ABP 10.7.0 resolves a patched version of each by itself.**
   `SQLitePCLRaw.*` 2.1.12 (GHSA-2m69-gcr7-jv3q): `Volo.Abp.EntityFrameworkCore.Sqlite` 10.7.0 brings
   `Microsoft.EntityFrameworkCore.Sqlite` 10.0.11, which depends on 2.1.12. Scriban 7.2.7 (GHSA-7jvp-hj45-2f2m, fixed in

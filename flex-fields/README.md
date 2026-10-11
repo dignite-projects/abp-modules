@@ -129,8 +129,9 @@ The Angular library is an npm workspace, outside MSBuild:
 cd flex-fields/angular && npm install --legacy-peer-deps && npm run build:lib
 ```
 
-`--legacy-peer-deps` is required: `@abp/ng.theme.shared` depends on `@swimlane/ngx-datatable`, whose
-Angular peer range stops at 20, so npm will not hoist it beside Angular 21 without it.
+`--legacy-peer-deps` is required: `@abp/ng.theme.shared` 10.7.0 still depends on
+`@swimlane/ngx-datatable` `~22.0.0`, whose Angular peer range stops at 20, so npm will not hoist it
+beside Angular 22 without it.
 
 Run the demo stack — the host on `https://localhost:44330`, the Angular app on `http://localhost:4200`:
 

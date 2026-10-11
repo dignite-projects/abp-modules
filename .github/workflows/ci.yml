@@ -207,17 +207,21 @@ jobs:
           node ./notifications/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
 
       # --- flex-fields Angular (angular/projects/flex-fields) ---
-      # Expect unmet-peer warnings from this install: @abp/ng.theme.shared depends on
-      # @swimlane/ngx-datatable, whose Angular peer range stops at 20, and the demo app's global styles
-      # import it by top-level path. yarn reports that as a warning rather than an error, which is why
-      # npm's --legacy-peer-deps workaround is no longer needed here.
+      # Expect unmet-peer warnings from this install. @abp/ng.theme.shared 10.7.0 still pins
+      # @swimlane/ngx-datatable ~22.0.0, whose Angular peer range stops at 20 (only 25.x admits Angular
+      # 22), and the demo app's global styles import it by top-level path; ABP 10.7.0 also
+      # still pins Angular 21 peers for ng-zorro-antd (~21.3.1), @ng-bootstrap/ng-bootstrap (~20.0.0) and
+      # @angular/aria (~21.2.0) while its own template runs Angular 22. yarn reports all of that as
+      # warnings rather than errors, which is why npm's --legacy-peer-deps workaround is not needed here.
       - name: Install flex-fields Angular dependencies
         working-directory: flex-fields/angular
         run: yarn install --frozen-lockfile
 
-      # @abp/ng.components pins ng-zorro-antd at <21.1.0 while this demo app used to ask for
-      # ^21.3.3 (narrowed to ~21.0.2 for exactly this reason); @angular/cdk reaches the same
-      # package by the same route and carries the same risk. Two copies are two module-scoped
+      # @abp/ng.components 10.7.0 pins ng-zorro-antd at ~21.3.1, so this demo app declares the same
+      # range (under ABP 10.5 it was <21.1.0 and the demo was narrowed to ~21.0.2 for exactly this
+      # reason) and stays off ng-zorro-antd 22. @angular/cdk reaches the same packages by the same route:
+      # ng-zorro-antd 21.3 depends on @angular/cdk ^21, so the demo keeps cdk on 21.2 even on Angular 22 -
+      # a cdk 22 at the root would nest a second copy. Two copies are two module-scoped
       # NZ_CONFIG/NzConfigService tokens - see build/check-angular-package-duplicates.mjs.
       - name: Check flex-fields Angular package duplicates
         run: node ./build/check-angular-package-duplicates.mjs flex-fields/angular/node_modules ng-zorro-antd @angular/cdk
