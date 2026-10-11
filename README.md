@@ -56,7 +56,7 @@ abp-modules/
 │   ├── docs/                             # decision records (why contributors, why no File Explorer here)
 │   └── .claude/skills/                   # module-specific conventions & invariants
 ├── notifications/
-│   ├── Dignite.NotificationCenter.slnx   # focused solution for this module alone
+│   ├── Dignite.Abp.Notifications.slnx  # focused solution for this module alone
 │   ├── core/  notification-center/       # the published class libraries
 │   ├── host/  angular/                   # local-dev demo app + Angular workspace
 │   └── .claude/skills/                   # module-specific conventions & invariants
@@ -84,7 +84,7 @@ To work on one module in isolation, use its own solution — same projects, smal
 
 ```bash
 dotnet build blob-storing/Dignite.Abp.BlobStoring.slnx
-dotnet build notifications/Dignite.NotificationCenter.slnx
+dotnet build notifications/Dignite.Abp.Notifications.slnx
 ```
 
 `flex-fields` has no such focused solution for its libraries — `Dignite.Abp.FlexFields.slnx` holds

@@ -12,7 +12,7 @@ dotnet test Dignite.Abp.Modules.slnx
 
 # One module in isolation (same projects, smaller graph)
 dotnet build blob-storing/Dignite.Abp.BlobStoring.slnx
-dotnet build notifications/Dignite.NotificationCenter.slnx
+dotnet build notifications/Dignite.Abp.Notifications.slnx
 ```
 
 The Angular libraries live in two Angular CLI workspaces, installed with Yarn Classic (v1) and built
