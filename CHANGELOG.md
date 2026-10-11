@@ -125,6 +125,10 @@ so it stays clear which part of the repository actually moved.
   went unseen. They are not allowlisted: the fixed releases (3.2.0, 4.1.3) require a Six Labors license key to build, so the
   package that reached them was replaced instead - `Dignite.Abp.BlobStoring.Imaging` (see blob-storing below) references only
   ABP's imaging abstractions, and nothing in the solution references ImageSharp any more.
+- The four per-module NuGet package smoke-test scripts are now one, `build/smoke-test-nuget-packages.ps1 <artifacts>
+  <version> -Module <name>`. Each module's package list and the types the generated consumer touches moved to
+  `<module>/.github/scripts/nuget-surface.psd1`; `ci.yml` and `release.yml` call the shared script. The checks
+  themselves are unchanged.
 
 #### blob-storing (was file-storing)
 
@@ -238,6 +242,10 @@ so it stays clear which part of the repository actually moved.
 
 #### notifications
 
+- The two `*.TestBase` projects no longer get Fody and ConfigureAwait.Fody on a Release build, which logged "Could not
+  find a FodyWeavers.xml" and wrote a stray `FodyWeavers.xml` into each folder. They set `IsTestProject` to false so
+  `dotnet test` skips them, and that override (evaluated after the root `Directory.Build.props`) had re-enabled the
+  weaver; the root file now decides from its own private test-tree property.
 - The ABP Studio run profile (`host/etc/run-profiles/Default.abprun.json`) pointed the Angular app and the proxy
   generator at `../../angular`; both now resolve to `notifications/angular`.
 - The NuGet package smoke test now also covers `Dignite.Abp.Notifications.Push`, `.Push.Expo`,
