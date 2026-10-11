@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit, Type, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, Type, inject, ChangeDetectionStrategy } from '@angular/core';
 import { DatePipe, NgComponentOutlet } from '@angular/common';
 import { LocalizationPipe } from '@abp/ng.core';
 import { Confirmation, ConfirmationService } from '@abp/ng.theme.shared';
@@ -140,6 +140,7 @@ import { NotificationCenterEventsService } from './notification-center-events.se
       </div>
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       .abp-notification-inbox-item.abp-notification-inbox-unread { background: rgba(13, 110, 253, 0.05); box-shadow: inset 3px 0 0 var(--bs-primary, #0d6efd); }

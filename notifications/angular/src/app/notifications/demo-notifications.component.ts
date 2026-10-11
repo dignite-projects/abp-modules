@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RestService } from '@abp/ng.core';
 import { RouterLink } from '@angular/router';
 
@@ -16,6 +16,7 @@ import { RouterLink } from '@angular/router';
   selector: 'app-demo-notifications',
   standalone: true,
   imports: [RouterLink],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="card mb-3">
       <div class="card-body">

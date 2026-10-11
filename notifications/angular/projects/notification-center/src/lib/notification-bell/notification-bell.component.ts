@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit, Type, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit, Type, inject, ChangeDetectionStrategy } from '@angular/core';
 import { DOCUMENT, DatePipe, NgComponentOutlet } from '@angular/common';
 import { AuthService, EnvironmentService, LocalizationPipe } from '@abp/ng.core';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
@@ -99,6 +99,7 @@ import { NOTIFICATION_CENTER_INBOX_PATH } from '../enums/paths';
       </div>
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       .abp-notification-bell { position: relative; display: inline-block; }

@@ -1,11 +1,16 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { NotificationDataComponentsService } from './notification-data-components.service';
 import { MessageNotificationDataComponent } from './message-notification-data.component';
 import { LocalizableMessageNotificationDataComponent } from './localizable-message-notification-data.component';
 import { UnsupportedNotificationDataComponent } from './unsupported-notification-data.component';
 
-@Component({ selector: 'abp-stub-notification-data', standalone: true, template: '' })
+@Component({
+  selector: 'abp-stub-notification-data',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
+  template: '',
+})
 class StubNotificationDataComponent {}
 
 describe('NotificationDataComponentsService', () => {
