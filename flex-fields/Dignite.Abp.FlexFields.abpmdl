@@ -2,42 +2,42 @@
   "template": "app-nolayers",
   "imports": {
     "Volo.Abp.LeptonXLiteTheme": {
-      "version": "5.5.0",
+      "version": "5.7.0",
       "isInstalled": true,
       "creationTime": "07/29/2026 03:29:36 +00:00"
     },
     "Volo.Abp.Account": {
-      "version": "10.5.0",
+      "version": "10.7.0",
       "isInstalled": true,
       "creationTime": "07/29/2026 03:29:36 +00:00"
     },
     "Volo.Abp.OpenIddict": {
-      "version": "10.5.0",
+      "version": "10.7.0",
       "isInstalled": true,
       "creationTime": "07/29/2026 03:29:36 +00:00"
     },
     "Volo.Abp.Identity": {
-      "version": "10.5.0",
+      "version": "10.7.0",
       "isInstalled": true,
       "creationTime": "07/29/2026 03:29:36 +00:00"
     },
     "Volo.Abp.SettingManagement": {
-      "version": "10.5.0",
+      "version": "10.7.0",
       "isInstalled": true,
       "creationTime": "07/29/2026 03:29:36 +00:00"
     },
     "Volo.Abp.PermissionManagement": {
-      "version": "10.5.0",
+      "version": "10.7.0",
       "isInstalled": true,
       "creationTime": "07/29/2026 03:29:36 +00:00"
     },
     "Volo.Abp.FeatureManagement": {
-      "version": "10.5.0",
+      "version": "10.7.0",
       "isInstalled": true,
       "creationTime": "07/29/2026 03:29:36 +00:00"
     },
     "Volo.Abp.BlobStoring.Database": {
-      "version": "10.5.0",
+      "version": "10.7.0",
       "isInstalled": true,
       "creationTime": "07/29/2026 03:29:36 +00:00"
     }

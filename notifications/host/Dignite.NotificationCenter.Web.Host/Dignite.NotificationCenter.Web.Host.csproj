@@ -13,23 +13,17 @@
   </PropertyGroup>
 
   <!--
-    Security overrides for vulnerable transitive dependencies (this project pins its own
-    inline versions, so a direct reference is how we force a patched version). Each entry
-    lifts a transitive package to its first patched release; drop it once the upstream
-    ABP/Swashbuckle/MagicOnion/EF Core graph rolls forward past it. Same pins as
-    flex-fields/demo/Dignite.Abp.FlexFields.Demo/ - both hosts pull the same vulnerable
-    transitive packages through the same ABP modules.
-      MessagePack                3.1.1  -> 3.1.7   (GHSA-hv8m-jj95-wg3x et al.; via Volo.Abp.Studio.Client.AspNetCore -> MagicOnion)
-      Microsoft.OpenApi          2.3.0  -> 2.7.5   (GHSA-v5pm-xwqc-g5wc; via Volo.Abp.Swashbuckle -> Swashbuckle.AspNetCore)
-      Scriban                    7.2.1  -> 7.2.2   (GHSA-7jvp-hj45-2f2m; via Volo.Abp.TextTemplating.Scriban)
-      SQLitePCLRaw.bundle_e_sqlite3 2.1.11 -> 2.1.12 (GHSA-2m69-gcr7-jv3q; via Microsoft.EntityFrameworkCore.Sqlite)
+    Security overrides for vulnerable transitive dependencies: this host pins its own inline versions
+    (it opts out of the repo-root central package management), so a direct PackageReference is how it
+    would force a patched version. None is needed at ABP 10.7.0 - the ABP 10.5-era overrides were dropped
+    because the 10.7.0 graph already resolves a patched version of each:
+      MessagePack                   3.1.7  (GHSA-hv8m-jj95-wg3x et al.; Volo.Abp.Studio.Client.AspNetCore 3.1.4 -> MagicOnion 7.10.2)
+      Microsoft.OpenApi             2.7.5  (GHSA-v5pm-xwqc-g5wc; Volo.Abp.Swashbuckle 10.7.0 -> Swashbuckle.AspNetCore 10.2.3)
+      Scriban                       7.2.5  (GHSA-7jvp-hj45-2f2m; Volo.Abp.TextTemplating.Scriban 10.7.0)
+      SQLitePCLRaw.bundle_e_sqlite3 2.1.12 (GHSA-2m69-gcr7-jv3q; Microsoft.EntityFrameworkCore.Sqlite 10.0.11)
+    Microsoft.OpenApi must stay on 2.x if it is ever pinned again: Swashbuckle.AspNetCore 10.2.3 is built
+    against Microsoft.OpenApi 2.x, and 3.0 is a breaking major (dependabot ignores >= 3.0.0).
   -->
-  <ItemGroup Label="Security overrides for vulnerable transitive dependencies">
-    <PackageReference Include="MessagePack" Version="3.1.8" />
-    <PackageReference Include="Microsoft.OpenApi" Version="2.12.2" />
-    <PackageReference Include="Scriban" Version="7.2.7" />
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
@@ -45,60 +39,66 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.AspNetCore.Mvc" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.Autofac" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.Mapperly" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.Swashbuckle" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.AspNetCore.Serilog" Version="10.5.0" />
+    <PackageReference Include="Volo.Abp.AspNetCore.Mvc" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.Autofac" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.Mapperly" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.Swashbuckle" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.AspNetCore.Serilog" Version="10.7.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.Account.Web.OpenIddict" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.Account.HttpApi" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.Account.Application" Version="10.5.0" />
+    <PackageReference Include="Volo.Abp.Account.Web.OpenIddict" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.Account.HttpApi" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.Account.Application" Version="10.7.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.PermissionManagement.Domain.Identity" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.Identity.HttpApi" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.Identity.Application" Version="10.5.0" />
+    <PackageReference Include="Volo.Abp.PermissionManagement.Domain.Identity" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.Identity.HttpApi" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.Identity.Application" Version="10.7.0" />
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.PermissionManagement.Domain.OpenIddict" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.PermissionManagement.Web" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.PermissionManagement.HttpApi" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.PermissionManagement.Application" Version="10.5.0" />
+    <PackageReference Include="Volo.Abp.PermissionManagement.Domain.OpenIddict" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.PermissionManagement.Web" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.PermissionManagement.HttpApi" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.PermissionManagement.Application" Version="10.7.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.FeatureManagement.HttpApi" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.FeatureManagement.Application" Version="10.5.0" />
+    <PackageReference Include="Volo.Abp.FeatureManagement.HttpApi" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.FeatureManagement.Application" Version="10.7.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.SettingManagement.HttpApi" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.SettingManagement.Application" Version="10.5.0" />
+    <PackageReference Include="Volo.Abp.SettingManagement.HttpApi" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.SettingManagement.Application" Version="10.7.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.LeptonXLite" Version="5.5.0" />
+    <PackageReference Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.LeptonXLite" Version="5.7.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.AuditLogging.EntityFrameworkCore" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.Identity.EntityFrameworkCore" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.OpenIddict.EntityFrameworkCore" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.BackgroundJobs.EntityFrameworkCore" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.BlobStoring.Database.EntityFrameworkCore" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.FeatureManagement.EntityFrameworkCore" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.PermissionManagement.EntityFrameworkCore" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.SettingManagement.EntityFrameworkCore" Version="10.5.0" />
-    <PackageReference Include="Volo.Abp.EntityFrameworkCore.Sqlite" Version="10.5.0" />
+    <PackageReference Include="Volo.Abp.AuditLogging.EntityFrameworkCore" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.Identity.EntityFrameworkCore" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.OpenIddict.EntityFrameworkCore" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.BackgroundJobs.EntityFrameworkCore" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.BlobStoring.Database.EntityFrameworkCore" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.FeatureManagement.EntityFrameworkCore" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.PermissionManagement.EntityFrameworkCore" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.SettingManagement.EntityFrameworkCore" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.EntityFrameworkCore.Sqlite" Version="10.7.0" />
   </ItemGroup>
 
+  <!--
+    Volo.Abp.Studio.Client.AspNetCore has its own version line and declares a minimum Volo.Abp.AspNetCore.
+    3.1.4 (minimum 10.6.1) is the newest release whose minimum does not exceed this host's ABP 10.7.0; no
+    release requires exactly 10.7.0 yet. A later one that requires an ABP version above 10.7.0 would pull
+    the rest of the host up with it (NU1605), hence the dependabot ignore on >= 3.1.5.
+  -->
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.Studio.Client.AspNetCore" Version="3.0.8" />
+    <PackageReference Include="Volo.Abp.Studio.Client.AspNetCore" Version="3.1.4" />
   </ItemGroup>
 
   <ItemGroup>

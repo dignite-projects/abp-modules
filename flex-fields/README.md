@@ -23,7 +23,7 @@ defines "the concrete one."
   `EfCoreFlexFieldIndexManagerBase`, …) lives only in `Dignite.Abp.FlexFields.EntityFrameworkCore`;
   the MongoDB provider has no equivalent type and queries the value bag directly.
 
-> **.NET 10 · ABP 10.5.0 · LGPL-3.0-only**
+> **.NET 10 · ABP 10.7.0 · LGPL-3.0-only**
 
 ## Packages
 

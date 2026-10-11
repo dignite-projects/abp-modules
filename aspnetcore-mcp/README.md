@@ -10,7 +10,7 @@ Hosts one **[Model Context Protocol](https://modelcontextprotocol.io) (MCP) serv
 resources and prompts to it. It is infrastructure, not a module with a domain model of its own: it does
 not reference, and is not owned by, any module in this repository.
 
-> **.NET 10 · ABP 10.5.0 · ModelContextProtocol 2.1.0 · LGPL-3.0-only**
+> **.NET 10 · ABP 10.7.0 · ModelContextProtocol 2.1.0 · LGPL-3.0-only**
 
 ## Why it exists
 

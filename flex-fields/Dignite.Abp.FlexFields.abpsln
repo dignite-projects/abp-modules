@@ -2,7 +2,7 @@
   "id": "1364896b-7b0a-4bc2-afe6-b9bcf5834bca",
   "template": "app-nolayers",
   "versions": {
-    "AbpFramework": "10.5.0",
+    "AbpFramework": "10.7.0",
     "AbpStudio": "3.0.7",
     "TargetDotnetFramework": "net10.0"
   },

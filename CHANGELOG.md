@@ -16,6 +16,53 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking - every NuGet package now targets ABP Framework 10.7.0 (was 10.5.0).** All `Volo.Abp.*` references in
+  the root `Directory.Packages.props` and in both demo hosts moved to 10.7.0, so the packages' published
+  dependencies are now `Volo.Abp.* >= 10.7.0`: a consuming host must be on ABP 10.7.0 or later. No source change was
+  needed to compile against it. The Angular packages are not part of this: they stay on `@abp/ng.*` ~10.5.0 and
+  Angular 21, because ABP 10.6 moved its Angular packages to Angular 22 and that upgrade has not been decided.
+- **The repository-wide security pins are gone, because ABP 10.7.0 resolves a patched version of each by itself.**
+  `SQLitePCLRaw.*` 2.1.12 (GHSA-2m69-gcr7-jv3q): `Volo.Abp.EntityFrameworkCore.Sqlite` 10.7.0 brings
+  `Microsoft.EntityFrameworkCore.Sqlite` 10.0.11, which depends on 2.1.12. Scriban 7.2.7 (GHSA-7jvp-hj45-2f2m, fixed in
+  7.2.2): `Volo.Abp.TextTemplating.Scriban` 10.7.0 depends on Scriban 7.2.5. `Polly` stays at 8.6.3, still the version
+  `Volo.Abp.PermissionManagement.Domain` 10.7.0 uses. The vulnerability gate in `ci.yml` / `release.yml` no longer
+  allowlists GHSA-7jvp-hj45-2f2m, which no resolved Scriban is affected by any more.
+- Demo hosts (`notifications/host/`, `flex-fields/demo/`; never published): `Volo.Abp.Studio.Client.AspNetCore`
+  3.0.8 → 3.1.4, the newest release whose minimum `Volo.Abp.AspNetCore` (10.6.1) does not exceed 10.7.0 - none
+  requires exactly 10.7.0 yet - and dependabot now ignores it from 3.1.5 on, until a release's ABP requirement is
+  checked. LeptonX Lite 5.5.0 → 5.7.0, its release for ABP 10.7. Their inline security overrides are dropped for
+  the same reason as the repository pins: MessagePack (Studio.Client 3.1.4 → MagicOnion 7.10.2 → 3.1.7),
+  Microsoft.OpenApi (`Volo.Abp.Swashbuckle` 10.7.0 → Swashbuckle.AspNetCore 10.2.3 → 2.7.5), Scriban 7.2.5 and
+  SQLitePCLRaw 2.1.12 are all past their advisories. Dependabot keeps ignoring Microsoft.OpenApi 3.x: Swashbuckle
+  10.2.3 is still built against 2.x.
+- **The vulnerability gate in `ci.yml` / `release.yml` now checks every advisory line.** Its regex only inspected the
+  first advisory line of each package (and never matched a top-level package's row), so the three High
+  SixLabors.ImageSharp 3.1.11 advisories reaching `Dignite.Abp.FileStoring.Imaging` through
+  `Volo.Abp.Imaging.ImageSharp` 10.7.0 went unseen; they are now allowlisted by id, because the fixed releases (3.2.0,
+  4.1.3) require a Six Labors license key to build, and the entry goes when the package is rebuilt as
+  `Dignite.Abp.BlobStoring.Imaging`.
+
+#### notifications
+
+- `Dignite.Abp.Notifications.Emailing` no longer lists Scriban as a dependency of its own. The Scriban pin had put
+  `Scriban >= 7.2.7` into its published dependency list; consumers now get 7.2.5 through `Volo.Abp.Emailing` 10.7.0.
+- ABP 10.7's `GdprUserDataDeletionRequestedEto` carries a `TenantId`, and when the publisher sets it the event bus
+  runs `GdprUserDataDeletionRequestedHandler` inside that tenant. The handler is unchanged: it still deletes the
+  user's rows by user id in every tenant sharing the database, so it is not narrowed to the event's tenant.
+- `Dignite.Abp.Notifications.Emailing.Identity` and `Dignite.NotificationCenter.Push.Identity` depend on
+  `AbpIdentityDomainModule`, which in ABP 10.7 registers the Identity token providers and calls
+  `AddDataProtection()`. A process loading either module now loads a Data Protection key ring at startup (and creates
+  one when the store is empty), even if it never issues an Identity token.
+
+#### flex-fields
+
+- The kernel maps no relationship between a host entity and its `FlexFieldIndexBase<TEntity>` rows; a host that adds
+  one without a navigation on the host entity - the demo's `HasOne<Product>().WithMany()` for
+  `ProductFlexFieldIndex` - sees ABP 10.7 stop updating the tracked host entity (concurrency stamp, modification
+  audit, entity updated event) when only its index rows change. No change here; the demo is left as is.
+
 ## [10.0.0-rc.27] - 2026-10-10
 
 ### Added

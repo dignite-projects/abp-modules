@@ -98,7 +98,7 @@ There is therefore **no per-module versioning** and no per-project `<Version>`. 
 `Dignite.FileExplorer.*`). To make these releases unambiguously win NuGet.org's "latest version"
 resolution — no package rename needed — `<Version>`'s **MAJOR** segment tracks the **major version
 of the ABP Framework** this release targets (pinned in `Directory.Packages.props`; currently ABP
-`10.5.0`, so MAJOR is `10`). Since ABP's major will not regress below 10, this permanently clears
+`10.7.0`, so MAJOR is `10`). Since ABP's major will not regress below 10, this permanently clears
 the legacy `3.8.2` line.
 
 **MINOR** and **PATCH** are this repository's own counters:
