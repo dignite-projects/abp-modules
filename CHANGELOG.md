@@ -142,8 +142,10 @@ so it stays clear which part of the repository actually moved.
   > | `...Imaging:0005` (`ImageDecodeTimeout`) | `Dignite.Abp.BlobStoring.Imaging:ImageDecodeTimeout` |
   >
   > Behaviour that changes with it:
-  > - **A container without `AddMaxSizeContributor` has no size limit** (`IFileStorer` capped every upload at 100 MB,
-  >   `FileConsts.DefaultMaxFileSizeInBytes`). Add `AddMaxSizeContributor` to every container that takes uploads.
+  > - **A container without `AddMaxSizeContributor` is capped at `BlobStoringPipelineConsts.DefaultMaxBufferedBytes`
+  >   (100 MB, as `IFileStorer`'s `FileConsts.DefaultMaxFileSizeInBytes` was) by every contributor that reads the content;
+  >   a container with no contributor at all has no limit.** Add `AddMaxSizeContributor` with an explicit limit to every
+  >   container that takes uploads.
   > - Put the contributors in the recommended order: `MaxSize`, `AllowedContentTypes`, image contributors, GZip.
   > - Nothing deletes a partially written blob after a failed save any more; deleting the blob when your own metadata
   >   write fails is still yours to do.
