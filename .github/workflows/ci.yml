@@ -27,7 +27,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.302'
+          global-json-file: global.json
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -144,19 +144,19 @@ jobs:
 
       - name: Smoke-test blob-storing NuGet packages
         shell: pwsh
-        run: ./blob-storing/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}'
+        run: ./build/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}' -Module blob-storing
 
       - name: Smoke-test notifications NuGet packages
         shell: pwsh
-        run: ./notifications/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}'
+        run: ./build/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}' -Module notifications
 
       - name: Smoke-test flex-fields NuGet packages
         shell: pwsh
-        run: ./flex-fields/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}'
+        run: ./build/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}' -Module flex-fields
 
       - name: Smoke-test aspnetcore-mcp NuGet packages
         shell: pwsh
-        run: ./aspnetcore-mcp/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}'
+        run: ./build/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}' -Module aspnetcore-mcp
 
       # --- notifications Angular (angular/projects/notification-center) ---
       - name: Install notifications Angular dependencies
