@@ -6,6 +6,7 @@ import {
   ViewChild,
   ViewContainerRef,
   inject,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -18,6 +19,7 @@ import { FlexFieldData } from '../models';
  */
 @Component({
   selector: 'ff-flex-field-config',
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './flex-field-config.component.html',
 })
 export class FlexFieldConfigComponent implements OnChanges, OnDestroy {

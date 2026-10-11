@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { readStringList } from '../../utils';
@@ -10,6 +10,7 @@ import { checkedKeys, clearChecked, findTreeNode, toTreeNodes } from './tree-nod
 @Component({
   selector: 'ff-tree-control',
   templateUrl: './tree-control.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CommonModule, ReactiveFormsModule, TreePickerNodesComponent],
 })
 export class TreeControlComponent extends TreePickerBase {

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CoreModule } from '@abp/ng.core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FieldTypeConfigBase } from '@dignite/ng.flex-fields';
@@ -10,6 +10,7 @@ import { CKEditorMode } from './ckeditor-mode';
 @Component({
   selector: 'ff-ckeditor-config',
   templateUrl: './ckeditor-config.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CoreModule, ReactiveFormsModule],
 })
 export class CKEditorConfigComponent extends FieldTypeConfigBase {

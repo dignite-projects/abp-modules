@@ -8,7 +8,7 @@ import {
   ReactiveFormsModule,
   ValidatorFn,
 } from '@angular/forms';
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FlexFieldControlComponent } from '../../components/flex-field-control.component';
 import type { FlexFieldValue } from '../../models';
 import { flexFieldErrorMessage } from '../../utils';
@@ -30,6 +30,7 @@ import { normalizeMatrixBlockTypes, normalizeMatrixBlockValues } from './matrix-
 @Component({
   selector: 'ff-matrix-control',
   templateUrl: './matrix-control.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CoreModule, CommonModule, ReactiveFormsModule, FlexFieldControlComponent],
 })
 export class MatrixControlComponent extends FieldTypeControlBase {

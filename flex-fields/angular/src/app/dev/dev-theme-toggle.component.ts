@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { DevThemeService } from './dev-theme.service';
 
 /**
@@ -22,6 +22,7 @@ import { DevThemeService } from './dev-theme.service';
       {{ isDark() ? '☀ Light' : '☾ Dark' }}
     </button>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: `
     /* Fixed rather than in the page flow, so it stays put wherever the home page is scrolled to,
        and clears anything it might otherwise land under: ng-bootstrap's modal sits at z-index 1055

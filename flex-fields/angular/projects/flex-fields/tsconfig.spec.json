@@ -5,5 +5,11 @@
     "types": ["vitest/globals", "node"],
     "esModuleInterop": true
   },
-  "include": ["**/*.spec.ts", "**/*.d.ts"]
+  "include": [
+    "**/*.spec.ts",
+    "**/*.d.ts"
+  ],
+  "angularCompilerOptions": {
+    "strictTemplates": false
+  }
 }

@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef, inject } from '@angular/core';
+import { Component, ViewChild, ElementRef, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
   ABP,
@@ -34,6 +34,7 @@ import {
     PermissionDirective,
     FlexFieldConfigComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [ListService, { provide: LIST_QUERY_DEBOUNCE_TIME, useValue: 300 }],
 })
 export class ProductFieldsComponent {

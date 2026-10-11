@@ -1,5 +1,5 @@
 import { CoreModule } from '@abp/ng.core';
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FlexFieldConfigComponent } from '../../components/flex-field-config.component';
 import type { FlexFieldData } from '../../models';
@@ -31,6 +31,7 @@ let nextInstanceId = 0;
   selector: 'ff-table-config',
   templateUrl: './table-config.component.html',
   imports: [CoreModule, ReactiveFormsModule, FlexFieldConfigComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [{ provide: COMPOSITE_NESTING_DEPTH, useFactory: nextCompositeNestingDepth }],
 })
 export class TableConfigComponent extends FieldTypeConfigBase {

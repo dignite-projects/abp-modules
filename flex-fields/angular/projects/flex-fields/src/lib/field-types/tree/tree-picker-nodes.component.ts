@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TreeModule } from '@abp/ng.components/tree';
 import { TreeNode, findTreeNode } from './tree-node';
@@ -14,6 +14,7 @@ import { TreeNode, findTreeNode } from './tree-node';
   selector: 'ff-tree-picker-nodes',
   templateUrl: './tree-picker-nodes.component.html',
   styleUrls: ['./tree-picker-nodes.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CommonModule, TreeModule],
 })
 export class TreePickerNodesComponent {

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CoreModule } from '@abp/ng.core';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -12,6 +12,7 @@ let nextCheckboxId = 0;
 @Component({
   selector: 'ff-select-config',
   templateUrl: './select-config.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CoreModule, ReactiveFormsModule, DragDropModule],
 })
 export class SelectConfigComponent extends FieldTypeConfigBase {

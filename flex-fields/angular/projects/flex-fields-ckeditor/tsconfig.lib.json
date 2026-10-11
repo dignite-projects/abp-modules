@@ -12,7 +12,7 @@
     // up declarations across two entry points that way. `yarn build:lib` (flex-fields core) must still
     // run before this library builds.
     "paths": {
-      "@dignite/ng.flex-fields": ["dist/flex-fields"]
+      "@dignite/ng.flex-fields": ["../../dist/flex-fields"]
     }
   },
   "include": [
@@ -20,5 +20,8 @@
   ],
   "exclude": [
     "**/*.spec.ts"
-  ]
+  ],
+  "angularCompilerOptions": {
+    "strictTemplates": false
+  }
 }

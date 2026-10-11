@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, ViewChild, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CoreModule, LocalizationService } from '@abp/ng.core';
 import { TreeModule } from '@abp/ng.components/tree';
 import { ThemeSharedModule } from '@abp/ng.theme.shared';
@@ -35,6 +35,7 @@ let nextCheckboxId = 0;
   selector: 'ff-tree-config',
   templateUrl: './tree-config.component.html',
   imports: [CoreModule, ThemeSharedModule, ReactiveFormsModule, TreeModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: `
     /* This component had no styles of its own, so every bit of ng-zorro chrome came through
        untouched - all of it hardcoded light-mode: .ant-tree paints an opaque background: #fff (a
