@@ -10,7 +10,7 @@ and the Angular demo app are local-dev-only, never packed.
 
 ## Structure
 
-One `.slnx` — `Dignite.NotificationCenter.slnx`:
+One `.slnx` — `Dignite.Abp.Notifications.slnx`:
 
 - **`core/`** — `Notifications.Abstractions, Notifications, Notifications.Client,
   Notifications.Domain[.Shared], Notifications.EntityFrameworkCore, Notifications.MongoDB, Notifications.Identity,
@@ -119,15 +119,15 @@ publisher must not register the distribution job or the event handlers at all (d
 ## Commands
 
 ```bash
-dotnet build Dignite.NotificationCenter.slnx
-dotnet test Dignite.NotificationCenter.slnx
+dotnet build Dignite.Abp.Notifications.slnx
+dotnet test Dignite.Abp.Notifications.slnx
 
 # core/ only (the MongoDB project starts an embedded mongod):
 dotnet test core/test/Dignite.Abp.Notifications.Tests
 dotnet test core/test/Dignite.Abp.Notifications.EntityFrameworkCore.Tests
 dotnet test core/test/Dignite.Abp.Notifications.MongoDB.Tests
 
-dotnet pack Dignite.NotificationCenter.slnx -c Release
+dotnet pack Dignite.Abp.Notifications.slnx -c Release
 ```
 
 No `DbMigrator` — a consuming host owns its own DbContext/migrations via

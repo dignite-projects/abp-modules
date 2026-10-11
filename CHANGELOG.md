@@ -204,6 +204,10 @@ so it stays clear which part of the repository actually moved.
   `AbpIdentityDomainModule`, which in ABP 10.7 registers the Identity token providers and calls
   `AddDataProtection()`. A process loading either module now loads a Data Protection key ring at startup (and creates
   one when the store is empty), even if it never issues an Identity token.
+- The notifications solution files are renamed from `Dignite.NotificationCenter.{slnx,abpsln,abpmdl}` to
+  `Dignite.Abp.Notifications.{slnx,abpsln,abpmdl}`, matching the module's root package family. No package, project or
+  namespace is renamed (`Dignite.NotificationCenter.Installer` keeps its name); the Installer package now ships
+  `content/Dignite.Abp.Notifications.abpmdl`.
 
 #### flex-fields
 

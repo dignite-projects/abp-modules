@@ -353,7 +353,7 @@ access token 里是否带有 `session_id` claim（§14）。
   自己实现这个接口的宿主 DbContext 必须补上这个属性，并生成迁移（新增一张表）。目前还在 rc 阶段，可以接受，
   在 CHANGELOG 里写明即可。
 - 新增 4 个包，需要同步更新：两个 `.slnx`、`Directory.Packages.props`（只用到 `Microsoft.Extensions.Http`）、
-  `Dignite.NotificationCenter.abpmdl` / Installer、README 的包表、`notifications/CLAUDE.md` 的结构表、
+  `Dignite.Abp.Notifications.abpmdl` / Installer、README 的包表、`notifications/CLAUDE.md` 的结构表、
   `notifications-invariants` §3 中的插件列表。
 - 版本随仓库统一发布（下一个 rc）。
 

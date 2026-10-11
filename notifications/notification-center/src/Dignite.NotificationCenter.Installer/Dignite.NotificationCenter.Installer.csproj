@@ -12,8 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="..\..\..\Dignite.NotificationCenter.abpmdl" />
-    <Content Include="..\..\..\Dignite.NotificationCenter.abpmdl">
+    <None Remove="..\..\..\Dignite.Abp.Notifications.abpmdl" />
+    <Content Include="..\..\..\Dignite.Abp.Notifications.abpmdl">
       <Pack>true</Pack>
       <PackagePath>content\</PackagePath>
     </Content>
