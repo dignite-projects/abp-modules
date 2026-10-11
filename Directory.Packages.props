@@ -7,75 +7,64 @@
   </PropertyGroup>
 
   <!--
-    Security pins for vulnerable transitive dependencies. Each entry lifts a package that the ABP /
-    EF Core graph resolves transitively to its first patched release; drop it once upstream rolls
-    forward past the advisory on its own. The 3 demo hosts opt out of central package management and
-    carry their own inline copies of these pins - keep the two sets in sync.
+    Security pins for vulnerable transitive dependencies go here: each entry lifts a package that the ABP /
+    EF Core graph resolves transitively to its first patched release, and is dropped once upstream rolls
+    forward past the advisory on its own. The 2 demo hosts (notifications/host/..., flex-fields/demo/...)
+    opt out of central package management and would need their own inline copy of any such pin.
 
-    SQLitePCLRaw: Microsoft.EntityFrameworkCore.Sqlite (via Volo.Abp.EntityFrameworkCore.Sqlite
-    10.5.0) still bundles SQLitePCLRaw 2.1.11, which ships a SQLite older than 3.50.2
-    (GHSA-2m69-gcr7-jv3q / CVE-2025-6965). 2.1.12 is the first build past that advisory; pin the
-    whole family so they stay on one version. Only ever reaches test projects and the hosts, never a
-    packable library. (Carried over from abp-file-storing; abp-notifications had no equivalent pin.)
-
-    Scriban: Volo.Abp.TextTemplating.Scriban 10.5.0 resolves Scriban 7.2.1, which carries a
-    high-severity advisory (GHSA-7jvp-hj45-2f2m). Unlike the SQLitePCLRaw pin this one does reach a
-    packable library - Volo.Abp.Emailing -> Dignite.Abp.Notifications.Emailing - so transitive
-    pinning promotes Scriban into that package's published dependency list. That is the intent:
-    consumers resolve the patched version too. 7.2.7 is what the 3 hosts already pin inline.
+    There are none at ABP 10.7.0. The pins carried up to ABP 10.5.0 were dropped because 10.7.0 resolves
+    a patched version by itself:
+      - SQLitePCLRaw (GHSA-2m69-gcr7-jv3q, fixed in 2.1.12): Volo.Abp.EntityFrameworkCore.Sqlite 10.7.0 ->
+        Microsoft.EntityFrameworkCore.Sqlite 10.0.11 -> SQLitePCLRaw.* 2.1.12 (10.5.0 resolved 2.1.11).
+      - Scriban (GHSA-7jvp-hj45-2f2m, fixed in 7.2.2): Volo.Abp.TextTemplating.Scriban 10.7.0 -> Scriban
+        7.2.5 (10.5.0 resolved 7.2.1). Scriban is therefore no longer promoted into
+        Dignite.Abp.Notifications.Emailing's published dependency list; consumers get 7.2.5 through ABP.
   -->
-  <ItemGroup Label="Security-patched transitive dependencies">
-    <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" />
-    <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
-    <PackageVersion Include="SQLitePCLRaw.core" Version="2.1.12" />
-    <PackageVersion Include="SQLitePCLRaw.provider.e_sqlite3" Version="2.1.12" />
-    <PackageVersion Include="Scriban" Version="7.2.7" />
-  </ItemGroup>
 
-  <ItemGroup Label="ABP 10.5.0">
-    <PackageVersion Include="Volo.Abp.Core" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.BlobStoring" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Validation" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Imaging.Abstractions" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Imaging.ImageSharp" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Ddd.Domain" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Ddd.Application" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Ddd.Application.Contracts" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Authorization" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Authorization.Abstractions" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.AspNetCore" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.AspNetCore.TestBase" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Http.Client" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Mapperly" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.EntityFrameworkCore" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.EntityFrameworkCore.Sqlite" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.MongoDB" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Autofac" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.TestBase" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.VirtualFileSystem" Version="10.5.0" />
+  <ItemGroup Label="ABP 10.7.0">
+    <PackageVersion Include="Volo.Abp.Core" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.BlobStoring" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Validation" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Imaging.Abstractions" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Imaging.ImageSharp" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Ddd.Domain" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Ddd.Application" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Ddd.Application.Contracts" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Authorization" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Authorization.Abstractions" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.TestBase" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Http.Client" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Mapperly" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.EntityFrameworkCore" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.EntityFrameworkCore.Sqlite" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.MongoDB" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Autofac" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.TestBase" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.VirtualFileSystem" Version="10.7.0" />
     <!-- notifications-only -->
-    <PackageVersion Include="Volo.Abp.Localization" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.SettingManagement.Domain" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Features" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Timing" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Guids" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.EventBus" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.EventBus.Abstractions" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Gdpr.Abstractions" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.MultiTenancy.Abstractions" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.BackgroundJobs.Abstractions" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.BackgroundWorkers" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.DistributedLocking.Abstractions" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.AspNetCore.SignalR" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Json.SystemTextJson" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI.Bundling" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.SettingManagement.Web" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Identity.Domain" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Identity.Domain.Shared" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Emailing" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Localization" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.SettingManagement.Domain" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Features" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Timing" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Guids" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.EventBus" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.EventBus.Abstractions" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Gdpr.Abstractions" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.MultiTenancy.Abstractions" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.BackgroundJobs.Abstractions" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.BackgroundWorkers" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.DistributedLocking.Abstractions" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.SignalR" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Json.SystemTextJson" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI.Bundling" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.SettingManagement.Web" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Identity.Domain" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Identity.Domain.Shared" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Emailing" Version="10.7.0" />
   </ItemGroup>
 
   <!--
@@ -96,7 +85,8 @@
 
   <!--
     Polly: the retry policy of the notification definition store's startup save, the same one ABP's own definition
-    stores use (Volo.Abp.PermissionManagement.Domain 10.5.0 depends on Polly 8.6.3; keep them on one version).
+    stores use (Volo.Abp.PermissionManagement.Domain 10.7.0 still depends on Polly 8.6.3, as 10.5.0 did; keep them on one
+    version).
   -->
   <ItemGroup Label="Retry policies (notifications definition store)">
     <PackageVersion Include="Polly" Version="8.6.3" />

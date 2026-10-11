@@ -28,8 +28,14 @@ updates:
     ignore:
       - dependency-name: "Volo.Abp.*"
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
+      # Studio.Client has its own version line and declares a minimum Volo.Abp.AspNetCore; the demo hosts pin
+      # 3.1.4 (minimum 10.6.1), the newest whose minimum does not exceed the repo's ABP 10.7.0. A later release
+      # may require ABP 10.8 and drag the host past the pinned ABP (NU1605) - check its nuspec before lifting.
       - dependency-name: "Volo.Abp.Studio.Client.AspNetCore"
-        versions: [">= 3.0.9"]
+        versions: [">= 3.1.5"]
+      # Swashbuckle.AspNetCore 10.2.3 (via Volo.Abp.Swashbuckle 10.7.0) is built against Microsoft.OpenApi 2.x
+      # and resolves the patched 2.7.5 itself; 3.0 is a breaking major. Nothing references it directly today -
+      # this keeps a future pin on 2.x.
       - dependency-name: "Microsoft.OpenApi"
         versions: [">= 3.0.0"]
 
@@ -51,8 +57,14 @@ updates:
     ignore:
       - dependency-name: "Volo.Abp.*"
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
+      # Studio.Client has its own version line and declares a minimum Volo.Abp.AspNetCore; the demo hosts pin
+      # 3.1.4 (minimum 10.6.1), the newest whose minimum does not exceed the repo's ABP 10.7.0. A later release
+      # may require ABP 10.8 and drag the host past the pinned ABP (NU1605) - check its nuspec before lifting.
       - dependency-name: "Volo.Abp.Studio.Client.AspNetCore"
-        versions: [">= 3.0.9"]
+        versions: [">= 3.1.5"]
+      # Swashbuckle.AspNetCore 10.2.3 (via Volo.Abp.Swashbuckle 10.7.0) is built against Microsoft.OpenApi 2.x
+      # and resolves the patched 2.7.5 itself; 3.0 is a breaking major. Nothing references it directly today -
+      # this keeps a future pin on 2.x.
       - dependency-name: "Microsoft.OpenApi"
         versions: [">= 3.0.0"]
 
@@ -74,8 +86,14 @@ updates:
     ignore:
       - dependency-name: "Volo.Abp.*"
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
+      # Studio.Client has its own version line and declares a minimum Volo.Abp.AspNetCore; the demo hosts pin
+      # 3.1.4 (minimum 10.6.1), the newest whose minimum does not exceed the repo's ABP 10.7.0. A later release
+      # may require ABP 10.8 and drag the host past the pinned ABP (NU1605) - check its nuspec before lifting.
       - dependency-name: "Volo.Abp.Studio.Client.AspNetCore"
-        versions: [">= 3.0.9"]
+        versions: [">= 3.1.5"]
+      # Swashbuckle.AspNetCore 10.2.3 (via Volo.Abp.Swashbuckle 10.7.0) is built against Microsoft.OpenApi 2.x
+      # and resolves the patched 2.7.5 itself; 3.0 is a breaking major. Nothing references it directly today -
+      # this keeps a future pin on 2.x.
       - dependency-name: "Microsoft.OpenApi"
         versions: [">= 3.0.0"]
 
