@@ -24,7 +24,7 @@
     "@abp/ng.theme.shared": "~10.7.0",
     "@angular/animations": "~22.0.8",
     "@angular/aria": "~22.0.7",
-    "@angular/common": "~22.0.8",
+    "@angular/common": "~22.1.1",
     "@angular/compiler": "~22.0.8",
     "@angular/core": "~22.0.8",
     "@angular/forms": "~22.0.8",
