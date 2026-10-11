@@ -34,8 +34,9 @@ contributors. They're split by how the content loads:
 - **Root `.claude/skills/`** — 16 generic `abp-*` skills covering ABP itself (`abp-core`, `abp-ddd`,
   `abp-application-layer`, `abp-authorization`, `abp-ef-core`, `abp-mongodb`, `abp-testing`, …).
   These carry no module-specific content.
-- **`<module>/.claude/skills/`** — two per module: a **`*-conventions`** skill ("how *this* module
-  applies ABP") and a **`*-invariants`** skill ("what a change must not break").
+- **`<module>/.claude/skills/`** — in `blob-storing/` and `notifications/`, two per module: a
+  **`*-conventions`** skill ("how *this* module applies ABP") and a **`*-invariants`** skill ("what a
+  change must not break"). `flex-fields/` has none; its `CLAUDE.md` and design doc carry that content.
 
 `blob-storing/`, `notifications/`, and `flex-fields/` have genuinely different DDD shapes,
 persistence conventions, and hard invariants. Where they disagree — repository convention, object
@@ -79,7 +80,7 @@ project, and the version is repository-wide rather than per-module.
 
 **Every package in this repository ships the same version**, from the single `<Version>` in the root
 [`Directory.Build.props`](./Directory.Build.props): every packable NuGet project across the three
-module trees and all five Angular npm packages. One `v*` tag, one release pipeline, one number.
+module trees and all three Angular npm packages. One `v*` tag, one release pipeline, one number.
 
 The consequence is **empty bumps**: a change to `blob-storing/` alone still releases a new version of
 every other module's package, whose content is identical to the previous release. That is accepted on
@@ -171,7 +172,7 @@ breaking `site`'s restore.
    (`.github/workflows/release.yml`) triggers on `v*` tags and ends by creating a **draft** GitHub
    Release from the CHANGELOG section — review and publish it by hand. `workflow_dispatch` does not
    create a GitHub Release.
-4. Tagged releases publish the NuGet packages to NuGet.org and all five Angular libraries to npm. The
+4. Tagged releases publish the NuGet packages to NuGet.org and all three Angular libraries to npm. The
    npm dist-tag comes from [`build/resolve-npm-dist-tag.mjs`](./build/resolve-npm-dist-tag.mjs): a
    stable version always takes `latest`; a pre-release also takes `latest` for as long as no stable
    version of these packages has ever been published, and `next` from then on, so the first stable

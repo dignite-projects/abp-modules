@@ -2,11 +2,11 @@
 
 Event-driven notification framework for ABP Framework (LGPL-3.0-only), plus an optional Notification
 Center (inbox/subscriptions/read-unread/REST API), an MVC UI library, and an Angular UI library. The
-module's ABP Studio identity is `Dignite.NotificationCenter` (the app is the install entry point —
-`core/` is an internal dependency of it, not a separately installed thing). Published: `core/`
-(`Notifications*`, incl. `Abstractions`), `notification-center/src/` (incl.
-`Dignite.NotificationCenter.Web` and `.Installer`), `angular/projects/notification-center`. `host/`
-and the Angular demo app are local-dev-only, never packed.
+module's ABP Studio identity is `Dignite.Abp.Notifications` (the `.abpsln` module key); the install entry
+point is the `Dignite.NotificationCenter.Installer` package, and `core/` is an internal dependency of the
+app, not a separately installed thing. Published: `core/` (`Notifications*`, incl. `Abstractions`),
+`notification-center/src/` (incl. `Dignite.NotificationCenter.Web` and `.Installer`),
+`angular/projects/notification-center`. `host/` and the Angular demo app are local-dev-only, never packed.
 
 ## Structure
 

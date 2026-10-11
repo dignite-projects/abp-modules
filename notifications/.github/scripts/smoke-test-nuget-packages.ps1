@@ -21,6 +21,8 @@ $packageIds = @(
     'Dignite.Abp.Notifications.Identity',
     'Dignite.Abp.Notifications.Client',
     'Dignite.Abp.Notifications.SignalR',
+    'Dignite.Abp.Notifications.Push',
+    'Dignite.Abp.Notifications.Push.Expo',
     'Dignite.NotificationCenter.Domain.Shared',
     'Dignite.NotificationCenter.Domain',
     'Dignite.NotificationCenter.Application.Contracts',
@@ -30,6 +32,8 @@ $packageIds = @(
     'Dignite.NotificationCenter.EntityFrameworkCore',
     'Dignite.NotificationCenter.MongoDB',
     'Dignite.NotificationCenter.Web',
+    'Dignite.NotificationCenter.Push',
+    'Dignite.NotificationCenter.Push.Identity',
     'Dignite.NotificationCenter.Installer'
 )
 
@@ -85,6 +89,8 @@ public static class PackageSurface
         typeof(Dignite.Abp.Notifications.Identity.AbpNotificationsIdentityModule),
         typeof(Dignite.Abp.Notifications.Client.AbpNotificationsClientModule),
         typeof(Dignite.Abp.Notifications.SignalR.AbpNotificationsSignalRModule),
+        typeof(Dignite.Abp.Notifications.Push.AbpNotificationsPushModule),
+        typeof(Dignite.Abp.Notifications.Push.Expo.AbpNotificationsPushExpoModule),
         typeof(Dignite.NotificationCenter.NotificationCenterDomainSharedModule),
         typeof(Dignite.NotificationCenter.NotificationCenterDomainModule),
         typeof(Dignite.NotificationCenter.NotificationCenterApplicationContractsModule),
@@ -94,6 +100,8 @@ public static class PackageSurface
         typeof(Dignite.NotificationCenter.EntityFrameworkCore.NotificationCenterEntityFrameworkCoreModule),
         typeof(Dignite.NotificationCenter.MongoDB.NotificationCenterMongoDbModule),
         typeof(Dignite.NotificationCenter.Web.NotificationCenterWebModule),
+        typeof(Dignite.NotificationCenter.Push.NotificationCenterPushModule),
+        typeof(Dignite.NotificationCenter.Push.Identity.NotificationCenterPushIdentityModule),
         typeof(Dignite.NotificationCenter.NotificationCenterInstallerModule)
     ];
 }

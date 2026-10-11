@@ -11,9 +11,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test flex-fields",
     "test:ckeditor": "ng test flex-fields-ckeditor",
-    "lint": "ng lint",
-    "symlinks:setup": "cd scripts && pwsh ./setup-symlinks.ps1",
-    "symlinks:remove": "cd scripts && pwsh ./remove-symlinks.ps1"
+    "lint": "ng lint"
   },
   "private": true,
   "dependencies": {

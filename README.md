@@ -48,7 +48,8 @@ abp-modules/
 ├── Directory.Packages.props     # central package management for every library project
 ├── global.json  NuGet.Config  .nvmrc
 ├── Dignite.Abp.Modules.slnx     # aggregate solution (every module)
-├── .github/workflows/           # one build+test workflow, one lockstep release workflow
+├── .github/workflows/           # one build+test workflow, one lockstep release workflow, one PR labeler
+├── build/                       # build/test scripts + the npm/Angular package verification scripts
 ├── aspnetcore-mcp/              # shared MCP server infrastructure (no domain model)
 ├── blob-storing/
 │   ├── Dignite.Abp.BlobStoring.slnx      # focused solution for this module alone
@@ -59,10 +60,11 @@ abp-modules/
 │   ├── Dignite.Abp.Notifications.slnx  # focused solution for this module alone
 │   ├── core/  notification-center/       # the published class libraries
 │   ├── host/  angular/                   # local-dev demo app + Angular workspace
+│   ├── docs/                             # design documents
 │   └── .claude/skills/                   # module-specific conventions & invariants
 └── flex-fields/
-    ├── Dignite.Abp.FlexFields.slnx       # the demo host (the libraries build via the aggregate)
-    ├── src/                              # the published class libraries
+    ├── Dignite.Abp.FlexFields.slnx       # focused solution for this module alone (src/, test/ and demo/)
+    ├── src/  test/                       # the published class libraries and their tests
     ├── demo/  angular/                   # local-dev demo app + Angular workspace
     └── docs/flexfields-design.md         # design rationale
 ```
@@ -85,10 +87,8 @@ To work on one module in isolation, use its own solution — same projects, smal
 ```bash
 dotnet build blob-storing/Dignite.Abp.BlobStoring.slnx
 dotnet build notifications/Dignite.Abp.Notifications.slnx
+dotnet build flex-fields/Dignite.Abp.FlexFields.slnx
 ```
-
-`flex-fields` has no such focused solution for its libraries — `Dignite.Abp.FlexFields.slnx` holds
-only the demo host, so build its libraries through the aggregate solution.
 
 `dotnet test` starts an embedded mongod (MongoSandbox) for the MongoDB provider tests and uses
 in-memory SQLite for the EF Core ones, so no local database install is needed.

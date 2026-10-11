@@ -26,7 +26,7 @@
  *   duplicate arriving by some other route — a transitive `@dignite/*` edge, a dist-tag that makes a
  *   range resolve backwards — is caught too.
  *
- * Yarn Classic specifically, because that is what all three Angular workspaces here and every
+ * Yarn Classic specifically, because that is what both Angular workspaces here and every
  * downstream consumer use, while the packed-tarball smoke tests install with npm. npm deduplicates
  * where Yarn Classic does not, so the verification path and the real usage path used to differ in
  * exactly the way that hid this defect in the first place. `packed` mode still runs that same Yarn

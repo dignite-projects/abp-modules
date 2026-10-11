@@ -208,6 +208,8 @@ so it stays clear which part of the repository actually moved.
   `Dignite.Abp.Notifications.{slnx,abpsln,abpmdl}`, matching the module's root package family. No package, project or
   namespace is renamed (`Dignite.NotificationCenter.Installer` keeps its name); the Installer package now ships
   `content/Dignite.Abp.Notifications.abpmdl`.
+- The "Introducing the ABP Notification Center" article moved from `docs/en/articles/` to
+  `notifications/docs/articles/`.
 
 #### flex-fields
 
@@ -231,6 +233,26 @@ so it stays clear which part of the repository actually moved.
   `*Configuration` / `*ConfigurationNames` and `AddFileSizeLimitHandler` / `AddFileTypeCheckHandler` /
   `AddImageResizeHandler`.
 - `FileConsts`, `FileErrorCodes`, `FileStoringImagingErrorCodes`, `ImageFormatHelper`, `FileStoringResource`.
+
+### Fixed
+
+#### notifications
+
+- The ABP Studio run profile (`host/etc/run-profiles/Default.abprun.json`) pointed the Angular app and the proxy
+  generator at `../../angular`; both now resolve to `notifications/angular`.
+- The NuGet package smoke test now also covers `Dignite.Abp.Notifications.Push`, `.Push.Expo`,
+  `Dignite.NotificationCenter.Push` and `.Push.Identity`.
+
+#### flex-fields
+
+- CI and the release workflow now run `Dignite.Abp.FlexFields.Web.Tests`; they were never run before.
+- The NuGet package smoke test now also covers `Dignite.Abp.FlexFields.Web`, `.CKEditor` and `.CKEditor.Web`.
+- The demo's `etc/scripts/initialize-solution.ps1` builds `Dignite.Abp.FlexFields.slnx` from the module root instead of
+  running a bare `dotnet build` in a folder with no solution.
+
+#### aspnetcore-mcp
+
+- CI now uploads the `aspnetcore-mcp` coverage to Codecov (it was collected but never uploaded).
 
 ## [10.0.0-rc.27] - 2026-10-10
 
