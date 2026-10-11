@@ -1,6 +1,6 @@
 # Security Policy
 
-Covers every package released from this repository — the `file-storing/`, `notifications/`, and
+Covers every package released from this repository — the `blob-storing/`, `notifications/`, and
 `flex-fields/` module trees.
 
 ## Supported versions
@@ -26,12 +26,12 @@ Instead, use GitHub's private vulnerability reporting for this repository:
 2. Fill in the advisory form with as much detail as you can:
    - A description of the issue and its impact
    - Steps to reproduce (a minimal proof of concept helps a lot)
-   - Affected package (e.g. `Dignite.Abp.FileStoring`, `Dignite.Abp.FileStoring.Imaging`,
+   - Affected package (e.g. `Dignite.Abp.BlobStoring.Pipeline`, `Dignite.Abp.BlobStoring.Imaging`,
      `Dignite.Abp.Notifications`, `Dignite.NotificationCenter.HttpApi`, a specific persistence
      provider) and version / commit
    - Any suggested remediation, if you have one
 
-Reports about the demo hosts (`file-storing/host/`, `notifications/host/`, `flex-fields/demo/`) are welcome but are
+Reports about the demo hosts (`notifications/host/`, `flex-fields/demo/`) are welcome but are
 triaged at lower priority: they are local-development demos, never packed or published, and not
 intended to be deployed.
 
@@ -56,8 +56,8 @@ assuming a package is unaffected, and drop an entry from the allowlist as soon a
 genuinely remediated.
 
 **No allowlisted advisories at the moment.** The last ones, three High SixLabors.ImageSharp 3.1.11 advisories
-(GHSA-j3p4-wp97-rph4, GHSA-j9gm-c75j-xc9q, GHSA-jjfr-hcj7-qf5w) that reached `Dignite.Abp.FileStoring.Imaging` through
-`Volo.Abp.Imaging.ImageSharp` 10.7.0, are gone with that package: its replacement, `Dignite.Abp.BlobStoring.Imaging`,
+(GHSA-j3p4-wp97-rph4, GHSA-j9gm-c75j-xc9q, GHSA-jjfr-hcj7-qf5w) that reached this module's earlier Imaging package
+through `Volo.Abp.Imaging.ImageSharp` 10.7.0, are gone with that package: its replacement, `Dignite.Abp.BlobStoring.Imaging`,
 builds only on ABP's provider-agnostic `Volo.Abp.Imaging.Abstractions` and leaves the image library to the consuming
 application, so nothing in this repository references ImageSharp any more. Its tests run on
 `Volo.Abp.Imaging.SkiaSharp` (SkiaSharp 3.119.0), which has no open advisories.

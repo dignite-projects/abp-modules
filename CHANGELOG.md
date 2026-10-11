@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the packages released from this repository — the `file-storing/`,
+All notable changes to the packages released from this repository — the `blob-storing/`,
 `notifications/` and `flex-fields/` modules, and the shared `aspnetcore-mcp/` tree — are documented in
 this file.
 
@@ -15,6 +15,55 @@ packages are still republished at that version with unchanged content. Entries a
 so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
+
+### Added
+
+#### blob-storing (was file-storing)
+
+- **`Dignite.Abp.BlobStoring.Pipeline`** (`DigniteAbpBlobStoringPipelineModule`, namespace `Dignite.Abp.BlobStoring.Pipeline`):
+  everyday `IBlobPipelineContributor`s for the BLOB content pipeline ABP 10.7.0 introduced. ABP ships the mechanism
+  (`IBlobPipelineContributor`, `BlobContainerConfiguration.PipelineContributors`, run inside `IBlobContainer.SaveAsync` /
+  `GetAsync`, in configuration order on save and in reverse on get) and no contributors; these are the ones that were
+  `IFileHandler`s before, and GZip. Depends on `Volo.Abp.BlobStoring` and FileSignatures (MIT).
+  - `MaxSizeContributor` - `AddMaxSizeContributor(c => c.MaxSizeInBytes = ...)`. Rejects larger content with
+    `Dignite.Abp.BlobStoring:ContentTooLarge`, while the content is read: a seekable stream whose length is over the limit
+    is rejected without reading, any other stream as soon as the copy passes it. The copy replaces the stream, so later
+    contributors get a seekable stream with a known length.
+  - `AllowedContentTypesContributor` - `AddAllowedContentTypesContributor(c => c.AllowedContentTypes = [...])`, with
+    `AllowUnidentified`. Rejects content whose type, detected from the bytes, is not on the list
+    (`Dignite.Abp.BlobStoring:ContentTypeNotAllowed`); entries are exact types or `type/*` wildcards.
+  - `GZipContributor` - `AddGZipContributor(c => c.CompressionLevel = ...)`. Stores the content GZip-compressed and
+    decompresses it on read. It is part of the stored format: do not add it to, or remove it from, a container that
+    already has blobs.
+  - `IMimeTypeDetector` / `MimeTypeDetector`: the MIME type from the content's signature (FileSignatures, which also
+    looks inside archives, so an Office Open XML or OpenDocument file is not a plain ZIP), a text sniff for HTML, SVG and
+    XML, and a policy that reconciles the result with the extension (`Dignite.Abp.BlobStoring:ContentTypeMismatch`).
+    Replaceable with `[Dependency(ReplaceServices = true)]`. The README states what it does not protect against.
+  - `BlobStreamBuffering` (public): capped buffering for contributors that need to re-read the content;
+    `BlobStoringPipelineConsts.DefaultMaxBufferedBytes` (100 MB) bounds it when a container has no `MaxSize`.
+- **`Dignite.Abp.BlobStoring.Imaging`** (`DigniteAbpBlobStoringImagingModule`, namespace `Dignite.Abp.BlobStoring.Imaging`):
+  image contributors on ABP's provider-agnostic `Volo.Abp.Imaging.Abstractions`. It references no image library; the
+  application adds one of ABP's providers (`Volo.Abp.Imaging.SkiaSharp`, `.ImageSharp` or `.MagickNet`).
+  - `ImageResizeContributor` - `AddImageResizeContributor(c => ...)` with `MaxWidth`, `MaxHeight`, `MinWidth`,
+    `MinHeight` and `Mode`. An image is resized only when its header dimensions exceed the box (an image that fits is
+    stored byte for byte, never upscaled); a smaller source is rejected with
+    `Dignite.Abp.BlobStoring.Imaging:ImageTooSmall`. Content that is not an image, and an image the provider does not
+    support, pass through.
+  - `ImageCompressContributor` - `AddImageCompressContributor()`. Re-encodes with ABP's `IImageCompressor`, keeping the
+    original when the result is not smaller.
+  - The image decode guard - `ConfigureImageDecodeGuard(g => ...)`, applied by both contributors before the provider
+    decodes anything: `MaxSourceWidth` (8192), `MaxSourceHeight` (8192), `MaxSourcePixels` (50,000,000; about 200 MB of
+    RGBA per decode in the worst case), `MaxDecompressionRatio` (100 pixels per stored byte) and `DecodeTimeout` (10 s).
+    Dimensions are read from the header (PNG, JPEG, GIF, BMP, WebP, TIFF) without decoding. The timeout only
+    interrupts a provider that observes the cancellation token while decoding (ImageSharp does; SkiaSharp and Magick.NET
+    decode synchronously), so for those the dimension guard and the byte cap are the protections that apply.
+  - Both contributors are one-way transforms, so they can be added to a container that already has blobs.
+- Error codes are named, not numbered: `Dignite.Abp.BlobStoring:ContentTooLarge` / `ContentTypeMismatch` /
+  `ContentTypeNotAllowed`, and `Dignite.Abp.BlobStoring.Imaging:ImageTooLarge` / `ImageTooSmall` / `ImageDecodeTimeout` /
+  `ImageProcessingFailed`, each localized in English, Japanese, Simplified and Traditional Chinese. See the module's
+  README for the contributor reference and
+  [`blob-storing/docs/pipeline-contributors-decision.md`](blob-storing/docs/pipeline-contributors-decision.md) for why
+  this replaces the old pipeline.
 
 ### Changed
 
@@ -39,10 +88,75 @@ so it stays clear which part of the repository actually moved.
   10.2.3 is still built against 2.x.
 - **The vulnerability gate in `ci.yml` / `release.yml` now checks every advisory line.** Its regex only inspected the
   first advisory line of each package (and never matched a top-level package's row), so the three High
-  SixLabors.ImageSharp 3.1.11 advisories reaching `Dignite.Abp.FileStoring.Imaging` through
-  `Volo.Abp.Imaging.ImageSharp` 10.7.0 went unseen; they are now allowlisted by id, because the fixed releases (3.2.0,
-  4.1.3) require a Six Labors license key to build, and the entry goes when the package is rebuilt as
-  `Dignite.Abp.BlobStoring.Imaging`.
+  SixLabors.ImageSharp 3.1.11 advisories reaching the earlier Imaging package through `Volo.Abp.Imaging.ImageSharp` 10.7.0
+  went unseen. They are not allowlisted: the fixed releases (3.2.0, 4.1.3) require a Six Labors license key to build, so the
+  package that reached them was replaced instead - `Dignite.Abp.BlobStoring.Imaging` (see blob-storing below) references only
+  ABP's imaging abstractions, and nothing in the solution references ImageSharp any more.
+
+#### blob-storing (was file-storing)
+
+- **Breaking - `file-storing/` is now `blob-storing/`, its packages are `Dignite.Abp.BlobStoring.*`, and the `IFileHandler`
+  pipeline and `IFileStorer` are gone.** ABP 10.7.0's `IBlobPipelineContributor` is the same idea as `IFileHandler` (a
+  per-container ordered list of steps over a stream), so the module keeps no pipeline of its own: it ships contributors for
+  ABP's (see Added), and what used to wrap the container (`IFileStorer`, `StoredFileInfo`, `IBlobNameGenerator`) is now the
+  calling application's. The module is pre-stable and the rename adopts ABP's own naming
+  (`Dignite.Abp.BlobStoring.<Addition>`, as `Volo.Abp.BlobStoring.<Provider>`), so it falls under the one exception the
+  repository's PackageId invariant allows - the same one `10.0.0-rc.24` used for the notifications packages - and is not a
+  precedent for renaming after a layout change. Why, and the wrapper that lost:
+  [`blob-storing/docs/pipeline-contributors-decision.md`](blob-storing/docs/pipeline-contributors-decision.md).
+- The folder `file-storing/` is `blob-storing/`, and its solution is `blob-storing/Dignite.Abp.BlobStoring.slnx`, holding
+  `src/Dignite.Abp.BlobStoring.Pipeline`, `src/Dignite.Abp.BlobStoring.Imaging` and a test project for each.
+- Error codes: `Dignite.Abp.File:0001`-`0005` and `Dignite.Abp.FileStoring.Imaging:0001`-`0006` are replaced by the named
+  codes under `Dignite.Abp.BlobStoring` and `Dignite.Abp.BlobStoring.Imaging` (table below). The Imaging package has a
+  namespace of its own because ABP maps one code namespace to one localization resource.
+- `IMimeTypeDetector.DetectAsync(Stream, string? fileName = null, CancellationToken = default)`: `fileName` is optional. A
+  blob name without an extension gets no extension reconciliation; the content alone decides the type.
+- The image decode guard's defaults are 8192 x 8192 pixels and 50,000,000 pixels in total (the handler's were 4096 x 4096
+  and 16,000,000), because the old values rejected ordinary 24 MP camera originals.
+
+  > **Migrate:** the old types are removed, not obsoleted. Update the packages, modules, namespaces and the container
+  > configuration as below; code that called `IFileStorer` moves to the calling sequence at the end.
+  >
+  > | rc.27 | Now |
+  > |---|---|
+  > | package `Dignite.Abp.FileStoring`, `DigniteAbpFileStoringModule`, namespace `Dignite.Abp.FileStoring` | package `Dignite.Abp.BlobStoring.Pipeline`, `DigniteAbpBlobStoringPipelineModule`, namespace `Dignite.Abp.BlobStoring.Pipeline` |
+  > | package `Dignite.Abp.FileStoring.Imaging`, `DigniteAbpFileStoringImagingModule`, namespace `Dignite.Abp.FileStoring.Imaging` | package `Dignite.Abp.BlobStoring.Imaging`, `DigniteAbpBlobStoringImagingModule`, namespace `Dignite.Abp.BlobStoring.Imaging`; **and add one of ABP's imaging providers explicitly** (`Volo.Abp.Imaging.SkiaSharp`, `.ImageSharp` or `.MagickNet`, with its module) - the package no longer brings ImageSharp |
+  > | `AddFileSizeLimitHandler(h => h.MaxFileSize = 20)` (megabytes) | `AddMaxSizeContributor(c => c.MaxSizeInBytes = 20 * 1024 * 1024)` (bytes) |
+  > | `AddFileTypeCheckHandler(h => h.AllowedFileTypeNames = [".pdf"])` (extensions) | `AddAllowedContentTypesContributor(c => c.AllowedContentTypes = ["application/pdf"])` - **content types now, matched against the detected content, not file extensions** |
+  > | `AddImageResizeHandler(h => { h.ImageWidth = w; h.ImageHeight = h; h.ImageSizeMustBeLargerThanPreset = true; h.MaxImageWidth / MaxImageHeight / MaxPixelCount / MaxDecompressionRatio / DecodeTimeoutSeconds })` | `AddImageResizeContributor(c => { c.MaxWidth = w; c.MaxHeight = h; c.MinWidth = w; c.MinHeight = h; })` (the minimums only where `ImageSizeMustBeLargerThanPreset` was on) + `AddImageCompressContributor()` (the handler compressed after resizing) + `ConfigureImageDecodeGuard(g => { g.MaxSourceWidth; g.MaxSourceHeight; g.MaxSourcePixels; g.MaxDecompressionRatio; g.DecodeTimeout = TimeSpan.FromSeconds(n) })` |
+  > | `IFileStorer.StoreAsync` / `DeleteAsync` | `IBlobContainer.SaveAsync` / `DeleteAsync`, with the caller-side sequence below |
+  > | `StoredFileInfo` (`BlobName`, `Size`, `MimeType`, `Hash`) | the caller computes what its row needs: `IMimeTypeDetector.DetectAsync`, SHA-256, the length - of the *upload*, not of the bytes after a resize or GZip |
+  > | `IBlobNameGenerator`, `RandomBlobNameGenerator`, `SetBlobNameGenerator<T>()` | the caller names its blobs (a GUID), and saves with `overrideExisting: false` |
+  > | `ContainerNameValidator`, `FileConsts`, `ImageFormatHelper`, `FileHandlerContext` | removed |
+  > | `Dignite.Abp.File:0001` (`FileTooLarge`) | `Dignite.Abp.BlobStoring:ContentTooLarge` |
+  > | `Dignite.Abp.File:0002` (`InvalidImageType`) | `Dignite.Abp.BlobStoring:ContentTypeNotAllowed` |
+  > | `Dignite.Abp.File:0003` (`MissingFileExtension`), `0004` (`Containers.NotFound`) | no replacement: an extension is no longer required, and there is no container-name check |
+  > | `Dignite.Abp.File:0005` (`ContentTypeMismatch`) | `Dignite.Abp.BlobStoring:ContentTypeMismatch` |
+  > | `Dignite.Abp.FileStoring.Imaging:0001` (`ImageSizeTooSmall`) | `Dignite.Abp.BlobStoring.Imaging:ImageTooSmall` |
+  > | `...Imaging:0002` (`ImageResizeFailure`) | `Dignite.Abp.BlobStoring.Imaging:ImageProcessingFailed` |
+  > | `...Imaging:0003` (`ImageTooLarge`) | `Dignite.Abp.BlobStoring.Imaging:ImageTooLarge` |
+  > | `...Imaging:0004` (`ImageFormatNotSupported`), `0006` (`ImageResizeDimensionsTooLarge`) | no replacement: an image the provider does not support passes through unchanged; to forbid it, list the allowed types in `AddAllowedContentTypesContributor` |
+  > | `...Imaging:0005` (`ImageDecodeTimeout`) | `Dignite.Abp.BlobStoring.Imaging:ImageDecodeTimeout` |
+  >
+  > Behaviour that changes with it:
+  > - **A container without `AddMaxSizeContributor` has no size limit** (`IFileStorer` capped every upload at 100 MB,
+  >   `FileConsts.DefaultMaxFileSizeInBytes`). Add `AddMaxSizeContributor` to every container that takes uploads.
+  > - Put the contributors in the recommended order: `MaxSize`, `AllowedContentTypes`, image contributors, GZip.
+  > - Nothing deletes a partially written blob after a failed save any more; deleting the blob when your own metadata
+  >   write fails is still yours to do.
+  >
+  > The calling sequence that replaces `IFileStorer.StoreAsync` (see the README for the explanation):
+  >
+  > ```csharp
+  > await using var content = await BlobStreamBuffering.CopyToBufferAsync(upload, maxBytes, cancellationToken);
+  > var mimeType = await _mimeTypeDetector.DetectAsync(content, fileName, cancellationToken);
+  > var hash = Convert.ToHexString(await SHA256.HashDataAsync(content, cancellationToken));
+  > content.Position = 0;
+  > var blobName = GuidGenerator.Create().ToString("N");
+  > await _container.SaveAsync(blobName, content, overrideExisting: false, cancellationToken);   // the contributors run here
+  > try { /* insert your metadata row: blobName, fileName, mimeType, content.Length, hash */ }
+  > catch { await _container.DeleteAsync(blobName, CancellationToken.None); throw; }
+  > ```
 
 #### notifications
 
@@ -62,6 +176,22 @@ so it stays clear which part of the repository actually moved.
   one without a navigation on the host entity - the demo's `HasOne<Product>().WithMany()` for
   `ProductFlexFieldIndex` - sees ABP 10.7 stop updating the tracked host entity (concurrency stamp, modification
   audit, entity updated event) when only its index rows change. No change here; the demo is left as is.
+
+### Removed
+
+#### blob-storing (was file-storing)
+
+- The NuGet packages `Dignite.Abp.FileStoring` and `Dignite.Abp.FileStoring.Imaging` are no longer published, starting with
+  this version. Their replacements are `Dignite.Abp.BlobStoring.Pipeline` and `Dignite.Abp.BlobStoring.Imaging` (see
+  Changed for the mapping). The IDs are retired, not reused for something else.
+- The pipeline and its runner: `IFileHandler`, `FileHandlerContext`, `IFileStorer` / `FileStorer` and its typed-container
+  extensions, `StoredFileInfo`.
+- `IBlobNameGenerator`, `RandomBlobNameGenerator`, `SetBlobNameGenerator<T>()` / `GetBlobNameGeneratorType()` and
+  `BlobContainerConfigurationNames.BlobNameGenerator`; `ContainerNameValidator`.
+- The handlers and their configuration: `FileSizeLimitHandler`, `FileTypeCheckHandler`, `ImageResizeHandler`, with their
+  `*Configuration` / `*ConfigurationNames` and `AddFileSizeLimitHandler` / `AddFileTypeCheckHandler` /
+  `AddImageResizeHandler`.
+- `FileConsts`, `FileErrorCodes`, `FileStoringImagingErrorCodes`, `ImageFormatHelper`, `FileStoringResource`.
 
 ## [10.0.0-rc.27] - 2026-10-10
 
