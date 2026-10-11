@@ -109,8 +109,8 @@ jobs:
           # entry once its package is genuinely fixed or remediated (see SECURITY.md). To accept one,
           # filter it out here (`| grep -Ev 'GHSA-...'`) with a comment saying why.
           # GHSA-j3p4-wp97-rph4, GHSA-j9gm-c75j-xc9q, GHSA-jjfr-hcj7-qf5w (SixLabors.ImageSharp 3.1.11,
-          # reached through Volo.Abp.Imaging.ImageSharp 10.7.0 into the published package
-          # Dignite.Abp.FileStoring.Imaging): fixed in ImageSharp 4.1.2. The 3.x backport is 3.2.0, but
+          # reached through Volo.Abp.Imaging.ImageSharp 10.7.0; no published package references it while
+          # the blob-storing Imaging package is being rebuilt): fixed in ImageSharp 4.1.2. The 3.x backport is 3.2.0, but
           # 3.2.0 and 4.1.3 introduce Six Labors license-key enforcement at build time (their pricing
           # page: "a license key is required to build the software"), so pinning forward would force a
           # license key on this repository's CI and on every consumer's build. ABP 10.7.0 itself still
@@ -131,12 +131,9 @@ jobs:
       - name: Run AspNetCore Mcp tests
         run: dotnet test aspnetcore-mcp/test/Dignite.Abp.AspNetCore.Mcp.Tests/Dignite.Abp.AspNetCore.Mcp.Tests.csproj --no-build --configuration Release --verbosity normal
 
-      # --- file-storing tests ---
-      - name: Run FileStoring (core) tests
-        run: dotnet test file-storing/core/test/Dignite.Abp.FileStoring.Tests/Dignite.Abp.FileStoring.Tests.csproj --no-build --configuration Release --verbosity normal
-
-      - name: Run FileStoring Imaging (core) tests
-        run: dotnet test file-storing/core/test/Dignite.Abp.FileStoring.Imaging.Tests/Dignite.Abp.FileStoring.Imaging.Tests.csproj --no-build --configuration Release --verbosity normal
+      # --- blob-storing tests ---
+      - name: Run BlobStoring Pipeline tests
+        run: dotnet test blob-storing/test/Dignite.Abp.BlobStoring.Pipeline.Tests/Dignite.Abp.BlobStoring.Pipeline.Tests.csproj --no-build --configuration Release --verbosity normal
 
       # --- notifications tests ---
       - name: Run Notifications (core) tests
@@ -170,9 +167,9 @@ jobs:
       - name: Pack NuGet packages
         run: dotnet pack Dignite.Abp.Modules.slnx --no-build --configuration Release -o ./artifacts
 
-      - name: Smoke-test file-storing NuGet packages
+      - name: Smoke-test blob-storing NuGet packages
         shell: pwsh
-        run: ./file-storing/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts '${{ steps.version.outputs.version }}'
+        run: ./blob-storing/.github/scripts/smoke-test-nuget-packages.ps1 ./artifacts '${{ steps.version.outputs.version }}'
 
       - name: Smoke-test notifications NuGet packages
         shell: pwsh
