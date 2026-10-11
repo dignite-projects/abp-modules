@@ -77,7 +77,7 @@ so it stays clear which part of the repository actually moved.
 - **Breaking - every Angular package now targets `@abp/ng.*` 10.7.0, Angular 22 and TypeScript 6 (was `@abp/ng.*`
   10.5.0, Angular 21, TypeScript 5.9).** ABP 10.6 moved its Angular packages to Angular 22, so this is what matching
   the NuGet packages' ABP 10.7.0 takes. The published peer ranges are now `@abp/ng.*` `~10.7.0` and `@angular/*`
-  `^22.0.0` (`@dignite/ng.notification-center`) or `~22.0.0` (`@dignite/ng.flex-fields`,
+  `^22.0.0` in all three packages (`@dignite/ng.notification-center`, `@dignite/ng.flex-fields` and
   `@dignite/ng.flex-fields-ckeditor`): a consuming Angular host must be on Angular 22 and ABP 10.7. Both workspaces
   follow ABP 10.7.0's own Angular app template (`@angular/*` ~22.0, `@abp/ng.theme.lepton-x` ~5.7.0, `ng-packagr`
   ~22.0, TypeScript ~6.0.3). What else moved, and what deliberately did not:
