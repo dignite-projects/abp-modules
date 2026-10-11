@@ -18,11 +18,11 @@ namespace Dignite.Abp.BlobStoring.Imaging;
 /// </summary>
 public class ImageDecodeGuardConfiguration
 {
-    public const int DefaultMaxSourceWidth = 4096;
+    public const int DefaultMaxSourceWidth = 8192;
 
-    public const int DefaultMaxSourceHeight = 4096;
+    public const int DefaultMaxSourceHeight = 8192;
 
-    public const long DefaultMaxSourcePixels = 16_000_000;
+    public const long DefaultMaxSourcePixels = 50_000_000;
 
     public const int DefaultMaxDecompressionRatio = 100;
 
@@ -41,7 +41,7 @@ public class ImageDecodeGuardConfiguration
     }
 
     /// <summary>
-    /// The widest source image accepted, in pixels. Default: <see cref="DefaultMaxSourceWidth"/> (4096).
+    /// The widest source image accepted, in pixels. Default: <see cref="DefaultMaxSourceWidth"/> (8192).
     /// </summary>
     public int MaxSourceWidth
     {
@@ -50,7 +50,7 @@ public class ImageDecodeGuardConfiguration
     }
 
     /// <summary>
-    /// The tallest source image accepted, in pixels. Default: <see cref="DefaultMaxSourceHeight"/> (4096).
+    /// The tallest source image accepted, in pixels. Default: <see cref="DefaultMaxSourceHeight"/> (8192).
     /// </summary>
     public int MaxSourceHeight
     {
@@ -60,7 +60,9 @@ public class ImageDecodeGuardConfiguration
 
     /// <summary>
     /// The largest source image accepted, in pixels (width × height). Default:
-    /// <see cref="DefaultMaxSourcePixels"/> (16,000,000).
+    /// <see cref="DefaultMaxSourcePixels"/> (50,000,000, which admits a 24 MP camera original). A decoded image is
+    /// held as roughly four bytes per pixel, so the default is about 200 MB per decode in the worst case; lower it for
+    /// containers that take uploads from many users at once.
     /// </summary>
     public long MaxSourcePixels
     {
@@ -83,7 +85,8 @@ public class ImageDecodeGuardConfiguration
     /// How long the imaging provider may take to process one image; beyond it the save fails with
     /// <see cref="BlobStoringImagingErrorCodes.ImageDecodeTimeout"/>. Default: <see cref="DefaultDecodeTimeout"/>
     /// (10 seconds). It works through the cancellation token passed to the provider, so it only interrupts a provider
-    /// that observes that token while decoding.
+    /// that observes that token while decoding (ImageSharp does; SkiaSharp and Magick.NET decode synchronously), so for
+    /// those the dimension and pixel limits and the buffering cap are the protection that applies.
     /// </summary>
     public TimeSpan DecodeTimeout
     {

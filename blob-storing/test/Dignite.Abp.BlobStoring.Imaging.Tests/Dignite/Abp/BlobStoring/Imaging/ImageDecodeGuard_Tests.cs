@@ -75,9 +75,9 @@ public class ImageDecodeGuard_Tests : BlobStoringImagingTestBase
     {
         var guard = new BlobContainerConfiguration().GetImageDecodeGuardConfiguration();
 
-        guard.MaxSourceWidth.ShouldBe(4096);
-        guard.MaxSourceHeight.ShouldBe(4096);
-        guard.MaxSourcePixels.ShouldBe(16_000_000);
+        guard.MaxSourceWidth.ShouldBe(8192);
+        guard.MaxSourceHeight.ShouldBe(8192);
+        guard.MaxSourcePixels.ShouldBe(50_000_000);
         guard.MaxDecompressionRatio.ShouldBe(100);
         guard.DecodeTimeout.ShouldBe(TimeSpan.FromSeconds(10));
     }
