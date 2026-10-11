@@ -52,14 +52,21 @@
   <!-- Test-project detection (name + path based, so it is available this early - the SDK's own
        IsTestProject isn't set until much later). *.Tests run xunit; *.TestBase is shared scenario
        infrastructure with no runner. The three demo hosts have their OWN nested Directory.Build.props
-       that does not import this file, so nothing below ever reaches them. -->
+       that does not import this file, so nothing below ever reaches them.
+       The detection result lives in the private _DigniteTestTreeProject, and the coverlet and Fody
+       conditions below test THAT, not IsTestProject: a csproj body is evaluated after this file, and
+       the two *.TestBase projects deliberately set <IsTestProject>false</IsTestProject> so that
+       `dotnet test` on a solution skips them. Testing IsTestProject here would let that override
+       re-enable Fody on them (a "Could not find a FodyWeavers.xml" warning and a stray
+       FodyWeavers.xml written into the folder on every Release build). -->
   <PropertyGroup>
-    <IsTestProject Condition="$(MSBuildProjectFullPath.Contains('test')) and ($(MSBuildProjectName.EndsWith('.Tests')) or $(MSBuildProjectName.EndsWith('.TestBase')))">true</IsTestProject>
+    <_DigniteTestTreeProject Condition="$(MSBuildProjectFullPath.Contains('test')) and ($(MSBuildProjectName.EndsWith('.Tests')) or $(MSBuildProjectName.EndsWith('.TestBase')))">true</_DigniteTestTreeProject>
+    <IsTestProject Condition="'$(_DigniteTestTreeProject)' == 'true'">true</IsTestProject>
   </PropertyGroup>
 
   <!-- Code-coverage collector for test projects only. Enables the "XPlat Code Coverage" data
        collector for `dotnet test` locally and in CI; see codecov.yml. -->
-  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+  <ItemGroup Condition="'$(_DigniteTestTreeProject)' == 'true'">
     <PackageReference Include="coverlet.collector" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
   </ItemGroup>
 
@@ -71,14 +78,14 @@
        supplied inline via the WeaverConfiguration property (Fody's documented alternative to a
        per-project FodyWeavers.xml), so there is exactly one copy of it, right here, and no stray
        FodyWeavers.xml/.xsd files are scattered across the projects. -->
-  <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(IsTestProject)' != 'true'">
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(_DigniteTestTreeProject)' != 'true'">
     <WeaverConfiguration>
       <Weavers>
         <ConfigureAwait ContinueOnCapturedContext="false" />
       </Weavers>
     </WeaverConfiguration>
   </PropertyGroup>
-  <ItemGroup Condition="'$(Configuration)' == 'Release' and '$(IsTestProject)' != 'true'">
+  <ItemGroup Condition="'$(Configuration)' == 'Release' and '$(_DigniteTestTreeProject)' != 'true'">
     <PackageReference Include="ConfigureAwait.Fody" PrivateAssets="all" />
     <PackageReference Include="Fody" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
   </ItemGroup>
