@@ -10,7 +10,8 @@ $ErrorActionPreference = 'Stop'
 
 $artifacts = (Resolve-Path -LiteralPath $ArtifactsPath).Path
 $packageIds = @(
-    'Dignite.Abp.BlobStoring.Pipeline'
+    'Dignite.Abp.BlobStoring.Pipeline',
+    'Dignite.Abp.BlobStoring.Imaging'
 )
 
 foreach ($packageId in $packageIds) {
@@ -59,7 +60,12 @@ public static class PackageSurface
         typeof(Dignite.Abp.BlobStoring.Pipeline.AllowedContentTypesContributor),
         typeof(Dignite.Abp.BlobStoring.Pipeline.GZipContributor),
         typeof(Dignite.Abp.BlobStoring.Pipeline.IMimeTypeDetector),
-        typeof(Dignite.Abp.BlobStoring.Pipeline.BlobContainerConfigurationExtensions)
+        typeof(Dignite.Abp.BlobStoring.Pipeline.BlobContainerConfigurationExtensions),
+        typeof(Dignite.Abp.BlobStoring.Imaging.DigniteAbpBlobStoringImagingModule),
+        typeof(Dignite.Abp.BlobStoring.Imaging.ImageResizeContributor),
+        typeof(Dignite.Abp.BlobStoring.Imaging.ImageCompressContributor),
+        typeof(Dignite.Abp.BlobStoring.Imaging.ImageDecodeGuardConfiguration),
+        typeof(Dignite.Abp.BlobStoring.Imaging.ImagingBlobContainerConfigurationExtensions)
     ];
 }
 '@

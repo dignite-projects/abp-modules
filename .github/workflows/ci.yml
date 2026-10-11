@@ -94,6 +94,8 @@ jobs:
       # notifications tests).
       - name: Run BlobStoring Pipeline tests
         run: dotnet test blob-storing/test/Dignite.Abp.BlobStoring.Pipeline.Tests/Dignite.Abp.BlobStoring.Pipeline.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/blob-storing
+      - name: Run BlobStoring Imaging tests
+        run: dotnet test blob-storing/test/Dignite.Abp.BlobStoring.Imaging.Tests/Dignite.Abp.BlobStoring.Imaging.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/blob-storing
 
       # --- notifications tests ---
       # Dignite.Abp.Notifications.Domain.TestBase and Dignite.NotificationCenter.TestBase are

@@ -134,6 +134,8 @@ jobs:
       # --- blob-storing tests ---
       - name: Run BlobStoring Pipeline tests
         run: dotnet test blob-storing/test/Dignite.Abp.BlobStoring.Pipeline.Tests/Dignite.Abp.BlobStoring.Pipeline.Tests.csproj --no-build --configuration Release --verbosity normal
+      - name: Run BlobStoring Imaging tests
+        run: dotnet test blob-storing/test/Dignite.Abp.BlobStoring.Imaging.Tests/Dignite.Abp.BlobStoring.Imaging.Tests.csproj --no-build --configuration Release --verbosity normal
 
       # --- notifications tests ---
       - name: Run Notifications (core) tests

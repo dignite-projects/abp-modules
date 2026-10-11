@@ -9,9 +9,11 @@
 
   <Folder Name="/blob-storing/" />
   <Folder Name="/blob-storing/src/">
+    <Project Path="blob-storing/src/Dignite.Abp.BlobStoring.Imaging/Dignite.Abp.BlobStoring.Imaging.csproj" />
     <Project Path="blob-storing/src/Dignite.Abp.BlobStoring.Pipeline/Dignite.Abp.BlobStoring.Pipeline.csproj" />
   </Folder>
   <Folder Name="/blob-storing/test/">
+    <Project Path="blob-storing/test/Dignite.Abp.BlobStoring.Imaging.Tests/Dignite.Abp.BlobStoring.Imaging.Tests.csproj" />
     <Project Path="blob-storing/test/Dignite.Abp.BlobStoring.Pipeline.Tests/Dignite.Abp.BlobStoring.Pipeline.Tests.csproj" />
   </Folder>
 
