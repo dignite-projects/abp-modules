@@ -24,6 +24,7 @@
   <ItemGroup Label="ABP 10.7.0">
     <PackageVersion Include="Volo.Abp.Core" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.BlobStoring" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.BlobStoring.Memory" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Validation" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Imaging.Abstractions" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Imaging.ImageSharp" Version="10.7.0" />
@@ -77,6 +78,11 @@
   -->
   <ItemGroup Label="Embedded static and localization resources">
     <PackageVersion Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.11" />
+  </ItemGroup>
+
+  <!-- FileSignatures (MIT): the signature engine behind Dignite.Abp.BlobStoring.Pipeline's MIME detector. -->
+  <ItemGroup Label="File format signatures (blob-storing MIME detection)">
+    <PackageVersion Include="FileSignatures" Version="7.3.0" />
   </ItemGroup>
 
   <ItemGroup Label="System.Text.Json (only needed for netstandard targets; in-box on net10.0)">
