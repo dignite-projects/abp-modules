@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { LocalizationPipe } from '@abp/ng.core';
 import { NotificationDataPayload } from './notification-data-payload';
 
@@ -7,6 +7,7 @@ import { NotificationDataPayload } from './notification-data-payload';
   selector: 'abp-unsupported-notification-data',
   standalone: true,
   imports: [LocalizationPipe],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <p class="abp-notification-item-message abp-notification-item-unsupported text-muted">
       {{ 'NotificationCenter::UnsupportedNotification' | abpLocalization }}

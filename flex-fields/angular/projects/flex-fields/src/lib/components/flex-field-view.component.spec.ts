@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ConfigStateService } from '@abp/ng.core';
 import { CoreTestingModule } from '@abp/ng.core/testing';
@@ -7,7 +7,11 @@ import { FlexFieldValue } from '../models';
 import { provideFlexFields, provideFlexFieldTypes } from '../providers';
 import { FlexFieldViewComponent } from './flex-field-view.component';
 
-@Component({ selector: 'ff-stub-view', template: '<span>{{ value }}</span>' })
+@Component({
+  selector: 'ff-stub-view',
+  changeDetection: ChangeDetectionStrategy.Eager,
+  template: '<span>{{ value }}</span>',
+})
 class StubViewComponent {
   @Input() fields?: FlexFieldValue;
   @Input() type?: string;

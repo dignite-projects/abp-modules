@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -14,6 +14,7 @@ import { NumberConfiguration } from './number-configuration';
 @Component({
   selector: 'ff-number-search',
   templateUrl: './number-search.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CommonModule, ReactiveFormsModule],
 })
 export class NumberSearchComponent extends FieldTypeControlBase {

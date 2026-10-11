@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TestBed } from '@angular/core/testing';
 import { FieldTypeDefinition } from '../field-types';
@@ -6,7 +6,11 @@ import { FlexFieldValue } from '../models';
 import { provideFlexFields, provideFlexFieldTypes } from '../providers';
 import { FlexFieldControlComponent } from './flex-field-control.component';
 
-@Component({ selector: 'ff-stub-control', template: '<span>stub</span>' })
+@Component({
+  selector: 'ff-stub-control',
+  changeDetection: ChangeDetectionStrategy.Eager,
+  template: '<span>stub</span>',
+})
 class StubControlComponent {
   @Input() fields?: FlexFieldValue;
   @Input() parentFieldName?: string;
@@ -26,6 +30,7 @@ class StubControlComponent {
       }
     </form>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [ReactiveFormsModule, FlexFieldControlComponent],
 })
 class BuiltInControlsHostComponent {

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NzSelectModule, NzSelectOptionInterface } from 'ng-zorro-antd/select';
 import { AbstractControl, ReactiveFormsModule } from '@angular/forms';
@@ -12,6 +12,7 @@ import { SelectListItem, normalizeSelectListItems } from './select-list-item';
   selector: 'ff-select-search',
   templateUrl: './select-search.component.html',
   styleUrls: ['./select-field.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CommonModule, ReactiveFormsModule, NzSelectModule],
 })
 export class SelectSearchComponent extends FieldTypeControlBase implements OnInit {

@@ -11,7 +11,8 @@
     "useDefineForClassFields": false
   },
   "angularCompilerOptions": {
-    "compilationMode": "partial"
+    "compilationMode": "partial",
+    "strictTemplates": false
   },
   "exclude": ["**/*.spec.ts"],
   "include": ["**/*.ts"]

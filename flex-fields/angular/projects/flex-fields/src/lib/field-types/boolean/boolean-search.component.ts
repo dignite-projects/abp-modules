@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { LocalizationPipe } from '@abp/ng.core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, ReactiveFormsModule } from '@angular/forms';
@@ -12,6 +12,7 @@ import { BooleanConfiguration } from './boolean-configuration';
 @Component({
   selector: 'ff-boolean-search',
   templateUrl: './boolean-search.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CommonModule, ReactiveFormsModule, LocalizationPipe],
 })
 export class BooleanSearchComponent extends FieldTypeControlBase {

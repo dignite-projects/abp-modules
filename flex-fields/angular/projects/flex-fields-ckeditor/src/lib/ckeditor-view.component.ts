@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, inject } from '@angular/core';
+import { Component, Input, OnChanges, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CoreModule } from '@abp/ng.core';
 import { FlexFieldValue } from '@dignite/ng.flex-fields';
 import { marked } from 'marked';
@@ -23,6 +23,7 @@ import { CKEDITOR_DISPLAY_CONTRIBUTORS, applyDisplayContributors } from './ckedi
 @Component({
   selector: 'ff-ckeditor-view',
   templateUrl: './ckeditor-view.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CoreModule],
 })
 export class CKEditorViewComponent implements OnChanges {

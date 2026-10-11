@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { LocalizationPipe } from '@abp/ng.core';
 import {
   NotificationSubscriptionService,
@@ -60,6 +60,7 @@ export interface NotificationSubscriptionGroup {
       </tbody>
     </table>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       .abp-notification-subscriptions-table { width: 100%; border-collapse: collapse; }

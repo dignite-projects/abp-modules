@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy, OnInit, ViewEncapsulation, inject, signal } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, ViewEncapsulation, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CoreModule } from '@abp/ng.core';
 import { AbstractControl, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
@@ -36,6 +36,7 @@ import { CKEDITOR_UPLOAD_PROVIDER } from './ckeditor-upload-provider';
   // globally to reach them. (ckeditor5.css itself is no longer part of these styles: it arrives as a
   // <link> the host serves, see ngOnInit.) See ckeditor-control.component.css.
   encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CommonModule, CoreModule, ReactiveFormsModule, CKEditorModule],
 })
 export class CKEditorControlComponent extends FieldTypeControlBase implements OnInit, OnDestroy {

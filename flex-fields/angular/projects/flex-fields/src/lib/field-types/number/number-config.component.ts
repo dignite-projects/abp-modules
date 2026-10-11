@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CoreModule } from '@abp/ng.core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FieldTypeConfigBase } from '../field-type-config-base';
@@ -8,6 +8,7 @@ import { NumberConfiguration } from './number-configuration';
 @Component({
   selector: 'ff-number-config',
   templateUrl: './number-config.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CoreModule, ReactiveFormsModule],
 })
 export class NumberConfigComponent extends FieldTypeConfigBase {

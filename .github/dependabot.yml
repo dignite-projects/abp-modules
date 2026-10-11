@@ -128,7 +128,7 @@ updates:
       # deliberate config migration, not an auto-bump.
       - dependency-name: "eslint"
         update-types: ["version-update:semver-major"]
-      # @angular/compiler-cli's peer range is narrow (e.g. 21.2.19 wants >=5.9 <6.1) - a major
+      # @angular/compiler-cli's peer range is narrow (e.g. 22.0.8 wants >=6.0 <6.1) - a major
       # jump breaks the Angular compiler outright.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
@@ -164,16 +164,18 @@ updates:
       # deliberate config migration, not an auto-bump.
       - dependency-name: "eslint"
         update-types: ["version-update:semver-major"]
-      # @angular/compiler-cli's peer range is narrow (e.g. 21.2.19 wants >=5.9 <6.1) - a major
+      # @angular/compiler-cli's peer range is narrow (e.g. 22.0.8 wants >=6.0 <6.1) - a major
       # jump breaks the Angular compiler outright.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
-      # ng-zorro-antd's major version tracks Angular's own (22.0.1 requires @angular/core ^22.0.0).
+      # ng-zorro-antd's major version tracks Angular's own, but this repository follows the line
+      # @abp/ng.components pins (~21.3.1 for ABP 10.7.0) rather than Angular's: a 22.x here would sit
+      # beside ABP's 21.x copy and split NZ_CONFIG (see build/check-angular-package-duplicates.mjs).
       - dependency-name: "ng-zorro-antd"
         update-types: ["version-update:semver-major"]
-      # @abp/ng.theme.shared (an ABP package, pinned repo-wide to ~10.5.0 - see CLAUDE.md) declares
-      # @swimlane/ngx-datatable ~22.0.0 as a plain dependency, not a peer, and every ABP release up to
-      # the 10.6.0 ceiling this repo allows still pins that same ~22.0.0. Bumping our own copy past it
+      # @abp/ng.theme.shared (an ABP package, pinned repo-wide to ~10.7.0 - see CLAUDE.md) declares
+      # @swimlane/ngx-datatable ~22.0.0 as a plain dependency, not a peer, and ABP 10.7.0 still pins
+      # that same ~22.0.0 even though its Angular packages moved to Angular 22. Bumping our own copy past it
       # does not just need template changes: Yarn nests a private 22.0.0 copy under
       # @abp/ng.theme.shared/node_modules for its own internal use, and the demo app - which imports
       # both ThemeSharedModule and NgxDatatableModule in the same component - ends up with two

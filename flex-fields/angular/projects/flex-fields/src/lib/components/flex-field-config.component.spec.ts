@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -9,14 +9,22 @@ import { FlexFieldData } from '../models';
 import { provideFlexFields, provideFlexFieldTypes } from '../providers';
 import { FlexFieldConfigComponent } from './flex-field-config.component';
 
-@Component({ selector: 'ff-stub-config', template: '<span>stub-config</span>' })
+@Component({
+  selector: 'ff-stub-config',
+  changeDetection: ChangeDetectionStrategy.Eager,
+  template: '<span>stub-config</span>',
+})
 class StubConfigComponent {
   @Input() type?: string;
   @Input() selected?: FlexFieldData;
   @Input() Entity?: FormGroup;
 }
 
-@Component({ selector: 'ff-stub-config-2', template: '<span>stub-config-2</span>' })
+@Component({
+  selector: 'ff-stub-config-2',
+  changeDetection: ChangeDetectionStrategy.Eager,
+  template: '<span>stub-config-2</span>',
+})
 class StubConfig2Component {
   @Input() type?: string;
   @Input() selected?: FlexFieldData;

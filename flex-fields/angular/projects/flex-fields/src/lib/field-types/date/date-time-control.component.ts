@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { AbstractControl, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { FieldTypeControlBase } from '../field-type-control-base';
@@ -10,6 +10,7 @@ import { DateTimeInputMode } from './date-time-input-mode';
   selector: 'ff-date-time-control',
   templateUrl: './date-time-control.component.html',
   imports: [CommonModule, ReactiveFormsModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [DatePipe],
 })
 export class DateTimeControlComponent extends FieldTypeControlBase {

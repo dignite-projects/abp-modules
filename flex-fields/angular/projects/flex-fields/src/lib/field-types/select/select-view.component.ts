@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CoreModule } from '@abp/ng.core';
 import { FlexFieldValue } from '../../models';
 import { readStringList } from '../../utils';
@@ -11,6 +11,7 @@ import { normalizeSelectListItems } from './select-list-item';
 @Component({
   selector: 'ff-select-view',
   templateUrl: './select-view.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CoreModule],
 })
 export class SelectViewComponent {

@@ -27,10 +27,10 @@
     "angular"
   ],
   "peerDependencies": {
-    "@abp/ng.core": "~10.5.0",
-    "@angular/common": "~21.2.0",
-    "@angular/core": "~21.2.0",
-    "@angular/forms": "~21.2.0",
+    "@abp/ng.core": "~10.7.0",
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0",
+    "@angular/forms": "^22.0.0",
     "@ngx-validate/core": "^0.2.0",
     "rxjs": "~7.8.0"
   }

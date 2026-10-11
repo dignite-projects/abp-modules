@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { FieldTypeControlBase } from '../field-type-control-base';
@@ -8,6 +8,7 @@ import { BooleanConfiguration } from './boolean-configuration';
 @Component({
   selector: 'ff-boolean-control',
   templateUrl: './boolean-control.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CommonModule, ReactiveFormsModule],
 })
 export class BooleanControlComponent extends FieldTypeControlBase {
