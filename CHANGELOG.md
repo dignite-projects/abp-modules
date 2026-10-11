@@ -40,7 +40,10 @@ so it stays clear which part of the repository actually moved.
     XML, and a policy that reconciles the result with the extension (`Dignite.Abp.BlobStoring:ContentTypeMismatch`).
     Replaceable with `[Dependency(ReplaceServices = true)]`. The README states what it does not protect against.
   - `BlobStreamBuffering` (public): capped buffering for contributors that need to re-read the content;
-    `BlobStoringPipelineConsts.DefaultMaxBufferedBytes` (100 MB) bounds it when a container has no `MaxSize`.
+    `BlobStoringPipelineConsts.DefaultMaxBufferedBytes` (100 MB) bounds it when a container has no `MaxSize`. Every
+    contributor that reads the content (`AllowedContentTypes`, `GZip`, the image contributors) enforces that cap,
+    whether the stream is seekable or not; `MaxSize` is still recommended first because it also makes the stream
+    seekable for the contributors after it.
 - **`Dignite.Abp.BlobStoring.Imaging`** (`DigniteAbpBlobStoringImagingModule`, namespace `Dignite.Abp.BlobStoring.Imaging`):
   image contributors on ABP's provider-agnostic `Volo.Abp.Imaging.Abstractions`. It references no image library; the
   application adds one of ABP's providers (`Volo.Abp.Imaging.SkiaSharp`, `.ImageSharp` or `.MagickNet`).

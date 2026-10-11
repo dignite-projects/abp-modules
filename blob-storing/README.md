@@ -124,8 +124,11 @@ configuration be changed afterwards).
   (about 2 GB), because the content is held in memory.
 - **Changes the stored format:** no; it can be added to or removed from a container that already has blobs.
 
-It is the only contributor that limits the size of a *seekable* stream. Still enforce a request-body limit at the HTTP
-layer, so an oversized upload is cut off before it reaches your code.
+`MaxSize` is the recommended first contributor, but it is not the only cap: every contributor that reads the content
+(`AllowedContentTypes`, `ImageResize`, `ImageCompress`, `GZip`) enforces the container's `MaxSizeInBytes` itself, or
+`BlobStoringPipelineConsts.DefaultMaxBufferedBytes` (100 MB) when the container has none. Configuring `MaxSize` first is
+still preferable because it also makes the stream seekable, with a known length, for every contributor after it. Still
+enforce a request-body limit at the HTTP layer, so an oversized upload is cut off before it reaches your code.
 
 ### AllowedContentTypes
 
@@ -135,9 +138,10 @@ list with `Dignite.Abp.BlobStoring:ContentTypeNotAllowed`. The type is detected 
 reconciled with it, and content that contradicts the extension fails with `Dignite.Abp.BlobStoring:ContentTypeMismatch`.
 
 - **On save:** a stream that is seekable and at its start is probed in place and rewound. Any other stream is first
-  copied into memory, capped at the container's `MaxSizeInBytes` or, without one, at
-  `BlobStoringPipelineConsts.DefaultMaxBufferedBytes` (100 MB; a static property, so it can be changed once at startup),
-  and fails with `ContentTooLarge` beyond it; the copy replaces the stream.
+  copied into memory and the copy replaces the stream. Either way the content is capped at the container's
+  `MaxSizeInBytes` or, without one, at `BlobStoringPipelineConsts.DefaultMaxBufferedBytes` (100 MB; a static property,
+  so it can be changed once at startup); a seekable stream longer than the cap is rejected without being read, and any
+  other stream as soon as the copy passes it, with `ContentTooLarge`.
 - **On get:** does nothing.
 - **Configuration:**
   - `AllowedContentTypes` (`string[]`), required: exact types (`application/pdf`) or a wildcard over a top-level type
@@ -155,8 +159,10 @@ types (`image/png`, `image/jpeg`, …) if a container must not take it.
 `AddGZipContributor(c => c.CompressionLevel = …)` stores the content GZip-compressed and decompresses it when it is read.
 
 - **On save:** the content is compressed eagerly into memory, leaving the received stream open, and the compressed
-  stream (with a known length) replaces it. The compressed result is held in memory without a limit of its own: put
-  `MaxSize` in front of it on every container that takes uploads.
+  stream (with a known length) replaces it. The bytes read from the input are counted and capped at the container's
+  `MaxSizeInBytes` or, without one, at `BlobStoringPipelineConsts.DefaultMaxBufferedBytes` (100 MB): the save fails
+  with `ContentTooLarge` as soon as the input passes the cap (a seekable stream that is already longer is rejected
+  without being read). `MaxSize` in front of it is still recommended on every container that takes uploads.
 - **On get:** the stored stream is wrapped in a decompressing `GZipStream` that disposes it. The stream `GetAsync`
   returns is read-only and not seekable.
 - **Configuration:** `CompressionLevel` (`System.IO.Compression.CompressionLevel`, default `Optimal`). Changing it does

@@ -166,13 +166,13 @@ public abstract class ImageContributorBase : IBlobPipelineContributor
     }
 
     /// <summary>
-    /// The cap for buffering a non-seekable stream: the container's <c>MaxSizeContributor</c> limit, or
+    /// The cap for the content this contributor reads (a seekable stream longer than it is rejected, any other
+    /// is buffered up to it): the container's <c>MaxSizeContributor</c> limit, or
     /// <see cref="BlobStoringPipelineConsts.DefaultMaxBufferedBytes"/> when it has none.
     /// </summary>
     protected virtual long GetMaxBufferedBytes(BlobContainerConfiguration configuration)
     {
-        var maxSize = configuration.GetMaxSizeContributorConfiguration().MaxSizeInBytes;
-        return maxSize > 0 ? maxSize : BlobStoringPipelineConsts.DefaultMaxBufferedBytes;
+        return BlobStreamBuffering.GetMaxBufferedBytes(configuration);
     }
 
     /// <summary>

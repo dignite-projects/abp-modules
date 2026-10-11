@@ -18,11 +18,11 @@ namespace Dignite.Abp.BlobStoring.Pipeline;
 /// <para>
 /// Detection needs to re-read the content. A stream that is already seekable and at its start (for example
 /// after <see cref="MaxSizeContributor"/>) is probed in place and rewound; any other stream is first
-/// materialized into memory, capped at the container's <see cref="MaxSizeContributor"/> limit or, without
-/// one, <see cref="BlobStoringPipelineConsts.DefaultMaxBufferedBytes"/> (beyond which it fails with
-/// <see cref="BlobStoringPipelineErrorCodes.ContentTooLarge"/>), and that copy replaces
-/// <see cref="BlobPipelineContext.BlobStream"/>, as the pipeline contract requires of a contributor that
-/// consumes the content.
+/// materialized into memory, and that copy replaces <see cref="BlobPipelineContext.BlobStream"/>, as the
+/// pipeline contract requires of a contributor that consumes the content. Either way the content is capped at
+/// the container's <see cref="MaxSizeContributor"/> limit or, without one,
+/// <see cref="BlobStoringPipelineConsts.DefaultMaxBufferedBytes"/>, beyond which it fails with
+/// <see cref="BlobStoringPipelineErrorCodes.ContentTooLarge"/>.
 /// </para>
 /// <para>
 /// It does not change the content, so it can be added to or removed from a container that already has BLOBs.
@@ -60,13 +60,13 @@ public class AllowedContentTypesContributor : IBlobPipelineContributor, ITransie
     }
 
     /// <summary>
-    /// The cap for buffering a non-seekable stream: the container's <see cref="MaxSizeContributor"/> limit,
-    /// or <see cref="BlobStoringPipelineConsts.DefaultMaxBufferedBytes"/> when it has none.
+    /// The cap for the content this contributor reads (a seekable stream longer than it is rejected, any other
+    /// is buffered up to it): the container's <see cref="MaxSizeContributor"/> limit, or
+    /// <see cref="BlobStoringPipelineConsts.DefaultMaxBufferedBytes"/> when it has none.
     /// </summary>
     protected virtual long GetMaxBufferedBytes(BlobContainerConfiguration configuration)
     {
-        var maxSize = configuration.GetMaxSizeContributorConfiguration().MaxSizeInBytes;
-        return maxSize > 0 ? maxSize : BlobStoringPipelineConsts.DefaultMaxBufferedBytes;
+        return BlobStreamBuffering.GetMaxBufferedBytes(configuration);
     }
 
     /// <summary>

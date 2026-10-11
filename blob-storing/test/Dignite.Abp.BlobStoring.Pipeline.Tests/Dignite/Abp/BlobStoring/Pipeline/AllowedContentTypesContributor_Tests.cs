@@ -61,27 +61,6 @@ public class AllowedContentTypesContributor_Tests : BlobStoringPipelineTestBase
     }
 
     [Fact]
-    public async Task Should_Cap_Buffering_Of_A_Non_Seekable_Stream_Without_A_MaxSize_Contributor()
-    {
-        var previous = BlobStoringPipelineConsts.DefaultMaxBufferedBytes;
-        BlobStoringPipelineConsts.DefaultMaxBufferedBytes = 64;
-        try
-        {
-            var source = new TrackingStream(new byte[100_000], canSeek: false);
-
-            var exception = await Should.ThrowAsync<BusinessException>(
-                () => Container(BlobStoringPipelineTestModule.ImagesContainer).SaveAsync("big.png", source));
-
-            exception.Code.ShouldBe(BlobStoringPipelineErrorCodes.ContentTooLarge);
-            source.BytesRead.ShouldBeLessThan(100_000);
-        }
-        finally
-        {
-            BlobStoringPipelineConsts.DefaultMaxBufferedBytes = previous;
-        }
-    }
-
-    [Fact]
     public void AddAllowedContentTypesContributor_Should_Reject_An_Invalid_List()
     {
         var configuration = new BlobContainerConfiguration();

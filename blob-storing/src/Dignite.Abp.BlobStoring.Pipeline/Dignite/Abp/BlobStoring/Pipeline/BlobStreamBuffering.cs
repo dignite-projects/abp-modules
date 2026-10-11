@@ -20,16 +20,32 @@ public static class BlobStreamBuffering
     private const int CopyBufferSize = 81920;
 
     /// <summary>
-    /// Returns <see cref="BlobPipelineContext.BlobStream"/> when it is already seekable and positioned at
-    /// its start; otherwise copies it from its current position into memory (failing beyond
-    /// <paramref name="maxBytes"/>) and assigns the copy to <see cref="BlobPipelineContext.BlobStream"/>,
-    /// which makes the pipeline own and dispose it after the save.
+    /// The cap every content-reading contributor enforces for a container: its <c>MaxSizeContributor</c> limit
+    /// when one is configured (<c>&gt; 0</c>), else <see cref="BlobStoringPipelineConsts.DefaultMaxBufferedBytes"/>.
+    /// </summary>
+    public static long GetMaxBufferedBytes(BlobContainerConfiguration configuration)
+    {
+        var maxSize = configuration.GetMaxSizeContributorConfiguration().MaxSizeInBytes;
+        return maxSize > 0 ? maxSize : BlobStoringPipelineConsts.DefaultMaxBufferedBytes;
+    }
+
+    /// <summary>
+    /// Returns <see cref="BlobPipelineContext.BlobStream"/> when it is already seekable, positioned at its
+    /// start and not longer than <paramref name="maxBytes"/> (a longer one fails with
+    /// <see cref="BlobStoringPipelineErrorCodes.ContentTooLarge"/> before anything is read); otherwise copies it
+    /// from its current position into memory (failing beyond <paramref name="maxBytes"/>) and assigns the copy to
+    /// <see cref="BlobPipelineContext.BlobStream"/>, which makes the pipeline own and dispose it after the save.
     /// </summary>
     public static async Task<Stream> EnsureSeekableAsync(BlobPipelineContext context, long maxBytes)
     {
         var stream = context.BlobStream;
         if (stream.CanSeek && stream.Position == 0)
         {
+            if (stream.Length > maxBytes)
+            {
+                throw CreateContentTooLargeException(maxBytes);
+            }
+
             return stream;
         }
 

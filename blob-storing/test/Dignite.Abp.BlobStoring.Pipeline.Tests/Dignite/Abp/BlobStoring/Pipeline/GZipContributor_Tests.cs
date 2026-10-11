@@ -50,6 +50,47 @@ public class GZipContributor_Tests : BlobStoringPipelineTestBase
     }
 
     [Fact]
+    public async Task Should_Compress_Content_Within_A_Configured_MaxSize()
+    {
+        const string containerName = BlobStoringPipelineTestModule.GZipMaxSizeContainer;
+        var content = new byte[BlobStoringPipelineTestModule.MaxSizeInBytes]; // compresses far below the limit
+
+        await Container(containerName).SaveAsync("blob", new TrackingStream(content, canSeek: false));
+
+        Samples.Gunzip((await GetStoredBytesAsync(containerName, "blob"))!).ShouldBe(content);
+    }
+
+    [Fact]
+    public async Task Should_Stop_Reading_A_Non_Seekable_Stream_Past_A_Configured_MaxSize()
+    {
+        const string containerName = BlobStoringPipelineTestModule.GZipMaxSizeContainer;
+        var source = new TrackingStream(new byte[10 * 81920], canSeek: false);
+
+        var exception = await Should.ThrowAsync<BusinessException>(
+            () => Container(containerName).SaveAsync("blob", source));
+
+        exception.Code.ShouldBe(BlobStoringPipelineErrorCodes.ContentTooLarge);
+        exception.Data["MaxSizeInBytes"].ShouldBe(BlobStoringPipelineTestModule.MaxSizeInBytes);
+        source.BytesRead.ShouldBeLessThanOrEqualTo(81920); // one chunk, not the whole stream
+        source.IsDisposed.ShouldBeFalse();
+        (await GetStoredBytesAsync(containerName, "blob")).ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Should_Reject_A_Seekable_Stream_Over_A_Configured_MaxSize_Without_Reading_It()
+    {
+        const string containerName = BlobStoringPipelineTestModule.GZipMaxSizeContainer;
+        var source = new TrackingStream(new byte[BlobStoringPipelineTestModule.MaxSizeInBytes + 1], canSeek: true);
+
+        var exception = await Should.ThrowAsync<BusinessException>(
+            () => Container(containerName).SaveAsync("blob", source));
+
+        exception.Code.ShouldBe(BlobStoringPipelineErrorCodes.ContentTooLarge);
+        source.BytesRead.ShouldBe(0);
+        (await GetStoredBytesAsync(containerName, "blob")).ShouldBeNull();
+    }
+
+    [Fact]
     public void AddGZipContributor_Should_Default_To_Optimal_And_Reject_An_Unknown_Level()
     {
         var configuration = new BlobContainerConfiguration();

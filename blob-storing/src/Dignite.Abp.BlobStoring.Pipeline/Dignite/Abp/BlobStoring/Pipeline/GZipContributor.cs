@@ -1,3 +1,5 @@
+using System;
+using System.Buffers;
 using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks;
@@ -11,7 +13,11 @@ namespace Dignite.Abp.BlobStoring.Pipeline;
 /// <see cref="BlobContainerConfigurationExtensions.AddGZipContributor"/>.
 /// <para>
 /// While saving, the content is compressed eagerly into memory (the compressed stream has a known
-/// <see cref="Stream.Length"/>), leaving the received stream open. While reading, the stored stream is wrapped
+/// <see cref="Stream.Length"/>), leaving the received stream open. The bytes read from the received stream are
+/// counted and capped at the container's <see cref="MaxSizeContributor"/> limit or, without one,
+/// <see cref="BlobStoringPipelineConsts.DefaultMaxBufferedBytes"/>: beyond it the save fails with
+/// <see cref="BlobStoringPipelineErrorCodes.ContentTooLarge"/> (a seekable stream whose remaining length is
+/// already larger is rejected without reading). While reading, the stored stream is wrapped
 /// in a decompressing <see cref="GZipStream"/> that disposes it, so the stream returned by <c>GetAsync</c> is
 /// read-only and not seekable. ABP's BLOB encryption, when enabled, always runs after the contributors, so the
 /// content is compressed before it is encrypted.
@@ -25,17 +31,38 @@ namespace Dignite.Abp.BlobStoring.Pipeline;
 /// </summary>
 public class GZipContributor : IBlobPipelineContributor, ITransientDependency
 {
+    private const int CopyBufferSize = 81920;
+
     public virtual async Task OnSavingAsync(BlobPipelineContext context)
     {
         var configuration = context.Configuration.GetGZipContributorConfiguration();
         configuration.Validate();
 
+        var maxBytes = BlobStreamBuffering.GetMaxBufferedBytes(context.Configuration);
+        var input = context.BlobStream;
+        if (input.CanSeek && input.Length - input.Position > maxBytes)
+        {
+            throw BlobStreamBuffering.CreateContentTooLargeException(maxBytes);
+        }
+
         var compressedStream = new MemoryStream();
+        var chunk = ArrayPool<byte>.Shared.Rent(CopyBufferSize);
         try
         {
             await using (var gzipStream = new GZipStream(compressedStream, configuration.CompressionLevel, leaveOpen: true))
             {
-                await context.BlobStream.CopyToAsync(gzipStream, context.CancellationToken);
+                long totalBytes = 0;
+                int bytesRead;
+                while ((bytesRead = await input.ReadAsync(chunk.AsMemory(0, CopyBufferSize), context.CancellationToken)) > 0)
+                {
+                    totalBytes += bytesRead;
+                    if (totalBytes > maxBytes)
+                    {
+                        throw BlobStreamBuffering.CreateContentTooLargeException(maxBytes);
+                    }
+
+                    await gzipStream.WriteAsync(chunk.AsMemory(0, bytesRead), context.CancellationToken);
+                }
             }
         }
         catch
@@ -43,6 +70,10 @@ public class GZipContributor : IBlobPipelineContributor, ITransientDependency
             // Only a stream assigned to context.BlobStream is disposed by the pipeline.
             await compressedStream.DisposeAsync();
             throw;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(chunk);
         }
 
         compressedStream.Position = 0;

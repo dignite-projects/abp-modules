@@ -110,16 +110,20 @@ Imaging package, and do not add a third namespace without a third resource.
 
 Public, because contributors in other packages (Imaging, and any a consumer writes) need the same capped buffering:
 
-- `EnsureSeekableAsync(context, maxBytes)` returns `context.BlobStream` when it is seekable and at position 0, otherwise
-  copies it from its current position into memory (failing beyond `maxBytes`) and assigns the copy to
-  `context.BlobStream`, so the pipeline owns and disposes it.
+- `GetMaxBufferedBytes(configuration)` is the cap for a container: its `MaxSizeInBytes` when configured, else
+  `BlobStoringPipelineConsts.DefaultMaxBufferedBytes`.
+- `EnsureSeekableAsync(context, maxBytes)` returns `context.BlobStream` when it is seekable, at position 0 and not longer
+  than `maxBytes` (a longer one fails with `ContentTooLarge` before it is read), otherwise copies it from its current
+  position into memory (failing beyond `maxBytes`) and assigns the copy to `context.BlobStream`, so the pipeline owns
+  and disposes it.
 - `CopyToBufferAsync(source, maxBytes, cancellationToken)` copies into memory, failing with `ContentTooLarge` as soon as
   more than `maxBytes` have been read — and before reading anything when a seekable source already reports a larger
   remaining length. It leaves `source` open, disposes its own buffer on failure and returns the buffer at position 0.
 - `CreateContentTooLargeException(maxBytes)` builds the `ContentTooLarge` exception with `MaxSizeInBytes` data.
 
-Every buffering path is capped: the container's `MaxSizeInBytes`, or `BlobStoringPipelineConsts.DefaultMaxBufferedBytes`
-(100 MB) when it has none.
+Every contributor that reads content enforces a cap, seekable stream or not: the container's `MaxSizeInBytes`, or
+`BlobStoringPipelineConsts.DefaultMaxBufferedBytes` (100 MB) when it has none. `MaxSize` is still recommended first,
+because it also makes the stream seekable for the contributors after it.
 
 ## Commands
 

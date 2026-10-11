@@ -26,6 +26,7 @@ public class BlobStoringPipelineTestModule : AbpModule
     public const string PlainTextContainer = "plain-text";
     public const string GZipContainer = "gzip";
     public const string GZipEncryptedContainer = "gzip-encrypted";
+    public const string GZipMaxSizeContainer = "gzip-max-size";
     public const string ComposedContainer = "composed";
 
     public const long MaxSizeInBytes = 1024;
@@ -75,6 +76,13 @@ public class BlobStoringPipelineTestModule : AbpModule
             {
                 container.AddGZipContributor(c => c.CompressionLevel = CompressionLevel.SmallestSize);
                 container.UseEncryption(passPhrase: "pipeline-tests-passphrase");
+            });
+
+            // MaxSize is added after GZip on purpose: GZip runs first and must enforce the limit itself.
+            options.Containers.Configure(GZipMaxSizeContainer, container =>
+            {
+                container.AddGZipContributor();
+                container.AddMaxSizeContributor(c => c.MaxSizeInBytes = MaxSizeInBytes);
             });
 
             options.Containers.Configure(ComposedContainer, container =>

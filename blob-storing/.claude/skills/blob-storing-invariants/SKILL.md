@@ -38,8 +38,8 @@ Reading the content and returning without doing one of these leaves an empty or 
 replacing the stream is valid only for a contributor that does not consume the content.
 
 - `AllowedContentTypesContributor` and the image contributors get their stream from
-  `BlobStreamBuffering.EnsureSeekableAsync`, which returns the stream itself when it is seekable and at position 0 and
-  otherwise assigns a capped copy. The detector restores position 0; keep it that way.
+  `BlobStreamBuffering.EnsureSeekableAsync`, which returns the stream itself when it is seekable, at position 0 and not
+  longer than the cap, and otherwise assigns a capped copy (a seekable stream over the cap is rejected). The detector restores position 0; keep it that way.
 - Never "validate" from the claimed content type or the file name alone.
 
 ## 3. Every buffering path is capped
@@ -50,11 +50,15 @@ Content is never copied into memory without a bound. The bound is the container'
 as soon as the copy passes it) — never check size after buffering the whole thing. Limits above `Array.MaxLength` are not
 supported by this design (a spill-to-disk buffer would be the change, not removing the cap).
 
+- **Every contributor that reads the content enforces the cap itself** - the container's `MaxSize`, or
+  `DefaultMaxBufferedBytes` (100 MB) when none is configured - whether the stream is seekable or not. Resolve it with
+  `BlobStreamBuffering.GetMaxBufferedBytes(configuration)`; never assume an earlier contributor already bounded the
+  stream. `AllowedContentTypesContributor` and the image contributors get that through `EnsureSeekableAsync`;
+  `GZipContributor` counts the bytes it reads while compressing and fails with `ContentTooLarge` as soon as the cap
+  is passed.
 - A new contributor that has to re-read the content buffers through `BlobStreamBuffering`, with the same limit.
-- `MaxSizeContributor` goes first in a container: it materializes the seekable, length-aware copy everything after it reuses.
-- **Known gap:** `GZipContributor` compresses the whole input into memory and has no cap of its own; a container is only
-  bounded if `MaxSize` runs before it. Don't copy that shape into a new contributor, and don't add GZip to a container
-  that takes untrusted uploads without `MaxSize` in front of it.
+- `MaxSizeContributor` is still recommended first in a container: it materializes the seekable, length-aware copy
+  everything after it reuses, so later contributors do not buffer again.
 - Hosts still enforce a request-body limit at the HTTP layer.
 
 ## 4. The content decides the type — never the uploader's claim
