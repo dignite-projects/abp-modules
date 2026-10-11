@@ -1,0 +1,8 @@
+{
+  "culture": "ja",
+  "texts": {
+    "Dignite.Abp.BlobStoring:ContentTooLarge": "内容が大きすぎます。{MaxSizeInBytes} バイトを超えることはできません。",
+    "Dignite.Abp.BlobStoring:ContentTypeMismatch": "内容が拡張子 {Extension} と一致しません。",
+    "Dignite.Abp.BlobStoring:ContentTypeNotAllowed": "このコンテンツタイプ（{ContentType}）は許可されていません。"
+  }
+}

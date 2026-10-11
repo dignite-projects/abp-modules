@@ -140,7 +140,7 @@ if (unmatchedTargets.length > 0) {
       '  Each copy carries its own module-scoped InjectionToken values, so a provider registered ' +
         'against one copy is invisible to a consumer resolving the other. Narrow whichever ' +
         "workspace's package.json declares a wider range than the other copy's source allows, the " +
-        'way flex-fields/angular and file-storing/angular narrowed ng-zorro-antd to `~21.0.2` to ' +
+        'way flex-fields/angular narrowed ng-zorro-antd to `~21.0.2` to ' +
         'match @abp/ng.components\' `<21.1.0` ceiling.',
     );
     process.exitCode = 1;

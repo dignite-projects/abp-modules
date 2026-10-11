@@ -7,7 +7,7 @@ developed together in one repository and released in lockstep.
 
 | Module | What it is | Docs |
 |---|---|---|
-| [`file-storing/`](file-storing/) | A thin **upload layer** on ABP BlobStoring: a per-container `IFileHandler` pipeline (size limits, type checking, image resizing) and `IFileStorer`, which runs it with a streaming size cap and content-based MIME detection. No metadata, API or UI — the application that owns the files keeps those. | [README](file-storing/README.md) |
+| [`blob-storing/`](blob-storing/) | Everyday **pipeline contributors** for ABP BlobStoring: the `IBlobPipelineContributor`s ABP 10.7 leaves out — a size cap, a content-type allow-list checked against the real bytes, GZip, image resize and compress — plus content-based MIME detection. No upload service, metadata, API or UI — the application that owns the files keeps those. | [README](blob-storing/README.md) |
 | [`notifications/`](notifications/) | An extensible, event-driven **notification framework** with pluggable channel notifiers (SignalR, email), plus an optional **Notification Center** (persistent inbox, subscriptions, read/unread state, REST API) with MVC and Angular UI libraries. | [README](notifications/README.md) |
 | [`flex-fields/`](flex-fields/) | Runtime-defined (**"flex"**) fields — a constraint kernel supplying field types, configuration, validation, a per-entity value bag and a derived query index, with EF Core and MongoDB providers, plus an Angular UI library. It owns no domain model: each consuming application defines its own fields. | [README](flex-fields/README.md) |
 | [`aspnetcore-mcp/`](aspnetcore-mcp/) | Shared infrastructure, not a module: hosts the one **MCP (Model Context Protocol) server** an ABP application can have, and lets each module contribute AI-callable tools to it inside its own namespace (`Dignite.Site` and `Dignite.Vault.Extract` do, from their own repositories). | [README](aspnetcore-mcp/README.md) |
@@ -15,7 +15,8 @@ developed together in one repository and released in lockstep.
 Each module is **independently installable** — no module references another; a module's optional
 `*.Mcp` package depends only on the shared `aspnetcore-mcp/` tree. They share this
 repository for development and release, not at runtime. Every package keeps the PackageId it has
-always had; moving into a subdirectory changed nothing for consumers.
+always had; moving into a subdirectory changed nothing for consumers. (The exceptions are the pre-release
+renames that adopted ABP's package naming, recorded in [CLAUDE.md](CLAUDE.md) and the CHANGELOG.)
 
 ## History
 
@@ -23,12 +24,14 @@ These modules grew out of [`dignite-projects/dignite-abp`](https://github.com/di
 a broader, no-longer-maintained collection of ABP add-ons (notifications, dynamic forms, a file
 manager, a theme, and more).
 
-- [`file-storing/`](file-storing/) and [`notifications/`](notifications/) were each split out of
+- [`blob-storing/`](blob-storing/) and [`notifications/`](notifications/) were each split out of
   `dignite-abp` into their own standalone repositories —
   [`abp-file-storing`](https://github.com/dignite-projects/abp-file-storing) and
   [`abp-notifications`](https://github.com/dignite-projects/abp-notifications) — and later merged
   into this monorepo with their full commit history preserved. No PackageId or root namespace
-  changed in either move.
+  changed in either move. The first of them has since become `blob-storing/`: it published
+  `Dignite.Abp.FileStoring` until `10.0.0-rc.27`, and now publishes `Dignite.Abp.BlobStoring.Pipeline` and
+  `Dignite.Abp.BlobStoring.Imaging`, pipeline contributors for ABP's own BLOB pipeline.
 - [`flex-fields/`](flex-fields/) was extracted directly from `dignite-abp` (as
   `Dignite.Abp.DynamicForms`, renamed on the way out) straight into this repository, skipping the
   standalone-repo stage.
@@ -47,10 +50,10 @@ abp-modules/
 ├── Dignite.Abp.Modules.slnx     # aggregate solution (every module)
 ├── .github/workflows/           # one build+test workflow, one lockstep release workflow
 ├── aspnetcore-mcp/              # shared MCP server infrastructure (no domain model)
-├── file-storing/
-│   ├── Dignite.Abp.FileStoring.slnx      # focused solution for this module alone
-│   ├── core/                             # the published class libraries (no demo host)
-│   ├── docs/core-only-decision.md        # why there is no File Explorer / FileService here
+├── blob-storing/
+│   ├── Dignite.Abp.BlobStoring.slnx      # focused solution for this module alone
+│   ├── src/  test/                       # the published class libraries and their tests (no demo host)
+│   ├── docs/                             # decision records (why contributors, why no File Explorer here)
 │   └── .claude/skills/                   # module-specific conventions & invariants
 ├── notifications/
 │   ├── Dignite.NotificationCenter.slnx   # focused solution for this module alone
@@ -80,7 +83,7 @@ dotnet test Dignite.Abp.Modules.slnx
 To work on one module in isolation, use its own solution — same projects, smaller graph:
 
 ```bash
-dotnet build file-storing/Dignite.Abp.FileStoring.slnx
+dotnet build blob-storing/Dignite.Abp.BlobStoring.slnx
 dotnet build notifications/Dignite.NotificationCenter.slnx
 ```
 

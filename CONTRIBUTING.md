@@ -11,12 +11,12 @@ dotnet build Dignite.Abp.Modules.slnx
 dotnet test Dignite.Abp.Modules.slnx
 
 # One module in isolation (same projects, smaller graph)
-dotnet build file-storing/Dignite.Abp.FileStoring.slnx
+dotnet build blob-storing/Dignite.Abp.BlobStoring.slnx
 dotnet build notifications/Dignite.NotificationCenter.slnx
 ```
 
 The Angular libraries live in two Angular CLI workspaces, installed with Yarn Classic (v1) and built
-separately from MSBuild. (`file-storing/` has none: it is a .NET library layer only.)
+separately from MSBuild. (`blob-storing/` has none: it is a .NET library layer only.)
 
 ```bash
 cd notifications/angular && yarn install && yarn build:lib
@@ -37,7 +37,7 @@ contributors. They're split by how the content loads:
 - **`<module>/.claude/skills/`** — two per module: a **`*-conventions`** skill ("how *this* module
   applies ABP") and a **`*-invariants`** skill ("what a change must not break").
 
-`file-storing/`, `notifications/`, and `flex-fields/` have genuinely different DDD shapes,
+`blob-storing/`, `notifications/`, and `flex-fields/` have genuinely different DDD shapes,
 persistence conventions, and hard invariants. Where they disagree — repository convention, object
 mapper, distributed-event posture, test naming — **each module states its own** rather than sharing
 an averaged rule that would be wrong for all three. Where a module's `*-conventions` skill disagrees
@@ -46,8 +46,8 @@ with a generic `abp-*` skill, the module skill wins for code in that module.
 Start with:
 
 - `<module>/CLAUDE.md` — the layer map and the "add a feature" flow.
-- `file-storing/.claude/skills/file-storing-invariants/` — before touching the upload pipeline,
-  blob/DB writes, directory moves, authorization, or a DI lifetime.
+- `blob-storing/.claude/skills/blob-storing-invariants/` — before touching a contributor's stream
+  handling, buffering, MIME detection, an image contributor, or a stored format.
 - `notifications/.claude/skills/notifications-invariants/` — before touching `NotificationData`,
   any Notifier, the distributor, or a DI lifetime.
 
@@ -63,7 +63,7 @@ All library package versions live in the root [`Directory.Packages.props`](./Dir
 
 The demo hosts are the deliberate exception: each opts out of central package management and
 pins its own versions inline, via its own `Directory.Build.props` + `Directory.Packages.props`
-inside the project folder (`file-storing/host/.../`, `notifications/host/.../`,
+inside the project folder (`notifications/host/.../`,
 `flex-fields/demo/.../`). They are never published, so their dependency graph is allowed to drift
 from the libraries'.
 
@@ -81,11 +81,11 @@ project, and the version is repository-wide rather than per-module.
 [`Directory.Build.props`](./Directory.Build.props): every packable NuGet project across the three
 module trees and all five Angular npm packages. One `v*` tag, one release pipeline, one number.
 
-The consequence is **empty bumps**: a change to `file-storing/` alone still releases a new version of
+The consequence is **empty bumps**: a change to `blob-storing/` alone still releases a new version of
 every other module's package, whose content is identical to the previous release. That is accepted on
 purpose. The alternative — independent per-module versions in one repository — means consumers
 must reason about which `Dignite.Abp.Notifications` version pairs with which
-`Dignite.Abp.FileStoring` version, and the maintainers must run two release pipelines and two tag
+`Dignite.Abp.BlobStoring.Pipeline` version, and the maintainers must run two release pipelines and two tag
 namespaces. One number that sometimes moves for no reason is cheaper than a compatibility matrix
 that always needs checking.
 
@@ -93,9 +93,9 @@ There is therefore **no per-module versioning** and no per-project `<Version>`. 
 
 ### MAJOR tracks the ABP Framework version, not this repository's own breaking changes
 
-`file-storing/` and `notifications/` supersede legacy package lines already published on NuGet.org under this same
-`dignite-projects` org at versions `1.0.0` through `3.8.2` (`Dignite.Abp.Notifications*` and
-`Dignite.FileExplorer.*`). To make these releases unambiguously win NuGet.org's "latest version"
+`notifications/` supersedes a legacy package line already published on NuGet.org under this same
+`dignite-projects` org at versions `1.0.0` through `3.8.2` (`Dignite.Abp.Notifications*`; the other,
+`Dignite.FileExplorer.*`, left this repository in rc.25). To make these releases unambiguously win NuGet.org's "latest version"
 resolution — no package rename needed — `<Version>`'s **MAJOR** segment tracks the **major version
 of the ABP Framework** this release targets (pinned in `Directory.Packages.props`; currently ABP
 `10.7.0`, so MAJOR is `10`). Since ABP's major will not regress below 10, this permanently clears

@@ -1,0 +1,8 @@
+{
+  "culture": "zh-Hans",
+  "texts": {
+    "Dignite.Abp.BlobStoring:ContentTooLarge": "内容过大！不能超过 {MaxSizeInBytes} 字节。",
+    "Dignite.Abp.BlobStoring:ContentTypeMismatch": "内容与扩展名 {Extension} 不符！",
+    "Dignite.Abp.BlobStoring:ContentTypeNotAllowed": "不支持该内容类型（{ContentType}）！"
+  }
+}

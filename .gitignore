@@ -279,7 +279,7 @@ FodyWeavers.xsd
 .DS_Store
 Thumbs.db
 
-# Host logs (file-storing/host, notifications/host, flex-fields/demo demo apps)
+# Host logs (notifications/host, flex-fields/demo demo apps)
 Logs/
 
 *.db
@@ -289,7 +289,7 @@ Logs/
 # Use abp install-libs to restore.
 **/wwwroot/libs/*
 
-# Angular workspace (file-storing/angular, flex-fields/angular, notifications/angular)
+# Angular workspace (flex-fields/angular, notifications/angular)
 dist/
 .angular/
 

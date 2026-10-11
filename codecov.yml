@@ -5,7 +5,7 @@
 #
 #     dotnet test Dignite.Abp.Modules.slnx --collect:"XPlat Code Coverage"
 #
-# .github/workflows/ci.yml uploads coverage twice per run, once per module, under the "file-storing"
+# .github/workflows/ci.yml uploads coverage twice per run, once per module, under the "blob-storing"
 # and "notifications" flags declared below - the two module trees are otherwise-unrelated (see
 # CLAUDE.md), so a single blended number would hide which one actually regressed. Until the repo is
 # connected to Codecov (and a CODECOV_TOKEN secret is set) this whole file is inert and harmless.
@@ -22,9 +22,9 @@ flag_management:
         target: auto
         threshold: 1%
   individual_flags:
-    - name: file-storing
+    - name: blob-storing
       paths:
-        - file-storing/
+        - blob-storing/
     - name: notifications
       paths:
         - notifications/

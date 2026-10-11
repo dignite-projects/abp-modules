@@ -7,7 +7,7 @@ body:
     attributes:
       label: Which module?
       options:
-        - "file-storing (Dignite.Abp.FileStoring)"
+        - "blob-storing (Dignite.Abp.BlobStoring.*)"
         - "notifications (Dignite.Abp.Notifications / Dignite.NotificationCenter)"
         - "flex-fields (Dignite.Abp.FlexFields / @dignite/ng.flex-fields)"
         - "Repo-wide / not sure"
