@@ -97,7 +97,11 @@ so it stays clear which part of the repository actually moved.
   - Angular's own v22 migrations were applied, each keeping v21 behaviour: every component now declares
     `ChangeDetectionStrategy.Eager`, because Angular 22 changed the default for components that declare none
     (ABP's upgrade guide lists stale loading states and lists as the symptom), and `strictTemplates: false` is now
-    written out because it defaults to true. TypeScript 6 changes two defaults the code was written against:
+    written out because it defaults to true. ABP's own Angular 22 upgrade guide (`abp-10-6-angular-22.md`, section
+    "Updated Change Detection Behavior") calls `ChangeDetectionStrategy.Eager` a temporary compatibility measure
+    for legacy components and recommends `signal()`, `toSignal()` or the `async` pipe for component state. Moving
+    the libraries' components to signal-based state, so they can drop `Eager` and run under the new default, is a
+    follow-up and not part of this change. TypeScript 6 changes two defaults the code was written against:
     `baseUrl` is deprecated (the workspaces' `paths` are now relative to their tsconfig, as in ABP's template) and
     `strict` defaults to true, so the root tsconfigs now set `"strict": false` explicitly. Beyond these, no library
     source changed.
