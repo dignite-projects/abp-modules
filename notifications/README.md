@@ -30,11 +30,11 @@ with **MVC** and **Angular** UI libraries.
 - **Multi-tenant & permission-aware** — ABP `IMultiTenant` throughout, with optional ABP Identity
   permission gating.
 
-> **.NET 10 · ABP 10.5.0 · LGPL-3.0-only**
+> **.NET 10 · ABP 10.7.0 · LGPL-3.0-only**
 
 ## Packages
 
-Requirements: the **.NET 10 SDK** and an ABP **10.5.0** host application. Contract layers
+Requirements: the **.NET 10 SDK** and an ABP **10.7.0** host application. Contract layers
 multi-target `netstandard2.0;netstandard2.1;net10.0` so remote and older consumers can reference
 them.
 
