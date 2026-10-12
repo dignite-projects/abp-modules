@@ -4,13 +4,13 @@ using Volo.Abp.VirtualFileSystem;
 namespace Dignite.NotificationCenter;
 
 [DependsOn(typeof(AbpVirtualFileSystemModule))]
-public class NotificationCenterInstallerModule : AbpModule
+public class AbpNotificationCenterInstallerModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         Configure<AbpVirtualFileSystemOptions>(options =>
         {
-            options.FileSets.AddEmbedded<NotificationCenterInstallerModule>();
+            options.FileSets.AddEmbedded<AbpNotificationCenterInstallerModule>();
         });
     }
 }

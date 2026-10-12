@@ -18,7 +18,7 @@ namespace Dignite.Abp.FlexFields;
 /// itself differs in kind.
 /// </para>
 /// <para>
-/// Registered as an open generic by <see cref="FlexFieldsDomainModule"/>, so it serves every host entity
+/// Registered as an open generic by <see cref="AbpFlexFieldsDomainModule"/>, so it serves every host entity
 /// type without per-type registration. Members are virtual, and a host that needs different behaviour can
 /// subclass or replace it.
 /// </para>

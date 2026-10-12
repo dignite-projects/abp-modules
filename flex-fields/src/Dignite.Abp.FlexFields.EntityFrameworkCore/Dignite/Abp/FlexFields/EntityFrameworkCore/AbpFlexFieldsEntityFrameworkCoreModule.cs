@@ -12,9 +12,9 @@ namespace Dignite.Abp.FlexFields.EntityFrameworkCore;
 /// <c>FlexFieldConsts</c> and the field-type registrations are in the graph.
 /// </summary>
 [DependsOn(
-    typeof(FlexFieldsDomainModule),
+    typeof(AbpFlexFieldsDomainModule),
     typeof(AbpEntityFrameworkCoreModule)
     )]
-public class FlexFieldsEntityFrameworkCoreModule : AbpModule
+public class AbpFlexFieldsEntityFrameworkCoreModule : AbpModule
 {
 }

@@ -11,7 +11,7 @@ using Volo.Abp.VirtualFileSystem;
 namespace Dignite.Abp.BlobStoring.Pipeline;
 
 [DependsOn(typeof(AbpBlobStoringModule))]
-public class DigniteAbpBlobStoringPipelineModule : AbpModule
+public class AbpBlobStoringPipelineModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
@@ -23,7 +23,7 @@ public class DigniteAbpBlobStoringPipelineModule : AbpModule
 
         Configure<AbpVirtualFileSystemOptions>(options =>
         {
-            options.FileSets.AddEmbedded<DigniteAbpBlobStoringPipelineModule>();
+            options.FileSets.AddEmbedded<AbpBlobStoringPipelineModule>();
         });
 
         Configure<AbpLocalizationOptions>(options =>

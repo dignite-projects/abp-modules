@@ -104,18 +104,18 @@ provider. The MVC UI package is optional.
 ```csharp
 [DependsOn(
     typeof(AbpNotificationsSignalRModule),
-    typeof(NotificationCenterApplicationModule),
-    typeof(NotificationCenterHttpApiModule),
-    typeof(NotificationCenterEntityFrameworkCoreModule),
-    typeof(NotificationCenterWebModule)
+    typeof(AbpNotificationCenterApplicationModule),
+    typeof(AbpNotificationCenterHttpApiModule),
+    typeof(AbpNotificationCenterEntityFrameworkCoreModule),
+    typeof(AbpNotificationCenterWebModule)
 )]
 public class MyApplicationModule : AbpModule
 {
 }
 ```
 
-Replace `NotificationCenterEntityFrameworkCoreModule` with
-`NotificationCenterMongoDbModule` when the host uses MongoDB. Core does not reference the
+Replace `AbpNotificationCenterEntityFrameworkCoreModule` with
+`AbpNotificationCenterMongoDbModule` when the host uses MongoDB. Core does not reference the
 Notification Center, so adding or removing the persistent inbox does not change the publishing API.
 Applications that use permission-gated definitions can additionally install
 `Dignite.Abp.Notifications.Identity` and depend on `AbpNotificationsIdentityModule`.

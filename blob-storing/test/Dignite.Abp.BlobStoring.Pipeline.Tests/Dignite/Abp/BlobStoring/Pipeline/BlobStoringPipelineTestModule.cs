@@ -14,7 +14,7 @@ namespace Dignite.Abp.BlobStoring.Pipeline;
     typeof(AbpAutofacModule),
     typeof(AbpTestBaseModule),
     typeof(AbpBlobStoringMemoryModule),
-    typeof(DigniteAbpBlobStoringPipelineModule)
+    typeof(AbpBlobStoringPipelineModule)
 )]
 public class BlobStoringPipelineTestModule : AbpModule
 {

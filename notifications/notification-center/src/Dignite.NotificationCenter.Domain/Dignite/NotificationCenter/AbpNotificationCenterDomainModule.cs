@@ -6,11 +6,11 @@ using Volo.Abp.Modularity;
 namespace Dignite.NotificationCenter;
 
 [DependsOn(
-    typeof(NotificationCenterDomainSharedModule),
+    typeof(AbpNotificationCenterDomainSharedModule),
     typeof(AbpNotificationsAbstractionsModule),
     typeof(AbpDddDomainModule),
     typeof(AbpGdprAbstractionsModule)
     )]
-public class NotificationCenterDomainModule : AbpModule
+public class AbpNotificationCenterDomainModule : AbpModule
 {
 }

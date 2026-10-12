@@ -12,15 +12,15 @@
         'Dignite.Abp.FlexFields.Installer'
     )
     Types = @(
-        'Dignite.Abp.FlexFields.FlexFieldsDomainSharedModule',
-        'Dignite.Abp.FlexFields.FlexFieldsAbstractionsModule',
-        'Dignite.Abp.FlexFields.FlexFieldsDomainModule',
-        'Dignite.Abp.FlexFields.EntityFrameworkCore.FlexFieldsEntityFrameworkCoreModule',
-        'Dignite.Abp.FlexFields.MongoDB.FlexFieldsMongoDbModule',
-        'Dignite.Abp.FlexFields.Web.FlexFieldsWebModule',
-        'Dignite.Abp.FlexFields.CKEditor.FlexFieldsCKEditorModule',
-        'Dignite.Abp.FlexFields.CKEditor.Web.FlexFieldsCKEditorWebModule',
-        'Dignite.Abp.FlexFields.FlexFieldsInstallerModule'
+        'Dignite.Abp.FlexFields.AbpFlexFieldsDomainSharedModule',
+        'Dignite.Abp.FlexFields.AbpFlexFieldsAbstractionsModule',
+        'Dignite.Abp.FlexFields.AbpFlexFieldsDomainModule',
+        'Dignite.Abp.FlexFields.EntityFrameworkCore.AbpFlexFieldsEntityFrameworkCoreModule',
+        'Dignite.Abp.FlexFields.MongoDB.AbpFlexFieldsMongoDbModule',
+        'Dignite.Abp.FlexFields.Web.AbpFlexFieldsWebModule',
+        'Dignite.Abp.FlexFields.CKEditor.AbpFlexFieldsCKEditorModule',
+        'Dignite.Abp.FlexFields.CKEditor.Web.AbpFlexFieldsCKEditorWebModule',
+        'Dignite.Abp.FlexFields.AbpFlexFieldsInstallerModule'
     )
     Label = 'FlexFields '
 }

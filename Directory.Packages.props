@@ -149,7 +149,7 @@
 
   <!--
     CKEditor bolt-on (Dignite.Abp.FlexFields.CKEditor.Web only): Markdig converts a Markdown-format
-    field value to HTML server-side before rendering (see FlexFieldsCKEditorWebModule, which builds the
+    field value to HTML server-side before rendering (see AbpFlexFieldsCKEditorWebModule, which builds the
     pipeline with .UseAdvancedExtensions() for GFM support - CKEditor 5's Markdown plugin emits GitHub
     Flavored Markdown, not bare CommonMark). HtmlSanitizer (Ganss.Xss) sanitizes the resulting HTML - and
     the HTML-format path's raw value too - before @Html.Raw renders it; this is the first field type in

@@ -14,7 +14,7 @@ namespace Dignite.NotificationCenter;
 /// </summary>
 public class PushIdentityModuleRegistration_Tests
 {
-    [DependsOn(typeof(NotificationCenterPushIdentityModule))]
+    [DependsOn(typeof(AbpNotificationCenterPushIdentityModule))]
     public class PushIdentityTestModule : AbpModule
     {
     }

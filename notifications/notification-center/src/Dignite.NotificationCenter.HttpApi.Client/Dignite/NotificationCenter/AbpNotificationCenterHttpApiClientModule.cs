@@ -6,21 +6,21 @@ using Volo.Abp.VirtualFileSystem;
 namespace Dignite.NotificationCenter;
 
 [DependsOn(
-    typeof(NotificationCenterApplicationContractsModule),
+    typeof(AbpNotificationCenterApplicationContractsModule),
     typeof(AbpHttpClientModule)
     )]
-public class NotificationCenterHttpApiClientModule : AbpModule
+public class AbpNotificationCenterHttpApiClientModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         context.Services.AddStaticHttpClientProxies(
-            typeof(NotificationCenterApplicationContractsModule).Assembly,
+            typeof(AbpNotificationCenterApplicationContractsModule).Assembly,
             NotificationCenterRemoteServiceConsts.RemoteServiceName
             );
 
         Configure<AbpVirtualFileSystemOptions>(options =>
         {
-            options.FileSets.AddEmbedded<NotificationCenterHttpApiClientModule>();
+            options.FileSets.AddEmbedded<AbpNotificationCenterHttpApiClientModule>();
         });
     }
 }

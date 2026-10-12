@@ -13,7 +13,7 @@ namespace Dignite.Abp.FlexFields.MongoDB;
 /// <summary>
 /// The kernel ships one <see cref="IFlexFieldValueMigrator{TEntity}"/> and one
 /// <see cref="IFlexFieldValidator{TEntity}"/>, both registered as open generics in
-/// <c>FlexFieldsDomainModule</c>, and this package ships no counterpart of either. That is a claim about how
+/// <c>AbpFlexFieldsDomainModule</c>, and this package ships no counterpart of either. That is a claim about how
 /// they behave on a document store, so it is worth checking on one rather than taking on faith - especially
 /// the migrator, whose <c>UpdateAsync(autoSave: false)</c> means something different here: ABP's MongoDB
 /// repository writes each entity immediately rather than batching, so a page is several round trips and is
