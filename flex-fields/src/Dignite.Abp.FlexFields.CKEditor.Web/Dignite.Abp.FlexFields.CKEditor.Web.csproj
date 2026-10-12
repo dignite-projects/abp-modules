@@ -4,7 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace />
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
-    <Description>Default &lt;flex-field-view&gt; rendering (Dignite.Abp.FlexFields.Web) for the CKEditor bolt-on field type: converts a Markdown-format value to HTML (Markdig, GFM-compatible pipeline) and sanitizes the result (HtmlSanitizer) before rendering - see FlexFieldsCKEditorWebModule for the sanitizer/pipeline setup. No search partial: CKEditorFieldType.IndexValueType is null, so there is nothing to search on.</Description>
+    <Description>Default &lt;flex-field-view&gt; rendering (Dignite.Abp.FlexFields.Web) for the CKEditor bolt-on field type: converts a Markdown-format value to HTML (Markdig, GFM-compatible pipeline) and sanitizes the result (HtmlSanitizer) before rendering - see AbpFlexFieldsCKEditorWebModule for the sanitizer/pipeline setup. No search partial: CKEditorFieldType.IndexValueType is null, so there is nothing to search on.</Description>
   </PropertyGroup>
 
   <!-- See Dignite.Abp.FlexFields.Web's csproj comment - the Razor SDK's default @(RazorGenerate) glob

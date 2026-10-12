@@ -6,15 +6,15 @@ using Volo.Abp.VirtualFileSystem;
 namespace Dignite.Abp.FlexFields.CKEditor;
 
 [DependsOn(
-    typeof(FlexFieldsAbstractionsModule)
+    typeof(AbpFlexFieldsAbstractionsModule)
     )]
-public class FlexFieldsCKEditorModule : AbpModule
+public class AbpFlexFieldsCKEditorModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         Configure<AbpVirtualFileSystemOptions>(options =>
         {
-            options.FileSets.AddEmbedded<FlexFieldsCKEditorModule>();
+            options.FileSets.AddEmbedded<AbpFlexFieldsCKEditorModule>();
         });
 
         Configure<AbpLocalizationOptions>(options =>

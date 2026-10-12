@@ -12,17 +12,17 @@ using Volo.Abp.VirtualFileSystem;
 namespace Dignite.NotificationCenter.Web;
 
 [DependsOn(
-    typeof(NotificationCenterApplicationContractsModule),
+    typeof(AbpNotificationCenterApplicationContractsModule),
     typeof(AbpAspNetCoreMvcUiThemeSharedModule),
     typeof(AbpSettingManagementWebModule)
     )]
-public class NotificationCenterWebModule : AbpModule
+public class AbpNotificationCenterWebModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         Configure<AbpVirtualFileSystemOptions>(options =>
         {
-            options.FileSets.AddEmbedded<NotificationCenterWebModule>();
+            options.FileSets.AddEmbedded<AbpNotificationCenterWebModule>();
         });
 
         Configure<AbpBundlingOptions>(options =>

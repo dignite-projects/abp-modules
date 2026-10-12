@@ -15,16 +15,16 @@ namespace Dignite.Abp.BlobStoring.Imaging;
 /// <c>AbpImagingMagickNetModule</c>). Without one, every image is unsupported and stored as it is.
 /// </summary>
 [DependsOn(
-    typeof(DigniteAbpBlobStoringPipelineModule),
+    typeof(AbpBlobStoringPipelineModule),
     typeof(AbpImagingAbstractionsModule)
 )]
-public class DigniteAbpBlobStoringImagingModule : AbpModule
+public class AbpBlobStoringImagingModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         Configure<AbpVirtualFileSystemOptions>(options =>
         {
-            options.FileSets.AddEmbedded<DigniteAbpBlobStoringImagingModule>();
+            options.FileSets.AddEmbedded<AbpBlobStoringImagingModule>();
         });
 
         Configure<AbpLocalizationOptions>(options =>

@@ -15,8 +15,8 @@ namespace Dignite.NotificationCenter;
 /// <c>*_Tests&lt;TStartupModule&gt;</c> classes in this project).
 /// </summary>
 [DependsOn(
-    typeof(NotificationCenterApplicationModule),
-    typeof(NotificationCenterPushModule),
+    typeof(AbpNotificationCenterApplicationModule),
+    typeof(AbpNotificationCenterPushModule),
     typeof(AbpAutofacModule),
     typeof(AbpTestBaseModule)
     )]
