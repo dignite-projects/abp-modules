@@ -2,7 +2,7 @@
   "applications": {
     "Dignite.NotificationCenter.Web.Host.Angular": {
       "type": "cli",
-      "workingDirectory": "../../angular",
+      "workingDirectory": "../../../angular",
       "startCommand": "./start.ps1",
       "launchUrl": "http://localhost:4200",
       "execution": {
@@ -96,7 +96,7 @@
           "ProxyUrl": "https://localhost:44380",
           "ProxyModule": "app",
           "ProxyServiceType": "application",
-          "ProxyWorkingDirectory": "../../angular"
+          "ProxyWorkingDirectory": "../../../angular"
         }
       ]
     }

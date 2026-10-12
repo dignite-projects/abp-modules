@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CoreModule } from '@abp/ng.core';
 import { DatePipe } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -15,6 +15,7 @@ let nextRadioId = 0;
   imports: [CoreModule, ReactiveFormsModule],
   // DatePipe is not `providedIn: 'root'`. The old library injected it and relied on the host app
   // happening to provide it, which failed with a null-injector error in any host that did not.
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [DatePipe],
 })
 export class DateTimeConfigComponent extends FieldTypeConfigBase {

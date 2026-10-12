@@ -9,4 +9,11 @@ namespace Dignite.Abp.Notifications.SignalR;
     )]
 public class AbpNotificationsSignalRModule : AbpModule
 {
+    public override void ConfigureServices(ServiceConfigurationContext context)
+    {
+        Configure<NotificationNotifierOptions>(options =>
+        {
+            options.Notifiers.Add<SignalRNotifier>(SignalRNotifier.ChannelName);
+        });
+    }
 }

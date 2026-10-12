@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dignite.Abp.Notifications;
+using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Guids;
@@ -15,10 +16,11 @@ namespace Dignite.NotificationCenter;
 
 /// <summary>
 /// EF-backed implementation of the core <see cref="INotificationStore"/>. Replaces the framework's
-/// <c>NullNotificationStore</c> when this module is installed. Both write and read go through the single core
-/// <see cref="INotificationDataSerializer"/> (System.Text.Json + stable discriminator) — no Newtonsoft, no
-/// AssemblyQualifiedName. Durable reads use its additive tolerant-reader capability so one historical payload
-/// cannot fail a whole inbox page. Queries use proper joins/indexes (fixes roadmap problem D).
+/// <c>NullNotificationStore</c> when this module is installed. The payload is stored exactly as it was published —
+/// the discriminator-tagged JSON of <see cref="NotificationInfo.DataJson"/>, produced once by
+/// <see cref="INotificationDataSerializer"/> at the publish boundary — and read back the same way, so the store
+/// never needs to know a payload's CLR type; readers hydrate it through the serializer's tolerant read.
+/// Queries use proper joins/indexes (fixes roadmap problem D).
 /// </summary>
 [Dependency(ReplaceServices = true)]
 [ExposeServices(typeof(INotificationStore))]
@@ -30,8 +32,6 @@ public class NotificationStore : INotificationStore, ITransientDependency
 
     protected IRepository<NotificationSubscription, Guid> SubscriptionRepository { get; }
 
-    protected INotificationDataSerializer DataSerializer { get; }
-
     protected IGuidGenerator GuidGenerator { get; }
 
     protected IClock Clock { get; }
@@ -40,34 +40,44 @@ public class NotificationStore : INotificationStore, ITransientDependency
 
     protected IAsyncQueryableExecuter AsyncExecuter { get; }
 
+    protected IDataFilter DataFilter { get; }
+
     public NotificationStore(
         IRepository<Notification, Guid> notificationRepository,
         IRepository<UserNotification, Guid> userNotificationRepository,
         IRepository<NotificationSubscription, Guid> subscriptionRepository,
-        INotificationDataSerializer dataSerializer,
         IGuidGenerator guidGenerator,
         IClock clock,
         ICurrentTenant currentTenant,
-        IAsyncQueryableExecuter asyncExecuter)
+        IAsyncQueryableExecuter asyncExecuter,
+        IDataFilter dataFilter)
     {
         NotificationRepository = notificationRepository;
         UserNotificationRepository = userNotificationRepository;
         SubscriptionRepository = subscriptionRepository;
-        DataSerializer = dataSerializer;
         GuidGenerator = guidGenerator;
         Clock = clock;
         CurrentTenant = currentTenant;
         AsyncExecuter = asyncExecuter;
+        DataFilter = dataFilter;
     }
 
     public virtual async Task InsertNotificationAsync(
         NotificationInfo notification,
         CancellationToken cancellationToken = default)
     {
+        // A notification arrives with the id its publisher gave it, so seeing it again means the same distribution ran
+        // twice (a redelivered publish request, a retried job). The event inbox deduplicates first; this check keeps
+        // the second run from failing on the primary key. Inbox rows have the same guard in InsertUserNotificationsAsync.
+        if (await NotificationExistsAsync(notification.Id, cancellationToken))
+        {
+            return;
+        }
+
         var entity = new Notification(
             notification.Id,
             notification.NotificationName,
-            DataSerializer.Serialize(notification.Data),
+            notification.DataJson,
             notification.EntityTypeName,
             notification.EntityId,
             notification.Severity,
@@ -75,6 +85,12 @@ public class NotificationStore : INotificationStore, ITransientDependency
             notification.TenantId ?? CurrentTenant.Id);
 
         await NotificationRepository.InsertAsync(entity, cancellationToken: cancellationToken);
+    }
+
+    protected virtual async Task<bool> NotificationExistsAsync(Guid notificationId, CancellationToken cancellationToken)
+    {
+        var query = await NotificationRepository.GetQueryableAsync();
+        return await AsyncExecuter.AnyAsync(query.Where(n => n.Id == notificationId), cancellationToken);
     }
 
     public virtual async Task InsertUserNotificationAsync(
@@ -109,6 +125,7 @@ public class NotificationStore : INotificationStore, ITransientDependency
                 userNotification.Id == Guid.Empty ? GuidGenerator.Create() : userNotification.Id,
                 userNotification.UserId,
                 userNotification.NotificationId,
+                userNotification.NotificationName,
                 userNotification.State,
                 userNotification.CreationTime == default ? Clock.Now : userNotification.CreationTime,
                 userNotification.TenantId ?? CurrentTenant.Id))
@@ -210,18 +227,16 @@ public class NotificationStore : INotificationStore, ITransientDependency
         int maxResultCount = int.MaxValue,
         DateTime? startDate = null,
         DateTime? endDate = null,
+        IReadOnlyCollection<string>? notificationNames = null,
+        IReadOnlyCollection<string>? excludedNotificationNames = null,
         CancellationToken cancellationToken = default)
     {
         // Two indexed queries + an in-memory join, rather than a cross-collection join, so the SAME store works on
         // both EF Core and MongoDB. The (UserId, State, CreationTime) index serves the first query; the second is a
         // primary-key batch lookup. A user-notification whose notification was deleted is skipped, not thrown on
         // (roadmap problem D).
-        var userNotificationQuery = await UserNotificationRepository.GetQueryableAsync();
-        userNotificationQuery = userNotificationQuery.Where(un =>
-            un.UserId == userId
-            && (state == null || un.State == state)
-            && (startDate == null || un.CreationTime >= startDate)
-            && (endDate == null || un.CreationTime <= endDate));
+        var userNotificationQuery = await CreateUserNotificationQueryAsync(
+            userId, state, startDate, endDate, notificationNames, excludedNotificationNames);
 
         var pagedUserNotifications = await AsyncExecuter.ToListAsync(
             userNotificationQuery
@@ -262,7 +277,39 @@ public class NotificationStore : INotificationStore, ITransientDependency
         UserNotificationState? state = null,
         DateTime? startDate = null,
         DateTime? endDate = null,
+        IReadOnlyCollection<string>? notificationNames = null,
+        IReadOnlyCollection<string>? excludedNotificationNames = null,
         CancellationToken cancellationToken = default)
+    {
+        var query = await CreateUserNotificationQueryAsync(
+            userId, state, startDate, endDate, notificationNames, excludedNotificationNames);
+
+        return await AsyncExecuter.CountAsync(query, cancellationToken);
+    }
+
+    public virtual async Task<Dictionary<string, int>> GetUnreadCountsByNotificationNameAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        // One grouped query over the user's unread rows only, served by the inbox indexes.
+        var query = await UserNotificationRepository.GetQueryableAsync();
+        var counts = await AsyncExecuter.ToListAsync(
+            query
+                .Where(un => un.UserId == userId && un.State == UserNotificationState.Unread)
+                .GroupBy(un => un.NotificationName)
+                .Select(group => new { NotificationName = group.Key, Count = group.Count() }),
+            cancellationToken);
+
+        return counts.ToDictionary(row => row.NotificationName, row => row.Count, StringComparer.Ordinal);
+    }
+
+    protected virtual async Task<IQueryable<UserNotification>> CreateUserNotificationQueryAsync(
+        Guid userId,
+        UserNotificationState? state,
+        DateTime? startDate,
+        DateTime? endDate,
+        IReadOnlyCollection<string>? notificationNames,
+        IReadOnlyCollection<string>? excludedNotificationNames)
     {
         var query = await UserNotificationRepository.GetQueryableAsync();
         query = query.Where(un =>
@@ -271,7 +318,19 @@ public class NotificationStore : INotificationStore, ITransientDependency
             && (startDate == null || un.CreationTime >= startDate)
             && (endDate == null || un.CreationTime <= endDate));
 
-        return await AsyncExecuter.CountAsync(query, cancellationToken);
+        if (notificationNames != null)
+        {
+            var included = notificationNames.ToList();
+            query = query.Where(un => included.Contains(un.NotificationName));
+        }
+
+        if (excludedNotificationNames is { Count: > 0 })
+        {
+            var excluded = excludedNotificationNames.ToList();
+            query = query.Where(un => !excluded.Contains(un.NotificationName));
+        }
+
+        return query;
     }
 
     public virtual async Task InsertSubscriptionAsync(
@@ -305,6 +364,24 @@ public class NotificationStore : INotificationStore, ITransientDependency
             x.TenantKey == tenantKey && x.UserId == userId
             && x.NotificationNameKey == notificationNameKey && x.ScopeKey == scopeKey,
             cancellationToken: cancellationToken);
+    }
+
+    public virtual async Task DeleteAllUserDataAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        // A person's id is unique across tenants, so one delete by it reaches every tenant. The tenant filter is
+        // switched off here because the providers disagree on DeleteDirectAsync: EF Core still applies it,
+        // MongoDB never does. Direct deletes load nothing, however many rows the user has.
+        using (DataFilter.Disable<IMultiTenant>())
+        {
+            await UserNotificationRepository.DeleteDirectAsync(
+                x => x.UserId == userId,
+                cancellationToken);
+            await SubscriptionRepository.DeleteDirectAsync(
+                x => x.UserId == userId,
+                cancellationToken);
+        }
     }
 
     public virtual async Task<bool> IsSubscribedAsync(
@@ -404,7 +481,7 @@ public class NotificationStore : INotificationStore, ITransientDependency
         {
             Id = n.Id,
             NotificationName = n.NotificationName,
-            Data = DeserializeDurableData(n.Data),
+            DataJson = n.Data,
             EntityTypeName = n.EntityTypeName,
             EntityId = n.EntityId,
             Severity = n.Severity,
@@ -420,15 +497,11 @@ public class NotificationStore : INotificationStore, ITransientDependency
             Id = un.Id,
             UserId = un.UserId,
             NotificationId = un.NotificationId,
+            NotificationName = un.NotificationName,
             State = un.State,
             CreationTime = un.CreationTime,
             TenantId = un.TenantId
         };
-    }
-
-    protected virtual NotificationData? DeserializeDurableData(string? json)
-    {
-        return DataSerializer.Deserialize(json);
     }
 
     protected virtual NotificationSubscriptionInfo MapToSubscriptionInfo(NotificationSubscription s)

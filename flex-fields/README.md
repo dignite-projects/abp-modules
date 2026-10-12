@@ -23,7 +23,7 @@ defines "the concrete one."
   `EfCoreFlexFieldIndexManagerBase`, …) lives only in `Dignite.Abp.FlexFields.EntityFrameworkCore`;
   the MongoDB provider has no equivalent type and queries the value bag directly.
 
-> **.NET 10 · ABP 10.5.0 · LGPL-3.0-only**
+> **.NET 10 · ABP 10.7.0 · LGPL-3.0-only**
 
 ## Packages
 
@@ -35,6 +35,7 @@ defines "the concrete one."
 | `Dignite.Abp.FlexFields.EntityFrameworkCore` | EF Core support (not ownership): `ConfigureFlexFieldsProperty`/`ConfigureFlexField`/`ConfigureFlexFieldIndex` model-builder extensions, the typed pivot-row shape (`FlexFieldIndexValue`), and abstract base classes for the index manager, query executor, and field repository. Ships no `DbContext` and no table of its own. |
 | `Dignite.Abp.FlexFields.MongoDB` | MongoDB support: queries and indexes the `FlexFieldDictionary` in place, so writes need almost no index synchronization. Deliberately has **no** counterpart to `FlexFieldIndexValue` — that shape is a relational pivot row. |
 | `@dignite/ng.flex-fields` (npm) | Angular UI: config / control / view / search components for all eight field types, the `FieldTypeResolver` registry, and `provideFlexFields()`. See [`angular/projects/flex-fields`](./angular/projects/flex-fields/README.md). |
+| `@dignite/ng.flex-fields-ckeditor` (npm) | Optional bolt-on: the `CKEditor` rich-text field type (`provideCKEditorFieldType()`). The host supplies image upload (`CKEDITOR_UPLOAD_PROVIDER`) and can change any editor's CKEditor 5 configuration, plugins included (`CKEDITOR_CONFIG_CONTRIBUTORS`) and the read-only view's HTML (`CKEDITOR_DISPLAY_CONTRIBUTORS`). See [`angular/projects/flex-fields-ckeditor`](./angular/projects/flex-fields-ckeditor/README.md#customizing-the-editor-configuration). |
 
 ## Install
 
@@ -128,8 +129,9 @@ The Angular library is an npm workspace, outside MSBuild:
 cd flex-fields/angular && npm install --legacy-peer-deps && npm run build:lib
 ```
 
-`--legacy-peer-deps` is required: `@abp/ng.theme.shared` depends on `@swimlane/ngx-datatable`, whose
-Angular peer range stops at 20, so npm will not hoist it beside Angular 21 without it.
+`--legacy-peer-deps` is required: `@abp/ng.theme.shared` 10.7.0 still depends on
+`@swimlane/ngx-datatable` `~22.0.0`, whose Angular peer range stops at 20, so npm will not hoist it
+beside Angular 22 without it.
 
 Run the demo stack — the host on `https://localhost:44330`, the Angular app on `http://localhost:4200`:
 

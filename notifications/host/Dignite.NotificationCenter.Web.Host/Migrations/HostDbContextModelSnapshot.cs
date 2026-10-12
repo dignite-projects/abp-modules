@@ -18,7 +18,84 @@ namespace Dignite.NotificationCenter.Web.Host.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("_Abp_DatabaseProvider", EfCoreDatabaseProvider.Sqlite)
-                .HasAnnotation("ProductVersion", "10.0.7");
+                .HasAnnotation("ProductVersion", "10.0.11");
+
+            modelBuilder.Entity("Dignite.Abp.Notifications.NotificationDefinitionRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExtraProperties")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ExtraProperties");
+
+                    b.Property<string>("FeatureName")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GroupName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PermissionName")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupName");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("NotifDefinitions", (string)null);
+                });
+
+            modelBuilder.Entity("Dignite.Abp.Notifications.NotificationGroupDefinitionRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExtraProperties")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ExtraProperties");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("NotifDefinitionGroups", (string)null);
+                });
 
             modelBuilder.Entity("Dignite.NotificationCenter.Notification", b =>
                 {
@@ -128,6 +205,60 @@ namespace Dignite.NotificationCenter.Web.Host.Migrations
                     b.ToTable("NotifNotificationSubscriptions", (string)null);
                 });
 
+            modelBuilder.Entity("Dignite.NotificationCenter.PushDevice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CultureName")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastSeenTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SessionId")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("TenantId");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TokenKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("TEXT")
+                        .IsFixedLength();
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenKey")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "UserId");
+
+                    b.ToTable("NotifPushDevices", (string)null);
+                });
+
             modelBuilder.Entity("Dignite.NotificationCenter.UserNotification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -138,6 +269,11 @@ namespace Dignite.NotificationCenter.Web.Host.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("NotificationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NotificationName")
+                        .IsRequired()
+                        .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
                     b.Property<byte>("State")
@@ -162,6 +298,8 @@ namespace Dignite.NotificationCenter.Web.Host.Migrations
                     b.HasIndex("TenantId", "State", "CreationTime");
 
                     b.HasIndex("TenantId", "UserId", "State", "CreationTime");
+
+                    b.HasIndex("TenantId", "UserId", "NotificationName", "State", "CreationTime");
 
                     b.ToTable("NotifUserNotifications", (string)null);
                 });

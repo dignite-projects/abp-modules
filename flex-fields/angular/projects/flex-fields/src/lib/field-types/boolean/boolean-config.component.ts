@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CoreModule } from '@abp/ng.core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FieldTypeConfigBase } from '../field-type-config-base';
@@ -10,6 +10,7 @@ let nextCheckboxId = 0;
 @Component({
   selector: 'ff-boolean-config',
   templateUrl: './boolean-config.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CoreModule, ReactiveFormsModule],
 })
 export class BooleanConfigComponent extends FieldTypeConfigBase {

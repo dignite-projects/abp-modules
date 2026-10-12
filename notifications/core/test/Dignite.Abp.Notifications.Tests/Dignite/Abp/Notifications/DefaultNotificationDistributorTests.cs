@@ -25,7 +25,7 @@ public class DefaultNotificationDistributorTests
         var store = Substitute.For<INotificationStore>();
         var definitionManager = Substitute.For<INotificationDefinitionManager>();
         var eventBus = Substitute.For<IDistributedEventBus>();
-        definitionManager.Get("test").Returns(DefinitionWithChannels());
+        definitionManager.GetAsync("test").Returns(DefinitionWithChannels());
         definitionManager.IsAvailableAsync("test", Arg.Any<Guid>()).Returns(true);
 
         var published = new List<NotificationDeliveryRequestedEto>();
@@ -71,8 +71,8 @@ public class DefaultNotificationDistributorTests
         var definitionManager = Substitute.For<INotificationDefinitionManager>();
         var eventBus = Substitute.For<IDistributedEventBus>();
         var notificationName = $"batch-{Guid.NewGuid():N}";
-        definitionManager.Get(notificationName).Returns(
-            new NotificationDefinition(notificationName, new FixedLocalizableString("Batch")).UseChannels("Test"));
+        definitionManager.GetAsync(notificationName).Returns(
+            new NotificationDefinition("Test", notificationName, new FixedLocalizableString("Batch")));
         definitionManager.IsAvailableAsync(notificationName, Arg.Any<Guid>()).Returns(true);
 
         var writeBatches = new List<Guid[]>();
@@ -123,7 +123,7 @@ public class DefaultNotificationDistributorTests
         var store = Substitute.For<INotificationStore>();
         var definitionManager = Substitute.For<INotificationDefinitionManager>();
         var eventBus = Substitute.For<IDistributedEventBus>();
-        definitionManager.Get("test").Returns(DefinitionWithChannels());
+        definitionManager.GetAsync("test").Returns(DefinitionWithChannels());
         definitionManager.IsAvailableAsync("test", Arg.Any<Guid>()).Returns(true);
 
         var persistedRecipients = new List<Guid>();
@@ -196,7 +196,7 @@ public class DefaultNotificationDistributorTests
         var store = Substitute.For<INotificationStore>();
         var definitionManager = Substitute.For<INotificationDefinitionManager>();
         var eventBus = Substitute.For<IDistributedEventBus>();
-        definitionManager.Get("test").Returns(DefinitionWithChannels());
+        definitionManager.GetAsync("test").Returns(DefinitionWithChannels());
 
         var subscribedUser = Guid.NewGuid();
         store.GetSubscriptionUserIdsAsync(
@@ -209,7 +209,7 @@ public class DefaultNotificationDistributorTests
 
         await distributor.DistributeAsync(notification, Array.Empty<Guid>());
 
-        definitionManager.DidNotReceiveWithAnyArgs().Get(default!);
+        await definitionManager.DidNotReceiveWithAnyArgs().GetAsync(default!);
         await store.DidNotReceiveWithAnyArgs().GetSubscriptionUserIdsAsync(
             default!, default, default, default, default, default);
         await store.DidNotReceiveWithAnyArgs().InsertNotificationAsync(default!);
@@ -223,7 +223,7 @@ public class DefaultNotificationDistributorTests
         var store = Substitute.For<INotificationStore>();
         var definitionManager = Substitute.For<INotificationDefinitionManager>();
         var eventBus = Substitute.For<IDistributedEventBus>();
-        definitionManager.Get("test").Returns(DefinitionWithChannels());
+        definitionManager.GetAsync("test").Returns(DefinitionWithChannels());
 
         var available = Guid.NewGuid();
         var notAvailable = Guid.NewGuid();
@@ -255,7 +255,7 @@ public class DefaultNotificationDistributorTests
         var store = Substitute.For<INotificationStore>();
         var definitionManager = Substitute.For<INotificationDefinitionManager>();
         var eventBus = Substitute.For<IDistributedEventBus>();
-        definitionManager.Get("test").Returns(DefinitionWithChannels());
+        definitionManager.GetAsync("test").Returns(DefinitionWithChannels());
 
         var distributor = CreateDistributor(store, definitionManager, eventBus);
         var notification = new NotificationInfo { Id = Guid.NewGuid(), NotificationName = "test" };
@@ -274,11 +274,15 @@ public class DefaultNotificationDistributorTests
         var store = Substitute.For<INotificationStore>();
         var definitionManager = Substitute.For<INotificationDefinitionManager>();
         var eventBus = Substitute.For<IDistributedEventBus>();
-        definitionManager.Get("test").Returns(new NotificationDefinition("test", new FixedLocalizableString("Test")));
+        definitionManager.GetAsync("test").Returns(new NotificationDefinition("Test", "test", new FixedLocalizableString("Test")));
         definitionManager.IsAvailableAsync("test", Arg.Any<Guid>()).Returns(true);
 
         var userId = Guid.NewGuid();
-        var distributor = CreateDistributor(store, definitionManager, eventBus);
+        var distributor = CreateDistributor(
+            store,
+            definitionManager,
+            eventBus,
+            channelResolver: NotificationTestObjects.CreateChannelResolver());
         var notification = new NotificationInfo { Id = Guid.NewGuid(), NotificationName = "test" };
 
         await distributor.DistributeAsync(notification, new[] { userId });
@@ -297,9 +301,13 @@ public class DefaultNotificationDistributorTests
         var store = new NullNotificationStore();
         var definitionManager = Substitute.For<INotificationDefinitionManager>();
         var eventBus = Substitute.For<IDistributedEventBus>();
-        definitionManager.Get("test").Returns(new NotificationDefinition("test", new FixedLocalizableString("Test")));
+        definitionManager.GetAsync("test").Returns(new NotificationDefinition("Test", "test", new FixedLocalizableString("Test")));
 
-        var distributor = CreateDistributor(store, definitionManager, eventBus);
+        var distributor = CreateDistributor(
+            store,
+            definitionManager,
+            eventBus,
+            channelResolver: NotificationTestObjects.CreateChannelResolver());
         var notification = new NotificationInfo { Id = Guid.NewGuid(), NotificationName = "test" };
 
         await Should.ThrowAsync<AbpException>(() => distributor.DistributeAsync(notification, new[] { Guid.NewGuid() }));
@@ -313,7 +321,7 @@ public class DefaultNotificationDistributorTests
         var store = Substitute.For<INotificationStore>();
         var definitionManager = Substitute.For<INotificationDefinitionManager>();
         var eventBus = Substitute.For<IDistributedEventBus>();
-        definitionManager.Get("test").Returns(DefinitionWithChannels());
+        definitionManager.GetAsync("test").Returns(DefinitionWithChannels());
         definitionManager.IsAvailableAsync("test", Arg.Any<Guid>()).Returns(true);
 
         NotificationDeliveryRequestedEto? published = null;
@@ -345,12 +353,39 @@ public class DefaultNotificationDistributorTests
     }
 
     [Fact]
+    public async Task Copies_the_published_payload_json_onto_every_delivery_event_without_reading_it()
+    {
+        var store = Substitute.For<INotificationStore>();
+        var definitionManager = Substitute.For<INotificationDefinitionManager>();
+        var eventBus = Substitute.For<IDistributedEventBus>();
+        definitionManager.GetAsync("test").Returns(DefinitionWithChannels());
+        definitionManager.IsAvailableAsync("test", Arg.Any<Guid>()).Returns(true);
+
+        var published = new List<NotificationDeliveryRequestedEto>();
+        eventBus.WhenForAnyArgs(x => x.PublishAsync(Arg.Any<NotificationDeliveryRequestedEto>()))
+            .Do(ci => published.Add(ci.Arg<NotificationDeliveryRequestedEto>()));
+
+        // A discriminator no registry in this test knows: the distributor must not need to.
+        const string dataJson = "{\"type\":\"Publisher.Only.Payload\",\"orderNumber\":\"SO-1\",\"lines\":[1,2]}";
+        var notification = new NotificationInfo { Id = Guid.NewGuid(), NotificationName = "test", DataJson = dataJson };
+
+        await CreateDistributor(store, definitionManager, eventBus)
+            .DistributeAsync(notification, new[] { Guid.NewGuid(), Guid.NewGuid() });
+
+        published.Count.ShouldBe(2);
+        published.ShouldAllBe(item => item.DataJson == dataJson);
+        await store.Received(1).InsertNotificationAsync(
+            Arg.Is<NotificationInfo>(n => n.DataJson == dataJson),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Explicit_recipients_are_filtered_by_the_same_definition_eligibility_as_subscribers()
     {
         var store = Substitute.For<INotificationStore>();
         var definitionManager = Substitute.For<INotificationDefinitionManager>();
         var eventBus = Substitute.For<IDistributedEventBus>();
-        definitionManager.Get("test").Returns(DefinitionWithChannels());
+        definitionManager.GetAsync("test").Returns(DefinitionWithChannels());
 
         var eligible = Guid.NewGuid();
         var denied = Guid.NewGuid();
@@ -387,7 +422,7 @@ public class DefaultNotificationDistributorTests
         var callerTenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var tenantsSeen = new List<Guid?>();
-        definitionManager.Get("test").Returns(DefinitionWithChannels());
+        definitionManager.GetAsync("test").Returns(DefinitionWithChannels());
         store.GetSubscriptionUserIdsAsync(
                 "test", null, null, Arg.Any<Guid?>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns(call =>
@@ -437,13 +472,14 @@ public class DefaultNotificationDistributorTests
         IDistributedEventBus eventBus,
         ICurrentTenant? currentTenant = null,
         ILogger<DefaultNotificationDistributor>? logger = null,
-        NotificationDistributionOptions? options = null)
+        NotificationDistributionOptions? options = null,
+        INotificationChannelResolver? channelResolver = null)
     {
         return new DefaultNotificationDistributor(
             store,
             definitionManager,
+            channelResolver ?? NotificationTestObjects.CreateChannelResolver("Test"),
             eventBus,
-            NotificationTestObjects.CreateSerializer(),
             currentTenant ?? new TestCurrentTenant(),
             logger ?? NullLogger<DefaultNotificationDistributor>.Instance,
             Options.Create(options ?? new NotificationDistributionOptions()));
@@ -451,6 +487,6 @@ public class DefaultNotificationDistributorTests
 
     private static NotificationDefinition DefinitionWithChannels()
     {
-        return new NotificationDefinition("test", new FixedLocalizableString("Test")).UseChannels("Test");
+        return new NotificationDefinition("Test", "test", new FixedLocalizableString("Test"));
     }
 }

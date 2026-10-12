@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Dignite.Abp.AspNetCore.Mcp/Dignite.Abp.AspNetCore.Mcp.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Dignite.Abp.AspNetCore.Mcp.Tests/Dignite.Abp.AspNetCore.Mcp.Tests.csproj" />
+  </Folder>
+</Solution>

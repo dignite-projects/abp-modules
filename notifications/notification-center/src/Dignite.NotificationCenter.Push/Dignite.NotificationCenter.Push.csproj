@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>Connects the Dignite.Abp.Notifications push channel to the Notification Center's push device registry.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.NotificationCenter.Domain\Dignite.NotificationCenter.Domain.csproj" />
+    <ProjectReference Include="..\..\..\core\src\Dignite.Abp.Notifications.Push\Dignite.Abp.Notifications.Push.csproj" />
+  </ItemGroup>
+
+</Project>

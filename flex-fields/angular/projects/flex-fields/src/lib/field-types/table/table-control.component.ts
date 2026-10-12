@@ -1,7 +1,7 @@
 import { CoreModule, LocalizationService } from '@abp/ng.core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormArray, FormGroup, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FlexFieldControlComponent } from '../../components/flex-field-control.component';
 import type { FlexFieldValue } from '../../models';
 import { flexFieldErrorMessage } from '../../utils';
@@ -20,6 +20,7 @@ import { TableConfiguration } from './table-configuration';
 @Component({
   selector: 'ff-table-control',
   templateUrl: './table-control.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CoreModule, CommonModule, ReactiveFormsModule, FlexFieldControlComponent],
 })
 export class TableControlComponent extends FieldTypeControlBase {

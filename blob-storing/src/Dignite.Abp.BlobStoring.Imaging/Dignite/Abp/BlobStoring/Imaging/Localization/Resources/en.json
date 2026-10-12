@@ -1,0 +1,9 @@
+{
+  "culture": "en",
+  "texts": {
+    "Dignite.Abp.BlobStoring.Imaging:ImageTooLarge": "The image is too large to process. It cannot exceed {MaxWidth}x{MaxHeight} pixels ({MaxPixels} pixels in total).",
+    "Dignite.Abp.BlobStoring.Imaging:ImageTooSmall": "The image is too small. It must be at least {MinWidth} pixels wide and {MinHeight} pixels high.",
+    "Dignite.Abp.BlobStoring.Imaging:ImageDecodeTimeout": "Processing the image took too long (more than {DecodeTimeoutSeconds} seconds).",
+    "Dignite.Abp.BlobStoring.Imaging:ImageProcessingFailed": "The image could not be processed."
+  }
+}

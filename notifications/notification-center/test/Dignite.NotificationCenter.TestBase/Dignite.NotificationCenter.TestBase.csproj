@@ -19,6 +19,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Dignite.NotificationCenter.Application\Dignite.NotificationCenter.Application.csproj" />
+    <ProjectReference Include="..\..\src\Dignite.NotificationCenter.Push\Dignite.NotificationCenter.Push.csproj" />
+    <ProjectReference Include="..\..\src\Dignite.NotificationCenter.Push.Identity\Dignite.NotificationCenter.Push.Identity.csproj" />
   </ItemGroup>
 
   <ItemGroup>

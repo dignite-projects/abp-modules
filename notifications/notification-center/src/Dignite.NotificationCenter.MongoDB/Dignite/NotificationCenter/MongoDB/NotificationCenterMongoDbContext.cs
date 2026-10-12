@@ -15,6 +15,8 @@ public class NotificationCenterMongoDbContext : AbpMongoDbContext, INotification
 
     public IMongoCollection<NotificationSubscription> NotificationSubscriptions => Collection<NotificationSubscription>();
 
+    public IMongoCollection<PushDevice> PushDevices => Collection<PushDevice>();
+
     public IMongoCollection<IncomingEventRecord> IncomingEvents => Collection<IncomingEventRecord>();
 
     public IMongoCollection<OutgoingEventRecord> OutgoingEvents => Collection<OutgoingEventRecord>();
@@ -92,6 +94,14 @@ public class NotificationCenterMongoDbContext : AbpMongoDbContext, INotification
                 indexes.CreateOne(new CreateIndexModel<BsonDocument>(
                     Builders<BsonDocument>.IndexKeys
                         .Ascending(nameof(UserNotification.TenantId))
+                        .Ascending(nameof(UserNotification.UserId))
+                        .Ascending(nameof(UserNotification.NotificationName))
+                        .Ascending(nameof(UserNotification.State))
+                        .Descending(nameof(UserNotification.CreationTime))));
+
+                indexes.CreateOne(new CreateIndexModel<BsonDocument>(
+                    Builders<BsonDocument>.IndexKeys
+                        .Ascending(nameof(UserNotification.TenantId))
                         .Ascending(nameof(UserNotification.State))
                         .Ascending(nameof(UserNotification.CreationTime))));
 
@@ -137,6 +147,23 @@ public class NotificationCenterMongoDbContext : AbpMongoDbContext, INotification
                         .Ascending(nameof(NotificationSubscription.TenantKey))
                         .Ascending(nameof(NotificationSubscription.UserId))
                         .Ascending(nameof(NotificationSubscription.NotificationNameKey))));
+            });
+        });
+
+        modelBuilder.Entity<PushDevice>(b =>
+        {
+            b.CollectionName = NotificationCenterDbProperties.DbTablePrefix + "PushDevices";
+            b.ConfigureIndexes(indexes =>
+            {
+                indexes.CreateOne(new CreateIndexModel<BsonDocument>(
+                    Builders<BsonDocument>.IndexKeys
+                        .Ascending(nameof(PushDevice.TokenKey)),
+                    new CreateIndexOptions { Unique = true }));
+
+                indexes.CreateOne(new CreateIndexModel<BsonDocument>(
+                    Builders<BsonDocument>.IndexKeys
+                        .Ascending(nameof(PushDevice.TenantId))
+                        .Ascending(nameof(PushDevice.UserId))));
             });
         });
     }

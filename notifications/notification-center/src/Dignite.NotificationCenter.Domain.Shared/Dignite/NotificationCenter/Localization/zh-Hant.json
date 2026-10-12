@@ -4,6 +4,14 @@
     "Menu:NotificationCenter": "通知中心",
     "Notifications": "通知",
     "MarkAllAsRead": "全部標記為已讀",
+    "ViewAll": "查看全部",
+    "Inbox:All": "全部",
+    "Inbox:Unread": "未讀",
+    "Delete": "刪除",
+    "DeleteAllRead": "清除已讀",
+    "DeleteNotificationConfirmation": "刪除這則通知？",
+    "DeleteAllReadConfirmation": "刪除所有已讀通知？未讀通知會保留。",
+    "MarkAllAsReadConfirmation": "將所有通知標記為已讀？",
     "NoNotifications": "暫無通知",
     "NoUnreadNotifications": "暫無未讀通知",
     "Subscriptions": "通知訂閱",
@@ -12,6 +20,7 @@
     "Subscribed": "已訂閱",
     "SubscriptionScope": "範圍",
     "AllEntities": "所有實體",
+    "NotificationGroup:Other": "其他",
     "UnsupportedNotification": "目前版本無法顯示此通知。"
   }
 }

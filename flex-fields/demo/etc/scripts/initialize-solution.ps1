@@ -21,8 +21,8 @@ function Run-Step {
 }
 
 Run-Step "Build" {
-    Set-Location (Join-Path $scriptRoot "..\..\")
-    dotnet build
+    Set-Location (Join-Path $scriptRoot "..\..\..\")
+    dotnet build Dignite.Abp.FlexFields.slnx
 }
 
 Run-Step "InstallLibs" {

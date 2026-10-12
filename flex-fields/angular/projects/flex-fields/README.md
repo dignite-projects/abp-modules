@@ -3,7 +3,7 @@
 Angular UI for the **[Dignite.Abp.FlexFields](https://github.com/dignite-projects/abp-modules/tree/main/flex-fields)**
 ABP module — render, configure, display and filter runtime-defined ("flex") fields.
 
-> **Angular 21 · ABP 10.5 · LGPL-3.0-only**
+> **Angular 22 · ABP 10.7 · LGPL-3.0-only**
 
 FlexFields is a *constraint kernel*: it supplies the mechanism (field types, configuration,
 validation, indexing) and never owns the domain model. This package is its front-end half. It
@@ -26,13 +26,14 @@ import resolving to nothing on any install that skips peers, `--legacy-peer-deps
 
 Everything in `peerDependencies` you **must** declare yourself. Two are easy to miss because no stock
 ABP host brings them in: `ng-zorro-antd` (`^21.0.0`) and `@angular/cdk` (`~21.2.0`), both imported
-directly by the field controls. Note that `@abp/ng.components` pins `ng-zorro-antd` at
-`~21.0.0-next.1`, i.e. `<21.1.0`. Declaring a wider range — `^21.0.2`, or the `21.3.3` current hosts
-run — is supported and expected, but no single version satisfies both, so your package manager
-installs two: yours at the root and `21.0.2` nested under `@abp/ng.components`. Two copies are two
-module-scoped `NZ_CONFIG` / `NzConfigService` injection tokens, so `provideNzConfig()` and
-`provideNzI18n()` configure the copy these controls use and not the one ABP's `abp-tree` sees. Pin
-inside `<21.1.0` if you need a single copy; otherwise expect `abp-tree` to run on ng-zorro defaults.
+directly by the field controls. Both stay on their 21 line on an Angular 22 host, because that is
+what ABP 10.7 brings: `@abp/ng.components` 10.7.0 depends on `ng-zorro-antd` `~21.3.1`, and
+`ng-zorro-antd` 21.3 depends on `@angular/cdk` `^21` (`@angular/cdk` 21.2 accepts Angular 22 as a
+peer). Declare `ng-zorro-antd` inside `~21.3.1` and `@angular/cdk` on `~21.2` to get a single copy
+of each. A range the ABP copy does not satisfy — `ng-zorro-antd` 22, or `@angular/cdk` 22 — is
+installed beside it instead: yours at the root, ABP's nested under `@abp/ng.components`. Two copies
+are two module-scoped `NZ_CONFIG` / `NzConfigService` injection tokens, so `provideNzConfig()` and
+`provideNzI18n()` configure the copy these controls use and not the one ABP's `abp-tree` sees.
 
 ### Styles
 
@@ -93,8 +94,6 @@ token, each documented in its own README:
 
 - [`@dignite/ng.flex-fields-ckeditor`](https://github.com/dignite-projects/abp-modules/blob/main/flex-fields/angular/projects/flex-fields-ckeditor/README.md#styles) — one entry, for
   CKEditor 5's UI stylesheet.
-- [`@dignite/ng.flex-fields-file-explorer`](https://github.com/dignite-projects/abp-modules/blob/main/flex-fields/angular/projects/flex-fields-file-explorer/README.md#styles) — no entry
-  of its own.
 
 **Maintainers:** the `StyleBundle` constant lives in the package whose component renders the
 CSS, not centrally — `NZ_SELECT_STYLE` here (`src/lib/utils/style-loader.service.ts`), `CKEDITOR5_STYLE`
@@ -164,7 +163,7 @@ Then render a field by role:
 ## Localization
 
 All strings resolve through the ABP `FlexFields` localization resource, which ships inside
-`Dignite.Abp.FlexFields.Abstractions`. Your host must depend on `FlexFieldsAbstractionsModule` for
+`Dignite.Abp.FlexFields.Abstractions`. Your host must depend on `AbpFlexFieldsAbstractionsModule` for
 them to reach the browser via the application-configuration endpoint.
 
 ## License

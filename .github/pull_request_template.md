@@ -10,9 +10,10 @@ Resolves #xxxx (write the related issue number if there is one)
 <!-- Tick the module tree(s) this PR touches. The three modules never reference each other, so most
      PRs touch only one. -->
 
-- [ ] `file-storing/` (Dignite.Abp.FileStoring / Dignite.FileExplorer)
+- [ ] `blob-storing/` (Dignite.Abp.BlobStoring.*)
 - [ ] `notifications/` (Dignite.Abp.Notifications / Dignite.NotificationCenter)
 - [ ] `flex-fields/` (Dignite.Abp.FlexFields / @dignite/ng.flex-fields)
+- [ ] `aspnetcore-mcp/` (Dignite.Abp.AspNetCore.Mcp)
 - [ ] Repo-wide (build, CI, docs, shared config)
 
 ### Checklist

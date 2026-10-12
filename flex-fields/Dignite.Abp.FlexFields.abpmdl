@@ -1,50 +1,63 @@
 {
-  "template": "app-nolayers",
-  "imports": {
-    "Volo.Abp.LeptonXLiteTheme": {
-      "version": "5.5.0",
-      "isInstalled": true,
-      "creationTime": "07/29/2026 03:29:36 +00:00"
-    },
-    "Volo.Abp.Account": {
-      "version": "10.5.0",
-      "isInstalled": true,
-      "creationTime": "07/29/2026 03:29:36 +00:00"
-    },
-    "Volo.Abp.OpenIddict": {
-      "version": "10.5.0",
-      "isInstalled": true,
-      "creationTime": "07/29/2026 03:29:36 +00:00"
-    },
-    "Volo.Abp.Identity": {
-      "version": "10.5.0",
-      "isInstalled": true,
-      "creationTime": "07/29/2026 03:29:36 +00:00"
-    },
-    "Volo.Abp.SettingManagement": {
-      "version": "10.5.0",
-      "isInstalled": true,
-      "creationTime": "07/29/2026 03:29:36 +00:00"
-    },
-    "Volo.Abp.PermissionManagement": {
-      "version": "10.5.0",
-      "isInstalled": true,
-      "creationTime": "07/29/2026 03:29:36 +00:00"
-    },
-    "Volo.Abp.FeatureManagement": {
-      "version": "10.5.0",
-      "isInstalled": true,
-      "creationTime": "07/29/2026 03:29:36 +00:00"
-    },
-    "Volo.Abp.BlobStoring.Database": {
-      "version": "10.5.0",
-      "isInstalled": true,
-      "creationTime": "07/29/2026 03:29:36 +00:00"
+  "folders": {
+    "items": {
+      "src": {},
+      "test": {},
+      "demo": {}
     }
   },
   "packages": {
+    "Dignite.Abp.FlexFields.Abstractions": {
+      "path": "src/Dignite.Abp.FlexFields.Abstractions/Dignite.Abp.FlexFields.Abstractions.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Abp.FlexFields.CKEditor": {
+      "path": "src/Dignite.Abp.FlexFields.CKEditor/Dignite.Abp.FlexFields.CKEditor.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Abp.FlexFields.CKEditor.Web": {
+      "path": "src/Dignite.Abp.FlexFields.CKEditor.Web/Dignite.Abp.FlexFields.CKEditor.Web.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Abp.FlexFields.Domain": {
+      "path": "src/Dignite.Abp.FlexFields.Domain/Dignite.Abp.FlexFields.Domain.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Abp.FlexFields.Domain.Shared": {
+      "path": "src/Dignite.Abp.FlexFields.Domain.Shared/Dignite.Abp.FlexFields.Domain.Shared.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Abp.FlexFields.EntityFrameworkCore": {
+      "path": "src/Dignite.Abp.FlexFields.EntityFrameworkCore/Dignite.Abp.FlexFields.EntityFrameworkCore.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Abp.FlexFields.MongoDB": {
+      "path": "src/Dignite.Abp.FlexFields.MongoDB/Dignite.Abp.FlexFields.MongoDB.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Abp.FlexFields.Web": {
+      "path": "src/Dignite.Abp.FlexFields.Web/Dignite.Abp.FlexFields.Web.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Abp.FlexFields.EntityFrameworkCore.Tests": {
+      "path": "test/Dignite.Abp.FlexFields.EntityFrameworkCore.Tests/Dignite.Abp.FlexFields.EntityFrameworkCore.Tests.abppkg",
+      "folder": "test"
+    },
+    "Dignite.Abp.FlexFields.MongoDB.Tests": {
+      "path": "test/Dignite.Abp.FlexFields.MongoDB.Tests/Dignite.Abp.FlexFields.MongoDB.Tests.abppkg",
+      "folder": "test"
+    },
+    "Dignite.Abp.FlexFields.Tests": {
+      "path": "test/Dignite.Abp.FlexFields.Tests/Dignite.Abp.FlexFields.Tests.abppkg",
+      "folder": "test"
+    },
+    "Dignite.Abp.FlexFields.Web.Tests": {
+      "path": "test/Dignite.Abp.FlexFields.Web.Tests/Dignite.Abp.FlexFields.Web.Tests.abppkg",
+      "folder": "test"
+    },
     "Dignite.Abp.FlexFields.Demo": {
-      "path": "demo/Dignite.Abp.FlexFields.Demo/Dignite.Abp.FlexFields.Demo.abppkg"
+      "path": "demo/Dignite.Abp.FlexFields.Demo/Dignite.Abp.FlexFields.Demo.abppkg",
+      "folder": "demo"
     }
   }
 }

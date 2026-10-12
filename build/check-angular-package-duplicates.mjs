@@ -3,7 +3,7 @@
 //
 // Angular libraries register through module-scoped `new InjectionToken(...)` values, so two copies
 // of the same package are two distinct DI keys, not a wasted-bytes problem. `verify-npm-single-copy.mjs`
-// already guards this for the five `@dignite/*` packages this repository publishes (issue #211:
+// already guards this for the three `@dignite/*` packages this repository publishes (issue #211:
 // `FLEX_FIELD_TYPES` split across two copies of `@dignite/ng.flex-fields` made `provideCKEditorFieldType()`
 // register into one copy while `FieldTypeResolver` read the other, so a field type looked unregistered
 // at runtime with nothing failing at install or build time). This script is the same check for the
@@ -13,12 +13,15 @@
 // `ng-zorro-antd` is the concrete case: `@abp/ng.components` (a real `dependency`, not a peer, of
 // `@dignite/ng.flex-fields` and `@dignite/ng.file-explorer` as of `6f039ef`) pins it at
 // `~21.0.0-next.1`, i.e. `<21.1.0`. A demo app declaring `^21.3.3` for its own use does not satisfy
-// that range, so Yarn Classic nests a second copy under `@abp/ng.components/node_modules`. Two copies
+// that range, so Yarn Classic nests a second copy under `@abp/ng.components/node_modules`. (That was
+// ABP 10.5; `@abp/ng.components` 10.7.0 pins `~21.3.1`, and flex-fields/angular declares the same
+// range - the shape of the risk is unchanged, only the numbers moved.) Two copies
 // are two module-scoped `NZ_CONFIG`/`NzConfigService` tokens: `provideNzConfig()`/`provideNzI18n()`
 // at the app root only reach the copy the app's own components resolve, not the one `@abp/ng.components`'
 // controls (e.g. `abp-tree`) see. `@angular/cdk` reaches these same packages through the identical
 // route - `@abp/ng.components` depends on `ng-zorro-antd`, which depends on `@angular/cdk` - so it
-// carries the same risk even though no version conflict currently splits it.
+// carries the same risk: on Angular 22, `ng-zorro-antd` 21.3 still depends on `@angular/cdk` `^21`,
+// so a workspace declaring `@angular/cdk` 22 would get a second, nested 21.x copy.
 //
 // A target that matches nothing installed fails the run rather than passing vacuously: a typo'd
 // target, or pointing this at the wrong node_modules, is otherwise indistinguishable from a clean
@@ -35,7 +38,7 @@
 // (`ng-zorro-antd`, or a fully-qualified `@angular/cdk`). There is no bare-word-means-scope guess: a
 // leading `@` with no `/` is the one shape npm reserves for a scope, everything else is matched
 // exactly, which is what makes an unscoped package name like `ng-zorro-antd` expressible at all.
-// There is no default target list - unlike `verify-npm-single-copy.mjs`'s fixed five `@dignite/*`
+// There is no default target list - unlike `verify-npm-single-copy.mjs`'s fixed three `@dignite/*`
 // packages, what to check here varies per workspace (see ci.yml), so it must be named explicitly
 // rather than silently checking nothing when a caller forgets an argument.
 
@@ -140,8 +143,8 @@ if (unmatchedTargets.length > 0) {
       '  Each copy carries its own module-scoped InjectionToken values, so a provider registered ' +
         'against one copy is invisible to a consumer resolving the other. Narrow whichever ' +
         "workspace's package.json declares a wider range than the other copy's source allows, the " +
-        'way flex-fields/angular and file-storing/angular narrowed ng-zorro-antd to `~21.0.2` to ' +
-        'match @abp/ng.components\' `<21.1.0` ceiling.',
+        'way flex-fields/angular declares ng-zorro-antd `~21.3.1` (and @angular/cdk `~21.2.0`) to ' +
+        'match what @abp/ng.components 10.7.0 resolves.',
     );
     process.exitCode = 1;
   }

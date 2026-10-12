@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, OnChanges } from '@angular/core';
+import { Component, Input, OnChanges, ChangeDetectionStrategy } from '@angular/core';
 import { FlexFieldViewComponent } from '../../components/flex-field-view.component';
 import type { FlexFieldValue } from '../../models';
 import type { InlineFieldDefinition } from '../inline-field-definition';
@@ -14,6 +14,7 @@ import { normalizeMatrixBlockTypes, normalizeMatrixBlockValues } from './matrix-
 @Component({
   selector: 'ff-matrix-view',
   templateUrl: './matrix-view.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CommonModule, FlexFieldViewComponent],
 })
 export class MatrixViewComponent implements OnChanges {

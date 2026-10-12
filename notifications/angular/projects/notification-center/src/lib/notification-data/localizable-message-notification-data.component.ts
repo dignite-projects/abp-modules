@@ -1,4 +1,4 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, inject, ChangeDetectionStrategy } from '@angular/core';
 import { LocalizationService } from '@abp/ng.core';
 import { NotificationDataPayload } from './notification-data-payload';
 
@@ -10,6 +10,7 @@ import { NotificationDataPayload } from './notification-data-payload';
 @Component({
   selector: 'abp-localizable-message-notification-data',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `<p class="abp-notification-item-message">{{ text }}</p>`,
 })
 export class LocalizableMessageNotificationDataComponent {

@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Dignite.Abp.Notifications.SignalR;
@@ -11,7 +12,7 @@ namespace Dignite.Abp.Notifications;
 public class SignalRNotifierTests
 {
     [Fact]
-    public async Task Pushes_one_trimmed_payload_to_the_requested_user_with_cancellation()
+    public async Task Pushes_one_flat_message_to_the_requested_user_with_cancellation()
     {
         var clientProxy = Substitute.For<IClientProxy>();
         var clients = Substitute.For<IHubClients>();
@@ -19,7 +20,7 @@ public class SignalRNotifierTests
         var hubContext = Substitute.For<IHubContext<NotificationsHub>>();
         hubContext.Clients.Returns(clients);
         var serializer = NotificationTestObjects.CreateSerializer();
-        var notifier = new SignalRNotifier(hubContext, serializer);
+        var notifier = new SignalRNotifier(hubContext);
         var cancellationToken = new CancellationTokenSource().Token;
         var userId = Guid.NewGuid();
         var request = new NotificationDeliveryRequestedEto
@@ -40,10 +41,12 @@ public class SignalRNotifierTests
             nameof(INotificationsClient.ReceiveNotification),
             Arg.Is<object[]>(arguments =>
                 arguments.Length == 1
-                && arguments[0] != null
-                && ((NotificationPayload)arguments[0]).NotificationId == request.NotificationId
-                && ((NotificationPayload)arguments[0]).Data is MessageNotificationData
-                && ((MessageNotificationData)((NotificationPayload)arguments[0]).Data!).Message == "hi"),
+                && arguments[0] is SignalRNotificationMessage
+                && ((SignalRNotificationMessage)arguments[0]).NotificationId == request.NotificationId
+                && ((SignalRNotificationMessage)arguments[0]).Data.HasValue
+                && ((SignalRNotificationMessage)arguments[0]).Data!.Value.ValueKind == JsonValueKind.Object
+                && ((SignalRNotificationMessage)arguments[0]).Data!.Value.GetProperty("type").GetString() == "Dignite.Message"
+                && ((SignalRNotificationMessage)arguments[0]).Data!.Value.GetProperty("message").GetString() == "hi"),
             cancellationToken);
     }
 }

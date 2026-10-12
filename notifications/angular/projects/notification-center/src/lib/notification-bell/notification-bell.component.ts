@@ -1,9 +1,10 @@
-import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit, Type, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit, Type, inject, ChangeDetectionStrategy } from '@angular/core';
 import { DOCUMENT, DatePipe, NgComponentOutlet } from '@angular/common';
 import { AuthService, EnvironmentService, LocalizationPipe } from '@abp/ng.core';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
-import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { RouterLink } from '@angular/router';
 import { UserNotificationService, UserNotificationDto } from '../proxy/dignite/abp/notification-center';
 import { NotificationSeverity, UserNotificationState } from '../proxy/dignite/abp/notifications';
 import { NotificationDataComponentsService } from '../notification-data/notification-data-components.service';
@@ -12,11 +13,15 @@ import {
   NotificationEntityLinkTarget,
   NotificationEntityLinksService,
 } from '../notification-links/notification-entity-links.service';
+import { NotificationNavigationService } from '../notification-links/notification-navigation.service';
+import { NotificationCenterEventsService } from '../notification-inbox/notification-center-events.service';
+import { NOTIFICATION_CENTER_INBOX_PATH } from '../enums/paths';
 
 /**
- * Notification bell: unread badge + dropdown of recent unread notifications, with mark-as-read / mark-all-as-read.
- * Refreshes on startup and when the ABP-mapped SignalR hub receives a notification (auto-reconnect handled by the
- * SignalR client). Each item's body is dispatched by discriminator through NotificationDataComponentsService
+ * Notification bell: unread badge + dropdown of the most recent notifications (read and unread), with mark-as-read /
+ * mark-all-as-read and a "View all" link to the inbox page. Reading an item keeps it listed, rendered as read.
+ * Refreshes on startup, when the ABP-mapped SignalR hub receives a notification (auto-reconnect handled by the
+ * SignalR client), and when the inbox page reports a change through NotificationCenterEventsService. Each item's body is dispatched by discriminator through NotificationDataComponentsService
  * (mirrors the MVC UI's NotificationCenterWebOptions.DataViewComponents), falling back to a generic image-only
  * rendering when no renderer is registered for it. Server-side tolerant placeholders use the built-in
  * "Dignite.Unsupported" renderer, so unreadable payloads still produce a visible safe fallback.
@@ -24,7 +29,7 @@ import {
 @Component({
   selector: 'abp-notification-bell',
   standalone: true,
-  imports: [DatePipe, LocalizationPipe, NgComponentOutlet, NgbDropdownModule],
+  imports: [DatePipe, LocalizationPipe, NgComponentOutlet, NgbDropdownModule, RouterLink],
   template: `
     <div
       class="dropdown abp-notification-bell"
@@ -62,7 +67,7 @@ import {
           }
         </div>
         @if (notifications.length === 0) {
-          <div class="abp-notification-empty">{{ 'NotificationCenter::NoUnreadNotifications' | abpLocalization }}</div>
+          <div class="abp-notification-empty">{{ 'NotificationCenter::NoNotifications' | abpLocalization }}</div>
         } @else {
           @for (n of notifications; track n.id) {
             <div
@@ -86,9 +91,15 @@ import {
             </div>
           }
         }
+        <a
+          class="abp-notification-view-all"
+          [routerLink]="inboxPath"
+          (click)="notificationDropdown.close()"
+        >{{ 'NotificationCenter::ViewAll' | abpLocalization }}</a>
       </div>
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       .abp-notification-bell { position: relative; display: inline-block; }
@@ -103,12 +114,14 @@ import {
       .abp-notification-item-title { min-width: 0; overflow-wrap: anywhere; font-size: 0.9rem; }
       .abp-notification-item-time { font-size: 0.75rem; color: #888; white-space: nowrap; }
       .abp-notification-item-image { max-width: 100%; border-radius: 4px; margin-top: 4px; }
+      .abp-notification-view-all { display: block; padding: 8px; text-align: center; font-size: 0.85rem; text-decoration: none; }
     `,
   ],
 })
 export class NotificationBellComponent implements OnInit, OnDestroy {
   unreadCount = 0;
   notifications: UserNotificationDto[] = [];
+  readonly inboxPath = NOTIFICATION_CENTER_INBOX_PATH;
 
   private markingNotificationIds = new Set<string>();
   private notificationService = inject(UserNotificationService);
@@ -119,7 +132,9 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
   private ngZone = inject(NgZone);
   private document = inject(DOCUMENT);
   private changeDetectorRef = inject(ChangeDetectorRef);
-  private router = inject(Router);
+  private navigation = inject(NotificationNavigationService);
+  private events = inject(NotificationCenterEventsService);
+  private inboxChangedSubscription?: Subscription;
   private hubConnection?: HubConnection;
   private startPromise?: Promise<void>;
 
@@ -130,9 +145,11 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.refresh();
     this.startRealtime();
+    this.inboxChangedSubscription = this.events.inboxChanged$.subscribe(() => this.refresh());
   }
 
   ngOnDestroy(): void {
+    this.inboxChangedSubscription?.unsubscribe();
     void this.hubConnection?.stop();
   }
 
@@ -142,7 +159,8 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
       this.unreadCount = c;
       this.changeDetectorRef.markForCheck();
     });
-    this.notificationService.getList({ state: UserNotificationState.Unread, maxResultCount: 10 }).subscribe(r => {
+    // The most recent notifications regardless of state; the badge alone counts unread.
+    this.notificationService.getList({ maxResultCount: 10 }).subscribe(r => {
       this.notifications = r.items;
       this.changeDetectorRef.markForCheck();
     });
@@ -229,62 +247,7 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
   }
 
   private navigateToTarget(target: NotificationEntityLinkTarget | null): void {
-    if (!target) {
-      return;
-    }
-
-    if (typeof target === 'string') {
-      this.navigateToStringTarget(target);
-      return;
-    }
-
-    if (Array.isArray(target)) {
-      void this.router.navigate(target);
-      return;
-    }
-
-    void this.router.navigateByUrl(target);
-  }
-
-  private navigateToStringTarget(target: string): void {
-    const trimmedTarget = target.trim();
-    if (!trimmedTarget) {
-      return;
-    }
-
-    const windowRef = this.document.defaultView;
-    if (this.isExternalUrl(trimmedTarget, windowRef)) {
-      windowRef?.location.assign(trimmedTarget);
-      return;
-    }
-
-    if (/^[a-z][a-z0-9+.-]*:/i.test(trimmedTarget) && windowRef) {
-      const url = new URL(trimmedTarget);
-      void this.router.navigateByUrl(`${url.pathname}${url.search}${url.hash}`);
-      return;
-    }
-
-    void this.router.navigateByUrl(trimmedTarget);
-  }
-
-  private isExternalUrl(target: string, windowRef: Window | null): boolean {
-    if (target.startsWith('//')) {
-      return true;
-    }
-
-    if (!/^[a-z][a-z0-9+.-]*:/i.test(target)) {
-      return false;
-    }
-
-    if (!windowRef) {
-      return true;
-    }
-
-    try {
-      return new URL(target).origin !== windowRef.location.origin;
-    } catch {
-      return true;
-    }
+    this.navigation.navigate(target);
   }
 
   private startRealtime(): void {

@@ -1,10 +1,11 @@
-using Dignite.Abp.Notifications.SignalR;
 using Volo.Abp.Localization;
 
 namespace Dignite.Abp.Notifications;
 
 public class TestNotificationDefinitionProvider : NotificationDefinitionProvider
 {
+    public const string GroupName = "Test";
+
     public const string Plain = "Test.Plain";
     public const string FeatureGated = "Test.FeatureGated";
     public const string DisabledFeatureGated = "Test.DisabledFeatureGated";
@@ -13,23 +14,20 @@ public class TestNotificationDefinitionProvider : NotificationDefinitionProvider
 
     public override void Define(INotificationDefinitionContext context)
     {
-        context.Add(new NotificationDefinition(Plain, new FixedLocalizableString("Plain"))
-            .UseChannels(SignalRNotifier.ChannelName));
+        var group = context.AddGroup(GroupName, new FixedLocalizableString("Test"));
 
-        context.Add(new NotificationDefinition(FeatureGated, new FixedLocalizableString("Feature Gated"))
-            .UseChannels(SignalRNotifier.ChannelName)
-            .RequireFeature(TestFeatureDefinitionProvider.EnabledFeature));
+        group.AddNotification(Plain, new FixedLocalizableString("Plain"));
 
-        context.Add(new NotificationDefinition(DisabledFeatureGated, new FixedLocalizableString("Disabled Feature Gated"))
-            .UseChannels(SignalRNotifier.ChannelName)
-            .RequireFeature(TestFeatureDefinitionProvider.DisabledFeature));
+        group.AddNotification(FeatureGated, new FixedLocalizableString("Feature Gated"))
+            .RequireFeature(TestFeatureDefinitionProvider.EnabledFeature);
 
-        context.Add(new NotificationDefinition(PermissionGranted, new FixedLocalizableString("Permission Granted"))
-            .UseChannels(SignalRNotifier.ChannelName)
-            .RequirePermission(TestNotificationPermissionChecker.GrantedPermission));
+        group.AddNotification(DisabledFeatureGated, new FixedLocalizableString("Disabled Feature Gated"))
+            .RequireFeature(TestFeatureDefinitionProvider.DisabledFeature);
 
-        context.Add(new NotificationDefinition(PermissionDenied, new FixedLocalizableString("Permission Denied"))
-            .UseChannels(SignalRNotifier.ChannelName)
-            .RequirePermission(TestNotificationPermissionChecker.DeniedPermission));
+        group.AddNotification(PermissionGranted, new FixedLocalizableString("Permission Granted"))
+            .RequirePermission(TestNotificationPermissionChecker.GrantedPermission);
+
+        group.AddNotification(PermissionDenied, new FixedLocalizableString("Permission Denied"))
+            .RequirePermission(TestNotificationPermissionChecker.DeniedPermission);
     }
 }

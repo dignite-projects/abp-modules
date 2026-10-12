@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, Type, ViewChild, ViewContainerRef, inject } from '@angular/core';
+import { Component, Input, OnChanges, Type, ViewChild, ViewContainerRef, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { FieldTypeResolver } from '../field-types/field-type-resolver.service';
 import { FlexFieldValue } from '../models';
@@ -12,6 +12,7 @@ import { FlexFieldValue } from '../models';
  */
 @Component({
   selector: 'ff-flex-field-search',
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './flex-field-search.component.html',
 })
 export class FlexFieldSearchComponent implements OnChanges {

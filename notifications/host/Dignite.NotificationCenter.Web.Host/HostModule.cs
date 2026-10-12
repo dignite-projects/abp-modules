@@ -61,6 +61,7 @@ using Microsoft.Extensions.Hosting;
 
 // Dignite NotificationCenter integration
 using Dignite.Abp.Notifications;
+using Dignite.Abp.Notifications.EntityFrameworkCore;
 using Dignite.Abp.Notifications.SignalR;
 using Dignite.Abp.Notifications.Identity;
 using Dignite.NotificationCenter;
@@ -117,13 +118,19 @@ namespace Dignite.NotificationCenter.Web.Host;
     typeof(BlobStoringDatabaseEntityFrameworkCoreModule),
     typeof(AbpEntityFrameworkCoreSqliteModule),
 
-    // Dignite NotificationCenter + notifiers + MVC UI (this repo)
+    // Dignite NotificationCenter + notifiers + MVC UI (this repo). This host keeps the inbox and the channels, so it
+    // distributes in-process (Dignite.Abp.Notifications); a publisher whose inbox is elsewhere would install
+    // Dignite.Abp.Notifications.Client instead.
+    typeof(AbpNotificationsModule),
     typeof(AbpNotificationsSignalRModule),
     typeof(AbpNotificationsIdentityModule),
-    typeof(NotificationCenterApplicationModule),
-    typeof(NotificationCenterHttpApiModule),
-    typeof(NotificationCenterEntityFrameworkCoreModule),
-    typeof(NotificationCenterWebModule)
+    typeof(AbpNotificationCenterApplicationModule),
+    typeof(AbpNotificationCenterHttpApiModule),
+    typeof(AbpNotificationCenterEntityFrameworkCoreModule),
+    typeof(AbpNotificationCenterWebModule),
+    // The definition store with its defaults: this host saves its definitions at startup (as every publisher of a split
+    // deployment does) and, defining every notification it serves itself, does not read the store.
+    typeof(AbpNotificationsEntityFrameworkCoreModule)
 )]
 public class HostModule : AbpModule
 {
@@ -230,6 +237,13 @@ public class HostModule : AbpModule
         Configure<NotificationDataOptions>(options =>
         {
             options.Add<OrderShippedNotificationData>();
+        });
+
+        // Route the demo notifications to the SignalR channel. A reusable module would add defaults for its own
+        // notifications the same way; the host, configured last, may override them or set Default.
+        Configure<NotificationRoutingOptions>(options =>
+        {
+            options.ForNotifications(["Demo.OrderShipped", "Demo.Announcement"], SignalRNotifier.ChannelName);
         });
 
         // Demo the two extension points: a custom renderer for the "Demo.OrderShipped" discriminator, and a

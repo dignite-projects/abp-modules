@@ -1,4 +1,5 @@
 using Dignite.Abp.Notifications;
+using Dignite.NotificationCenter.Push;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp;
 using Volo.Abp.Autofac;
@@ -14,7 +15,8 @@ namespace Dignite.NotificationCenter;
 /// <c>*_Tests&lt;TStartupModule&gt;</c> classes in this project).
 /// </summary>
 [DependsOn(
-    typeof(NotificationCenterApplicationModule),
+    typeof(AbpNotificationCenterApplicationModule),
+    typeof(AbpNotificationCenterPushModule),
     typeof(AbpAutofacModule),
     typeof(AbpTestBaseModule)
     )]
@@ -32,6 +34,13 @@ public class NotificationCenterTestBaseModule : AbpModule
         Configure<NotificationDataOptions>(options =>
         {
             options.Add<OrderShippedNotificationData>();
+        });
+
+        Configure<NotificationRoutingOptions>(options =>
+        {
+            options.ForNotification(
+                TestNotificationDefinitionProvider.OrderShipped,
+                TestNotificationDefinitionProvider.TestChannel);
         });
     }
 }

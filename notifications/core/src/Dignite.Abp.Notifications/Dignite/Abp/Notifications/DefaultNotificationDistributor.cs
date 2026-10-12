@@ -20,9 +20,9 @@ public class DefaultNotificationDistributor :
 
     protected INotificationDefinitionManager DefinitionManager { get; }
 
-    protected IDistributedEventBus DistributedEventBus { get; }
+    protected INotificationChannelResolver ChannelResolver { get; }
 
-    protected INotificationDataSerializer DataSerializer { get; }
+    protected IDistributedEventBus DistributedEventBus { get; }
 
     protected ICurrentTenant CurrentTenant { get; }
 
@@ -33,16 +33,16 @@ public class DefaultNotificationDistributor :
     public DefaultNotificationDistributor(
         INotificationStore store,
         INotificationDefinitionManager definitionManager,
+        INotificationChannelResolver channelResolver,
         IDistributedEventBus distributedEventBus,
-        INotificationDataSerializer dataSerializer,
         ICurrentTenant currentTenant,
         ILogger<DefaultNotificationDistributor> logger,
         IOptions<NotificationDistributionOptions> options)
     {
         Store = store;
         DefinitionManager = definitionManager;
+        ChannelResolver = channelResolver;
         DistributedEventBus = distributedEventBus;
-        DataSerializer = dataSerializer;
         CurrentTenant = currentTenant;
         Logger = logger;
         Options = options.Value;
@@ -71,7 +71,8 @@ public class DefaultNotificationDistributor :
             // back to the caller's ambient tenant.
             using (CurrentTenant.Change(notification.TenantId, null))
             {
-                var channels = ResolveExternalChannelsOrNull(notification.NotificationName);
+                // Resolved once per notification, before recipients are batched.
+                var channels = await ResolveExternalChannelsOrNullAsync(notification, cancellationToken);
                 var excluded = excludedUserIds is { Length: > 0 } ? new HashSet<Guid>(excludedUserIds) : null;
 
                 if (userIds != null)
@@ -185,6 +186,7 @@ public class DefaultNotificationDistributor :
         {
             UserId = userId,
             NotificationId = notification.Id,
+            NotificationName = notification.NotificationName,
             State = UserNotificationState.Unread,
             CreationTime = notification.CreationTime,
             TenantId = notification.TenantId
@@ -208,29 +210,34 @@ public class DefaultNotificationDistributor :
         }
     }
 
-    protected virtual string[]? ResolveExternalChannelsOrNull(string notificationName)
+    protected virtual async Task<string[]?> ResolveExternalChannelsOrNullAsync(
+        NotificationInfo notification,
+        CancellationToken cancellationToken)
     {
-        var definition = DefinitionManager.Get(notificationName);
-
-        var channels = definition.GetChannelsOrNull();
-        if (channels == null)
+        // Channels resolved by a publisher in another process — where the defining module's routing rules are
+        // configured — are used as they are; this process's resolver and routing are not consulted for them.
+        var channels = notification.Channels ?? await ChannelResolver.ResolveAsync(
+            await DefinitionManager.GetAsync(notification.NotificationName),
+            notification,
+            cancellationToken);
+        if (channels == null || channels.Length == 0)
         {
             if (Store is NullNotificationStore)
             {
                 throw new AbpException(
-                    $"Notification '{notificationName}' has no external channels and no NotificationCenter inbox store is installed. Configure UseChannels(...) or install NotificationCenter.");
+                    $"Notification '{notification.NotificationName}' has no external channels and no NotificationCenter inbox store is installed. Configure NotificationRoutingOptions or install NotificationCenter.");
             }
 
             return null;
         }
 
-        if (channels.Length == 0 || channels.Any(string.IsNullOrWhiteSpace))
+        if (channels.Any(string.IsNullOrWhiteSpace))
         {
             throw new AbpException(
-                $"Notification '{notificationName}' has invalid delivery channel configuration.");
+                $"Notification '{notification.NotificationName}' has invalid delivery channel configuration.");
         }
 
-        return channels.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        return channels.Select(channel => channel.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
     protected virtual NotificationDeliveryRequestedEto CreateDeliveryRequest(
@@ -239,12 +246,13 @@ public class DefaultNotificationDistributor :
         string channel)
     {
         // The ETO must stay a flat, default-STJ-serializable POCO (ABP's outbox/inbox serializes it without the
-        // app's JSON options), so the polymorphic payload crosses the wire as a discriminator-tagged string.
+        // app's JSON options), so the payload crosses the wire as the discriminator-tagged string it was published as.
+        // It is copied, not re-serialized: this process need not know the payload's CLR type.
         return new NotificationDeliveryRequestedEto
         {
             NotificationId = notification.Id,
             NotificationName = notification.NotificationName,
-            DataJson = DataSerializer.Serialize(notification.Data),
+            DataJson = notification.DataJson,
             Severity = notification.Severity,
             CreationTime = notification.CreationTime,
             UserId = userId,

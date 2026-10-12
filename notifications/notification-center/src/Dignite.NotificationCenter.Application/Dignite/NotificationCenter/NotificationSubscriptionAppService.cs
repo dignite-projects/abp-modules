@@ -1,17 +1,17 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dignite.Abp.Notifications;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp.Application.Dtos;
-using Volo.Abp.Application.Services;
 using Volo.Abp.Localization;
 using Volo.Abp.Users;
 
 namespace Dignite.NotificationCenter;
 
 [Authorize]
-public class NotificationSubscriptionAppService : ApplicationService, INotificationSubscriptionAppService
+public class NotificationSubscriptionAppService : NotificationCenterAppService, INotificationSubscriptionAppService
 {
     protected INotificationStore Store { get; }
 
@@ -41,21 +41,30 @@ public class NotificationSubscriptionAppService : ApplicationService, INotificat
             .Select(subscription => subscription.NotificationName)
             .ToHashSet(StringComparer.Ordinal);
 
-        var dtos = available.Select(definition => new NotificationSubscriptionDto
+        var dtos = new List<NotificationSubscriptionDto>(available.Count);
+        foreach (var definition in available)
         {
-            NotificationName = definition.Name,
-            DisplayName = definition.DisplayName.Localize(StringLocalizerFactory).Value,
-            Description = definition.Description?.Localize(StringLocalizerFactory)?.Value,
-            IsSubscribed = definitionWideSubscriptions.Contains(definition.Name)
-        }).ToList();
+            dtos.Add(new NotificationSubscriptionDto
+            {
+                NotificationName = definition.Name,
+                GroupName = definition.GroupName,
+                GroupDisplayName = GetGroupDisplayName(await DefinitionManager.GetGroupOrNullAsync(definition.GroupName)),
+                DisplayName = definition.DisplayName.Localize(StringLocalizerFactory).Value,
+                Description = definition.Description?.Localize(StringLocalizerFactory)?.Value,
+                IsSubscribed = definitionWideSubscriptions.Contains(definition.Name)
+            });
+        }
 
         foreach (var subscription in subscribed.Where(subscription =>
                      subscription.EntityTypeName != null || subscription.EntityId != null))
         {
             availableByName.TryGetValue(subscription.NotificationName, out var definition);
+            var group = await GetGroupOrNullAsync(subscription.NotificationName);
             dtos.Add(new NotificationSubscriptionDto
             {
                 NotificationName = subscription.NotificationName,
+                GroupName = group?.Name ?? NotificationCenterConsts.OtherGroupName,
+                GroupDisplayName = GetGroupDisplayName(group),
                 EntityTypeName = subscription.EntityTypeName,
                 EntityId = subscription.EntityId,
                 DisplayName = definition?.DisplayName.Localize(StringLocalizerFactory).Value,
@@ -68,9 +77,12 @@ public class NotificationSubscriptionAppService : ApplicationService, INotificat
                      subscription.EntityTypeName == null && subscription.EntityId == null
                      && !availableByName.ContainsKey(subscription.NotificationName)))
         {
+            var group = await GetGroupOrNullAsync(subscription.NotificationName);
             dtos.Add(new NotificationSubscriptionDto
             {
                 NotificationName = subscription.NotificationName,
+                GroupName = group?.Name ?? NotificationCenterConsts.OtherGroupName,
+                GroupDisplayName = GetGroupDisplayName(group),
                 IsSubscribed = true
             });
         }
@@ -88,6 +100,13 @@ public class NotificationSubscriptionAppService : ApplicationService, INotificat
     {
         return SubscriptionManager.UnsubscribeAsync(
             CurrentUser.GetId(), input.NotificationName, CreateEntityIdentifier(input));
+    }
+
+    /// <summary>The group of a defined notification (available to the user or not), or null when it no longer exists.</summary>
+    protected virtual async Task<NotificationGroupDefinition?> GetGroupOrNullAsync(string notificationName)
+    {
+        var definition = await DefinitionManager.GetOrNullAsync(notificationName);
+        return definition == null ? null : await DefinitionManager.GetGroupOrNullAsync(definition.GroupName);
     }
 
     protected virtual NotificationEntityIdentifier? CreateEntityIdentifier(NotificationSubscriptionScopeDto input)

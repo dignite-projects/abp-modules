@@ -9,7 +9,7 @@ using Xunit;
 namespace Dignite.Abp.FlexFields.MongoDB;
 
 /// <summary>
-/// <see cref="FlexFieldsMongoDbModule"/> registers the same custom bag serializer for
+/// <see cref="AbpFlexFieldsMongoDbModule"/> registers the same custom bag serializer for
 /// <see cref="FieldConfigurationDictionary"/> as it does for <see cref="FlexFieldDictionary"/>, but a field
 /// definition's configuration commonly holds more than scalars - <see cref="SelectConfiguration.Options"/> is
 /// a <c>List&lt;SelectListItem&gt;</c>, a list of a plain class, not a list of strings or numbers. This is

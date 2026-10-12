@@ -16,9 +16,10 @@ body:
       label: Which module?
       description: The three module trees are independent and never reference each other.
       options:
-        - "file-storing (Dignite.Abp.FileStoring / Dignite.FileExplorer)"
+        - "blob-storing (Dignite.Abp.BlobStoring.*)"
         - "notifications (Dignite.Abp.Notifications / Dignite.NotificationCenter)"
         - "flex-fields (Dignite.Abp.FlexFields / @dignite/ng.flex-fields)"
+        - "aspnetcore-mcp (Dignite.Abp.AspNetCore.Mcp)"
         - "Not sure / repo-wide"
     validations:
       required: true
@@ -44,7 +45,7 @@ body:
     id: abp-version
     attributes:
       label: ABP Framework version
-      placeholder: "10.5.0"
+      placeholder: "10.7.0"
     validations:
       required: true
   - type: input

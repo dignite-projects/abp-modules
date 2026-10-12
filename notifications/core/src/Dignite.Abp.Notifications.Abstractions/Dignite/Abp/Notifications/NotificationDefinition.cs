@@ -1,0 +1,68 @@
+using System;
+using System.Collections.Generic;
+using Volo.Abp;
+using Volo.Abp.Localization;
+
+namespace Dignite.Abp.Notifications;
+
+/// <summary>
+/// A notification type registered by a business module: its stable name, owning group, display text, optional
+/// permission/feature gating, and free-form attributes.
+/// </summary>
+public class NotificationDefinition
+{
+    public string Name { get; }
+
+    /// <summary>Name of the <see cref="NotificationGroupDefinition"/> this definition belongs to.</summary>
+    public string GroupName { get; }
+
+    public ILocalizableString DisplayName { get; set; }
+
+    public ILocalizableString? Description { get; set; }
+
+    /// <summary>
+    /// When set, a user must be granted this permission both to subscribe and to receive the notification.
+    /// </summary>
+    public string? PermissionName { get; private set; }
+
+    /// <summary>
+    /// When set, this feature must be enabled in the notification tenant both to subscribe and to receive it.
+    /// </summary>
+    public string? FeatureName { get; private set; }
+
+    /// <summary>Free-form extension bag — e.g. explicit external channel routing.</summary>
+    public IDictionary<string, object?> Attributes { get; }
+
+    /// <summary>Created through <see cref="NotificationGroupDefinition.AddNotification"/>.</summary>
+    protected internal NotificationDefinition(string groupName, string name, ILocalizableString displayName)
+    {
+        GroupName = Check.NotNullOrWhiteSpace(groupName, nameof(groupName));
+        Name = Check.NotNullOrWhiteSpace(name, nameof(name));
+        DisplayName = Check.NotNull(displayName, nameof(displayName));
+        Attributes = new Dictionary<string, object?>();
+    }
+
+    public NotificationDefinition RequirePermission(string permissionName)
+    {
+        PermissionName = permissionName;
+        return this;
+    }
+
+    public NotificationDefinition RequireFeature(string featureName)
+    {
+        FeatureName = featureName;
+        return this;
+    }
+
+    public NotificationDefinition WithDescription(ILocalizableString description)
+    {
+        Description = description;
+        return this;
+    }
+
+    public NotificationDefinition WithAttribute(string key, object? value)
+    {
+        Attributes[key] = value;
+        return this;
+    }
+}

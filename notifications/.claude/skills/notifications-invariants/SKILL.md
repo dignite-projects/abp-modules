@@ -57,15 +57,27 @@ Newtonsoft.Json anywhere in this pipeline.
   hand-rolled switch statement in a specific layer. Storage (EF Core / MongoDB) and the HTTP API use
   the converter registered once, globally, on `AbpSystemTextJsonSerializerOptions` in
   `AbpNotificationsAbstractionsModule.ConfigureServices` (so remote `HttpApi.Client` consumers get it too).
-- **The distributed event bus never sees a live `NotificationData`.** ABP serializes ETOs with plain
-  `System.Text.Json` and *no* app-level options — the transactional outbox/inbox included — so a
-  polymorphic/abstract member on an ETO is lossy on write and throws on read
-  (`NotSupportedException` while draining the box; issue #118). `NotificationDeliveryRequestedEto`
-  therefore carries the payload pre-serialized as `DataJson`, produced via
-  `INotificationDataSerializer.Serialize` at the distributor publish boundary and hydrated via
-  `INotificationDataSerializer.Deserialize` (`NotificationPayload.FromRequest(request, dataSerializer)`)
-  at the notifier boundary. Keep every ETO a flat, default-STJ-round-trippable POCO; never put an
-  abstract/polymorphic member back on one.
+- **No wire contract ever carries a live `NotificationData`.** Any contract serialized by an engine this
+  module does not configure — the distributed event bus, SignalR hub protocols, any future transport — must
+  carry the payload as pre-serialized/raw JSON, never a polymorphic/abstract member; such a member is lossy on
+  write and may throw on read. `NotificationPayload` (the typed view) is in-process only: notifiers render
+  from it, they never serialize it to a client.
+  - **Distributed event bus.** ABP serializes ETOs with plain `System.Text.Json` and *no* app-level
+    options — the transactional outbox/inbox included — so a polymorphic/abstract member on an ETO is lossy on
+    write and throws on read (`NotSupportedException` while draining the box; issue #118).
+    `NotificationDeliveryRequestedEto` (and `NotificationPublishRequestedEto`) therefore carries the payload
+    pre-serialized as `DataJson`, produced once via `INotificationDataSerializer.Serialize` at the publish boundary
+    (the local or the remote publisher; `NotificationInfo.DataJson` carries it from there and the distributor copies
+    it) and hydrated via
+    `INotificationDataSerializer.Deserialize` (`NotificationPayload.FromRequest(request, dataSerializer)`)
+    at the notifier boundary. Keep every ETO a flat, default-STJ-round-trippable POCO; never put an
+    abstract/polymorphic member back on one.
+  - **SignalR.** The hub protocol serializes with its own plain System.Text.Json options, so a
+    `NotificationPayload` pushed to clients arrived as `"data": {}` (no discriminator, no content).
+    `SignalRNotifier` therefore pushes a flat `SignalRNotificationMessage` whose `JsonElement? Data` is the
+    raw `DataJson` object (`{"type": "...", ...}`, the same shape the REST inbox returns). The MessagePack hub
+    protocol is unsupported (`JsonElement` has no formatter). The proof is a test through the real
+    `JsonHubProtocol` (`SignalRNotificationMessage_Tests`), like the ETO's plain-STJ test.
 - The payload envelope carries only the stable `type` discriminator — no `schemaVersion`, no upcaster chain.
   (An earlier design added event-sourcing-style schema versioning + N→N+1 upcasters; it was removed as
   over-engineering — notifications are read-once, not a replayable event stream. Don't reintroduce it.)
@@ -112,14 +124,16 @@ constructor injection).
   request. Definition/registry caches (name → definition lookups) are fine as singletons — the
   permission/store checks that ride along with them are not.
 
-## 3. Notifiers are plugins — depend on `Abstractions`, not Core or Center
+## 3. Notifiers are plugins — depend on `Abstractions`, not the implementation or Center
 
-A Notifier (SignalR, Email, future WebPush/FCM/SMS/Webhook) references
+A Notifier (SignalR, Email, Push, future WebPush/SMS/Webhook) references
 `Dignite.Abp.Notifications.Abstractions` and its own channel SDK — nothing else in this repo. It
 implements `INotificationNotifier` and handles one `NotificationDeliveryRequestedEto` through cancellation-aware
-`DeliverAsync`; Core's internal handler owns distributed transport adaptation. A Notifier should not need
-`INotificationStore`, EF Core, or MongoDB. This is what lets a channel be added,
-removed, or deployed independently without touching Core.
+`DeliverAsync`; the internal handler in `Dignite.Abp.Notifications` (the implementation package) owns distributed
+transport adaptation. A Notifier should not need `INotificationStore`, EF Core, or MongoDB. This is what lets a channel
+be added, removed, or deployed independently without touching the pipeline. (Abstractions now also carries the
+definition and routing contracts a notifier never uses; that is ABP's one-Abstractions-per-feature layout, not a
+reason to reference anything else.)
 
 There is **no exception left** — `Emailing` used to be one and no longer is; its `.csproj` has a
 single `ProjectReference`, to `Abstractions`. Don't reintroduce one. Host-specific address or
@@ -127,10 +141,16 @@ identity lookups belong in a separate integration package, as `Notifications.Ema
 for ABP Identity. Everything a Notifier needs about the notification — including the entity it
 concerns (`EntityTypeName` / `EntityId`) — rides on the ETO.
 
+The Push notifier has one more level of the same shape. A push *provider* (`Notifications.Push.Expo`, a
+future FCM/APNs one) is a plugin of the Push notifier, not a channel of its own: it references
+`Notifications.Push` and its service's client, nothing else. Where the devices come from is
+`IPushDeviceStore`, implemented outside the notifier — by the host, or by an integration package over the
+Notification Center's device registry — exactly as an email address comes from a resolver.
+
 ## 4. Delivery is best-effort, single-recipient, and cancellation-aware
 
 `NotificationDeliveryRequestedEto` carries exactly one `UserId` and one channel. Never reintroduce an aggregate
-recipient list at this boundary. Delivery is **best-effort**: Core's internal handler resolves the channel notifier
+recipient list at this boundary. Delivery is **best-effort**: the internal handler in the implementation package resolves the channel notifier
 and calls `DeliverAsync` once — there is no per-recipient delivery record, idempotency key, lease, or retry worker.
 The authoritative record of a notification is the inbox row; a channel that throws is logged and dropped, not
 retried. Forward the supplied `CancellationToken` to channel SDK calls and other cancellable I/O.
@@ -141,8 +161,8 @@ reintroduce it; use ABP's own distributed-event outbox if at-least-once transpor
 
 ## 5. Both operation modes must keep working
 
-Core logic (publish, distribute, definitions) must function with `NullNotificationStore` (no
-Center installed) as well as a real store. Don't add a feature to Core that silently assumes
+Abstractions and implementation logic (publish, distribute, definitions) must function with `NullNotificationStore`
+(no Center installed) as well as a real store. Don't add a feature to either package that silently assumes
 `NotificationCenter` is present — see "Two operation modes" in
 [`notifications/CLAUDE.md`](../../../CLAUDE.md).
 

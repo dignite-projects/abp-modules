@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, ReactiveFormsModule } from '@angular/forms';
 import { FieldTypeControlBase } from '../field-type-control-base';
@@ -8,6 +8,7 @@ import { TextConfiguration } from './text-configuration';
 @Component({
   selector: 'ff-text-search',
   templateUrl: './text-search.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CommonModule, ReactiveFormsModule],
 })
 export class TextSearchComponent extends FieldTypeControlBase {

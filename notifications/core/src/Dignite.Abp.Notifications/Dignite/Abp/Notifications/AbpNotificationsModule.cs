@@ -1,16 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Volo.Abp;
-using Volo.Abp.BackgroundWorkers;
 using Volo.Abp.BackgroundJobs;
-using Volo.Abp.DistributedLocking;
 using Volo.Abp.EventBus;
 using Volo.Abp.EventBus.Distributed;
-using Volo.Abp.Features;
 using Volo.Abp.Guids;
 using Volo.Abp.Modularity;
 using Volo.Abp.Timing;
@@ -18,68 +9,50 @@ using Volo.Abp.Uow;
 
 namespace Dignite.Abp.Notifications;
 
+/// <summary>
+/// The default, in-process implementation of the contracts in <see cref="AbpNotificationsAbstractionsModule"/>, as
+/// <c>AbpBackgroundJobsModule</c> is for <c>AbpBackgroundJobsAbstractionsModule</c>: the local
+/// <see cref="INotificationPublisher"/>, the distributor, the distribution background job, the delivery event handler
+/// that calls the channel notifiers, and the handler that distributes notifications published in other processes
+/// (<see cref="NotificationPublishRequestedEto"/>). Install it in the process that hosts the inbox and the channels — a
+/// monolith, or a dedicated notification service.
+/// </summary>
+/// <remarks>
+/// A business module depends on <see cref="AbpNotificationsAbstractionsModule"/>, never on this module: depending on it
+/// would bring the distributor, the job and the event handlers into every process that hosts the business module. A
+/// publisher whose inbox lives in another process installs <c>Dignite.Abp.Notifications.Client</c> instead. The two do not
+/// exclude each other: installed together, this package's <see cref="DefaultNotificationPublisher"/> wins in either module
+/// order and the process distributes its notifications itself.
+/// </remarks>
 [DependsOn(
     typeof(AbpNotificationsAbstractionsModule),
-    typeof(AbpFeaturesModule),
-    typeof(AbpTimingModule),
     typeof(AbpBackgroundJobsAbstractionsModule),
-    typeof(AbpBackgroundWorkersModule),
-    typeof(AbpDistributedLockingAbstractionsModule),
-    typeof(AbpGuidsModule),
     typeof(AbpEventBusModule),
+    typeof(AbpGuidsModule),
+    typeof(AbpTimingModule),
     typeof(AbpUnitOfWorkModule)
     )]
 public class AbpNotificationsModule : AbpModule
 {
-    public override void PreConfigureServices(ServiceConfigurationContext context)
-    {
-        AutoAddDefinitionProviders(context.Services);
-    }
-
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
-        AddValidatedOptions<NotificationDistributionOptions>(context.Services, options => options.Validate());
+        context.Services
+            .AddOptions<NotificationDistributionOptions>()
+            .Validate(options =>
+            {
+                options.Validate();
+                return true;
+            })
+            .ValidateOnStart();
 
-        // NotificationDefinitionRegistration.Validate() runs from NotificationDefinitionStartupService instead of this
-        // options-validation pipeline: the real definition-name conflict check only exists inside
-        // NotificationDefinitionManager's lazily-built dictionary, so both checks belong at the one hook that can
-        // reach it.
-        context.Services.AddHostedService<NotificationDefinitionStartupService>();
+        // The two checks of the routing table that only make sense where channels are delivered: a channel no notifier
+        // in this process hosts, and a stateless host (no inbox) with a notification that has no channel at all.
+        context.Services.AddHostedService<NotificationDistributionStartupService>();
 
         Configure<AbpDistributedEventBusOptions>(options =>
         {
             options.Handlers.Add<NotificationDeliveryRequestedHandler>();
+            options.Handlers.Add<NotificationPublishRequestedHandler>();
         });
-    }
-
-    private static void AutoAddDefinitionProviders(IServiceCollection services)
-    {
-        services.PostConfigure<NotificationDefinitionRegistration>(options =>
-        {
-            var definitionProviders = services
-                .Where(descriptor => descriptor.ImplementationType != null &&
-                                     typeof(INotificationDefinitionProvider).IsAssignableFrom(
-                                         descriptor.ImplementationType))
-                .Select(descriptor => descriptor.ImplementationType!)
-                .Distinct()
-                .ToList();
-
-            options.DefinitionProviders.AddIfNotContains(definitionProviders);
-        });
-    }
-
-    private static void AddValidatedOptions<TOptions>(
-        IServiceCollection services,
-        Action<TOptions> validate)
-        where TOptions : class
-    {
-        services
-            .AddOptions<TOptions>()
-            .Validate(options =>
-            {
-                validate(options);
-                return true;
-            })
-            .ValidateOnStart();
     }
 }

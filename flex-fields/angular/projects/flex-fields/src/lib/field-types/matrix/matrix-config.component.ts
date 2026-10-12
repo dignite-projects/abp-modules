@@ -1,5 +1,5 @@
 import { CoreModule } from '@abp/ng.core';
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import {
   AbstractControl,
   FormArray,
@@ -45,6 +45,7 @@ let nextInstanceId = 0;
   selector: 'ff-matrix-config',
   templateUrl: './matrix-config.component.html',
   imports: [CoreModule, ReactiveFormsModule, FlexFieldConfigComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [{ provide: COMPOSITE_NESTING_DEPTH, useFactory: nextCompositeNestingDepth }],
 })
 export class MatrixConfigComponent extends FieldTypeConfigBase {

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Shouldly;
 using Volo.Abp;
 using Volo.Abp.BackgroundJobs;
@@ -28,8 +29,9 @@ public class DefaultNotificationPublisherTests
 
     public DefaultNotificationPublisherTests()
     {
-        _definitionManager.Get(Arg.Any<string>()).Returns(call =>
+        _definitionManager.GetAsync(Arg.Any<string>()).Returns(call =>
             new NotificationDefinition(
+                "Test",
                 call.Arg<string>(),
                 new FixedLocalizableString(call.Arg<string>())));
     }
@@ -64,13 +66,12 @@ public class DefaultNotificationPublisherTests
         currentTenant.Id.Returns(tenantId);
 
         return new DefaultNotificationPublisher(
-            options,
-            _distributor,
-            _backgroundJobManager,
+            new NotificationDistributionDispatcher(options, _distributor, _backgroundJobManager),
             guidGenerator,
             clock,
             currentTenant,
-            _definitionManager);
+            _definitionManager,
+            NotificationTestObjects.CreateSerializer());
     }
 
     [Fact]
@@ -105,7 +106,7 @@ public class DefaultNotificationPublisherTests
     [Fact]
     public async Task Undefined_notification_name_fails_before_any_side_effect()
     {
-        _definitionManager.Get("missing").Returns(_ => throw new AbpException("Undefined notification: missing"));
+        _definitionManager.GetAsync("missing").ThrowsAsync(new AbpException("Undefined notification: missing"));
         var publisher = CreatePublisher(threshold: 3);
 
         await Should.ThrowAsync<AbpException>(() => publisher.PublishAsync(
@@ -171,6 +172,35 @@ public class DefaultNotificationPublisherTests
     }
 
     [Fact]
+    public async Task Serializes_the_payload_once_at_the_publish_boundary()
+    {
+        var publisher = CreatePublisher(threshold: 3);
+
+        await publisher.PublishAsync("test", new MessageNotificationData("hi"), userIds: new[] { Guid.NewGuid() });
+
+        // From here on the payload is a string: the store writes it, the delivery event copies it, a job carries it.
+        await _distributor.Received(1).DistributeAsync(
+            Arg.Is<NotificationInfo>(n => n.DataJson == "{\"type\":\"Dignite.Message\",\"message\":\"hi\"}"),
+            Arg.Any<Guid[]?>(),
+            Arg.Any<Guid[]?>());
+    }
+
+    [Fact]
+    public async Task An_unregistered_payload_type_fails_at_publish_before_any_side_effect()
+    {
+        var publisher = CreatePublisher(threshold: 3);
+
+        await Should.ThrowAsync<System.Text.Json.JsonException>(() => publisher.PublishAsync(
+            "test",
+            new OrderShippedNotificationData { OrderNumber = "SO-1" },
+            userIds: new[] { Guid.NewGuid() }));
+
+        await _distributor.DidNotReceiveWithAnyArgs().DistributeAsync(default!, default, default);
+        await _backgroundJobManager.DidNotReceiveWithAnyArgs()
+            .EnqueueAsync(Arg.Any<NotificationDistributionJobArgs>());
+    }
+
+    [Fact]
     public async Task Enqueues_a_single_background_job_when_above_threshold()
     {
         var tenantId = Guid.NewGuid();
@@ -223,8 +253,8 @@ public class DefaultNotificationPublisherTests
         public NotificationDistributionJob CreateJob()
         {
             var definitionManager = Substitute.For<INotificationDefinitionManager>();
-            definitionManager.Get("test")
-                .Returns(new NotificationDefinition("test", new FixedLocalizableString("Test")).UseChannels("Test"));
+            definitionManager.GetAsync("test")
+                .Returns(new NotificationDefinition("Test", "test", new FixedLocalizableString("Test")));
             definitionManager.IsAvailableAsync("test", Arg.Any<Guid>()).Returns(true);
 
             Store.When(x => x.InsertNotificationAsync(Arg.Any<NotificationInfo>()))
@@ -244,8 +274,8 @@ public class DefaultNotificationPublisherTests
                 new DefaultNotificationDistributor(
                     Store,
                     definitionManager,
+                    NotificationTestObjects.CreateChannelResolver("Test"),
                     EventBus,
-                    NotificationTestObjects.CreateSerializer(),
                     CurrentTenant,
                     NullLogger<DefaultNotificationDistributor>.Instance,
                     Options.Create(new NotificationDistributionOptions())),

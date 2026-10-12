@@ -1,8 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.Threading;
@@ -13,6 +13,17 @@ namespace Dignite.Abp.Notifications;
 /// Best-effort dispatch of a delivery request to the channel notifier hosted by this process. There is no
 /// per-recipient delivery state, idempotency, or retry — the notification's authoritative record is the inbox row.
 /// </summary>
+/// <remarks>
+/// Only the notifier registered for the event's channel in <see cref="NotificationNotifierOptions"/> is constructed,
+/// so an email delivery never builds the push or SignalR notifier (or their dependency graphs), and one channel's
+/// notifier failing to construct cannot break another channel's deliveries.
+/// <para>
+/// Resolving the notifier is as best-effort as delivering through it: a notifier that cannot be built, or that answers
+/// to a different name than the channel it is registered for, is a configuration error of that one channel. It is
+/// logged and the delivery dropped, never thrown back into the event bus, where it would surface in the publisher's
+/// unit of work or be redelivered by an inbox.
+/// </para>
+/// </remarks>
 [ExposeServices(
     typeof(IDistributedEventHandler<NotificationDeliveryRequestedEto>),
     typeof(NotificationDeliveryRequestedHandler))]
@@ -20,27 +31,47 @@ public class NotificationDeliveryRequestedHandler :
     IDistributedEventHandler<NotificationDeliveryRequestedEto>,
     ITransientDependency
 {
-    protected IReadOnlyList<INotificationNotifier> Notifiers { get; }
+    protected IServiceProvider ServiceProvider { get; }
+    protected IOptions<NotificationNotifierOptions> NotifierOptions { get; }
     protected ICancellationTokenProvider CancellationTokenProvider { get; }
     protected ILogger<NotificationDeliveryRequestedHandler> Logger { get; }
 
     public NotificationDeliveryRequestedHandler(
-        IEnumerable<INotificationNotifier> notifiers,
+        IServiceProvider serviceProvider,
+        IOptions<NotificationNotifierOptions> notifierOptions,
         ICancellationTokenProvider cancellationTokenProvider,
         ILogger<NotificationDeliveryRequestedHandler> logger)
     {
-        Notifiers = notifiers.ToList();
+        ServiceProvider = serviceProvider;
+        NotifierOptions = notifierOptions;
         CancellationTokenProvider = cancellationTokenProvider;
         Logger = logger;
     }
 
     public virtual async Task HandleEventAsync(NotificationDeliveryRequestedEto eventData)
     {
-        var notifier = ResolveNotifierOrNull(eventData.Channel);
+        INotificationNotifier? notifier;
+        try
+        {
+            notifier = ResolveNotifierOrNull(eventData.Channel);
+        }
+        catch (Exception exception)
+        {
+            // Unlike a delivery failure below, the exception itself is logged: building a notifier involves no
+            // recipient or payload data, and the message is what names the missing dependency or the misregistration.
+            Logger.LogError(
+                exception,
+                "The notifier for channel {Channel} could not be resolved; notification {NotificationId} is not delivered on this channel.",
+                eventData.Channel,
+                eventData.NotificationId);
+            return;
+        }
+
         if (notifier == null)
         {
             // Distributed event subscribers receive every channel's work type. A process that does not host this
-            // channel leaves the event untouched.
+            // channel leaves the event untouched. Debug, not Warning: in a split deployment this fires once per
+            // recipient and channel; misconfiguration is reported once at startup by NotificationDistributionStartupService.
             Logger.LogDebug(
                 "Ignoring notification delivery for notification {NotificationId} because channel {Channel} is not hosted by this process.",
                 eventData.NotificationId,
@@ -71,22 +102,21 @@ public class NotificationDeliveryRequestedHandler :
 
     protected virtual INotificationNotifier? ResolveNotifierOrNull(string channel)
     {
-        var matches = Notifiers
-            .Where(notifier => string.Equals(notifier.Name, channel, StringComparison.OrdinalIgnoreCase))
-            .GroupBy(notifier => notifier.GetType())
-            .Select(group => group.First())
-            .ToList();
-        if (matches.Count == 0)
+        // The event bus resolves this handler from a per-event scope, so the notifier shares that scope's lifetime.
+        // Two types claiming one channel never reach here: the options reject them as they are added.
+        if (!NotifierOptions.Value.Notifiers.TryGetValue(channel, out var notifierType))
         {
             return null;
         }
 
-        if (matches.Count != 1)
+        var notifier = (INotificationNotifier)ServiceProvider.GetRequiredService(notifierType);
+        if (!string.Equals(notifier.Name, channel, StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException(
-                $"Multiple notification notifiers are registered for channel '{channel}'.");
+                $"Notification notifier '{notifierType.FullName}' is registered for channel '{channel}' but its " +
+                $"{nameof(INotificationNotifier.Name)} is '{notifier.Name}'.");
         }
 
-        return matches[0];
+        return notifier;
     }
 }

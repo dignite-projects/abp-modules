@@ -1,5 +1,6 @@
 using System;
 using Dignite.Abp.Notifications;
+using Volo.Abp;
 using Volo.Abp.Domain.Entities;
 using Volo.Abp.MultiTenancy;
 
@@ -14,6 +15,12 @@ public class UserNotification : BasicAggregateRoot<Guid>, IMultiTenant
 
     public virtual Guid NotificationId { get; protected set; }
 
+    /// <summary>
+    /// Copy of <see cref="Notification.NotificationName"/>, so the inbox can be filtered and counted by definition
+    /// (and so by group) with single-table indexed queries on both EF Core and MongoDB. Immutable once written.
+    /// </summary>
+    public virtual string NotificationName { get; protected set; } = default!;
+
     public virtual UserNotificationState State { get; protected set; }
 
     public virtual DateTime CreationTime { get; protected set; }
@@ -26,6 +33,7 @@ public class UserNotification : BasicAggregateRoot<Guid>, IMultiTenant
         Guid id,
         Guid userId,
         Guid notificationId,
+        string notificationName,
         UserNotificationState state,
         DateTime creationTime,
         Guid? tenantId)
@@ -33,6 +41,8 @@ public class UserNotification : BasicAggregateRoot<Guid>, IMultiTenant
     {
         UserId = userId;
         NotificationId = notificationId;
+        NotificationName = Check.NotNullOrWhiteSpace(
+            notificationName, nameof(notificationName), NotificationCenterConsts.MaxNotificationNameLength);
         State = state;
         CreationTime = creationTime;
         TenantId = tenantId;

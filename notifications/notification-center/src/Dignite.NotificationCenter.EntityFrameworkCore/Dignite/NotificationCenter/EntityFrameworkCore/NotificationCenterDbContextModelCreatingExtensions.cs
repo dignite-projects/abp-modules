@@ -32,8 +32,12 @@ public static class NotificationCenterDbContextModelCreatingExtensions
             b.ToTable(NotificationCenterDbProperties.DbTablePrefix + "UserNotifications", NotificationCenterDbProperties.DbSchema);
             b.ConfigureByConvention();
 
+            b.Property(x => x.NotificationName).IsRequired().HasMaxLength(NotificationCenterConsts.MaxNotificationNameLength);
+
             // The real inbox query: a user's notifications filtered by state and ordered by time (fixes problem D).
             b.HasIndex(x => new { x.TenantId, x.UserId, x.State, x.CreationTime });
+            // A user's inbox filtered by definition/group, and the per-definition unread counts.
+            b.HasIndex(x => new { x.TenantId, x.UserId, x.NotificationName, x.State, x.CreationTime });
             // Retention cleanup deletes old read inbox rows without loading unrelated users.
             b.HasIndex(x => new { x.TenantId, x.State, x.CreationTime });
             b.HasIndex(x => new { x.State, x.CreationTime });
@@ -62,6 +66,24 @@ public static class NotificationCenterDbContextModelCreatingExtensions
             b.HasIndex(x => new { x.TenantKey, x.UserId, x.NotificationNameKey, x.ScopeKey }).IsUnique();
             // A user's own subscriptions.
             b.HasIndex(x => new { x.TenantKey, x.UserId, x.NotificationNameKey });
+        });
+
+        builder.Entity<PushDevice>(b =>
+        {
+            b.ToTable(NotificationCenterDbProperties.DbTablePrefix + "PushDevices", NotificationCenterDbProperties.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(x => x.Provider).IsRequired().HasMaxLength(PushDeviceConsts.MaxProviderLength);
+            b.Property(x => x.Token).IsRequired().HasMaxLength(PushDeviceConsts.MaxTokenLength);
+            b.Property(x => x.TokenKey).IsRequired().IsUnicode(false).IsFixedLength()
+                .HasMaxLength(PushDeviceConsts.TokenKeyLength);
+            b.Property(x => x.CultureName).HasMaxLength(PushDeviceConsts.MaxCultureNameLength);
+            b.Property(x => x.SessionId).HasMaxLength(PushDeviceConsts.MaxSessionIdLength);
+
+            // One registration per device across every tenant: a token identifies a physical device.
+            b.HasIndex(x => x.TokenKey).IsUnique();
+            // A user's devices, read on every push delivery.
+            b.HasIndex(x => new { x.TenantId, x.UserId });
         });
     }
 }

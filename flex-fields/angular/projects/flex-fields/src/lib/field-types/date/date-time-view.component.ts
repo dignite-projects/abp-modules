@@ -1,4 +1,4 @@
-import { Component, inject, Input } from '@angular/core';
+import { Component, inject, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CoreModule } from '@abp/ng.core';
 import { DatePipe } from '@angular/common';
 import { FlexFieldValue } from '../../models';
@@ -14,6 +14,7 @@ import { DateTimeInputMode } from './date-time-input-mode';
   selector: 'ff-date-time-view',
   templateUrl: './date-time-view.component.html',
   imports: [CoreModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [DatePipe],
 })
 export class DateTimeViewComponent {

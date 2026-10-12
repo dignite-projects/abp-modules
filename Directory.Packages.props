@@ -7,71 +7,65 @@
   </PropertyGroup>
 
   <!--
-    Security pins for vulnerable transitive dependencies. Each entry lifts a package that the ABP /
-    EF Core graph resolves transitively to its first patched release; drop it once upstream rolls
-    forward past the advisory on its own. The 3 demo hosts opt out of central package management and
-    carry their own inline copies of these pins - keep the two sets in sync.
+    Security pins for vulnerable transitive dependencies go here: each entry lifts a package that the ABP /
+    EF Core graph resolves transitively to its first patched release, and is dropped once upstream rolls
+    forward past the advisory on its own. The 2 demo hosts (notifications/host/..., flex-fields/demo/...)
+    opt out of central package management and would need their own inline copy of any such pin.
 
-    SQLitePCLRaw: Microsoft.EntityFrameworkCore.Sqlite (via Volo.Abp.EntityFrameworkCore.Sqlite
-    10.5.0) still bundles SQLitePCLRaw 2.1.11, which ships a SQLite older than 3.50.2
-    (GHSA-2m69-gcr7-jv3q / CVE-2025-6965). 2.1.12 is the first build past that advisory; pin the
-    whole family so they stay on one version. Only ever reaches test projects and the hosts, never a
-    packable library. (Carried over from abp-file-storing; abp-notifications had no equivalent pin.)
-
-    Scriban: Volo.Abp.TextTemplating.Scriban 10.5.0 resolves Scriban 7.2.1, which carries a
-    high-severity advisory (GHSA-7jvp-hj45-2f2m). Unlike the SQLitePCLRaw pin this one does reach a
-    packable library - Volo.Abp.Emailing -> Dignite.Abp.Notifications.Emailing - so transitive
-    pinning promotes Scriban into that package's published dependency list. That is the intent:
-    consumers resolve the patched version too. 7.2.7 is what the 3 hosts already pin inline.
+    There are none at ABP 10.7.0. The pins carried up to ABP 10.5.0 were dropped because 10.7.0 resolves
+    a patched version by itself:
+      - SQLitePCLRaw (GHSA-2m69-gcr7-jv3q, fixed in 2.1.12): Volo.Abp.EntityFrameworkCore.Sqlite 10.7.0 ->
+        Microsoft.EntityFrameworkCore.Sqlite 10.0.11 -> SQLitePCLRaw.* 2.1.12 (10.5.0 resolved 2.1.11).
+      - Scriban (GHSA-7jvp-hj45-2f2m, fixed in 7.2.2): Volo.Abp.TextTemplating.Scriban 10.7.0 -> Scriban
+        7.2.5 (10.5.0 resolved 7.2.1). Scriban is therefore no longer promoted into
+        Dignite.Abp.Notifications.Emailing's published dependency list; consumers get 7.2.5 through ABP.
   -->
-  <ItemGroup Label="Security-patched transitive dependencies">
-    <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" />
-    <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
-    <PackageVersion Include="SQLitePCLRaw.core" Version="2.1.12" />
-    <PackageVersion Include="SQLitePCLRaw.provider.e_sqlite3" Version="2.1.12" />
-    <PackageVersion Include="Scriban" Version="7.2.7" />
-  </ItemGroup>
 
-  <ItemGroup Label="ABP 10.5.0">
-    <PackageVersion Include="Volo.Abp.Core" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.BlobStoring" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Validation" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Imaging.Abstractions" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Imaging.ImageSharp" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Ddd.Domain" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Ddd.Application" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Ddd.Application.Contracts" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Authorization" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Authorization.Abstractions" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Http.Client" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Mapperly" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.EntityFrameworkCore" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.EntityFrameworkCore.Sqlite" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.MongoDB" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Autofac" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.TestBase" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.VirtualFileSystem" Version="10.5.0" />
+  <ItemGroup Label="ABP 10.7.0">
+    <PackageVersion Include="Volo.Abp.Core" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.BlobStoring" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.BlobStoring.Memory" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Validation" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Imaging.Abstractions" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Imaging.SkiaSharp" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Ddd.Domain" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Ddd.Application" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Ddd.Application.Contracts" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Authorization" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Authorization.Abstractions" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.TestBase" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Http.Client" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Mapperly" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.EntityFrameworkCore" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.EntityFrameworkCore.Sqlite" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.MongoDB" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Autofac" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.TestBase" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.VirtualFileSystem" Version="10.7.0" />
     <!-- notifications-only -->
-    <PackageVersion Include="Volo.Abp.Localization" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.SettingManagement.Domain" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Features" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Timing" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Guids" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.EventBus" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.EventBus.Abstractions" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.MultiTenancy.Abstractions" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.BackgroundJobs.Abstractions" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.BackgroundWorkers" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.DistributedLocking.Abstractions" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.AspNetCore.SignalR" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Json.SystemTextJson" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI.Bundling" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.SettingManagement.Web" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Identity.Domain" Version="10.5.0" />
-    <PackageVersion Include="Volo.Abp.Emailing" Version="10.5.0" />
+    <PackageVersion Include="Volo.Abp.Localization" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.SettingManagement.Domain" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Features" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Timing" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Guids" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.EventBus" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.EventBus.Abstractions" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Gdpr.Abstractions" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.MultiTenancy.Abstractions" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.BackgroundJobs.Abstractions" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.BackgroundWorkers" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.DistributedLocking.Abstractions" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.SignalR" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Json.SystemTextJson" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI.Bundling" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.SettingManagement.Web" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Identity.Domain" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Identity.Domain.Shared" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Emailing" Version="10.7.0" />
   </ItemGroup>
 
   <!--
@@ -83,24 +77,63 @@
     manifest generation for embedded wwwroot content (ABP's AddEmbedded/ManifestEmbeddedFileProvider).
   -->
   <ItemGroup Label="Embedded static and localization resources">
-    <PackageVersion Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.11" />
+    <PackageVersion Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.12" />
+  </ItemGroup>
+
+  <!-- FileSignatures (MIT): the signature engine behind Dignite.Abp.BlobStoring.Pipeline's MIME detector. -->
+  <ItemGroup Label="File format signatures (blob-storing MIME detection)">
+    <PackageVersion Include="FileSignatures" Version="7.3.0" />
+  </ItemGroup>
+
+  <!--
+    SkiaSharp native assets for Linux: Volo.Abp.Imaging.SkiaSharp 10.7.0 depends only on SkiaSharp 3.119.0, which
+    brings SkiaSharp.NativeAssets.Win32 and .macOS but not .Linux (ABP's own csproj adds it only when built on Linux,
+    so the published nuspec does not list it). The blob-storing Imaging tests reference it so they run on Linux CI
+    runners. Same version as ABP 10.7.0's Directory.Packages.props. Test-only: Dignite.Abp.BlobStoring.Imaging itself
+    references no image library.
+  -->
+  <ItemGroup Label="SkiaSharp Linux native assets (blob-storing Imaging tests only)">
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="3.119.0" />
   </ItemGroup>
 
   <ItemGroup Label="System.Text.Json (only needed for netstandard targets; in-box on net10.0)">
-    <PackageVersion Include="System.Text.Json" Version="10.0.11" />
+    <PackageVersion Include="System.Text.Json" Version="10.0.12" />
+  </ItemGroup>
+
+  <!--
+    Polly: the retry policy of the notification definition store's startup save, the same one ABP's own definition
+    stores use (Volo.Abp.PermissionManagement.Domain 10.7.0 still depends on Polly 8.6.3, as 10.5.0 did; keep them on one
+    version).
+  -->
+  <ItemGroup Label="Retry policies (notifications definition store)">
+    <PackageVersion Include="Polly" Version="8.8.0" />
   </ItemGroup>
 
   <ItemGroup Label="Microsoft hosting abstractions">
-    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.11" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup Label="HttpClient factory (notifications push providers)">
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.12" />
+  </ItemGroup>
+
+  <!--
+    The official C# Model Context Protocol SDK (Apache-2.0), used by aspnetcore-mcp/ and by every
+    module's *.Mcp project through it. Every MCP-contributing module in one host shares one server, so
+    they must all agree on this version: it is pinned here once rather than per tree. Its only
+    transitive dependencies are Microsoft.Extensions.* 10.0.x and Microsoft.Extensions.AI.Abstractions.
+  -->
+  <ItemGroup Label="Model Context Protocol">
+    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.1.0" />
   </ItemGroup>
 
   <ItemGroup Label="Test stack">
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="NSubstitute" Version="6.2.0" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Proxies" Version="10.0.11" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Proxies" Version="10.0.12" />
   </ItemGroup>
 
   <ItemGroup Label="MongoDB integration-test infrastructure (embedded mongod, ABP v10 pattern)">
@@ -111,12 +144,12 @@
   </ItemGroup>
 
   <ItemGroup Label="SourceLink">
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.400" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.401" />
   </ItemGroup>
 
   <!--
     CKEditor bolt-on (Dignite.Abp.FlexFields.CKEditor.Web only): Markdig converts a Markdown-format
-    field value to HTML server-side before rendering (see FlexFieldsCKEditorWebModule, which builds the
+    field value to HTML server-side before rendering (see AbpFlexFieldsCKEditorWebModule, which builds the
     pipeline with .UseAdvancedExtensions() for GFM support - CKEditor 5's Markdown plugin emits GitHub
     Flavored Markdown, not bare CommonMark). HtmlSanitizer (Ganss.Xss) sanitizes the resulting HTML - and
     the HTML-format path's raw value too - before @Html.Raw renders it; this is the first field type in
@@ -124,7 +157,7 @@
     output is new here, not an existing pattern being extended.
   -->
   <ItemGroup Label="CKEditor bolt-on: Markdown/HTML conversion and sanitization (Dignite.Abp.FlexFields.CKEditor.Web only)">
-    <PackageVersion Include="Markdig" Version="1.3.2" />
+    <PackageVersion Include="Markdig" Version="1.4.0" />
     <PackageVersion Include="HtmlSanitizer" Version="9.2.1039" />
   </ItemGroup>
 

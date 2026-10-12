@@ -9,9 +9,18 @@ updates:
       github-actions:
         patterns:
           - "*"
+      # `groups` only batch version updates by default. Security updates open one PR per
+      # vulnerability unless a group opts in with `applies-to: security-updates`.
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
 
   - package-ecosystem: nuget
-    directory: "/"
+    directories:
+      - "/"
+      - "/notifications/host/Dignite.NotificationCenter.Web.Host"
+      - "/flex-fields/demo/Dignite.Abp.FlexFields.Demo"
     schedule:
       interval: monthly
     groups:
@@ -25,121 +34,23 @@ updates:
       others:
         patterns:
           - "*"
-    ignore:
-      - dependency-name: "Volo.Abp.*"
-        update-types: ["version-update:semver-minor", "version-update:semver-major"]
-      - dependency-name: "Volo.Abp.Studio.Client.AspNetCore"
-        versions: [">= 3.0.9"]
-      - dependency-name: "Microsoft.OpenApi"
-        versions: [">= 3.0.0"]
-
-  - package-ecosystem: nuget
-    directory: "/file-storing/host/Dignite.FileExplorer.Web.Host"
-    schedule:
-      interval: monthly
-    groups:
-      abp:
-        patterns:
-          - "Volo.Abp.*"
-      microsoft:
-        patterns:
-          - "Microsoft.*"
-          - "System.*"
-      others:
+      security:
+        applies-to: security-updates
         patterns:
           - "*"
     ignore:
       - dependency-name: "Volo.Abp.*"
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
+      # Studio.Client has its own version line and declares a minimum Volo.Abp.AspNetCore; the demo hosts pin
+      # 3.1.4 (minimum 10.6.1), the newest whose minimum does not exceed the repo's ABP 10.7.0. A later release
+      # may require ABP 10.8 and drag the host past the pinned ABP (NU1605) - check its nuspec before lifting.
       - dependency-name: "Volo.Abp.Studio.Client.AspNetCore"
-        versions: [">= 3.0.9"]
+        versions: [">= 3.1.5"]
+      # Swashbuckle.AspNetCore 10.2.3 (via Volo.Abp.Swashbuckle 10.7.0) is built against Microsoft.OpenApi 2.x
+      # and resolves the patched 2.7.5 itself; 3.0 is a breaking major. Nothing references it directly today -
+      # this keeps a future pin on 2.x.
       - dependency-name: "Microsoft.OpenApi"
         versions: [">= 3.0.0"]
-
-  - package-ecosystem: nuget
-    directory: "/notifications/host/Dignite.NotificationCenter.Web.Host"
-    schedule:
-      interval: monthly
-    groups:
-      abp:
-        patterns:
-          - "Volo.Abp.*"
-      microsoft:
-        patterns:
-          - "Microsoft.*"
-          - "System.*"
-      others:
-        patterns:
-          - "*"
-    ignore:
-      - dependency-name: "Volo.Abp.*"
-        update-types: ["version-update:semver-minor", "version-update:semver-major"]
-      - dependency-name: "Volo.Abp.Studio.Client.AspNetCore"
-        versions: [">= 3.0.9"]
-      - dependency-name: "Microsoft.OpenApi"
-        versions: [">= 3.0.0"]
-
-  - package-ecosystem: nuget
-    directory: "/flex-fields/demo/Dignite.Abp.FlexFields.Demo"
-    schedule:
-      interval: monthly
-    groups:
-      abp:
-        patterns:
-          - "Volo.Abp.*"
-      microsoft:
-        patterns:
-          - "Microsoft.*"
-          - "System.*"
-      others:
-        patterns:
-          - "*"
-    ignore:
-      - dependency-name: "Volo.Abp.*"
-        update-types: ["version-update:semver-minor", "version-update:semver-major"]
-      - dependency-name: "Volo.Abp.Studio.Client.AspNetCore"
-        versions: [">= 3.0.9"]
-      - dependency-name: "Microsoft.OpenApi"
-        versions: [">= 3.0.0"]
-
-  - package-ecosystem: npm
-    directory: "/file-storing/angular"
-    schedule:
-      interval: monthly
-    groups:
-      angular:
-        patterns:
-          - "@angular/*"
-          - "@angular-eslint/*"
-          - "@angular-devkit/*"
-      abp-ng:
-        patterns:
-          - "@abp/ng.*"
-      others:
-        patterns:
-          - "*"
-    ignore:
-      - dependency-name: "@abp/ng.*"
-        update-types: ["version-update:semver-minor", "version-update:semver-major"]
-      - dependency-name: "@angular/*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@angular-eslint/*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@angular-devkit/*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "ng-packagr"
-        update-types: ["version-update:semver-major"]
-      # eslint 9+ switched to flat config, a breaking change unrelated to Angular/ABP; needs a
-      # deliberate config migration, not an auto-bump.
-      - dependency-name: "eslint"
-        update-types: ["version-update:semver-major"]
-      # @angular/compiler-cli's peer range is narrow (e.g. 21.2.19 wants >=5.9 <6.1) - a major
-      # jump breaks the Angular compiler outright.
-      - dependency-name: "typescript"
-        update-types: ["version-update:semver-major"]
-      # ng-zorro-antd's major version tracks Angular's own (22.0.1 requires @angular/core ^22.0.0).
-      - dependency-name: "ng-zorro-antd"
-        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: npm
     directory: "/notifications/angular"
@@ -157,6 +68,10 @@ updates:
       others:
         patterns:
           - "*"
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
     ignore:
       - dependency-name: "@abp/ng.*"
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
@@ -172,7 +87,7 @@ updates:
       # deliberate config migration, not an auto-bump.
       - dependency-name: "eslint"
         update-types: ["version-update:semver-major"]
-      # @angular/compiler-cli's peer range is narrow (e.g. 21.2.19 wants >=5.9 <6.1) - a major
+      # @angular/compiler-cli's peer range is narrow (e.g. 22.0.8 wants >=6.0 <6.1) - a major
       # jump breaks the Angular compiler outright.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
@@ -193,6 +108,10 @@ updates:
       others:
         patterns:
           - "*"
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
     ignore:
       - dependency-name: "@abp/ng.*"
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
@@ -208,16 +127,18 @@ updates:
       # deliberate config migration, not an auto-bump.
       - dependency-name: "eslint"
         update-types: ["version-update:semver-major"]
-      # @angular/compiler-cli's peer range is narrow (e.g. 21.2.19 wants >=5.9 <6.1) - a major
+      # @angular/compiler-cli's peer range is narrow (e.g. 22.0.8 wants >=6.0 <6.1) - a major
       # jump breaks the Angular compiler outright.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
-      # ng-zorro-antd's major version tracks Angular's own (22.0.1 requires @angular/core ^22.0.0).
+      # ng-zorro-antd's major version tracks Angular's own, but this repository follows the line
+      # @abp/ng.components pins (~21.3.1 for ABP 10.7.0) rather than Angular's: a 22.x here would sit
+      # beside ABP's 21.x copy and split NZ_CONFIG (see build/check-angular-package-duplicates.mjs).
       - dependency-name: "ng-zorro-antd"
         update-types: ["version-update:semver-major"]
-      # @abp/ng.theme.shared (an ABP package, pinned repo-wide to ~10.5.0 - see CLAUDE.md) declares
-      # @swimlane/ngx-datatable ~22.0.0 as a plain dependency, not a peer, and every ABP release up to
-      # the 10.6.0 ceiling this repo allows still pins that same ~22.0.0. Bumping our own copy past it
+      # @abp/ng.theme.shared (an ABP package, pinned repo-wide to ~10.7.0 - see CLAUDE.md) declares
+      # @swimlane/ngx-datatable ~22.0.0 as a plain dependency, not a peer, and ABP 10.7.0 still pins
+      # that same ~22.0.0 even though its Angular packages moved to Angular 22. Bumping our own copy past it
       # does not just need template changes: Yarn nests a private 22.0.0 copy under
       # @abp/ng.theme.shared/node_modules for its own internal use, and the demo app - which imports
       # both ThemeSharedModule and NgxDatatableModule in the same component - ends up with two

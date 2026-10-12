@@ -7,9 +7,10 @@ body:
     attributes:
       label: Which module?
       options:
-        - "file-storing (Dignite.Abp.FileStoring / Dignite.FileExplorer)"
+        - "blob-storing (Dignite.Abp.BlobStoring.*)"
         - "notifications (Dignite.Abp.Notifications / Dignite.NotificationCenter)"
         - "flex-fields (Dignite.Abp.FlexFields / @dignite/ng.flex-fields)"
+        - "aspnetcore-mcp (Dignite.Abp.AspNetCore.Mcp)"
         - "Repo-wide / not sure"
     validations:
       required: true

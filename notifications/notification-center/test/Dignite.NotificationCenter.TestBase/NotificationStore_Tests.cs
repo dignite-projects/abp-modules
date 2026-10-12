@@ -20,7 +20,8 @@ public abstract class NotificationStore_Tests<TStartupModule> : NotificationCent
     where TStartupModule : IAbpModule
 {
     private async Task InsertAsync(Guid notificationId, Guid userId, NotificationData data,
-        UserNotificationState state = UserNotificationState.Unread)
+        UserNotificationState state = UserNotificationState.Unread,
+        string notificationName = "order.shipped")
     {
         await WithUnitOfWorkAsync(async () =>
         {
@@ -28,8 +29,8 @@ public abstract class NotificationStore_Tests<TStartupModule> : NotificationCent
             var info = new NotificationInfo
             {
                 Id = notificationId,
-                NotificationName = "order.shipped",
-                Data = data,
+                NotificationName = notificationName,
+                DataJson = SerializeData(data),
                 Severity = NotificationSeverity.Success,
                 CreationTime = DateTime.UtcNow
             };
@@ -38,6 +39,7 @@ public abstract class NotificationStore_Tests<TStartupModule> : NotificationCent
             {
                 UserId = userId,
                 NotificationId = notificationId,
+                NotificationName = notificationName,
                 State = state,
                 CreationTime = info.CreationTime
             });
@@ -61,7 +63,7 @@ public abstract class NotificationStore_Tests<TStartupModule> : NotificationCent
             list.Count.ShouldBe(1);
             var row = list.Single();
             row.Notification.NotificationName.ShouldBe("order.shipped");
-            var data = row.Notification.Data.ShouldBeOfType<OrderShippedNotificationData>();
+            var data = DeserializeData(row.Notification.DataJson).ShouldBeOfType<OrderShippedNotificationData>();
             data.OrderNumber.ShouldBe("SO-1001");
             data.ItemCount.ShouldBe(3);
             row.UserNotification.State.ShouldBe(UserNotificationState.Unread);
@@ -88,6 +90,59 @@ public abstract class NotificationStore_Tests<TStartupModule> : NotificationCent
     }
 
     [Fact]
+    public async Task Stores_the_payload_json_verbatim_even_for_a_type_this_process_does_not_know()
+    {
+        // What a notification service receives from a publisher whose payload type it has not registered.
+        const string dataJson = "{\"type\":\"Publisher.Only.Payload\",\"orderNumber\":\"SO-1\",\"lines\":[1,2]}";
+        var notificationId = Guid.NewGuid();
+
+        await WithUnitOfWorkAsync(async () =>
+        {
+            await GetRequiredService<INotificationStore>().InsertNotificationAsync(new NotificationInfo
+            {
+                Id = notificationId,
+                NotificationName = "order.shipped",
+                DataJson = dataJson,
+                CreationTime = DateTime.UtcNow
+            });
+        });
+
+        await WithUnitOfWorkAsync(async () =>
+        {
+            (await GetRequiredService<IRepository<Notification, Guid>>().GetAsync(notificationId))
+                .Data.ShouldBe(dataJson);
+        });
+    }
+
+    [Fact]
+    public async Task Notification_insert_is_idempotent_by_id()
+    {
+        var notificationId = Guid.NewGuid();
+        var notification = new NotificationInfo
+        {
+            Id = notificationId,
+            NotificationName = "order.shipped",
+            DataJson = SerializeData(new MessageNotificationData("first")),
+            CreationTime = DateTime.UtcNow
+        };
+
+        // Two runs of the same distribution (a redelivered publish request, a retried job), each in its own unit of work.
+        for (var run = 0; run < 2; run++)
+        {
+            await WithUnitOfWorkAsync(async () =>
+            {
+                await GetRequiredService<INotificationStore>().InsertNotificationAsync(notification);
+            });
+        }
+
+        await WithUnitOfWorkAsync(async () =>
+        {
+            (await GetRequiredService<IRepository<Notification, Guid>>()
+                .GetListAsync(row => row.Id == notificationId)).Count.ShouldBe(1);
+        });
+    }
+
+    [Fact]
     public async Task User_notification_inserts_are_idempotent_by_user_and_notification()
     {
         var notificationId = Guid.NewGuid();
@@ -102,7 +157,7 @@ public abstract class NotificationStore_Tests<TStartupModule> : NotificationCent
             {
                 Id = notificationId,
                 NotificationName = "order.shipped",
-                Data = new OrderShippedNotificationData { OrderNumber = "SO-10", ItemCount = 1 },
+                DataJson = SerializeData(new OrderShippedNotificationData { OrderNumber = "SO-10", ItemCount = 1 }),
                 Severity = NotificationSeverity.Info,
                 CreationTime = creationTime
             });
@@ -111,6 +166,7 @@ public abstract class NotificationStore_Tests<TStartupModule> : NotificationCent
             {
                 UserId = userId,
                 NotificationId = notificationId,
+                NotificationName = "order.shipped",
                 State = UserNotificationState.Unread,
                 CreationTime = creationTime
             });
@@ -123,6 +179,7 @@ public abstract class NotificationStore_Tests<TStartupModule> : NotificationCent
             {
                 UserId = userId,
                 NotificationId = notificationId,
+                NotificationName = "order.shipped",
                 State = UserNotificationState.Read,
                 CreationTime = creationTime
             });
@@ -137,6 +194,7 @@ public abstract class NotificationStore_Tests<TStartupModule> : NotificationCent
                 {
                     UserId = userId,
                     NotificationId = notificationId,
+                    NotificationName = "order.shipped",
                     State = UserNotificationState.Unread,
                     CreationTime = creationTime
                 },
@@ -144,6 +202,7 @@ public abstract class NotificationStore_Tests<TStartupModule> : NotificationCent
                 {
                     UserId = otherUserId,
                     NotificationId = notificationId,
+                    NotificationName = "order.shipped",
                     State = UserNotificationState.Unread,
                     CreationTime = creationTime
                 },
@@ -151,6 +210,7 @@ public abstract class NotificationStore_Tests<TStartupModule> : NotificationCent
                 {
                     UserId = otherUserId,
                     NotificationId = notificationId,
+                    NotificationName = "order.shipped",
                     State = UserNotificationState.Read,
                     CreationTime = creationTime
                 }
@@ -203,23 +263,76 @@ public abstract class NotificationStore_Tests<TStartupModule> : NotificationCent
             var rows = await GetRequiredService<INotificationStore>().GetUserNotificationsAsync(userId);
 
             rows.Count.ShouldBe(4);
-            var legacy = rows.Single(row => row.Notification.Id == legacyId)
-                .Notification.Data.ShouldBeOfType<OrderShippedNotificationData>();
+            var legacy = DeserializeData(rows.Single(row => row.Notification.Id == legacyId)
+                .Notification.DataJson).ShouldBeOfType<OrderShippedNotificationData>();
             legacy.OrderNumber.ShouldBe("SO-LEGACY");
 
-            var unknown = rows.Single(row => row.Notification.Id == unknownId)
-                .Notification.Data.ShouldBeOfType<UnsupportedNotificationData>();
+            var unknown = DeserializeData(rows.Single(row => row.Notification.Id == unknownId)
+                .Notification.DataJson).ShouldBeOfType<UnsupportedNotificationData>();
             unknown.Reason.ShouldBe(UnsupportedNotificationDataReason.UnknownDiscriminator);
             unknown.OriginalDiscriminator.ShouldBe("Removed.Module.Payload");
 
-            var malformed = rows.Single(row => row.Notification.Id == malformedId)
-                .Notification.Data.ShouldBeOfType<UnsupportedNotificationData>();
+            var malformed = DeserializeData(rows.Single(row => row.Notification.Id == malformedId)
+                .Notification.DataJson).ShouldBeOfType<UnsupportedNotificationData>();
             malformed.Reason.ShouldBe(UnsupportedNotificationDataReason.MalformedPayload);
             malformed.RawJson.ShouldContain("not-an-integer");
-            var throwingSetter = rows.Single(row => row.Notification.Id == throwingSetterId)
-                .Notification.Data.ShouldBeOfType<UnsupportedNotificationData>();
+            var throwingSetter = DeserializeData(rows.Single(row => row.Notification.Id == throwingSetterId)
+                .Notification.DataJson).ShouldBeOfType<UnsupportedNotificationData>();
             throwingSetter.Reason.ShouldBe(UnsupportedNotificationDataReason.MalformedPayload);
             throwingSetter.RawJson.ShouldContain("THROW-FORMAT");
+        });
+    }
+
+    [Fact]
+    public async Task Filters_inbox_by_included_and_excluded_notification_names()
+    {
+        var userId = Guid.NewGuid();
+        await InsertAsync(Guid.NewGuid(), userId, new MessageNotificationData("a"), notificationName: "n.a");
+        await InsertAsync(Guid.NewGuid(), userId, new MessageNotificationData("b"), UserNotificationState.Read, "n.b");
+        await InsertAsync(Guid.NewGuid(), userId, new MessageNotificationData("c"), notificationName: "n.c");
+        await InsertAsync(Guid.NewGuid(), Guid.NewGuid(), new MessageNotificationData("x"), notificationName: "n.a");
+
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var store = GetRequiredService<INotificationStore>();
+
+            var included = await store.GetUserNotificationsAsync(userId, notificationNames: new[] { "n.a", "n.b" });
+            included.Select(row => row.UserNotification.NotificationName).OrderBy(name => name)
+                .ShouldBe(new[] { "n.a", "n.b" });
+            (await store.GetUserNotificationCountAsync(userId, notificationNames: new[] { "n.a", "n.b" })).ShouldBe(2);
+            (await store.GetUserNotificationCountAsync(
+                userId, UserNotificationState.Unread, notificationNames: new[] { "n.a", "n.b" })).ShouldBe(1);
+
+            var excluded = await store.GetUserNotificationsAsync(userId, excludedNotificationNames: new[] { "n.a", "n.b" });
+            excluded.Single().UserNotification.NotificationName.ShouldBe("n.c");
+            (await store.GetUserNotificationCountAsync(userId, excludedNotificationNames: new[] { "n.a" })).ShouldBe(2);
+
+            (await store.GetUserNotificationCountAsync(userId, notificationNames: Array.Empty<string>())).ShouldBe(0);
+            (await store.GetUserNotificationCountAsync(userId, excludedNotificationNames: Array.Empty<string>())).ShouldBe(3);
+        });
+    }
+
+    [Fact]
+    public async Task Counts_unread_rows_per_notification_name_for_one_user()
+    {
+        var userId = Guid.NewGuid();
+        await InsertAsync(Guid.NewGuid(), userId, new MessageNotificationData("a1"), notificationName: "n.a");
+        await InsertAsync(Guid.NewGuid(), userId, new MessageNotificationData("a2"), notificationName: "n.a");
+        await InsertAsync(Guid.NewGuid(), userId, new MessageNotificationData("a3"), UserNotificationState.Read, "n.a");
+        await InsertAsync(Guid.NewGuid(), userId, new MessageNotificationData("b"), notificationName: "n.b");
+        await InsertAsync(Guid.NewGuid(), userId, new MessageNotificationData("c"), UserNotificationState.Read, "n.c");
+        await InsertAsync(Guid.NewGuid(), Guid.NewGuid(), new MessageNotificationData("x"), notificationName: "n.a");
+
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var counts = await GetRequiredService<INotificationStore>().GetUnreadCountsByNotificationNameAsync(userId);
+
+            counts.Count.ShouldBe(2);
+            counts["n.a"].ShouldBe(2);
+            counts["n.b"].ShouldBe(1);
+            counts.ContainsKey("n.c").ShouldBeFalse();
+            (await GetRequiredService<INotificationStore>().GetUnreadCountsByNotificationNameAsync(Guid.NewGuid()))
+                .ShouldBeEmpty();
         });
     }
 
@@ -507,6 +620,7 @@ public abstract class NotificationStore_Tests<TStartupModule> : NotificationCent
                     Guid.NewGuid(),
                     userId,
                     notificationId,
+                    "order.shipped",
                     UserNotificationState.Unread,
                     creationTime,
                     null));

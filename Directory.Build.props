@@ -10,10 +10,10 @@
 
     <!-- Lockstep version: one <Version> for every packable project in this repo (all three module
          trees) - see CONTRIBUTING.md#versioning-and-releases. MAJOR tracks the ABP
-         Framework major version targeted in Directory.Packages.props (currently 10.5.0 -> MAJOR =
+         Framework major version targeted in Directory.Packages.props (currently 10.7.0 -> MAJOR =
          10) and must stay >= 10 forever, permanently ahead of the legacy Dignite.FileExplorer.* / Dignite.Abp.Notifications*
          package lines already published on NuGet up to 3.8.2 under these same PackageIds. -->
-    <Version>10.0.0-rc.16</Version>
+    <Version>10.0.0-rc.28</Version>
     <!-- Pinned explicitly and never bumped in lockstep with <Version>: without this the SDK derives
          AssemblyVersion from <Version>, moving it on every release and breaking
          AssemblyQualifiedName-based lookups. notifications/'s NotificationData deserialization
@@ -40,7 +40,7 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
-  <!-- Product / PackageTags are module-specific: file-storing/Directory.Build.props and
+  <!-- Product / PackageTags are module-specific: blob-storing/Directory.Build.props and
        notifications/Directory.Build.props each override them in a thin file that explicitly
        imports this one (MSBuild imports only the NEAREST Directory.Build.props per project and
        stops walking up, so each module needs that explicit import to inherit the settings above). -->
@@ -52,14 +52,21 @@
   <!-- Test-project detection (name + path based, so it is available this early - the SDK's own
        IsTestProject isn't set until much later). *.Tests run xunit; *.TestBase is shared scenario
        infrastructure with no runner. The three demo hosts have their OWN nested Directory.Build.props
-       that does not import this file, so nothing below ever reaches them. -->
+       that does not import this file, so nothing below ever reaches them.
+       The detection result lives in the private _DigniteTestTreeProject, and the coverlet and Fody
+       conditions below test THAT, not IsTestProject: a csproj body is evaluated after this file, and
+       the two *.TestBase projects deliberately set <IsTestProject>false</IsTestProject> so that
+       `dotnet test` on a solution skips them. Testing IsTestProject here would let that override
+       re-enable Fody on them (a "Could not find a FodyWeavers.xml" warning and a stray
+       FodyWeavers.xml written into the folder on every Release build). -->
   <PropertyGroup>
-    <IsTestProject Condition="$(MSBuildProjectFullPath.Contains('test')) and ($(MSBuildProjectName.EndsWith('.Tests')) or $(MSBuildProjectName.EndsWith('.TestBase')))">true</IsTestProject>
+    <_DigniteTestTreeProject Condition="$(MSBuildProjectFullPath.Contains('test')) and ($(MSBuildProjectName.EndsWith('.Tests')) or $(MSBuildProjectName.EndsWith('.TestBase')))">true</_DigniteTestTreeProject>
+    <IsTestProject Condition="'$(_DigniteTestTreeProject)' == 'true'">true</IsTestProject>
   </PropertyGroup>
 
   <!-- Code-coverage collector for test projects only. Enables the "XPlat Code Coverage" data
        collector for `dotnet test` locally and in CI; see codecov.yml. -->
-  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+  <ItemGroup Condition="'$(_DigniteTestTreeProject)' == 'true'">
     <PackageReference Include="coverlet.collector" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
   </ItemGroup>
 
@@ -71,14 +78,14 @@
        supplied inline via the WeaverConfiguration property (Fody's documented alternative to a
        per-project FodyWeavers.xml), so there is exactly one copy of it, right here, and no stray
        FodyWeavers.xml/.xsd files are scattered across the projects. -->
-  <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(IsTestProject)' != 'true'">
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(_DigniteTestTreeProject)' != 'true'">
     <WeaverConfiguration>
       <Weavers>
         <ConfigureAwait ContinueOnCapturedContext="false" />
       </Weavers>
     </WeaverConfiguration>
   </PropertyGroup>
-  <ItemGroup Condition="'$(Configuration)' == 'Release' and '$(IsTestProject)' != 'true'">
+  <ItemGroup Condition="'$(Configuration)' == 'Release' and '$(_DigniteTestTreeProject)' != 'true'">
     <PackageReference Include="ConfigureAwait.Fody" PrivateAssets="all" />
     <PackageReference Include="Fody" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
   </ItemGroup>

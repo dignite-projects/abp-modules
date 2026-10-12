@@ -4,7 +4,7 @@ using Volo.Abp.Modularity;
 
 namespace Dignite.Abp.Notifications.TestProviderA;
 
-[DependsOn(typeof(AbpNotificationsModule))]
+[DependsOn(typeof(AbpNotificationsAbstractionsModule))]
 public class TestProviderAModule : AbpModule
 {
 }
@@ -23,8 +23,8 @@ public class TestProviderADefinitionProvider : NotificationDefinitionProvider
     public override void Define(INotificationDefinitionContext context)
     {
         Interlocked.Increment(ref _defineCallCount);
-        context.Add(new NotificationDefinition(
+        context.AddGroup("Test.ProviderA").AddNotification(
             "Test.CrossModuleDuplicate",
-            new FixedLocalizableString("Provider A")));
+            new FixedLocalizableString("Provider A"));
     }
 }

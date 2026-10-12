@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef, inject } from '@angular/core';
+import { Component, ViewChild, ElementRef, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
   ABP,
@@ -34,6 +34,7 @@ import {
     PermissionDirective,
     FlexFieldConfigComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [ListService, { provide: LIST_QUERY_DEBOUNCE_TIME, useValue: 300 }],
 })
 export class ProductFieldsComponent {
@@ -136,7 +137,7 @@ export class ProductFieldsComponent {
   }
 
   /**
-   * A field type with no query-index slot (FileExplorer) can never actually be searched -
+   * A field type with no query-index slot (CKEditor, say) can never actually be searched -
    * FlexFieldIndexManagerBase.GetIndexableFieldsAsync skips it regardless of `Searchable`. Lock the
    * checkbox off rather than let an admin set a flag that looks like it did something; the hint beside
    * it says why, since a control that is merely greyed out reads as broken.

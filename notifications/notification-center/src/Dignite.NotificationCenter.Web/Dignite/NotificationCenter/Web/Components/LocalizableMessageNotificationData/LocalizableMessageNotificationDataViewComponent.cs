@@ -1,7 +1,6 @@
-using System.Linq;
+using Dignite.Abp.Notifications;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
-using Volo.Abp;
 
 namespace Dignite.NotificationCenter.Web.Components.LocalizableMessageNotificationData;
 
@@ -18,16 +17,7 @@ public class LocalizableMessageNotificationDataViewComponent : ViewComponent
 
     public virtual IViewComponentResult Invoke(Dignite.Abp.Notifications.LocalizableMessageNotificationData data)
     {
-        var localizer = data.ResourceName != null
-            ? StringLocalizerFactory.CreateByResourceNameOrNull(data.ResourceName)
-            : null;
-        localizer ??= StringLocalizerFactory.CreateDefaultOrNull();
-
-        var text = localizer == null
-            ? data.Name
-            : data.Arguments != null
-                ? localizer[data.Name, data.Arguments.Values.ToArray()].Value
-                : localizer[data.Name].Value;
+        var text = data.Localize(StringLocalizerFactory);
 
         return View("~/Dignite/NotificationCenter/Web/Components/LocalizableMessageNotificationData/Default.cshtml", text);
     }

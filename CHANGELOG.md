@@ -1,7 +1,8 @@
 # Changelog
 
-All notable changes to the packages released from this repository — the `file-storing/`,
-`notifications/` and `flex-fields/` modules — are documented in this file.
+All notable changes to the packages released from this repository — the `blob-storing/`,
+`notifications/` and `flex-fields/` modules, and the shared `aspnetcore-mcp/` tree — are documented in
+this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) — with two deviations from the
@@ -14,6 +15,875 @@ packages are still republished at that version with unchanged content. Entries a
 so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
+
+### Changed
+
+#### blob-storing
+
+- **Breaking - the module classes now follow ABP's `Abp<Module><Layer>Module` naming** (`AbpIdentityDomainModule`,
+  `AbpBlobStoringMinioModule`). Only the C# class names change; namespaces, PackageIds, assembly names and project
+  names are unchanged.
+  - `DigniteAbpBlobStoringPipelineModule` → `AbpBlobStoringPipelineModule`
+  - `DigniteAbpBlobStoringImagingModule` → `AbpBlobStoringImagingModule`
+
+  **Migrate:** update the `[DependsOn(typeof(...))]` references (and any other use of the class) in your own modules to
+  the new names; the `using` directives stay the same.
+
+#### flex-fields
+
+- **Breaking - the module classes now follow ABP's `Abp<Module><Layer>Module` naming.** Only the C# class names
+  change; namespaces, PackageIds, assembly names and project names are unchanged.
+  - `FlexFieldsAbstractionsModule` → `AbpFlexFieldsAbstractionsModule`
+  - `FlexFieldsDomainSharedModule` → `AbpFlexFieldsDomainSharedModule`
+  - `FlexFieldsDomainModule` → `AbpFlexFieldsDomainModule`
+  - `FlexFieldsEntityFrameworkCoreModule` → `AbpFlexFieldsEntityFrameworkCoreModule`
+  - `FlexFieldsMongoDbModule` → `AbpFlexFieldsMongoDbModule`
+  - `FlexFieldsWebModule` → `AbpFlexFieldsWebModule`
+  - `FlexFieldsCKEditorModule` → `AbpFlexFieldsCKEditorModule`
+  - `FlexFieldsCKEditorWebModule` → `AbpFlexFieldsCKEditorWebModule`
+  - `FlexFieldsInstallerModule` → `AbpFlexFieldsInstallerModule`
+
+  **Migrate:** update the `[DependsOn(typeof(...))]` references (and any other use of the class) in your own modules to
+  the new names; the `using` directives stay the same.
+
+- **`@dignite/ng.flex-fields-ckeditor` moves to CKEditor 5 v49.** Its dependencies are now `ckeditor5` `^49.0.0`,
+  `@ckeditor/ckeditor5-angular` `^12.0.0` and `@ckeditor/ckeditor5-integrations-common` `^3.2.0` (were `^48.0.0`,
+  `^11.2.0`, `^2.4.0`), in step with the workspace that builds and tests it. An application still on CKEditor 48 would
+  end up with two copies of `ckeditor5`, which CKEditor refuses to load (`ckeditor-duplicated-modules`) - upgrade
+  the application's `ckeditor5` and `@ckeditor/ckeditor5-angular` together with this package.
+
+#### notifications
+
+- **The Notification Center module classes now follow ABP's `Abp<Module><Layer>Module` naming.** Only the C# class
+  names change; namespaces, PackageIds, assembly names and project names (`Dignite.NotificationCenter.*`) are
+  unchanged.
+  - `NotificationCenterDomainSharedModule` → `AbpNotificationCenterDomainSharedModule`
+  - `NotificationCenterDomainModule` → `AbpNotificationCenterDomainModule`
+  - `NotificationCenterApplicationContractsModule` → `AbpNotificationCenterApplicationContractsModule`
+  - `NotificationCenterApplicationModule` → `AbpNotificationCenterApplicationModule`
+  - `NotificationCenterEntityFrameworkCoreModule` → `AbpNotificationCenterEntityFrameworkCoreModule`
+  - `NotificationCenterMongoDbModule` → `AbpNotificationCenterMongoDbModule`
+  - `NotificationCenterHttpApiModule` → `AbpNotificationCenterHttpApiModule`
+  - `NotificationCenterHttpApiClientModule` → `AbpNotificationCenterHttpApiClientModule`
+  - `NotificationCenterWebModule` → `AbpNotificationCenterWebModule`
+  - `NotificationCenterPushModule` → `AbpNotificationCenterPushModule`
+  - `NotificationCenterPushIdentityModule` → `AbpNotificationCenterPushIdentityModule`
+  - `NotificationCenterInstallerModule` → `AbpNotificationCenterInstallerModule`
+
+## [10.0.0-rc.28] - 2026-10-12
+
+### Added
+
+#### blob-storing (was file-storing)
+
+- **`Dignite.Abp.BlobStoring.Pipeline`** (`DigniteAbpBlobStoringPipelineModule`, namespace `Dignite.Abp.BlobStoring.Pipeline`):
+  everyday `IBlobPipelineContributor`s for the BLOB content pipeline ABP 10.7.0 introduced. ABP ships the mechanism
+  (`IBlobPipelineContributor`, `BlobContainerConfiguration.PipelineContributors`, run inside `IBlobContainer.SaveAsync` /
+  `GetAsync`, in configuration order on save and in reverse on get) and no contributors; these are the ones that were
+  `IFileHandler`s before, and GZip. Depends on `Volo.Abp.BlobStoring` and FileSignatures (MIT).
+  - `MaxSizeContributor` - `AddMaxSizeContributor(c => c.MaxSizeInBytes = ...)`. Rejects larger content with
+    `Dignite.Abp.BlobStoring:ContentTooLarge`, while the content is read: a seekable stream whose length is over the limit
+    is rejected without reading, any other stream as soon as the copy passes it. The copy replaces the stream, so later
+    contributors get a seekable stream with a known length.
+  - `AllowedContentTypesContributor` - `AddAllowedContentTypesContributor(c => c.AllowedContentTypes = [...])`, with
+    `AllowUnidentified`. Rejects content whose type, detected from the bytes, is not on the list
+    (`Dignite.Abp.BlobStoring:ContentTypeNotAllowed`); entries are exact types or `type/*` wildcards.
+  - `GZipContributor` - `AddGZipContributor(c => c.CompressionLevel = ...)`. Stores the content GZip-compressed and
+    decompresses it on read. It is part of the stored format: do not add it to, or remove it from, a container that
+    already has blobs.
+  - `IMimeTypeDetector` / `MimeTypeDetector`: the MIME type from the content's signature (FileSignatures, which also
+    looks inside archives, so an Office Open XML or OpenDocument file is not a plain ZIP), a text sniff for HTML, SVG and
+    XML, and a policy that reconciles the result with the extension (`Dignite.Abp.BlobStoring:ContentTypeMismatch`).
+    Replaceable with `[Dependency(ReplaceServices = true)]`. The README states what it does not protect against.
+  - `BlobStreamBuffering` (public): capped buffering for contributors that need to re-read the content;
+    `BlobStoringPipelineConsts.DefaultMaxBufferedBytes` (100 MB) bounds it when a container has no `MaxSize`. Every
+    contributor that reads the content (`AllowedContentTypes`, `GZip`, the image contributors) enforces that cap,
+    whether the stream is seekable or not; `MaxSize` is still recommended first because it also makes the stream
+    seekable for the contributors after it.
+- **`Dignite.Abp.BlobStoring.Imaging`** (`DigniteAbpBlobStoringImagingModule`, namespace `Dignite.Abp.BlobStoring.Imaging`):
+  image contributors on ABP's provider-agnostic `Volo.Abp.Imaging.Abstractions`. It references no image library; the
+  application adds one of ABP's providers (`Volo.Abp.Imaging.SkiaSharp`, `.ImageSharp` or `.MagickNet`).
+  - `ImageResizeContributor` - `AddImageResizeContributor(c => ...)` with `MaxWidth`, `MaxHeight`, `MinWidth`,
+    `MinHeight` and `Mode`. An image is resized only when its header dimensions exceed the box (an image that fits is
+    stored byte for byte, never upscaled); a smaller source is rejected with
+    `Dignite.Abp.BlobStoring.Imaging:ImageTooSmall`. Content that is not an image, and an image the provider does not
+    support, pass through.
+  - `ImageCompressContributor` - `AddImageCompressContributor()`. Re-encodes with ABP's `IImageCompressor`, keeping the
+    original when the result is not smaller.
+  - The image decode guard - `ConfigureImageDecodeGuard(g => ...)`, applied by both contributors before the provider
+    decodes anything: `MaxSourceWidth` (8192), `MaxSourceHeight` (8192), `MaxSourcePixels` (50,000,000; about 200 MB of
+    RGBA per decode in the worst case), `MaxDecompressionRatio` (100 pixels per stored byte) and `DecodeTimeout` (10 s).
+    Dimensions are read from the header (PNG, JPEG, GIF, BMP, WebP, TIFF) without decoding. The timeout only
+    interrupts a provider that observes the cancellation token while decoding (ImageSharp does; SkiaSharp and Magick.NET
+    decode synchronously), so for those the dimension guard and the byte cap are the protections that apply.
+  - Both contributors are one-way transforms, so they can be added to a container that already has blobs.
+- Error codes are named, not numbered: `Dignite.Abp.BlobStoring:ContentTooLarge` / `ContentTypeMismatch` /
+  `ContentTypeNotAllowed`, and `Dignite.Abp.BlobStoring.Imaging:ImageTooLarge` / `ImageTooSmall` / `ImageDecodeTimeout` /
+  `ImageProcessingFailed`, each localized in English, Japanese, Simplified and Traditional Chinese. See the module's
+  README for the contributor reference and
+  [`blob-storing/docs/pipeline-contributors-decision.md`](blob-storing/docs/pipeline-contributors-decision.md) for why
+  this replaces the old pipeline.
+
+### Changed
+
+- **Breaking - every NuGet package now targets ABP Framework 10.7.0 (was 10.5.0).** All `Volo.Abp.*` references in
+  the root `Directory.Packages.props` and in both demo hosts moved to 10.7.0, so the packages' published
+  dependencies are now `Volo.Abp.* >= 10.7.0`: a consuming host must be on ABP 10.7.0 or later. No source change was
+  needed to compile against it. The Angular packages moved with it, in the next entry.
+- **Breaking - every Angular package now targets `@abp/ng.*` 10.7.0, Angular 22 and TypeScript 6 (was `@abp/ng.*`
+  10.5.0, Angular 21, TypeScript 5.9).** ABP 10.6 moved its Angular packages to Angular 22, so this is what matching
+  the NuGet packages' ABP 10.7.0 takes. The published peer ranges are now `@abp/ng.*` `~10.7.0` and `@angular/*`
+  `^22.0.0` in all three packages (`@dignite/ng.notification-center`, `@dignite/ng.flex-fields` and
+  `@dignite/ng.flex-fields-ckeditor`): a consuming Angular host must be on Angular 22 and ABP 10.7. Both workspaces
+  follow ABP 10.7.0's own Angular app template (`@angular/*` ~22.0, `@abp/ng.theme.lepton-x` ~5.7.0, `ng-packagr`
+  ~22.0, TypeScript ~6.0.3). What else moved, and what deliberately did not:
+  - `ng-zorro-antd` ~21.0.2 → ~21.3.1 in the flex-fields demo, the range `@abp/ng.components` 10.7.0 depends on, so the
+    workspace still resolves one copy. It stays on the 21 line on Angular 22 for the same reason, and so does
+    `@angular/cdk` (~21.2.0, whose peer range accepts Angular 22): `ng-zorro-antd` 21.3 depends on `@angular/cdk`
+    `^21`, so a cdk 22 would sit beside it as a second copy. `@dignite/ng.flex-fields` keeps its `ng-zorro-antd`
+    `^21.0.0` and `@angular/cdk` `~21.2.0` peers; its README now says to declare `~21.3.1` / `~21.2` for one copy.
+  - `@ng-bootstrap/ng-bootstrap` (`~20.0.0` peer of `@dignite/ng.notification-center`) and `@swimlane/ngx-datatable`
+    (22.0.0) do not move: `@abp/ng.theme.shared` 10.7.0 still depends on exactly those lines, whose peer ranges stop
+    at Angular 21 and 20. Like ABP's own 10.7 template, the workspaces install them under Angular 22 with unmet-peer
+    warnings; both build and pass their tests that way.
+  - `@angular-eslint/*` stays on 21.4 with ESLint 8, as in ABP's 10.7 template: `@angular-eslint` 22 requires ESLint
+    9+ and its flat config. `zone.js` stays on ~0.16.2, which Angular 22 accepts (`~0.15.0 || ~0.16.0`) and nothing
+    in ABP 10.7 constrains. CKEditor (`ckeditor5` ^48, `@ckeditor/ckeditor5-angular` ^11.2) already accepts Angular
+    22. Node: Angular 22 needs `^22.22.3 || ^24.15.0 || >=26`; the repository's `.nvmrc` (22.23.2) already meets it.
+  - Angular's own v22 migrations were applied, each keeping v21 behaviour: every component now declares
+    `ChangeDetectionStrategy.Eager`, because Angular 22 changed the default for components that declare none
+    (ABP's upgrade guide lists stale loading states and lists as the symptom), and `strictTemplates: false` is now
+    written out because it defaults to true. ABP's own Angular 22 upgrade guide (`abp-10-6-angular-22.md`, section
+    "Updated Change Detection Behavior") calls `ChangeDetectionStrategy.Eager` a temporary compatibility measure
+    for legacy components and recommends `signal()`, `toSignal()` or the `async` pipe for component state. Moving
+    the libraries' components to signal-based state, so they can drop `Eager` and run under the new default, is a
+    follow-up and not part of this change. TypeScript 6 changes two defaults the code was written against:
+    `baseUrl` is deprecated (the workspaces' `paths` are now relative to their tsconfig, as in ABP's template) and
+    `strict` defaults to true, so the root tsconfigs now set `"strict": false` explicitly. Beyond these, no library
+    source changed.
+- **The repository-wide security pins are gone, because ABP 10.7.0 resolves a patched version of each by itself.**
+  `SQLitePCLRaw.*` 2.1.12 (GHSA-2m69-gcr7-jv3q): `Volo.Abp.EntityFrameworkCore.Sqlite` 10.7.0 brings
+  `Microsoft.EntityFrameworkCore.Sqlite` 10.0.11, which depends on 2.1.12. Scriban 7.2.7 (GHSA-7jvp-hj45-2f2m, fixed in
+  7.2.2): `Volo.Abp.TextTemplating.Scriban` 10.7.0 depends on Scriban 7.2.5. `Polly` stays at 8.6.3, still the version
+  `Volo.Abp.PermissionManagement.Domain` 10.7.0 uses. The vulnerability gate in `ci.yml` / `release.yml` no longer
+  allowlists GHSA-7jvp-hj45-2f2m, which no resolved Scriban is affected by any more.
+- Demo hosts (`notifications/host/`, `flex-fields/demo/`; never published): `Volo.Abp.Studio.Client.AspNetCore`
+  3.0.8 → 3.1.4, the newest release whose minimum `Volo.Abp.AspNetCore` (10.6.1) does not exceed 10.7.0 - none
+  requires exactly 10.7.0 yet - and dependabot now ignores it from 3.1.5 on, until a release's ABP requirement is
+  checked. LeptonX Lite 5.5.0 → 5.7.0, its release for ABP 10.7. Their inline security overrides are dropped for
+  the same reason as the repository pins: MessagePack (Studio.Client 3.1.4 → MagicOnion 7.10.2 → 3.1.7),
+  Microsoft.OpenApi (`Volo.Abp.Swashbuckle` 10.7.0 → Swashbuckle.AspNetCore 10.2.3 → 2.7.5), Scriban 7.2.5 and
+  SQLitePCLRaw 2.1.12 are all past their advisories. Dependabot keeps ignoring Microsoft.OpenApi 3.x: Swashbuckle
+  10.2.3 is still built against 2.x.
+- **The vulnerability gate in `ci.yml` / `release.yml` now checks every advisory line.** Its regex only inspected the
+  first advisory line of each package (and never matched a top-level package's row), so the three High
+  SixLabors.ImageSharp 3.1.11 advisories reaching the earlier Imaging package through `Volo.Abp.Imaging.ImageSharp` 10.7.0
+  went unseen. They are not allowlisted: the fixed releases (3.2.0, 4.1.3) require a Six Labors license key to build, so the
+  package that reached them was replaced instead - `Dignite.Abp.BlobStoring.Imaging` (see blob-storing below) references only
+  ABP's imaging abstractions, and nothing in the solution references ImageSharp any more.
+- The four per-module NuGet package smoke-test scripts are now one, `build/smoke-test-nuget-packages.ps1 <artifacts>
+  <version> -Module <name>`. Each module's package list and the types the generated consumer touches moved to
+  `<module>/.github/scripts/nuget-surface.psd1`; `ci.yml` and `release.yml` call the shared script. The checks
+  themselves are unchanged.
+
+#### blob-storing (was file-storing)
+
+- **Breaking - `file-storing/` is now `blob-storing/`, its packages are `Dignite.Abp.BlobStoring.*`, and the `IFileHandler`
+  pipeline and `IFileStorer` are gone.** ABP 10.7.0's `IBlobPipelineContributor` is the same idea as `IFileHandler` (a
+  per-container ordered list of steps over a stream), so the module keeps no pipeline of its own: it ships contributors for
+  ABP's (see Added), and what used to wrap the container (`IFileStorer`, `StoredFileInfo`, `IBlobNameGenerator`) is now the
+  calling application's. The module is pre-stable and the rename adopts ABP's own naming
+  (`Dignite.Abp.BlobStoring.<Addition>`, as `Volo.Abp.BlobStoring.<Provider>`), so it falls under the one exception the
+  repository's PackageId invariant allows - the same one `10.0.0-rc.24` used for the notifications packages - and is not a
+  precedent for renaming after a layout change. Why, and the wrapper that lost:
+  [`blob-storing/docs/pipeline-contributors-decision.md`](blob-storing/docs/pipeline-contributors-decision.md).
+- The folder `file-storing/` is `blob-storing/`, and its solution is `blob-storing/Dignite.Abp.BlobStoring.slnx`, holding
+  `src/Dignite.Abp.BlobStoring.Pipeline`, `src/Dignite.Abp.BlobStoring.Imaging` and a test project for each.
+- Error codes: `Dignite.Abp.File:0001`-`0005` and `Dignite.Abp.FileStoring.Imaging:0001`-`0006` are replaced by the named
+  codes under `Dignite.Abp.BlobStoring` and `Dignite.Abp.BlobStoring.Imaging` (table below). The Imaging package has a
+  namespace of its own because ABP maps one code namespace to one localization resource.
+- `IMimeTypeDetector.DetectAsync(Stream, string? fileName = null, CancellationToken = default)`: `fileName` is optional. A
+  blob name without an extension gets no extension reconciliation; the content alone decides the type.
+- The image decode guard's defaults are 8192 x 8192 pixels and 50,000,000 pixels in total (the handler's were 4096 x 4096
+  and 16,000,000), because the old values rejected ordinary 24 MP camera originals.
+
+  > **Migrate:** the old types are removed, not obsoleted. Update the packages, modules, namespaces and the container
+  > configuration as below; code that called `IFileStorer` moves to the calling sequence at the end.
+  >
+  > | rc.27 | Now |
+  > |---|---|
+  > | package `Dignite.Abp.FileStoring`, `DigniteAbpFileStoringModule`, namespace `Dignite.Abp.FileStoring` | package `Dignite.Abp.BlobStoring.Pipeline`, `DigniteAbpBlobStoringPipelineModule`, namespace `Dignite.Abp.BlobStoring.Pipeline` |
+  > | package `Dignite.Abp.FileStoring.Imaging`, `DigniteAbpFileStoringImagingModule`, namespace `Dignite.Abp.FileStoring.Imaging` | package `Dignite.Abp.BlobStoring.Imaging`, `DigniteAbpBlobStoringImagingModule`, namespace `Dignite.Abp.BlobStoring.Imaging`; **and add one of ABP's imaging providers explicitly** (`Volo.Abp.Imaging.SkiaSharp`, `.ImageSharp` or `.MagickNet`, with its module) - the package no longer brings ImageSharp |
+  > | `AddFileSizeLimitHandler(h => h.MaxFileSize = 20)` (megabytes) | `AddMaxSizeContributor(c => c.MaxSizeInBytes = 20 * 1024 * 1024)` (bytes) |
+  > | `AddFileTypeCheckHandler(h => h.AllowedFileTypeNames = [".pdf"])` (extensions) | `AddAllowedContentTypesContributor(c => c.AllowedContentTypes = ["application/pdf"])` - **content types now, matched against the detected content, not file extensions** |
+  > | `AddImageResizeHandler(h => { h.ImageWidth = w; h.ImageHeight = h; h.ImageSizeMustBeLargerThanPreset = true; h.MaxImageWidth / MaxImageHeight / MaxPixelCount / MaxDecompressionRatio / DecodeTimeoutSeconds })` | `AddImageResizeContributor(c => { c.MaxWidth = w; c.MaxHeight = h; c.MinWidth = w; c.MinHeight = h; })` (the minimums only where `ImageSizeMustBeLargerThanPreset` was on) + `AddImageCompressContributor()` (the handler compressed after resizing) + `ConfigureImageDecodeGuard(g => { g.MaxSourceWidth; g.MaxSourceHeight; g.MaxSourcePixels; g.MaxDecompressionRatio; g.DecodeTimeout = TimeSpan.FromSeconds(n) })` |
+  > | `IFileStorer.StoreAsync` / `DeleteAsync` | `IBlobContainer.SaveAsync` / `DeleteAsync`, with the caller-side sequence below |
+  > | `StoredFileInfo` (`BlobName`, `Size`, `MimeType`, `Hash`) | the caller computes what its row needs: `IMimeTypeDetector.DetectAsync`, SHA-256, the length - of the *upload*, not of the bytes after a resize or GZip |
+  > | `IBlobNameGenerator`, `RandomBlobNameGenerator`, `SetBlobNameGenerator<T>()` | the caller names its blobs (a GUID), and saves with `overrideExisting: false` |
+  > | `ContainerNameValidator`, `FileConsts`, `ImageFormatHelper`, `FileHandlerContext` | removed |
+  > | `Dignite.Abp.File:0001` (`FileTooLarge`) | `Dignite.Abp.BlobStoring:ContentTooLarge` |
+  > | `Dignite.Abp.File:0002` (`InvalidImageType`) | `Dignite.Abp.BlobStoring:ContentTypeNotAllowed` |
+  > | `Dignite.Abp.File:0003` (`MissingFileExtension`), `0004` (`Containers.NotFound`) | no replacement: an extension is no longer required, and there is no container-name check |
+  > | `Dignite.Abp.File:0005` (`ContentTypeMismatch`) | `Dignite.Abp.BlobStoring:ContentTypeMismatch` |
+  > | `Dignite.Abp.FileStoring.Imaging:0001` (`ImageSizeTooSmall`) | `Dignite.Abp.BlobStoring.Imaging:ImageTooSmall` |
+  > | `...Imaging:0002` (`ImageResizeFailure`) | `Dignite.Abp.BlobStoring.Imaging:ImageProcessingFailed` |
+  > | `...Imaging:0003` (`ImageTooLarge`) | `Dignite.Abp.BlobStoring.Imaging:ImageTooLarge` |
+  > | `...Imaging:0004` (`ImageFormatNotSupported`), `0006` (`ImageResizeDimensionsTooLarge`) | no replacement: an image the provider does not support passes through unchanged; to forbid it, list the allowed types in `AddAllowedContentTypesContributor` |
+  > | `...Imaging:0005` (`ImageDecodeTimeout`) | `Dignite.Abp.BlobStoring.Imaging:ImageDecodeTimeout` |
+  >
+  > Behaviour that changes with it:
+  > - **A container without `AddMaxSizeContributor` is capped at `BlobStoringPipelineConsts.DefaultMaxBufferedBytes`
+  >   (100 MB, as `IFileStorer`'s `FileConsts.DefaultMaxFileSizeInBytes` was) by every contributor that reads the content;
+  >   a container with no contributor at all has no limit.** Add `AddMaxSizeContributor` with an explicit limit to every
+  >   container that takes uploads.
+  > - Put the contributors in the recommended order: `MaxSize`, `AllowedContentTypes`, image contributors, GZip.
+  > - Nothing deletes a partially written blob after a failed save any more; deleting the blob when your own metadata
+  >   write fails is still yours to do.
+  >
+  > The calling sequence that replaces `IFileStorer.StoreAsync` (see the README for the explanation):
+  >
+  > ```csharp
+  > await using var content = await BlobStreamBuffering.CopyToBufferAsync(upload, maxBytes, cancellationToken);
+  > var mimeType = await _mimeTypeDetector.DetectAsync(content, fileName, cancellationToken);
+  > var hash = Convert.ToHexString(await SHA256.HashDataAsync(content, cancellationToken));
+  > content.Position = 0;
+  > var blobName = GuidGenerator.Create().ToString("N");
+  > await _container.SaveAsync(blobName, content, overrideExisting: false, cancellationToken);   // the contributors run here
+  > try { /* insert your metadata row: blobName, fileName, mimeType, content.Length, hash */ }
+  > catch { await _container.DeleteAsync(blobName, CancellationToken.None); throw; }
+  > ```
+
+#### notifications
+
+- `Dignite.Abp.Notifications.Emailing` no longer lists Scriban as a dependency of its own. The Scriban pin had put
+  `Scriban >= 7.2.7` into its published dependency list; consumers now get 7.2.5 through `Volo.Abp.Emailing` 10.7.0.
+- ABP 10.7's `GdprUserDataDeletionRequestedEto` carries a `TenantId`, and when the publisher sets it the event bus
+  runs `GdprUserDataDeletionRequestedHandler` inside that tenant. The handler is unchanged: it still deletes the
+  user's rows by user id in every tenant sharing the database, so it is not narrowed to the event's tenant.
+- `Dignite.Abp.Notifications.Emailing.Identity` and `Dignite.NotificationCenter.Push.Identity` depend on
+  `AbpIdentityDomainModule`, which in ABP 10.7 registers the Identity token providers and calls
+  `AddDataProtection()`. A process loading either module now loads a Data Protection key ring at startup (and creates
+  one when the store is empty), even if it never issues an Identity token.
+- The notifications solution files are renamed from `Dignite.NotificationCenter.{slnx,abpsln,abpmdl}` to
+  `Dignite.Abp.Notifications.{slnx,abpsln,abpmdl}`, matching the module's root package family. No package, project or
+  namespace is renamed (`Dignite.NotificationCenter.Installer` keeps its name); the Installer package now ships
+  `content/Dignite.Abp.Notifications.abpmdl`.
+- The "Introducing the ABP Notification Center" article moved from `docs/en/articles/` to
+  `notifications/docs/articles/`.
+
+#### flex-fields
+
+- The kernel maps no relationship between a host entity and its `FlexFieldIndexBase<TEntity>` rows; a host that adds
+  one without a navigation on the host entity - the demo's `HasOne<Product>().WithMany()` for
+  `ProductFlexFieldIndex` - sees ABP 10.7 stop updating the tracked host entity (concurrency stamp, modification
+  audit, entity updated event) when only its index rows change. No change here; the demo is left as is.
+
+### Removed
+
+#### blob-storing (was file-storing)
+
+- The NuGet packages `Dignite.Abp.FileStoring` and `Dignite.Abp.FileStoring.Imaging` are no longer published, starting with
+  this version. Their replacements are `Dignite.Abp.BlobStoring.Pipeline` and `Dignite.Abp.BlobStoring.Imaging` (see
+  Changed for the mapping). The IDs are retired, not reused for something else.
+- The pipeline and its runner: `IFileHandler`, `FileHandlerContext`, `IFileStorer` / `FileStorer` and its typed-container
+  extensions, `StoredFileInfo`.
+- `IBlobNameGenerator`, `RandomBlobNameGenerator`, `SetBlobNameGenerator<T>()` / `GetBlobNameGeneratorType()` and
+  `BlobContainerConfigurationNames.BlobNameGenerator`; `ContainerNameValidator`.
+- The handlers and their configuration: `FileSizeLimitHandler`, `FileTypeCheckHandler`, `ImageResizeHandler`, with their
+  `*Configuration` / `*ConfigurationNames` and `AddFileSizeLimitHandler` / `AddFileTypeCheckHandler` /
+  `AddImageResizeHandler`.
+- `FileConsts`, `FileErrorCodes`, `FileStoringImagingErrorCodes`, `ImageFormatHelper`, `FileStoringResource`.
+
+### Fixed
+
+#### notifications
+
+- The two `*.TestBase` projects no longer get Fody and ConfigureAwait.Fody on a Release build, which logged "Could not
+  find a FodyWeavers.xml" and wrote a stray `FodyWeavers.xml` into each folder. They set `IsTestProject` to false so
+  `dotnet test` skips them, and that override (evaluated after the root `Directory.Build.props`) had re-enabled the
+  weaver; the root file now decides from its own private test-tree property.
+- The ABP Studio run profile (`host/etc/run-profiles/Default.abprun.json`) pointed the Angular app and the proxy
+  generator at `../../angular`; both now resolve to `notifications/angular`.
+- The NuGet package smoke test now also covers `Dignite.Abp.Notifications.Push`, `.Push.Expo`,
+  `Dignite.NotificationCenter.Push` and `.Push.Identity`.
+
+#### flex-fields
+
+- The `Dignite.Abp.FlexFields.Installer` package now ships the module manifest (`content/Dignite.Abp.FlexFields.abpmdl`)
+  instead of the demo application's: it listed only `Dignite.Abp.FlexFields.Demo` plus the demo template's ABP module
+  imports, so ABP Studio saw the demo, not the module. It now lists the `src`, `test` and `demo` packages, as the
+  notifications manifest does, and `Dignite.Abp.FlexFields.CKEditor` has the `.abppkg` it was missing.
+- CI and the release workflow now run `Dignite.Abp.FlexFields.Web.Tests`; they were never run before.
+- The NuGet package smoke test now also covers `Dignite.Abp.FlexFields.Web`, `.CKEditor` and `.CKEditor.Web`.
+- The demo's `etc/scripts/initialize-solution.ps1` builds `Dignite.Abp.FlexFields.slnx` from the module root instead of
+  running a bare `dotnet build` in a folder with no solution.
+
+#### aspnetcore-mcp
+
+- CI now uploads the `aspnetcore-mcp` coverage to Codecov (it was collected but never uploaded).
+
+## [10.0.0-rc.27] - 2026-10-10
+
+### Added
+
+#### flex-fields
+
+- `CKEDITOR_DISPLAY_CONTRIBUTORS` / `CKEditorDisplayContributor` (`@dignite/ng.flex-fields-ckeditor`): a multi provider
+  through which the host rewrites the HTML the read-only view (`ff-ckeditor-view`) displays, the counterpart of
+  `CKEDITOR_CONFIG_CONTRIBUTORS` for display. A contributor gets the HTML (a Markdown value already converted) and a
+  context (the field and its content format) and returns the HTML to show; contributors run in registration order,
+  once whenever the view's value or field changes, before Angular's sanitizer. With none registered nothing changes.
+  See the package README for an example that prefixes stored relative image addresses with the API host.
+
+## [10.0.0-rc.26] - 2026-10-10
+
+### Added
+
+#### flex-fields
+
+- `CKEDITOR_CONFIG_CONTRIBUTORS` / `CKEditorConfigContributor` (`@dignite/ng.flex-fields-ckeditor`): a multi provider
+  through which the host changes the CKEditor 5 configuration each `CKEditor` field's editor is created with — extra
+  plugins, toolbar, any other `EditorConfig` option. A contributor gets the composed configuration and a context (the
+  loaded `ckeditor5` package, the field, its mode and content format) and changes it in place or returns a
+  replacement; contributors run in registration order, once per editor. With none registered nothing changes. See the
+  package README for an example that shows stored relative image addresses from the API host while editing, keeping
+  `getData()` relative.
+
+## [10.0.0-rc.25] - 2026-10-10
+
+### Added
+
+#### file-storing
+
+- `IFileStorer` (default `FileStorer`, transient) in `Dignite.Abp.FileStoring` — the runner of a container's
+  `IFileHandler` pipeline, which until now existed only inside File Explorer's `FileDescriptorManager`.
+  `StoreAsync(containerName, fileName, stream, cancellationToken)` validates the container name, copies the upload
+  into a buffer capped at the container's size limit, detects the MIME type from the content, runs the handlers in
+  their configured order, hashes the result with SHA-256, names it with the container's `IBlobNameGenerator` and saves
+  it without overwriting, deleting a partially written blob again when the save fails. It returns
+  `StoredFileInfo { BlobName, Size, MimeType, Hash }`, all describing the stored (post-handler) bytes.
+  `DeleteAsync(containerName, blobName, cancellationToken)` removes a blob. `StoreAsync<TContainer>` /
+  `DeleteAsync<TContainer>` extensions take a typed container. Content dedup and file metadata stay with the caller:
+  store first, write your row, and call `DeleteAsync` if the row fails. See
+  [`file-storing/docs/core-only-decision.md`](file-storing/docs/core-only-decision.md).
+- `IMimeTypeDetector` (default `MimeTypeDetector`): MIME type from the content's signature, reconciled with the file
+  extension. A file whose content contradicts its extension (an executable named `.png`, text named `.pdf`) is
+  rejected with the new error code `Dignite.Abp.File:0005`; formats without a signature (text, CSV, JSON, SVG) fall
+  back to the extension, unknown ones to `application/octet-stream`.
+- `SetBlobNameGenerator<T>()` / `GetBlobNameGeneratorType()` and `BlobContainerConfigurationNames.BlobNameGenerator`
+  (same `"BlobNameGenerator"` key) now live in core; they were part of `Dignite.FileExplorer.Domain`.
+- `FileConsts.DefaultMaxFileSizeInBytes` (100 MB): the cap `IFileStorer` applies to a container without
+  `AddFileSizeLimitHandler`.
+- `FileHandlerContext.CancellationToken`, the store operation's token, as on ABP's `BlobPipelineContext`.
+
+#### flex-fields
+
+- `CKEditorUploadProvider` / `CKEDITOR_UPLOAD_PROVIDER` (`@dignite/ng.flex-fields-ckeditor`): the host registers how an
+  inline image is uploaded (`upload(file, containerName)` resolving to the URL to embed). The package ships no
+  implementation.
+
+### Changed
+
+#### file-storing
+
+- **The MIME type comes from the content.** Under `IFileStorer`, `FileHandlerContext.MimeType` and
+  `StoredFileInfo.MimeType` are detected from the bytes; the API takes no caller-supplied MIME type at all, and
+  `FileTypeCheckHandler`'s extension check runs only after the extension has been checked against the content.
+- **The size limit binds while copying.** `IFileStorer` stops reading an upload as soon as it passes the container's
+  limit (and rejects a seekable stream whose length is over the limit before reading it), instead of buffering it
+  whole and checking afterwards.
+- `ImageResizeHandler` links the operation's cancellation token into its decode timeout and passes it to ABP's image
+  resizer and compressor. A caller's cancellation now surfaces as `OperationCanceledException`, not as the
+  decode-timeout error.
+- `FileHandlerContext`'s constructor takes an optional trailing `CancellationToken` — source compatible, but code
+  compiled against rc.24 must be recompiled.
+
+#### flex-fields
+
+- **Breaking — the CKEditor image upload target is the host's.** The adapter no longer posts to
+  `POST /api/file-explorer/files` with apiName `FileExplorer`; `CKEditorUploadAdapter` takes the host's
+  `CKEditorUploadProvider`. Without a registered `CKEDITOR_UPLOAD_PROVIDER` the upload-image button is omitted, as it
+  already was for a field with no `CKEditor.ImagesContainerName`.
+
+  > **Migrate:** a host that relied on the File Explorer upload registers a provider for its own file API
+  > (`{ provide: CKEDITOR_UPLOAD_PROVIDER, useExisting: MyUploadProvider }`); see the package README.
+
+### Removed
+
+#### file-storing
+
+- **File Explorer has left this repository.** `file-storing/` is now only the enhancement layer on ABP BlobStoring
+  (`Dignite.Abp.FileStoring`, `Dignite.Abp.FileStoring.Imaging`). These packages are no longer published from here,
+  starting with this version:
+  - NuGet: `Dignite.FileExplorer.Domain.Shared`, `.Domain`, `.Application.Contracts`, `.Application`, `.HttpApi`,
+    `.HttpApi.Client`, `.EntityFrameworkCore`, `.MongoDB`, `.Mcp`, `.Installer`.
+  - npm: `@dignite/ng.file-explorer`.
+
+  The file browser is the CMS media library; it moves to the [`site`](https://github.com/dignite-projects/site)
+  repository as a Site feature, under the Site namespace (a new package identity, not a continuation of these IDs).
+  An application that only needs files stored safely (attachments, uploads tied to its own entities) uses
+  `IFileStorer` from core and keeps its own metadata. The demo host (`Dignite.FileExplorer.Web.Host`) and the
+  module's Angular workspace are gone with it; the module's solution is `file-storing/Dignite.Abp.FileStoring.slnx`.
+
+#### flex-fields
+
+- The FileExplorer field type: NuGet `Dignite.Abp.FlexFields.FileExplorer` and `Dignite.Abp.FlexFields.FileExplorer.Web`,
+  npm `@dignite/ng.flex-fields-file-explorer`. A media-picker field belongs with the media library and moves to the
+  `site` repository with it. The flex-fields demo no longer seeds an `images` field.
+
+## [10.0.0-rc.24] - 2026-10-09
+
+### Added
+
+#### notifications
+
+- `NullNotificationPublisher` (Abstractions), the null default of `INotificationPublisher`, after ABP's `NullSmsSender`.
+- `NotificationDefinitionsChangedEto` (`Dignite.Abp.Notifications.Domain.Shared`, wire name
+  `Dignite.Abp.Notifications.NotificationDefinitionsChanged`), after ABP's `DynamicPermissionDefinitionsChangedEto`:
+  the saver publishes the names of the definitions a save inserted or changed, through the distributed event bus in
+  its unit of work (into the outbox when one is configured). Group-only changes and deletions publish nothing, as in
+  ABP. Nothing in the module handles it; the dynamic store still reloads through the common stamp.
+- `Dignite.Abp.Notifications.Domain.Shared` (`netstandard2.0;netstandard2.1;net10.0`): the record column sizes
+  (`NotificationDefinitionRecordConsts`, `NotificationGroupDefinitionRecordConsts`, moved from the definition store)
+  and the event above.
+- `Dignite.Abp.Notifications.MongoDB` (`AbpNotificationsMongoDbModule`, namespace `Dignite.Abp.Notifications.MongoDB`):
+  the definition store on MongoDB, after `Volo.Abp.PermissionManagement.MongoDB` and `Volo.Abp.FeatureManagement.MongoDB`
+  — the EF Core package's counterpart for hosts whose Notification Center runs on `Dignite.NotificationCenter.MongoDB`.
+  `NotificationDefinitionStoreMongoDbContext` (`[IgnoreMultiTenancy]`, connection string `NotificationCenter`) keeps the
+  records in the `NotifDefinitionGroups` / `NotifDefinitions` collections with the EF Core tables' indexes (a unique
+  `Name` on both, `GroupName` on the definitions), and `ConfigureNotificationDefinitionStore()` maps them into a host's
+  own MongoDB context. The saver's unit of work is transactional, as in ABP, so MongoDB must run as a replica set.
+
+### Changed
+
+#### notifications
+
+- **Breaking - the notifications packages follow ABP's package layout.** One `.Abstractions` package holds every
+  contract and its null default (as `Volo.Abp.Authorization.Abstractions` does), the in-process implementation takes
+  the plain name (as `Volo.Abp.BackgroundJobs` does), remote publishing lives in a `.Client` package (as
+  `RemotePermissionChecker` lives in `Volo.Abp.AspNetCore.Mvc.Client(.Common)`), and the definition store is the feature's
+  `.Domain.Shared` / `.Domain` / `.EntityFrameworkCore` (as `Volo.Abp.PermissionManagement.Domain` is):
+
+  | rc.23 package | rc.24 package | rc.23 module | rc.24 module |
+  |---|---|---|---|
+  | `Dignite.Abp.Notifications` (contracts) | `Dignite.Abp.Notifications.Abstractions` | `AbpNotificationsModule` | `AbpNotificationsAbstractionsModule` |
+  | `Dignite.Abp.Notifications.Distribution` | `Dignite.Abp.Notifications` (implementation) | `AbpNotificationsDistributionModule` | `AbpNotificationsModule` |
+  | `Dignite.Abp.Notifications.Remote` | `Dignite.Abp.Notifications.Client` | `AbpNotificationsRemoteModule` | `AbpNotificationsClientModule` |
+  | `Dignite.Abp.Notifications.DefinitionStore` | `Dignite.Abp.Notifications.Domain` + `Dignite.Abp.Notifications.Domain.Shared` | `AbpNotificationsDefinitionStoreModule` | `AbpNotificationsDomainModule` (+ `AbpNotificationsDomainSharedModule`) |
+  | `Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore` | `Dignite.Abp.Notifications.EntityFrameworkCore` | `AbpNotificationsDefinitionStoreEntityFrameworkCoreModule` | `AbpNotificationsEntityFrameworkCoreModule` |
+
+  Everything Core held — the definition API and its static/dynamic stores, `NotificationRoutingOptions`, the channel
+  resolver, `INotificationPublisher`, `INotificationStore`, `INotificationDistributor`, `INotificationPermissionChecker`,
+  the info records, `NotificationEntityIdentifier`, the routing-name startup check — moved into Abstractions with the
+  same `Dignite.Abp.Notifications` namespace, as did `NullNotificationStore` and `AlwaysGrantedNotificationPermissionChecker`
+  from Distribution. `AbpNotificationsAbstractionsModule` now also depends on `AbpFeaturesModule` and runs Core's
+  options validation. Abstractions keeps `netstandard2.0;netstandard2.1;net10.0`. The types moved assembly, so modules
+  compiled against rc.23 must be recompiled.
+
+  > **Migrate — business modules: `AbpNotificationsModule` changed meaning.** In rc.23 it was the contracts module a
+  > business module depended on; in rc.24 it is the in-process implementation and brings the distributor, the
+  > distribution job and both event handlers. A business module (for example an `*.Application` project that defines
+  > and publishes notifications) changes its csproj reference from `Dignite.Abp.Notifications` to
+  > `Dignite.Abp.Notifications.Abstractions` and its `[DependsOn(typeof(AbpNotificationsModule))]` to
+  > `[DependsOn(typeof(AbpNotificationsAbstractionsModule))]`. Left as it is, the module still compiles and pulls the
+  > implementation into every process that hosts it — in a publisher with `.Client` the local publisher then wins and
+  > the publisher distributes its notifications itself instead of sending them to the notification service.
+
+  **Migrate — hosts:**
+  - Monolith (distributes in-process): replace `Dignite.Abp.Notifications.Distribution` with `Dignite.Abp.Notifications`
+    and `AbpNotificationsDistributionModule` with `AbpNotificationsModule`. A host with `Dignite.NotificationCenter.Application`
+    gets it from there.
+  - Publisher of a split deployment: replace `Dignite.Abp.Notifications.Remote` with `Dignite.Abp.Notifications.Client`
+    (`AbpNotificationsClientModule`, namespace `Dignite.Abp.Notifications.Client`), and
+    `Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore` with `Dignite.Abp.Notifications.EntityFrameworkCore`.
+  - Notification service: `Dignite.Abp.Notifications.Distribution` → `Dignite.Abp.Notifications`,
+    `Dignite.Abp.Notifications.DefinitionStore(.EntityFrameworkCore)` → `Dignite.Abp.Notifications.Domain` /
+    `Dignite.Abp.Notifications.EntityFrameworkCore` (`AbpNotificationsEntityFrameworkCoreModule`).
+  - Namespaces: `Dignite.Abp.Notifications.DefinitionStore` → `Dignite.Abp.Notifications` (the record entities,
+    `NotificationDefinitionStoreOptions`, `NotificationDefinitionStoreDbProperties`, the saver, the dynamic store),
+    `Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore` → `Dignite.Abp.Notifications.EntityFrameworkCore`.
+    `NotificationDefinitionStoreDbContext`, `ConfigureNotificationDefinitionStore()`, the `NotificationCenter`
+    connection string name and the tables are unchanged. The record entities' CLR names change, so a host's EF model
+    snapshot names them differently; the demo host's snapshot was updated and `dotnet ef migrations
+    has-pending-model-changes` reports no change, so no migration is needed for the rename itself.
+
+- **Breaking - `.Client` and the in-process implementation no longer exclude each other; the local publisher wins.**
+  rc.23's Remote module failed the start when an `INotificationDistributor` was registered. `RemoteNotificationPublisher`
+  now registers with `TryRegister` (it used `ReplaceServices`), as ABP's `HttpClientUserRoleFinder` yields to a local
+  `UserRoleFinder`: with both packages installed, `DefaultNotificationPublisher` is resolved in either module order and
+  the process distributes itself; with only `.Client`, `RemoteNotificationPublisher` is.
+- **Breaking - a host without any publisher resolves `NullNotificationPublisher`** instead of failing on the first
+  resolution of `INotificationPublisher`: each publish logs a warning naming the notification and returns. It is
+  registered by `AbpNotificationsAbstractionsModule.PostConfigureServices` (`TryAdd`, after every module's own
+  registrations), so the local and the remote publisher always win over it.
+- **Breaking - `StaticNotificationDefinitionSaver` takes an `IDistributedEventBus`**, and
+  `UpdateChangedNotificationsAsync` takes the `List<string>` that receives the names of the inserted and changed
+  definitions (ABP's `StaticPermissionSaver` signature). Only subclasses of the saver are affected.
+
+### Removed
+
+#### notifications
+
+- The package ids `Dignite.Abp.Notifications.Distribution`, `Dignite.Abp.Notifications.Remote`,
+  `Dignite.Abp.Notifications.DefinitionStore` and `Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore` (see
+  the table above), the modules `AbpNotificationsDistributionModule`, `AbpNotificationsRemoteModule`,
+  `AbpNotificationsDefinitionStoreModule`, `AbpNotificationsDefinitionStoreEntityFrameworkCoreModule`, and the startup
+  check that made Remote and Distribution exclusive.
+
+## [10.0.0-rc.23] - 2026-10-09
+
+### Added
+
+#### notifications
+
+- **Split deployment: publish in one process, distribute in another.** The new `Dignite.Abp.Notifications.Remote`
+  package replaces `INotificationPublisher` with `RemoteNotificationPublisher`, for a service whose inbox and channels
+  live in a separate notification service. It checks that the definition exists, serializes the payload, resolves the
+  channels with the local `INotificationChannelResolver` (the routing rules are configured where the business module
+  runs) and publishes one `NotificationPublishRequestedEto` per notification — into the publisher's outbox when a unit
+  of work is active, in the same transaction as the business change. The notification service handles it with
+  `NotificationPublishRequestedHandler`: the publisher's notification id, tenant, payload JSON and channels are kept,
+  small explicit fan-outs are distributed inline and the rest through the service's own job. Remote and Distribution
+  in one process fail the start. See "Split deployment" in the notifications README.
+- **`NotificationPublishRequestedEto`** (Abstractions, wire name `Dignite.Abp.Notifications.NotificationPublishRequested`):
+  a flat, default-System.Text.Json POCO carrying the payload as `DataJson`, the recipients and the resolved channels.
+  It implements `IMultiTenant`, so the receiving bus runs the handler in its tenant, host included. Abstractions now
+  references `Volo.Abp.MultiTenancy.Abstractions`.
+- `NotificationInfo.Channels` carries channels resolved by a publisher in another process; the distributor uses them
+  as they are and asks neither the resolver nor the definition manager for routing.
+- `NotificationStore.InsertNotificationAsync` skips a notification id it already holds, so a second run of the same
+  distribution (a redelivered publish request, a retried job) does not fail on the primary key.
+- **Definition catalog: `Dignite.Abp.Notifications.DefinitionStore` and
+  `Dignite.Abp.Notifications.DefinitionStore.EntityFrameworkCore`.** A notification service that hosts no business
+  module learns the publishers' definitions the way an ABP microservice learns other services' permissions: every
+  process saves its static definitions to shared tables at startup (`StaticNotificationDefinitionSaver`, in the
+  background with Polly retries), and a process with `NotificationDefinitionStoreOptions.IsDynamicNotificationStoreEnabled`
+  reads them (`DynamicNotificationDefinitionStore`, reloaded within 30 seconds of a change through a common stamp in the
+  distributed cache). Each part follows ABP's permission management domain, including the per-application hash that
+  skips unchanged saves and the rule that a save deletes only what `DeletedNotifications` / `DeletedNotificationGroups`
+  list, so services sharing the tables never delete each other's records. Display texts are stored by resource name
+  (`L:Resource,Key`) and resolved in the reader, through ABP's external localization store when the resource is not
+  registered there. The EF Core package maps `NotifDefinitionGroups` / `NotifDefinitions` on the `NotificationCenter`
+  connection string (`[IgnoreMultiTenancy]`) and adds `ConfigureNotificationDefinitionStore()` for the host's migration
+  DbContext; no migrations ship. The process that reads the store must also turn on ABP's
+  `IsDynamicPermissionStoreEnabled` / `IsDynamicFeatureStoreEnabled` (not checked; see the README). A MongoDB
+  implementation is a follow-up. The repository now pins `Polly` 8.6.3 (the version ABP 10.5's own stores use). See
+  "Definition catalog" in the notifications README.
+- `IStaticNotificationDefinitionStore` / `StaticNotificationDefinitionStore` (the providers' definitions, built once)
+  and `IDynamicNotificationDefinitionStore` with its empty default `NullDynamicNotificationDefinitionStore` in Core,
+  after ABP's static and dynamic feature definition stores.
+
+### Changed
+
+#### notifications
+
+- **Breaking - the distribution pipeline moved out of `Dignite.Abp.Notifications` into the new
+  `Dignite.Abp.Notifications.Distribution` package.** Every process that referenced Core registered the distribution
+  job and the delivery event handler, so two services carrying business modules shared the job queue and both received
+  every `NotificationDeliveryRequestedEto`. Core keeps what business modules use — definitions, routing, the
+  `INotificationPublisher` contract, `NotificationInfo` and the other info records, the `INotificationStore` /
+  `INotificationDistributor` / `INotificationPermissionChecker` contracts — with unchanged namespaces and package id, so
+  modules compiled against rc.22 keep working. `DefaultNotificationPublisher`, `DefaultNotificationDistributor`,
+  `NotificationDistributionJob(Args)`, `NotificationDeliveryRequestedHandler`, `NullNotificationStore`,
+  `AlwaysGrantedNotificationPermissionChecker`, `NotificationSubscriptionManager` and `NotificationDistributionOptions`
+  moved to Distribution (same `Dignite.Abp.Notifications` namespace), as did the unhosted-channel warning and the
+  stateless no-channel startup check; Core keeps the check for rules naming undefined notifications.
+  **`AbpNotificationsModule` no longer registers the delivery handler, the job or `NotificationDistributionOptions`**,
+  and depends only on Abstractions and Features. **Migrate:** a host without the Notification Center adds
+  `Dignite.Abp.Notifications.Distribution` and `[DependsOn(typeof(AbpNotificationsDistributionModule))]`; otherwise
+  `INotificationPublisher` has no implementation. `Dignite.NotificationCenter.Application` depends on Distribution, so a
+  host with the Notification Center gets it automatically. Test hosts that relied on Core's publisher add Distribution
+  too.
+- **Breaking - `NotificationInfo.Data` is now `NotificationInfo.DataJson`**, the discriminator-tagged JSON produced by
+  `INotificationDataSerializer`. The publisher serializes once, at the publish boundary — an unregistered payload type
+  now fails there, before anything is persisted or enqueued — and the string travels from there: the store writes and
+  returns it unchanged, the distributor copies it onto every delivery event, and the job args round-trip through any
+  serializer. A process that distributes no longer needs the payload's CLR type. `UserNotificationAppService`
+  hydrates `UserNotificationDto.Data` through the tolerant `INotificationDataSerializer.Deserialize`, so the REST and C#
+  client contracts are unchanged. `DefaultNotificationDistributor` and `NotificationStore` no longer take the
+  serializer, and `NotificationStore.DeserializeDurableData` is gone. `DefaultNotificationPublisher` takes the new
+  `NotificationDistributionDispatcher` (the inline-or-job decision it now shares with the remote-publish handler) and
+  the serializer.
+- **Breaking - the distribution job is named `Dignite.Abp.Notifications.Distribute`** (`[BackgroundJobName]`) instead of
+  the args type's full name, so its queue is a stable contract of Distribution. Jobs still queued under the old name are
+  not picked up after the upgrade; drain the queue first.
+- `NullNotificationStore` and `AlwaysGrantedNotificationPermissionChecker` register with `TryRegister`: the packages
+  that replace them depend on Core, not Distribution, so module order no longer guarantees that the replacement is
+  registered last.
+- **Breaking - `Dignite.Abp.Notifications.Identity` no longer depends on `Volo.Abp.Identity.Domain`; the host must be
+  able to resolve ABP's `IUserRoleFinder`.** `IdentityNotificationPermissionChecker` used
+  `IIdentityUserRepository` and `IUserClaimsPrincipalFactory<IdentityUser>`, which tied the package to the Identity
+  database. It now asks `IUserRoleFinder` (`Volo.Abp.Identity.Domain.Shared`) for the recipient's role names, builds
+  the principal ABP's permission providers read (`UserId`, one `Role` per role, and `TenantId` when a tenant is
+  current) and calls `IPermissionChecker`. The package references `Volo.Abp.Authorization` and
+  `Volo.Abp.Identity.Domain.Shared`; the package id, namespace, class name and `AbpNotificationsIdentityModule` are
+  unchanged. **Migrate:** a monolith that already installs `Volo.Abp.Identity.Domain` needs nothing, it registers
+  `UserRoleFinder`. A host without it must register an `IUserRoleFinder`, normally by installing an Identity
+  `HttpApi.Client` package (`Volo.Abp.Identity.Pro.HttpApi.Client`, whose `HttpClientUserRoleFinder` calls the
+  Identity service), and enable `IsDynamicPermissionStoreEnabled`. Installing the package no longer pulls in the
+  Identity domain or needs the Identity database. A recipient that no longer exists is no longer rejected up front:
+  it has no roles and is granted only what is granted to it directly.
+- **Breaking - `INotificationDefinitionManager` is asynchronous**: `Get` / `GetOrNull` / `GetAll` / `GetGroups` /
+  `GetGroupOrNull` become `GetAsync` / `GetOrNullAsync` / `GetAllAsync` / `GetGroupsAsync` / `GetGroupOrNullAsync`,
+  because the manager now merges the definitions of this process with those of the definition catalog (static first,
+  a dynamic definition or group only under a name no static one has, as ABP's `FeatureDefinitionManager`). Business
+  modules' production code uses only the definition API and is unaffected; code that calls the manager — tests that
+  assert a definition included — awaits the new methods. `NotificationDefinitionManager` is transient (it was a
+  singleton) and no longer builds the definitions: a custom registry overrides
+  `StaticNotificationDefinitionStore.CreateGroups` (or replaces `IStaticNotificationDefinitionStore`) instead of
+  `NotificationDefinitionManager.CreateGroups`. The startup checks read the static definitions only.
+  `UserNotificationAppService.MapToDto` and `TryResolveGroupFilter` become `MapToDtoAsync` and
+  `ResolveGroupFilterAsync`, and `NotificationSubscriptionAppService.GetGroupOrNull` becomes `GetGroupOrNullAsync`.
+- **Breaking - a remote publish request whose notification is unknown is refused, so the event inbox retries it.**
+  `NotificationPublishRequestedHandler` looks the name up (its own definitions and the catalog) before writing anything
+  and throws when it finds none: the definition carries the permission and feature requirements that apply at
+  delivery, and until now such a request was distributed to no one and marked processed. The usual cause is a
+  publisher whose definitions have not reached the catalog yet, which a retry outlives; configure the notification
+  service with `AbpEventBusBoxesOptions.InboxProcessorFailurePolicy = RetryLater` (ABP's default `Retry` re-runs the
+  event every period and holds back the events behind it). The handler's constructor takes an
+  `INotificationDefinitionManager`.
+
+## [10.0.0-rc.22] - 2026-10-09
+
+### Added
+
+#### notifications
+
+- **Personal data erasure on `GdprUserDataDeletionRequestedEto`.** The Notification Center now depends on
+  `Volo.Abp.Gdpr.Abstractions` and handles ABP's GDPR deletion event (`GdprUserDataDeletionRequestedHandler`): it
+  deletes the user's inbox rows (read and unread), notification subscriptions and push devices, in every tenant.
+  Rows are removed in bulk by user id alone, because before ABP 10.7 the event carries no tenant. The shared
+  `Notification` payload is left to the host's retention job. Nothing in this repository publishes the event - the
+  host needs a publisher; without one the handler never runs. See "Personal data erasure (GDPR)" in the notifications
+  README.
+- **Breaking - `INotificationStore.DeleteAllUserDataAsync(userId)`** erases the user's inbox rows and subscriptions in
+  every tenant; custom `INotificationStore` implementations must add it (`NullNotificationStore` is a no-op).
+  `PushDeviceManager.RemoveAllAsync(userId)` does the same for push devices. `NotificationStore` takes `IDataFilter` as
+  a new constructor argument.
+
+## [10.0.0-rc.21] - 2026-10-07
+
+### Changed
+
+#### notifications
+
+- **Breaking - delivery channels are routed by the host, not fixed in the definition.**
+  `NotificationDefinition.UseChannels(...)` / `GetChannelsOrNull()` and the `NotificationChannels` helper are
+  gone. Routing lives in the new `NotificationRoutingOptions` (Core), which has two levels only: a rule per
+  notification name (`ForNotification(name, channels...)`, `ForNotifications(names, channels...)`,
+  `InboxOnly(names...)`) and a `Default` for notifications without a rule. A module adds defaults for its own
+  notifications in `ConfigureServices`; the host module, configured last, overrides any of them - later writes win
+  and a repeated rule for the same notification replaces the earlier one as a whole. Groups carry no routing.
+  Core and Abstractions know no channel names (each notifier package keeps its own `XxxNotifier.ChannelName`).
+  `Default` is never "every installed channel", so installing a notifier package cannot fan existing
+  notifications out to a new channel; `InboxOnly` is the explicit rule that overrides `Default`.
+  **Migrate** `.UseChannels("SignalR", "Email")` to
+  `Configure<NotificationRoutingOptions>(o => o.ForNotification(name, "SignalR", "Email"))`.
+- **`INotificationChannelResolver`** (Core) decides the channels for one notification; the default reads
+  `NotificationRoutingOptions`. It is called once per notification, before recipients are batched, inside the
+  notification's tenant scope, so a host can replace it for tenant- or severity-dependent routing. Per-user channel
+  preferences are not part of it. `DefaultNotificationDistributor` takes it as a new constructor argument.
+- **Startup validation of routing.** A rule for a notification no provider defines fails the start (catches typos); a
+  channel no notifier in the process hosts logs a warning naming the channel and the notifications that use it
+  (`NotificationRoutingOptions.RequireHostedChannels` makes it fail, for hosts that deliver every channel
+  themselves); in stateless mode (`NullNotificationStore`) a notification that resolves to no channel fails at
+  startup instead of at publish time.
+- **Breaking - `INotificationsClient.ReceiveNotification` takes `SignalRNotificationMessage`**, not
+  `NotificationPayload`. `NotificationPayload` stays as the in-process typed view the Email and Push notifiers
+  render from, but it is no longer a wire contract. Clients that read the message by property name see the same
+  fields; only `data` changes shape (see Fixed). The MessagePack hub protocol is not supported.
+
+### Fixed
+
+#### notifications
+
+- **The SignalR push carried `"data": {}`.** The hub protocol serializes with its own System.Text.Json options,
+  which do not know the polymorphic `NotificationData` converter, so clients received neither the `type`
+  discriminator nor the content. The bundled MVC and Angular bells only use the push as a refresh prompt and were
+  unaffected; in stateless forwarding mode, where the push is the only carrier of the payload, custom clients
+  received nothing usable. `data` is now the raw discriminator-tagged JSON object
+  (`{"type":"Dignite.Message","message":"..."}`), the same shape the REST inbox returns for
+  `UserNotificationDto.Data`. A module-wide rule now covers this class of bug: a wire contract serialized by an
+  engine the module does not configure never carries a live `NotificationData`.
+
+## [10.0.0-rc.20] - 2026-10-07
+
+### Added
+
+#### notifications
+
+- **Notification groups.** Every definition now belongs to a group, as ABP permissions do:
+  `context.AddGroup(name, displayName).AddNotification(name, displayName)`. Duplicate group names, and duplicate
+  definition names across groups, fail at startup. The inbox API gains a `GroupName` filter,
+  `GET /api/notification-center/notifications/groups` (groups in definition order with their unread counts), and
+  `GroupName` / `GroupDisplayName` on `UserNotificationDto` and `NotificationSubscriptionDto`; notifications whose
+  definition no longer exists fall into a synthetic "Other" group. The subscription settings UI (MVC and Angular)
+  lists definitions under group headings.
+- **Inbox page** for MVC (`/NotificationCenter/Notifications`) and Angular (`NotificationInboxComponent`, served by
+  `createRoutes()` and replaceable via `eNotificationCenterComponents.Notifications`): group tabs with unread
+  counts, an all/unread filter, paging, per-item delete, and "mark all as read" / "clear read". It is reached from
+  the bell, not the main menu.
+- **The bell lists the ten most recent notifications, read and unread**, highlighting unread ones (the badge still
+  counts only unread), with a "View all" link to the inbox page. Reading a notification no longer removes it from
+  the bell.
+- **Device push channel.** `Dignite.Abp.Notifications.Push` adds the `"Push"` channel: a definition says
+  `UseChannels("Push")` and the notification reaches the recipient's phones. Which delivery service carries
+  a message is decided per device - each registered device names the `IPushProvider` that issued its
+  token - so one channel spans Expo, FCM and APNs. Devices come from a new `IPushDeviceStore` seam (a null
+  store until something replaces it), content from an `INotificationPushContentProvider` chain built once
+  per device culture, and every message carries the inbox keys (`notificationId`, `notificationName`,
+  `entityTypeName`, `entityId`) as silent data. A device the provider reports dead is removed. Delivery
+  stays best-effort: no retry, no delivery state. Core, the distributor and
+  `NotificationDeliveryRequestedEto` are unchanged.
+- **Expo Push Service provider.** `Dignite.Abp.Notifications.Push.Expo` sends through Expo's push API (one
+  HTTP endpoint for iOS and Android, batches of 100), with `ExpoPushOptions.AccessToken` for Expo's
+  enhanced push security. Only push tickets are read; receipts are not polled.
+- **Push device registry in the Notification Center.** A new `PushDevice` aggregate (EF Core and MongoDB)
+  records the phones each user can be pushed to, with `POST /api/notification-center/push-devices/register`
+  and `/unregister` for the app (token in the body, never the URL). A registration takes the request culture
+  as the device's language and the caller's `session_id` claim as its login session; a token registered to
+  someone else - in any tenant - moves to the caller; a user keeps at most `PushDeviceOptions.MaxDevicesPerUser`
+  devices (default 10), the least recently seen dropping out. `Dignite.NotificationCenter.Push` serves the
+  push channel's devices from it.
+- **Push follows the login session (optional).** `Dignite.NotificationCenter.Push.Identity` forgets a device
+  whose ABP Identity session no longer exists instead of pushing to it - signed out, revoked, or cleaned up
+  as inactive. Meaningful on hosts with Identity Pro session management; inert elsewhere.
+
+### Changed
+
+#### notifications
+
+- **Breaking - definitions must be grouped.** Definition providers use `AddGroup(...).AddNotification(...)`; the
+  top-level `context.Add` and the public `NotificationDefinition` constructor are gone (custom definition managers
+  override `CreateGroups()` instead of `CreateDefinitions()`). `INotificationStore` gains include/exclude name
+  filters on the inbox list/count methods and `GetUnreadCountsByNotificationNameAsync`, and implementations must
+  populate `UserNotificationInfo.NotificationName`.
+- **Schema change:** `UserNotification` carries a copy of `NotificationName` (new column plus a
+  `(TenantId, UserId, NotificationName, State, CreationTime)` index on both providers), so group filtering and
+  per-group unread counts stay single-table queries. EF Core hosts need a migration.
+- `NotificationCultureResolver` (Abstractions) now holds the recipient-culture fallback that
+  `EmailNotifier.ResolveCulture` used to implement privately, so the email and push notifiers share it;
+  `EmailNotifier` switches cultures with ABP's `CultureHelper.Use`. Behaviour is unchanged.
+- `LocalizableMessageNotificationData.Localize(IStringLocalizerFactory)` (Abstractions) is now the one
+  rendering rule for localizable messages; the email and push content providers and the MVC inbox view
+  component call it instead of each carrying a copy. Output is unchanged.
+- **Core's delivery handler builds only the notifier for the delivery's channel.** It used to construct every
+  channel's notifier, with its whole dependency graph, for every delivery event and keep one - so an email
+  delivery also built the push and SignalR notifiers, and any one notifier failing to construct broke every
+  channel. Each channel module now maps its channel to its notifier type in the new `NotificationNotifierOptions`
+  (Abstractions), and the handler resolves just that type. A channel claimed by two types fails the application
+  start instead of the first delivery. **Custom notifiers must register:**
+  `Configure<NotificationNotifierOptions>(o => o.Notifiers.Add<TNotifier>(channelName))` - one exposed only as
+  `INotificationNotifier` is no longer called. `INotificationNotifier` itself is unchanged.
+- **A notifier that cannot be resolved no longer escapes the delivery handler.** A notifier whose construction
+  fails, or that answers to a different name than the channel it is registered for, is now logged at Error (with
+  the exception - building a notifier involves no recipient data) and the delivery dropped, as best-effort as a
+  failed delivery, instead of throwing back into the event bus.
+- **Schema change: every EF Core host needs a migration** for the new `{prefix}PushDevices` table (hosts own
+  their migrations; this module ships none). Hosts that implement `INotificationCenterDbContext` or
+  `INotificationCenterMongoDbContext` themselves must also add the new `PushDevices` property.
+
+### Fixed
+
+#### notifications
+
+- **MVC bell mark-as-read and the subscription toggles did nothing.** `notification-center.js` called
+  `dignite.abp.notificationCenter.*`, but ABP generates the proxies under `dignite.notificationCenter.*`.
+- **MVC bell badge double-counted and missed pushes.** Each SignalR push added one to the server-rendered count,
+  counting a notification twice when it arrived after the page rendered, and pushes missed while disconnected were
+  never counted. The bell now re-reads `GET .../notifications/unread-count` after every push and on reconnect, as
+  the Angular bell already did.
+
+## [10.0.0-rc.19] - 2026-10-04
+
+### Fixed
+
+#### aspnetcore-mcp
+
+- **A tool call's changes are now saved before its result is returned.** The only unit of work an MCP
+  request had was the one `AbpUnitOfWorkMiddleware` completes after the whole pipeline - by which time
+  the SDK had already written the tool's result to the response. A save that then failed (a unique index,
+  a concurrency conflict) could not become an error result: the middleware threw into a started
+  response and the client's connection was cut off. `AbpMcpUnitOfWorkFilter` now gives each tool call,
+  resource read and prompt the unit-of-work handling `AbpUowActionFilter` gives an MVC action: it takes
+  over the reserved unit of work, saves before returning, and rolls back on failure, so a failed save
+  comes back as the call's structured error. Found by an end-to-end run against the Site host, where
+  re-uploading a file whose earlier copy had been deleted hit `FileExplorer`'s MD5 unique index.
+- **Failures reported as tool results are logged.** `McpToolErrorFilter` turns every exception into an
+  error result, so nothing further up ever saw it: an unexpected failure reached the client as "an
+  internal error occurred" and left no trace on the server. It now logs and notifies exactly as
+  `AbpExceptionHandlingMiddleware` does for the HTTP API - level from the exception (business and
+  validation errors as warnings), `ExcludeExceptionFromLoggerSelectors` honoured, `IExceptionNotifier`
+  called.
+
+## [10.0.0-rc.18] - 2026-10-04
+
+### Added
+
+#### aspnetcore-mcp
+
+- **New top-level tree `aspnetcore-mcp/`, package `Dignite.Abp.AspNetCore.Mcp`.** Hosts the one
+  Model Context Protocol server an ABP application can have and lets any number of modules contribute
+  tools, resources and prompts to it. The C# MCP SDK keeps one server per service container, so
+  everything that exists once per server - transport, the `/mcp` endpoint, ABP-permission filtering,
+  one structured error envelope, server info and instructions - now lives here instead of in whichever
+  feature module happened to configure it first. Each contributor claims a namespace with
+  `AddAbpMcpModule(name, …)` (tool/prompt prefix `{name}_`, resource URI scheme), and the server
+  refuses to start on any overlap: the SDK otherwise keeps the first of two same-named tools and drops
+  the other silently. Tool classes are resolved from ABP's container on every call, so
+  `[Dependency(ReplaceServices = true)]` works for them, which the SDK's own `WithTools<T>()` does not
+  allow. The endpoint authorizes against the default policy and `AddAbpMcpAuthenticationDiscovery`
+  takes over only the 401 challenge (RFC 9728), so ABP's dynamic claims are not discarded on MCP
+  requests. Not a fourth module: it carries no domain model, and depending on it is not the
+  cross-module reference the "three modules never reference each other" invariant guards against.
+  Modules with dynamic resources contribute to `resources/list` through `IAbpMcpResourceListContributor`
+  instead of the SDK's single `WithListResourcesHandler` slot. The endpoint carries a request-body limit
+  (`AbpMcpServerOptions.MaxRequestBodySize`, 4 MB by default) that routing applies before the body is read,
+  since a tool can only check its arguments once the whole request is already buffered.
+  `AddAbpMcpAuthenticationDiscovery` wraps the host's `IAuthorizationMiddlewareResultHandler` with its
+  lifetime intact and fails startup if a later registration replaces the wrapper; a second call only
+  replaces the metadata, and the MCP scheme no longer forwards authentication to a `Bearer` scheme the host
+  may not have (the SDK's default). Primitives registered outside any module can be admitted with
+  `AbpMcpServerOptions.AllowUnownedPrimitives`, for third-party tool libraries.
+
+#### file-storing
+
+- **New package `Dignite.FileExplorer.Mcp`**: `file_explorer_*` MCP tools over the file explorer -
+  list containers, list/create directories, list/get/upload/update/delete files - each calling the
+  existing application services. Only containers the host lists in `FileExplorerMcpOptions.Containers`
+  are reachable. Uploads are base64 and capped by `FileExplorerMcpOptions.MaxUploadSize` (5 MB); the module
+  raises the MCP endpoint's request-body limit just enough to fit that, so a larger request is refused before
+  it is read. A file looked up by id answers "not found" alike when it is missing, unreadable to the caller,
+  or in a container not exposed to MCP, so probing ids reveals nothing. A listed container that cannot be
+  read is left out of `file_explorer_list_containers` (and logged) instead of failing it for the others.
+
+### Fixed
+
+#### file-storing
+
+- **`FileDescriptorAppService.GetListAsync` listed every user's files to a caller with no user id.** Without
+  `Files.Management` it narrows the list to `CreatorId = CurrentUser.Id` - but for a principal authenticated
+  without a user (a client-credentials token) that is `null`, and the repository reads a `null` creator as
+  "no owner filter", returning all files in the container. Such a caller owns no files, so it now gets an
+  empty list. Reachable over the REST API and, now, through `file_explorer_list_files`.
+- **`DirectoryDescriptorAppService.GetListAsync`/`CreateAsync` threw a null dereference for a caller with no
+  user id** (`CurrentUser.Id.Value`). Directories are per user, so such a caller is now refused with an
+  authorization error carrying the new, localized code `Dignite.FileExplorer:Directory:0008`.
+- **`FileDescriptorAppService.CreateAsync` accepted any `DirectoryId`.** Moving a file (`UpdateAsync`) already
+  required the directory to exist and share the file's container, owner and tenant; creating one checked
+  nothing, so a new file could be filed under another user's or another container's directory, or a directory
+  that does not exist. Creation now applies the same check, before anything is written to blob storage, and
+  answers `Dignite.FileExplorer:Directory:0002` (directory does not exist) like a move does.
+
+### Changed
+
+#### file-storing
+
+- The file route prefix moved from a private constant on `FileDescriptorController` to
+  `FileExplorerRemoteServiceConsts.FilesRoutePrefix`, so the HTTP API and the MCP tools build file URLs
+  from one definition. The route itself is unchanged.
+
+## [10.0.0-rc.17] - 2026-09-23
 
 ### Fixed
 
@@ -41,6 +911,35 @@ so it stays clear which part of the repository actually moved.
   as a CDN edge lagging the packument just read, and a real duplicate fails identically on every
   attempt, so it cannot be retried away. A propagation timeout now says so in those words, to stop a
   future reader from re-diagnosing it as the duplicate of issue #211.
+
+#### flex-fields
+
+- **`@dignite/ng.flex-fields-ckeditor` and `@dignite/ng.flex-fields-file-explorer` now depend on their
+  sibling packages at the exact release version instead of a `^` range.** Both declared
+  `@dignite/ng.flex-fields` (and the file-explorer bolt-on also `@dignite/ng.file-explorer`) as
+  `^10.0.0-rc.16`. Every `@dignite/ng.*` package ships from this repository at one lockstep version,
+  from the same commit, so a range could never admit a second compatible version — only an *older*
+  published sibling, which is exactly what Yarn Classic picks whenever npm's `latest` tag trails the
+  newest version. That leaves two copies of `@dignite/ng.flex-fields` in a host, and because Angular DI
+  keys off object identity, the module-scoped `FLEX_FIELD_TYPES` token becomes two distinct keys:
+  `provideCKEditorFieldType()` registers into one while `FieldTypeResolver` reads the other, so every
+  field type looks unregistered at runtime with nothing failing at install or build time. That is the
+  actual root cause of issue #211, which the single-copy checks in `release.yml` had only been
+  detecting. A host must now install every `@dignite/ng.*` package at the same version — which it
+  already had to for them to work together. `verify-version-lockstep.ps1` requires the exact version
+  for any `@dignite/*` dependency, so CI rejects a range reintroduced here.
+- **`DateTimeViewComponent`, the read-only view for `DateTime` fields, ignored the field's
+  `DateTime.InputMode` configuration and always rendered `value | shortDateTime`.** A field configured
+  for `InputMode = Date` or `InputMode = Month` therefore showed a spurious time part in every
+  read-only context — a bare field, or a `Table` column rendered through `ff-table-view`, which
+  dispatches to this same component via `ff-flex-field-view`. The edit-mode counterpart,
+  `DateTimeControlComponent`, already read `configuration['DateTime.InputMode']`, looked up the
+  matching Angular `DatePipe` format string in `DATE_INPUT_MODE_FORMATS`, and formatted with it — the
+  view component never did the same lookup despite receiving the same `field.configuration` on its
+  `fields` input. `DateTimeViewComponent` now performs that lookup itself, injecting `DatePipe` the
+  same way, and falls back to the `shortDateTime` pipe only when no `fields` input is bound or the
+  configured mode isn't in the table, so existing usages that never pass `field.configuration` keep
+  rendering exactly as before.
 
 ### Added
 
@@ -80,22 +979,17 @@ so it stays clear which part of the repository actually moved.
   family-wide: `true` silences every bundle loaded through this service, in every
   `@dignite/ng.flex-fields*` package. (#232)
 
-### Fixed
+### Security
 
-#### flex-fields
+#### notifications
 
-- **`DateTimeViewComponent`, the read-only view for `DateTime` fields, ignored the field's
-  `DateTime.InputMode` configuration and always rendered `value | shortDateTime`.** A field configured
-  for `InputMode = Date` or `InputMode = Month` therefore showed a spurious time part in every
-  read-only context — a bare field, or a `Table` column rendered through `ff-table-view`, which
-  dispatches to this same component via `ff-flex-field-view`. The edit-mode counterpart,
-  `DateTimeControlComponent`, already read `configuration['DateTime.InputMode']`, looked up the
-  matching Angular `DatePipe` format string in `DATE_INPUT_MODE_FORMATS`, and formatted with it — the
-  view component never did the same lookup despite receiving the same `field.configuration` on its
-  `fields` input. `DateTimeViewComponent` now performs that lookup itself, injecting `DatePipe` the
-  same way, and falls back to the `shortDateTime` pipe only when no `fields` input is bound or the
-  configured mode isn't in the table, so existing usages that never pass `field.configuration` keep
-  rendering exactly as before.
+- **`Dignite.Abp.Notifications.Emailing` now requires Scriban `>= 7.2.7`, lifting the vulnerable 7.2.1
+  that ABP 10.5.0 resolves.** The package reaches Scriban through `Volo.Abp.Emailing` →
+  `Volo.Abp.TextTemplating.Scriban` 10.5.0, which resolves Scriban 7.2.1 — affected by the
+  high-severity advisory GHSA-7jvp-hj45-2f2m. The root `Directory.Packages.props` now pins Scriban
+  7.2.7, and central transitive pinning promotes it into this package's own published dependency list,
+  so consumers restoring `Dignite.Abp.Notifications.Emailing` resolve the patched version too, not just
+  this repository's builds. The pin goes once ABP rolls forward past the advisory on its own.
 
 ## [10.0.0-rc.16] - 2026-09-05
 

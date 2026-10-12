@@ -9,6 +9,10 @@ import type { Editor } from 'ckeditor5';
 import { CKEDITOR5_STYLE } from './ckeditor-style';
 import { CKEditorControlComponent } from './ckeditor-control.component';
 import { CKEditorUploadAdapter } from './ckeditor-upload-adapter';
+import { CKEDITOR_UPLOAD_PROVIDER } from './ckeditor-upload-provider';
+import { CKEDITOR_CONFIG_CONTRIBUTORS, CKEditorConfigContributor } from './ckeditor-config-contributor';
+import { CKEditorContentFormat } from './ckeditor-content-format';
+import { CKEditorMode } from './ckeditor-mode';
 
 // ngOnInit's own describe block mocks this - plain stand-ins for every plugin class
 // buildEditorConfig/resolveEditorClass reference, none of which that test ever instantiates or
@@ -168,7 +172,10 @@ describe('CKEditorControlComponent', () => {
       return build(fieldValue({ field: { ...fieldValue().field, configuration } })).fixture.componentInstance;
     }
 
-    it('wires a file-explorer upload adapter when an images container is configured', () => {
+    it('wires the upload adapter when the host provides an upload provider and an images container is configured', () => {
+      TestBed.configureTestingModule({
+        providers: [{ provide: CKEDITOR_UPLOAD_PROVIDER, useValue: { upload: () => Promise.resolve('/files/x.png') } }],
+      });
       const component = componentFor({ 'CKEditor.ImagesContainerName': 'pics' });
       const fileRepository: { createUploadAdapter?: (loader: unknown) => unknown } = {};
       const editor = { plugins: { get: vi.fn(() => fileRepository) } } as unknown as Editor;
@@ -180,7 +187,19 @@ describe('CKEditorControlComponent', () => {
       expect(fileRepository.createUploadAdapter!({})).toBeInstanceOf(CKEditorUploadAdapter);
     });
 
+    it('does not touch FileRepository when the host provides no upload provider', () => {
+      const component = componentFor({ 'CKEditor.ImagesContainerName': 'pics' });
+      const editor = { plugins: { get: vi.fn() } } as unknown as Editor;
+
+      component.onReady(editor);
+
+      expect(editor.plugins.get).not.toHaveBeenCalled();
+    });
+
     it('does not touch FileRepository when no images container is configured', () => {
+      TestBed.configureTestingModule({
+        providers: [{ provide: CKEDITOR_UPLOAD_PROVIDER, useValue: { upload: () => Promise.resolve('/files/x.png') } }],
+      });
       const component = componentFor({});
       const editor = { plugins: { get: vi.fn() } } as unknown as Editor;
 
@@ -228,6 +247,29 @@ describe('CKEditorControlComponent', () => {
       });
 
       expect(fixture.nativeElement.textContent).not.toContain('Loading');
+    });
+
+    it("hands the composed configuration and the field to the host's config contributors", async () => {
+      const contributor = vi.fn<CKEditorConfigContributor>(config => ({ ...config, placeholder: 'From the host' }));
+      TestBed.configureTestingModule({
+        providers: [{ provide: CKEDITOR_CONFIG_CONTRIBUTORS, multi: true, useValue: contributor }],
+      });
+      const field = fieldValue();
+      const { fixture } = build(field);
+
+      fixture.detectChanges();
+      await vi.waitFor(() => expect(fixture.componentInstance.editor()).not.toBeNull());
+
+      expect(contributor).toHaveBeenCalledTimes(1);
+      expect(contributor).toHaveBeenCalledWith(
+        expect.objectContaining({ licenseKey: 'GPL' }),
+        expect.objectContaining({
+          field: field.field,
+          mode: CKEditorMode.Full,
+          contentFormat: CKEditorContentFormat.Html,
+        }),
+      );
+      expect(fixture.componentInstance.editor()!.editorConfig.placeholder).toBe('From the host');
     });
 
     // The Mode -> editor class / ContentFormat -> plugin mapping itself is already covered by

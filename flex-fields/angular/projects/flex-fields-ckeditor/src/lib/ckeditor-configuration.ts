@@ -11,9 +11,8 @@ export class CKEditorConfiguration {
 
   'CKEditor.ContentFormat': unknown = [CKEditorContentFormat.Html];
 
-  // No fallback container: unlike FileExplorerConfiguration's FileContainerName, leaving this empty
-  // does not make the field unusable - CKEditorControlComponent just omits the image-upload toolbar
-  // button (see ckeditor-editor-config.ts).
+  // No fallback container: leaving this empty does not make the field unusable -
+  // CKEditorControlComponent just omits the image-upload toolbar button (see ckeditor-editor-config.ts).
   'CKEditor.ImagesContainerName': unknown = [''];
 
   'CKEditor.InitialContent': unknown = [''];

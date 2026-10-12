@@ -1,0 +1,9 @@
+{
+  "culture": "zh-Hans",
+  "texts": {
+    "Dignite.Abp.BlobStoring.Imaging:ImageTooLarge": "图片过大，无法处理！不能超过 {MaxWidth}x{MaxHeight} 像素（总计 {MaxPixels} 像素）。",
+    "Dignite.Abp.BlobStoring.Imaging:ImageTooSmall": "图片过小！宽度至少为 {MinWidth} 像素，高度至少为 {MinHeight} 像素。",
+    "Dignite.Abp.BlobStoring.Imaging:ImageDecodeTimeout": "图片处理超时（超过 {DecodeTimeoutSeconds} 秒）！",
+    "Dignite.Abp.BlobStoring.Imaging:ImageProcessingFailed": "无法处理该图片！"
+  }
+}

@@ -30,6 +30,11 @@ public partial class UserNotificationClientProxy : ClientProxyBase<IUserNotifica
         return await RequestAsync<int>(nameof(GetUnreadCountAsync));
     }
 
+    public virtual async Task<ListResultDto<UserNotificationGroupDto>> GetGroupsAsync()
+    {
+        return await RequestAsync<ListResultDto<UserNotificationGroupDto>>(nameof(GetGroupsAsync));
+    }
+
     public virtual async Task MarkAsReadAsync(Guid notificationId)
     {
         await RequestAsync(nameof(MarkAsReadAsync), new ClientProxyRequestTypeValue

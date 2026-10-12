@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, NgModule, Output, forwardRef } from '@angular/core';
+import { Component, EventEmitter, Input, NgModule, Output, forwardRef, ChangeDetectionStrategy } from '@angular/core';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
 
 /**
@@ -23,6 +23,7 @@ import { NG_VALUE_ACCESSOR } from '@angular/forms';
   // eslint-disable-next-line @angular-eslint/prefer-standalone -- mirrors the real package's NgModule-based CKEditorModule, see comment above
   standalone: false,
   template: '',
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => CkeditorAngularMockComponent), multi: true }],
 })
 export class CkeditorAngularMockComponent {

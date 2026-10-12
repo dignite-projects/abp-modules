@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, inject } from '@angular/core';
+import { Component, ElementRef, HostListener, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, ReactiveFormsModule } from '@angular/forms';
 import { readStringList } from '../../utils';
@@ -64,6 +64,7 @@ import { findTreeNode, toTreeNodes } from './tree-node';
       }
     `,
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CommonModule, ReactiveFormsModule, TreePickerNodesComponent],
 })
 export class TreeSearchComponent extends TreePickerBase {

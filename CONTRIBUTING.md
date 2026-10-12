@@ -11,16 +11,16 @@ dotnet build Dignite.Abp.Modules.slnx
 dotnet test Dignite.Abp.Modules.slnx
 
 # One module in isolation (same projects, smaller graph)
-dotnet build file-storing/Dignite.FileExplorer.slnx
-dotnet build notifications/Dignite.NotificationCenter.slnx
+dotnet build blob-storing/Dignite.Abp.BlobStoring.slnx
+dotnet build notifications/Dignite.Abp.Notifications.slnx
 ```
 
-The Angular libraries are npm workspaces, built separately from MSBuild:
+The Angular libraries live in two Angular CLI workspaces, installed with Yarn Classic (v1) and built
+separately from MSBuild. (`blob-storing/` has none: it is a .NET library layer only.)
 
 ```bash
-cd file-storing/angular  && npm install --legacy-peer-deps && npm run build:lib
-cd notifications/angular && npm install && npm run build:lib
-cd flex-fields/angular   && npm install --legacy-peer-deps && npm run build:lib
+cd notifications/angular && yarn install && yarn build:lib
+cd flex-fields/angular   && yarn install && yarn build:lib && yarn build:lib:ckeditor
 ```
 
 ## Code conventions
@@ -34,10 +34,11 @@ contributors. They're split by how the content loads:
 - **Root `.claude/skills/`** — 16 generic `abp-*` skills covering ABP itself (`abp-core`, `abp-ddd`,
   `abp-application-layer`, `abp-authorization`, `abp-ef-core`, `abp-mongodb`, `abp-testing`, …).
   These carry no module-specific content.
-- **`<module>/.claude/skills/`** — two per module: a **`*-conventions`** skill ("how *this* module
-  applies ABP") and a **`*-invariants`** skill ("what a change must not break").
+- **`<module>/.claude/skills/`** — in `blob-storing/` and `notifications/`, two per module: a
+  **`*-conventions`** skill ("how *this* module applies ABP") and a **`*-invariants`** skill ("what a
+  change must not break"). `flex-fields/` has none; its `CLAUDE.md` and design doc carry that content.
 
-`file-storing/`, `notifications/`, and `flex-fields/` have genuinely different DDD shapes,
+`blob-storing/`, `notifications/`, and `flex-fields/` have genuinely different DDD shapes,
 persistence conventions, and hard invariants. Where they disagree — repository convention, object
 mapper, distributed-event posture, test naming — **each module states its own** rather than sharing
 an averaged rule that would be wrong for all three. Where a module's `*-conventions` skill disagrees
@@ -46,8 +47,8 @@ with a generic `abp-*` skill, the module skill wins for code in that module.
 Start with:
 
 - `<module>/CLAUDE.md` — the layer map and the "add a feature" flow.
-- `file-storing/.claude/skills/file-storing-invariants/` — before touching the upload pipeline,
-  blob/DB writes, directory moves, authorization, or a DI lifetime.
+- `blob-storing/.claude/skills/blob-storing-invariants/` — before touching a contributor's stream
+  handling, buffering, MIME detection, an image contributor, or a stored format.
 - `notifications/.claude/skills/notifications-invariants/` — before touching `NotificationData`,
   any Notifier, the distributor, or a DI lifetime.
 
@@ -63,7 +64,7 @@ All library package versions live in the root [`Directory.Packages.props`](./Dir
 
 The demo hosts are the deliberate exception: each opts out of central package management and
 pins its own versions inline, via its own `Directory.Build.props` + `Directory.Packages.props`
-inside the project folder (`file-storing/host/.../`, `notifications/host/.../`,
+inside the project folder (`notifications/host/.../`,
 `flex-fields/demo/.../`). They are never published, so their dependency graph is allowed to drift
 from the libraries'.
 
@@ -78,14 +79,14 @@ project, and the version is repository-wide rather than per-module.
 ### One version for the whole repository (lockstep)
 
 **Every package in this repository ships the same version**, from the single `<Version>` in the root
-[`Directory.Build.props`](./Directory.Build.props): all 33 packable NuGet projects across the three
+[`Directory.Build.props`](./Directory.Build.props): every packable NuGet project across the three
 module trees and all three Angular npm packages. One `v*` tag, one release pipeline, one number.
 
-The consequence is **empty bumps**: a change to `file-storing/` alone still releases a new version of
+The consequence is **empty bumps**: a change to `blob-storing/` alone still releases a new version of
 every other module's package, whose content is identical to the previous release. That is accepted on
 purpose. The alternative — independent per-module versions in one repository — means consumers
 must reason about which `Dignite.Abp.Notifications` version pairs with which
-`Dignite.Abp.FileStoring` version, and the maintainers must run two release pipelines and two tag
+`Dignite.Abp.BlobStoring.Pipeline` version, and the maintainers must run two release pipelines and two tag
 namespaces. One number that sometimes moves for no reason is cheaper than a compatibility matrix
 that always needs checking.
 
@@ -93,12 +94,12 @@ There is therefore **no per-module versioning** and no per-project `<Version>`. 
 
 ### MAJOR tracks the ABP Framework version, not this repository's own breaking changes
 
-`file-storing/` and `notifications/` supersede legacy package lines already published on NuGet.org under this same
-`dignite-projects` org at versions `1.0.0` through `3.8.2` (`Dignite.Abp.Notifications*` and
-`Dignite.FileExplorer.*`). To make these releases unambiguously win NuGet.org's "latest version"
+`notifications/` supersedes a legacy package line already published on NuGet.org under this same
+`dignite-projects` org at versions `1.0.0` through `3.8.2` (`Dignite.Abp.Notifications*`; the other,
+`Dignite.FileExplorer.*`, left this repository in rc.25). To make these releases unambiguously win NuGet.org's "latest version"
 resolution — no package rename needed — `<Version>`'s **MAJOR** segment tracks the **major version
 of the ABP Framework** this release targets (pinned in `Directory.Packages.props`; currently ABP
-`10.5.0`, so MAJOR is `10`). Since ABP's major will not regress below 10, this permanently clears
+`10.7.0`, so MAJOR is `10`). Since ABP's major will not regress below 10, this permanently clears
 the legacy `3.8.2` line.
 
 **MINOR** and **PATCH** are this repository's own counters:
@@ -129,17 +130,19 @@ safe to upgrade, which is the opposite of what this project's positioning needs.
 
 | Property | Segments | Purpose |
 |----------|----------|---------|
-| `<Version>` in [`Directory.Build.props`](./Directory.Build.props) | 3-segment SemVer (+ optional pre-release suffix) | The NuGet package version for **all 33 packable projects across all three modules**, and the value a `v*` tag must match. **This is the release version.** |
-| `version` in [`file-storing/angular/projects/file-explorer/package.json`](./file-storing/angular/projects/file-explorer/package.json) | Same value as `<Version>` | npm version for `@dignite/ng.file-explorer`. |
+| `<Version>` in [`Directory.Build.props`](./Directory.Build.props) | 3-segment SemVer (+ optional pre-release suffix) | The NuGet package version for **every packable project across all three modules**, and the value a `v*` tag must match. **This is the release version.** |
 | `version` in [`notifications/angular/projects/notification-center/package.json`](./notifications/angular/projects/notification-center/package.json) | Same value as `<Version>` | npm version for `@dignite/ng.notification-center`. |
 | `version` in [`flex-fields/angular/projects/flex-fields/package.json`](./flex-fields/angular/projects/flex-fields/package.json) | Same value as `<Version>` | npm version for `@dignite/ng.flex-fields`. |
+| `version` in [`flex-fields/angular/projects/flex-fields-ckeditor/package.json`](./flex-fields/angular/projects/flex-fields-ckeditor/package.json) | Same value as `<Version>` | npm version for `@dignite/ng.flex-fields-ckeditor`. |
+| `@dignite/*` entries in those `package.json` files' `dependencies` / `peerDependencies` | Same value as `<Version>`, exact — never a `^` range | One package from this repository depending on another (the `flex-fields-ckeditor` bolt-on on `@dignite/ng.flex-fields`). A range would only ever admit an *older* sibling, which is how a host ends up with two copies of `@dignite/ng.flex-fields` — see issue #211. |
 | `<AssemblyVersion>` | 4-segment | Pinned at `1.0.0.0` and **never** bumped with `<Version>`, avoiding assembly-binding churn. Load-bearing for notifications specifically — see [`notifications-invariants`](./notifications/.claude/skills/notifications-invariants/SKILL.md) §1. Don't "fix" this to match `<Version>`. |
 | Git tag | `vX.Y.Z[-suffix]` | Created on the release commit; the release workflow reads `<Version>` and fails if the tag doesn't match — tags do not drive the version number. |
 | `## [x.y.z]` heading in [`CHANGELOG.md`](./CHANGELOG.md) | 3-segment SemVer (+ optional pre-release suffix) | Human-facing release notes, extracted verbatim into the GitHub Release body. |
 
 CI and the release workflow both run
 [`.github/scripts/verify-version-lockstep.ps1`](./.github/scripts/verify-version-lockstep.ps1),
-which fails the build if `<Version>` and **any** Angular package version drift apart.
+which fails the build if `<Version>` and **any** Angular package version drift apart, or if any
+`@dignite/*` dependency between those packages is not pinned to exactly that version.
 
 ### Cutting a release
 
@@ -161,29 +164,35 @@ breaking `site`'s restore.
    by module so readers can tell which half of the repo changed.
 2. In that same commit, bump `<Version>` in `Directory.Build.props` and `version` in every Angular
    `package.json` tracked by
-   [`verify-version-lockstep.ps1`](./.github/scripts/verify-version-lockstep.ps1) (currently five
-   packages) to `x.y.z`. This is the only time these values move; they then stay on `x.y.z` until
-   the commit that cuts the *next* release.
+   [`verify-version-lockstep.ps1`](./.github/scripts/verify-version-lockstep.ps1) (currently three
+   packages) to `x.y.z`, along with every `@dignite/*` dependency pin inside those files. This is
+   the only time these values move; they then stay on `x.y.z` until the commit that cuts the *next*
+   release.
 3. Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`. The release workflow
-   (`.github/workflows/release.yml`) triggers on `v*` tags; `workflow_dispatch` only builds and
-   packs artifacts and does not create a GitHub Release.
-4. Tagged releases publish the NuGet packages to NuGet.org and four of the five Angular libraries to
-   npm (`flex-fields-ckeditor` has no npmjs publish step yet — see `release.yml`). Pre-release npm
-   versions use the `next` dist-tag; stable versions use `latest`. `workflow_dispatch` remains a
-   private preview build and does not publish to either public registry. npm requires every package
-   to have a `latest` tag, so when a package's first-ever public version is a pre-release it
-   temporarily owns both `next` and `latest`; the first stable release moves `latest` to the stable
-   version.
+   (`.github/workflows/release.yml`) triggers on `v*` tags and ends by creating a **draft** GitHub
+   Release from the CHANGELOG section — review and publish it by hand. `workflow_dispatch` does not
+   create a GitHub Release.
+4. Tagged releases publish the NuGet packages to NuGet.org and all three Angular libraries to npm. The
+   npm dist-tag comes from [`build/resolve-npm-dist-tag.mjs`](./build/resolve-npm-dist-tag.mjs): a
+   stable version always takes `latest`; a pre-release also takes `latest` for as long as no stable
+   version of these packages has ever been published, and `next` from then on, so the first stable
+   release retires that rule by itself. While pre-releases hold `latest`, the workflow does not move
+   `next` — it has no standing npm credential to run `npm dist-tag add` with — so `next` stays
+   wherever it was last set by hand. Pre-releases, tagged or dispatched, are also mirrored to GitHub
+   Packages (npm under `@dignite-projects/*`, since that registry requires the scope to match the
+   owning org). `workflow_dispatch` is a private preview build: it pushes a pre-release to GitHub
+   Packages only and does not publish to either public registry.
 5. NuGet.org publishing uses Trusted Publishing rather than a stored API key. The NuGet.org policy
    must select the intended package owner and match GitHub repository
    `dignite-projects/abp-modules` plus workflow file `release.yml`. Set the repository variable
    `NUGET_USER` to the NuGet profile name used by `NuGet/login@v1`; never use an email address for
    this value.
 
-Re-running `workflow_dispatch` without bumping the version first is safe on the NuGet side
-(`--skip-duplicate`), but **fails** on the Angular/npm side — GitHub Packages' npm registry rejects a
-duplicate publish outright, and this workflow doesn't soft-skip that error the way `site`'s does.
-Only dispatch a preview build when you actually mean to preview a version that hasn't shipped yet.
+Re-running `workflow_dispatch` without bumping the version first does not fail: NuGet pushes use
+`--skip-duplicate`, and the GitHub Packages npm step treats an already-published version (`E409`) as a
+soft skip, since that registry refuses to overwrite one. It also publishes nothing new, so it only
+re-verifies the build. The same soft skip is what lets a failed tag run be re-run past the GitHub
+Packages step to reach npmjs.
 
 > **Migrating from the old repositories:** these packages were previously released from
 > `dignite-projects/abp-file-storing` and `dignite-projects/abp-notifications`. Each package's

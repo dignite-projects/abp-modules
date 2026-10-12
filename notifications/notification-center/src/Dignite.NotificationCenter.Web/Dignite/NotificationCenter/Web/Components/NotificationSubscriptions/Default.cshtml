@@ -1,4 +1,5 @@
 @using Dignite.NotificationCenter.Localization
+@using System.Linq
 @using Microsoft.Extensions.Localization
 @model System.Collections.Generic.List<Dignite.NotificationCenter.NotificationSubscriptionDto>
 @inject IStringLocalizer<NotificationCenterResource> L
@@ -12,30 +13,36 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var subscription in Model)
+        @foreach (var group in Model.GroupBy(subscription => subscription.GroupName))
         {
-            <tr>
-                <td>@(subscription.DisplayName ?? subscription.NotificationName)</td>
-                <td>
-                    @if (subscription.EntityTypeName == null)
-                    {
-                        @L["AllEntities"]
-                    }
-                    else
-                    {
-                        <code>@subscription.EntityTypeName / @subscription.EntityId</code>
-                    }
-                </td>
-                <td>@subscription.Description</td>
-                <td>
-                    <input type="checkbox"
-                           class="dignite-subscription-toggle form-check-input"
-                           data-notification-name="@subscription.NotificationName"
-                           data-entity-type-name="@subscription.EntityTypeName"
-                           data-entity-id="@subscription.EntityId"
-                           checked="@subscription.IsSubscribed" />
-                </td>
+            <tr class="dignite-subscriptions-group">
+                <th colspan="4">@(group.First().GroupDisplayName ?? group.Key)</th>
             </tr>
+            @foreach (var subscription in group)
+            {
+                <tr>
+                    <td>@(subscription.DisplayName ?? subscription.NotificationName)</td>
+                    <td>
+                        @if (subscription.EntityTypeName == null)
+                        {
+                            @L["AllEntities"]
+                        }
+                        else
+                        {
+                            <code>@subscription.EntityTypeName / @subscription.EntityId</code>
+                        }
+                    </td>
+                    <td>@subscription.Description</td>
+                    <td>
+                        <input type="checkbox"
+                               class="dignite-subscription-toggle form-check-input"
+                               data-notification-name="@subscription.NotificationName"
+                               data-entity-type-name="@subscription.EntityTypeName"
+                               data-entity-id="@subscription.EntityId"
+                               checked="@subscription.IsSubscribed" />
+                    </td>
+                </tr>
+            }
         }
     </tbody>
 </table>

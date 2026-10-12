@@ -1,0 +1,9 @@
+{
+  "culture": "ja",
+  "texts": {
+    "Dignite.Abp.BlobStoring.Imaging:ImageTooLarge": "画像が大きすぎるため処理できません。{MaxWidth}x{MaxHeight} ピクセル（合計 {MaxPixels} ピクセル）を超えることはできません。",
+    "Dignite.Abp.BlobStoring.Imaging:ImageTooSmall": "画像が小さすぎます。幅は {MinWidth} ピクセル以上、高さは {MinHeight} ピクセル以上である必要があります。",
+    "Dignite.Abp.BlobStoring.Imaging:ImageDecodeTimeout": "画像の処理がタイムアウトしました（{DecodeTimeoutSeconds} 秒を超えました）。",
+    "Dignite.Abp.BlobStoring.Imaging:ImageProcessingFailed": "画像を処理できませんでした。"
+  }
+}

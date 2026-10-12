@@ -38,10 +38,8 @@ if (!version) {
 
 /** Every package this repository publishes to npmjs. They are versioned in lockstep. */
 const packages = [
-  '@dignite/ng.file-explorer',
   '@dignite/ng.notification-center',
   '@dignite/ng.flex-fields',
-  '@dignite/ng.flex-fields-file-explorer',
   '@dignite/ng.flex-fields-ckeditor',
 ];
 

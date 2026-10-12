@@ -2,7 +2,6 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": "./",
     "outDir": "./dist/out-tsc",
     "sourceMap": true,
     "declaration": false,
@@ -16,12 +15,13 @@
     "lib": ["ES2022", "dom", "esnext.disposable"],
     "paths": {
       "@dignite/ng.notification-center": [
-        "projects/notification-center/src/public-api.ts"
+        "./projects/notification-center/src/public-api.ts"
       ],
       "@dignite/ng.notification-center/config": [
-        "projects/notification-center/config/src/public-api.ts"
+        "./projects/notification-center/config/src/public-api.ts"
       ]
     },
+    "strict": false,
     "useDefineForClassFields": false
   },
   "angularCompilerOptions": {

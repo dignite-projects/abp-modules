@@ -8,11 +8,14 @@
       "vitest/globals"
     ],
     "paths": {
-      "@dignite/ng.flex-fields": ["dist/flex-fields"]
+      "@dignite/ng.flex-fields": ["../../dist/flex-fields"]
     }
   },
   "include": [
     "src/**/*.d.ts",
     "src/**/*.spec.ts"
-  ]
+  ],
+  "angularCompilerOptions": {
+    "strictTemplates": false
+  }
 }

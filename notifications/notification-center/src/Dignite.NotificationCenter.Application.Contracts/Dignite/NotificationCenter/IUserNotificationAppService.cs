@@ -15,6 +15,15 @@ public interface IUserNotificationAppService : IApplicationService
     /// <see cref="GetListAsync"/>'s <c>TotalCount</c> with the desired state filter.</summary>
     Task<int> GetUnreadCountAsync();
 
+    /// <summary>
+    /// Gets the inbox groups for the current user, in definition order, each with its unread count (from one grouped
+    /// unread-count query, plus one count for the "other" bucket when it has no unread rows). A group is listed when the user can currently receive one of its definitions or still has unread
+    /// notifications in it; <see cref="NotificationCenterConsts.OtherGroupName"/> is appended only when the user has
+    /// notifications whose definition no longer exists. Meant for the inbox page — the bell badge uses
+    /// <see cref="GetUnreadCountAsync"/>.
+    /// </summary>
+    Task<ListResultDto<UserNotificationGroupDto>> GetGroupsAsync();
+
     Task MarkAsReadAsync(Guid notificationId);
 
     Task MarkAllAsReadAsync();

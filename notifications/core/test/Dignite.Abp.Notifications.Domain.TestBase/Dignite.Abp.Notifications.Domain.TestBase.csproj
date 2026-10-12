@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <!-- Shared test library, not a runnable test assembly: it holds the abstract definition store
+         scenarios (*_Tests<TInfrastructure>) but no test runner; the EF Core and MongoDB test projects run them. -->
+    <IsTestProject>false</IsTestProject>
+    <RootNamespace />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="Volo.Abp.TestBase" />
+    <PackageReference Include="Volo.Abp.Autofac" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Dignite.Abp.Notifications.Domain\Dignite.Abp.Notifications.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

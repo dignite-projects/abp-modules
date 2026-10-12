@@ -1,4 +1,4 @@
-# Debug build of the whole monorepo (both module trees + the two demo hosts) via the aggregate
+# Debug build of the whole monorepo (every module tree + the two demo hosts) via the aggregate
 # solution. Run from anywhere: `./build/build-all.ps1`.
 # For a production-shaped build (Release, which is where ConfigureAwait.Fody weaving kicks in) use
 # build-all-release.ps1; to run the tests use test-all.ps1.

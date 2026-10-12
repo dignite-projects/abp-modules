@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CoreModule } from '@abp/ng.core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FieldTypeConfigBase } from '../field-type-config-base';
@@ -11,6 +11,7 @@ let nextRadioId = 0;
 @Component({
   selector: 'ff-text-config',
   templateUrl: './text-config.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CoreModule, ReactiveFormsModule],
 })
 export class TextConfigComponent extends FieldTypeConfigBase {

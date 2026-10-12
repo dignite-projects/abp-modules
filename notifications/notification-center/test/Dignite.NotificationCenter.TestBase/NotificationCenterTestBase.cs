@@ -1,6 +1,7 @@
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Dignite.Abp.Notifications;
 using Volo.Abp;
 using Volo.Abp.Modularity;
 using Volo.Abp.Security.Claims;
@@ -32,6 +33,18 @@ public abstract class NotificationCenterTestBase<TStartupModule> : AbpIntegrated
             isTransactional: isTransactional ?? false);
         await func();
         await uow.CompleteAsync();
+    }
+
+    /// <summary>The payload JSON a publisher would put on <see cref="NotificationInfo.DataJson"/>.</summary>
+    protected virtual string? SerializeData(NotificationData? data)
+    {
+        return GetRequiredService<INotificationDataSerializer>().Serialize(data);
+    }
+
+    /// <summary>The typed view of stored payload JSON, read tolerantly as every reader does.</summary>
+    protected virtual NotificationData? DeserializeData(string? dataJson)
+    {
+        return GetRequiredService<INotificationDataSerializer>().Deserialize(dataJson);
     }
 
     protected virtual IDisposable ChangeCurrentUser(Guid userId)

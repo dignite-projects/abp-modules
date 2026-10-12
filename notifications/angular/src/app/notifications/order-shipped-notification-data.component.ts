@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { NotificationDataPayload } from '@dignite/ng.notification-center';
 
 @Component({
@@ -15,6 +15,7 @@ import { NotificationDataPayload } from '@dignite/ng.notification-center';
       </div>
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       :host {

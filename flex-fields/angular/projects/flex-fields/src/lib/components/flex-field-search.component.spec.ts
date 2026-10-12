@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { TestBed } from '@angular/core/testing';
 import { CoreTestingModule } from '@abp/ng.core/testing';
@@ -7,7 +7,11 @@ import { FlexFieldValue } from '../models';
 import { provideFlexFields, provideFlexFieldTypes } from '../providers';
 import { FlexFieldSearchComponent } from './flex-field-search.component';
 
-@Component({ selector: 'ff-stub-search', template: '<span>stub</span>' })
+@Component({
+  selector: 'ff-stub-search',
+  changeDetection: ChangeDetectionStrategy.Eager,
+  template: '<span>stub</span>',
+})
 class StubSearchComponent {
   @Input() fields?: FlexFieldValue;
   @Input() parentFieldName?: string;

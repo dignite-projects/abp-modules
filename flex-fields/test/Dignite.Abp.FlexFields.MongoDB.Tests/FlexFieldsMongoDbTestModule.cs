@@ -11,7 +11,7 @@ namespace Dignite.Abp.FlexFields.MongoDB;
 [DependsOn(
     typeof(AbpTestBaseModule),
     typeof(AbpAutofacModule),
-    typeof(FlexFieldsMongoDbModule)
+    typeof(AbpFlexFieldsMongoDbModule)
     )]
 public class FlexFieldsMongoDbTestModule : AbpModule
 {
