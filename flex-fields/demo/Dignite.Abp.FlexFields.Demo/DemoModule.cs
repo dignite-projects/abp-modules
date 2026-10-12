@@ -112,15 +112,15 @@ namespace Dignite.Abp.FlexFields.Demo;
     typeof(AbpEntityFrameworkCoreSqliteModule),
 
     // FlexFields kernel - the demo is a downstream consumer, wired up in Entities/ and Services/FlexFields/
-    typeof(FlexFieldsEntityFrameworkCoreModule),
+    typeof(AbpFlexFieldsEntityFrameworkCoreModule),
 
     // SSR display/search for the flex fields Products/ProductFields already have - see
     // Controllers/ProductsWebController.cs and Views/ProductsWeb/Index.cshtml.
-    typeof(FlexFieldsWebModule),
+    typeof(AbpFlexFieldsWebModule),
 
     // CKEditor field type bolt-on plus its SSR view (Markdig + HtmlSanitizer flow through
     // transitively) - one module dependency for both.
-    typeof(FlexFieldsCKEditorWebModule)
+    typeof(AbpFlexFieldsCKEditorWebModule)
 )]
 public class DemoModule : AbpModule
 {

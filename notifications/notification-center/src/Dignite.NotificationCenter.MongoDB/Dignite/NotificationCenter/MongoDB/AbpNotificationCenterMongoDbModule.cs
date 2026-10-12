@@ -5,10 +5,10 @@ using Volo.Abp.MongoDB;
 namespace Dignite.NotificationCenter.MongoDB;
 
 [DependsOn(
-    typeof(NotificationCenterDomainModule),
+    typeof(AbpNotificationCenterDomainModule),
     typeof(AbpMongoDbModule)
     )]
-public class NotificationCenterMongoDbModule : AbpModule
+public class AbpNotificationCenterMongoDbModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {

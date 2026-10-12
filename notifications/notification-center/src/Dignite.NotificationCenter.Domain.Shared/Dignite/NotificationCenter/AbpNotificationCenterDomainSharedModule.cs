@@ -9,13 +9,13 @@ namespace Dignite.NotificationCenter;
 [DependsOn(
     typeof(AbpLocalizationModule)
     )]
-public class NotificationCenterDomainSharedModule : AbpModule
+public class AbpNotificationCenterDomainSharedModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         Configure<AbpVirtualFileSystemOptions>(options =>
         {
-            options.FileSets.AddEmbedded<NotificationCenterDomainSharedModule>();
+            options.FileSets.AddEmbedded<AbpNotificationCenterDomainSharedModule>();
         });
 
         Configure<AbpLocalizationOptions>(options =>

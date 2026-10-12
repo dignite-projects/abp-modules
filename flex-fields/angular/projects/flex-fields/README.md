@@ -163,7 +163,7 @@ Then render a field by role:
 ## Localization
 
 All strings resolve through the ABP `FlexFields` localization resource, which ships inside
-`Dignite.Abp.FlexFields.Abstractions`. Your host must depend on `FlexFieldsAbstractionsModule` for
+`Dignite.Abp.FlexFields.Abstractions`. Your host must depend on `AbpFlexFieldsAbstractionsModule` for
 them to reach the browser via the application-configuration endpoint.
 
 ## License

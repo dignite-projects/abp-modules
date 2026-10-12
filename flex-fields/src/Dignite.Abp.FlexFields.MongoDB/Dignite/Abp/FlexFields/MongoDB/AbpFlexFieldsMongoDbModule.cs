@@ -5,13 +5,13 @@ using Volo.Abp.MongoDB;
 namespace Dignite.Abp.FlexFields.MongoDB;
 
 /// <summary>
-/// Registers no services - deliberately, exactly like <c>FlexFieldsEntityFrameworkCoreModule</c>. This
+/// Registers no services - deliberately, exactly like <c>AbpFlexFieldsEntityFrameworkCoreModule</c>. This
 /// package ships no <c>MongoDbContext</c>, no collection and no repository: a downstream host owns its
 /// context and its collections, and reaches the kernel only through the abstract base classes here and
 /// <see cref="FlexFieldsMongoDbContextExtensions"/>. The dependency declarations exist so
 /// <c>FlexFieldConsts</c> and the field-type registrations are in the graph.
 /// <para>
-/// Contrast a module that owns entities (this repository's <c>NotificationCenterMongoDbModule</c>, say), which
+/// Contrast a module that owns entities (this repository's <c>AbpNotificationCenterMongoDbModule</c>, say), which
 /// calls <c>AddMongoDbContext</c> and registers repositories. FlexFields has no
 /// <c>ConnectionStringName</c> and no collection-name prefix, because it has nothing to name.
 /// </para>
@@ -23,12 +23,12 @@ namespace Dignite.Abp.FlexFields.MongoDB;
 /// </para>
 /// </summary>
 [DependsOn(
-    typeof(FlexFieldsDomainModule),
+    typeof(AbpFlexFieldsDomainModule),
     typeof(AbpMongoDbModule)
     )]
-public class FlexFieldsMongoDbModule : AbpModule
+public class AbpFlexFieldsMongoDbModule : AbpModule
 {
-    static FlexFieldsMongoDbModule()
+    static AbpFlexFieldsMongoDbModule()
     {
         // TryRegister: a host may create several ABP applications in one process (every integration test
         // class does), and BSON serializer registration is per-process, not per-application.

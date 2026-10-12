@@ -4,9 +4,9 @@ using Volo.Abp.Modularity;
 namespace Dignite.NotificationCenter.Push;
 
 [DependsOn(
-    typeof(NotificationCenterDomainModule),
+    typeof(AbpNotificationCenterDomainModule),
     typeof(AbpNotificationsPushModule)
     )]
-public class NotificationCenterPushModule : AbpModule
+public class AbpNotificationCenterPushModule : AbpModule
 {
 }
