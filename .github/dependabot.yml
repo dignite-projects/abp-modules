@@ -9,6 +9,12 @@ updates:
       github-actions:
         patterns:
           - "*"
+      # `groups` only batch version updates by default. Security updates open one PR per
+      # vulnerability unless a group opts in with `applies-to: security-updates`.
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
 
   - package-ecosystem: nuget
     directory: "/"
@@ -23,6 +29,10 @@ updates:
           - "Microsoft.*"
           - "System.*"
       others:
+        patterns:
+          - "*"
+      security:
+        applies-to: security-updates
         patterns:
           - "*"
     ignore:
@@ -54,6 +64,10 @@ updates:
       others:
         patterns:
           - "*"
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
     ignore:
       - dependency-name: "Volo.Abp.*"
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
@@ -81,6 +95,10 @@ updates:
           - "Microsoft.*"
           - "System.*"
       others:
+        patterns:
+          - "*"
+      security:
+        applies-to: security-updates
         patterns:
           - "*"
     ignore:
@@ -111,6 +129,10 @@ updates:
         patterns:
           - "@abp/ng.*"
       others:
+        patterns:
+          - "*"
+      security:
+        applies-to: security-updates
         patterns:
           - "*"
     ignore:
@@ -147,6 +169,10 @@ updates:
         patterns:
           - "@abp/ng.*"
       others:
+        patterns:
+          - "*"
+      security:
+        applies-to: security-updates
         patterns:
           - "*"
     ignore:
