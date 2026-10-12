@@ -16,7 +16,17 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+## [10.0.0-rc.29] - 2026-10-12
+
 ### Changed
+
+#### shared build and dependencies
+
+- Both Angular workspaces now build against Angular and Angular CLI `22.2.2` (from `22.0.8` / `22.0.9`),
+  with `ng-packagr` `22.2.4`, `zone.js` `0.16.3` and updated build/test dependencies. Library Angular peer
+  ranges remain `^22.0.0`; ABP remains `10.7.0`.
+- Updated the centrally managed Microsoft runtime packages and EF Core Proxies to `10.0.12`, Polly to
+  `8.8.0`, Markdig to `1.4.0`, Microsoft.NET.Test.Sdk to `18.10.1` and SourceLink to `10.0.401`.
 
 #### blob-storing
 
@@ -69,6 +79,13 @@ so it stays clear which part of the repository actually moved.
   - `NotificationCenterPushModule` → `AbpNotificationCenterPushModule`
   - `NotificationCenterPushIdentityModule` → `AbpNotificationCenterPushIdentityModule`
   - `NotificationCenterInstallerModule` → `AbpNotificationCenterInstallerModule`
+
+### Fixed
+
+#### notifications
+
+- Updated Angular workspace transitive dependencies including `hono`, `ip-address`, `proxy-addr`,
+  `js-yaml` and `source-map-js`, and the demo host's transitive `moment` dependency to `2.31.0`.
 
 ## [10.0.0-rc.28] - 2026-10-12
 
