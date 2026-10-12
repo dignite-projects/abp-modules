@@ -10,20 +10,20 @@ namespace Dignite.Abp.FlexFields.CKEditor.Web;
 /// Ships the one view under <c>Views/Shared/FlexFields/CKEditor.cshtml</c>, plus the shared
 /// <see cref="HtmlSanitizer"/>/<see cref="MarkdownPipeline"/> singletons that view depends on -
 /// depending on this module alone is enough for a host to get the CKEditor field type itself
-/// (<see cref="FlexFieldsCKEditorModule"/>), its SSR rendering, and safe HTML output, without wiring
+/// (<see cref="AbpFlexFieldsCKEditorModule"/>), its SSR rendering, and safe HTML output, without wiring
 /// three separate things.
 /// </summary>
 [DependsOn(
-    typeof(FlexFieldsWebModule),
-    typeof(FlexFieldsCKEditorModule)
+    typeof(AbpFlexFieldsWebModule),
+    typeof(AbpFlexFieldsCKEditorModule)
     )]
-public class FlexFieldsCKEditorWebModule : AbpModule
+public class AbpFlexFieldsCKEditorWebModule : AbpModule
 {
     public override void PreConfigureServices(ServiceConfigurationContext context)
     {
         PreConfigure<IMvcBuilder>(mvcBuilder =>
         {
-            mvcBuilder.AddCompiledRazorAssemblyPartIfNotExists(typeof(FlexFieldsCKEditorWebModule).Assembly);
+            mvcBuilder.AddCompiledRazorAssemblyPartIfNotExists(typeof(AbpFlexFieldsCKEditorWebModule).Assembly);
         });
     }
 

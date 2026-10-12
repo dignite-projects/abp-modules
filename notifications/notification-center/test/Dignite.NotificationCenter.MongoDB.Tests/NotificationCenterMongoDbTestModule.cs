@@ -7,7 +7,7 @@ namespace Dignite.NotificationCenter;
 
 [DependsOn(
     typeof(NotificationCenterTestBaseModule),
-    typeof(NotificationCenterMongoDbModule)
+    typeof(AbpNotificationCenterMongoDbModule)
     )]
 public class NotificationCenterMongoDbTestModule : AbpModule
 {

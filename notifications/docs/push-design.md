@@ -251,8 +251,8 @@ POST /api/notification-center/push-devices/unregister   { "provider": "Expo", "t
 ## 7. 桥接包：`Dignite.NotificationCenter.Push`
 
 ```csharp
-[DependsOn(typeof(NotificationCenterDomainModule), typeof(AbpNotificationsPushModule))]
-public class NotificationCenterPushModule : AbpModule { }
+[DependsOn(typeof(AbpNotificationCenterDomainModule), typeof(AbpNotificationsPushModule))]
+public class AbpNotificationCenterPushModule : AbpModule { }
 
 [Dependency(ReplaceServices = true)]
 [ExposeServices(typeof(IPushDeviceStore))]

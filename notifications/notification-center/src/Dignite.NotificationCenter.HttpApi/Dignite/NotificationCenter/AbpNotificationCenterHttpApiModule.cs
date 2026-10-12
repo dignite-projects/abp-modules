@@ -7,10 +7,10 @@ using Volo.Abp.Modularity;
 namespace Dignite.NotificationCenter;
 
 [DependsOn(
-    typeof(NotificationCenterApplicationContractsModule),
+    typeof(AbpNotificationCenterApplicationContractsModule),
     typeof(AbpAspNetCoreMvcModule)
     )]
-public class NotificationCenterHttpApiModule : AbpModule
+public class AbpNotificationCenterHttpApiModule : AbpModule
 {
     public override void PreConfigureServices(ServiceConfigurationContext context)
     {
@@ -20,7 +20,7 @@ public class NotificationCenterHttpApiModule : AbpModule
         // so this application-part registration (not ConventionalControllers.Create) is what's needed.
         PreConfigure<IMvcBuilder>(mvcBuilder =>
         {
-            mvcBuilder.AddApplicationPartIfNotExists(typeof(NotificationCenterHttpApiModule).Assembly);
+            mvcBuilder.AddApplicationPartIfNotExists(typeof(AbpNotificationCenterHttpApiModule).Assembly);
         });
     }
 

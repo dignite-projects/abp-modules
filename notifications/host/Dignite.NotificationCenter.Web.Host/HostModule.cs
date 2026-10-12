@@ -124,10 +124,10 @@ namespace Dignite.NotificationCenter.Web.Host;
     typeof(AbpNotificationsModule),
     typeof(AbpNotificationsSignalRModule),
     typeof(AbpNotificationsIdentityModule),
-    typeof(NotificationCenterApplicationModule),
-    typeof(NotificationCenterHttpApiModule),
-    typeof(NotificationCenterEntityFrameworkCoreModule),
-    typeof(NotificationCenterWebModule),
+    typeof(AbpNotificationCenterApplicationModule),
+    typeof(AbpNotificationCenterHttpApiModule),
+    typeof(AbpNotificationCenterEntityFrameworkCoreModule),
+    typeof(AbpNotificationCenterWebModule),
     // The definition store with its defaults: this host saves its definitions at startup (as every publisher of a split
     // deployment does) and, defining every notification it serves itself, does not read the store.
     typeof(AbpNotificationsEntityFrameworkCoreModule)

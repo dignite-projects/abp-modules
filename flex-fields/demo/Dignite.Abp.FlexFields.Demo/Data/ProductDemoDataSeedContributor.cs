@@ -243,7 +243,7 @@ public class ProductDemoDataSeedContributor : IDataSeedContributor, ITransientDe
         // ContentFormat = Markdown, Mode = Full, with an images container configured: Full must support
         // image upload regardless of content format, exactly like "content" above but exercising the
         // Markdown data processor + Image/ImageUpload plugin combination specifically (GFM serializes an
-        // uploaded image as "![](url)" - see FlexFieldsCKEditorWebModule for the read-back side).
+        // uploaded image as "![](url)" - see AbpFlexFieldsCKEditorWebModule for the read-back side).
         _ = await CreateFieldAsync(
             "notes", "Notes (Markdown)", CKEditorFieldType.ControlName,
             new FieldConfigurationDictionary
@@ -256,7 +256,7 @@ public class ProductDemoDataSeedContributor : IDataSeedContributor, ITransientDe
         // GFM-specific syntax on purpose (strikethrough, a pipe table): a plain CommonMark converter
         // would render these two constructs as literal source text instead of <del>/<table> markup, so
         // this is a direct check that the server's Markdig pipeline actually has .UseAdvancedExtensions()
-        // wired up (see FlexFieldsCKEditorWebModule) and that the client's `marked` call has GFM on
+        // wired up (see AbpFlexFieldsCKEditorWebModule) and that the client's `marked` call has GFM on
         // (its default).
         const string mouseNotesMarkdown =
             "## Care Instructions\n\n" +
