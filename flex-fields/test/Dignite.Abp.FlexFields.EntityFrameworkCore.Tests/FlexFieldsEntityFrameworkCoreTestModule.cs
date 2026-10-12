@@ -14,7 +14,7 @@ namespace Dignite.Abp.FlexFields.EntityFrameworkCore;
 [DependsOn(
     typeof(AbpTestBaseModule),
     typeof(AbpAutofacModule),
-    typeof(FlexFieldsEntityFrameworkCoreModule),
+    typeof(AbpFlexFieldsEntityFrameworkCoreModule),
     typeof(AbpEntityFrameworkCoreSqliteModule)
     )]
 public class FlexFieldsEntityFrameworkCoreTestModule : AbpModule

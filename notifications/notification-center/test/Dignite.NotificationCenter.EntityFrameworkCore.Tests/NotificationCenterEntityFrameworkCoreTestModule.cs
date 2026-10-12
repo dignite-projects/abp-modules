@@ -15,7 +15,7 @@ namespace Dignite.NotificationCenter;
 
 [DependsOn(
     typeof(NotificationCenterTestBaseModule),
-    typeof(NotificationCenterEntityFrameworkCoreModule),
+    typeof(AbpNotificationCenterEntityFrameworkCoreModule),
     typeof(AbpEntityFrameworkCoreSqliteModule)
     )]
 public class NotificationCenterEntityFrameworkCoreTestModule : AbpModule

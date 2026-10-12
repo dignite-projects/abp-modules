@@ -19,7 +19,7 @@ namespace Dignite.Abp.BlobStoring.Imaging;
     typeof(AbpTestBaseModule),
     typeof(AbpBlobStoringMemoryModule),
     typeof(AbpImagingSkiaSharpModule),
-    typeof(DigniteAbpBlobStoringImagingModule)
+    typeof(AbpBlobStoringImagingModule)
 )]
 public class BlobStoringImagingTestModule : AbpModule
 {

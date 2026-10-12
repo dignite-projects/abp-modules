@@ -5,10 +5,10 @@ using Volo.Abp.Modularity;
 namespace Dignite.NotificationCenter.EntityFrameworkCore;
 
 [DependsOn(
-    typeof(NotificationCenterDomainModule),
+    typeof(AbpNotificationCenterDomainModule),
     typeof(AbpEntityFrameworkCoreModule)
     )]
-public class NotificationCenterEntityFrameworkCoreModule : AbpModule
+public class AbpNotificationCenterEntityFrameworkCoreModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {

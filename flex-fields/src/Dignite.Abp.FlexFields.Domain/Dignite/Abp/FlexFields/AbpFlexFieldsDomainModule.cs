@@ -5,17 +5,17 @@ using Volo.Abp.Modularity;
 namespace Dignite.Abp.FlexFields;
 
 /// <summary>
-/// Joins the two independent sibling layers - <see cref="FlexFieldsAbstractionsModule"/> (field
-/// contracts and types) and <see cref="FlexFieldsDomainSharedModule"/> (column-length constants) - and
+/// Joins the two independent sibling layers - <see cref="AbpFlexFieldsAbstractionsModule"/> (field
+/// contracts and types) and <see cref="AbpFlexFieldsDomainSharedModule"/> (column-length constants) - and
 /// adds the DDD-aware seams a host implements or consumes: the provider seam, validation, and index
 /// maintenance. Same shape as ABP's own <c>AbpUsersDomainModule</c>.
 /// </summary>
 [DependsOn(
-    typeof(FlexFieldsAbstractionsModule),
-    typeof(FlexFieldsDomainSharedModule),
+    typeof(AbpFlexFieldsAbstractionsModule),
+    typeof(AbpFlexFieldsDomainSharedModule),
     typeof(AbpDddDomainModule)
     )]
-public class FlexFieldsDomainModule : AbpModule
+public class AbpFlexFieldsDomainModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {

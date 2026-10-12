@@ -20,7 +20,7 @@ namespace Dignite.Abp.FlexFields.Web;
 /// </para>
 /// </summary>
 [DependsOn(
-    typeof(FlexFieldsAbstractionsModule),
+    typeof(AbpFlexFieldsAbstractionsModule),
     // Needed for RazorPartialRenderer's IRazorViewEngine/ITempDataProvider - AbpAspNetCoreMvcModule
     // (this module's own dependency) is what actually calls AddMvc(). A real host ends up with these
     // anyway via its own AddControllersWithViews()/AddMvc()/AddRazorPages() call, but an
@@ -28,13 +28,13 @@ namespace Dignite.Abp.FlexFields.Web;
     // a consumer will.
     typeof(AbpAspNetCoreMvcUiModule)
     )]
-public class FlexFieldsWebModule : AbpModule
+public class AbpFlexFieldsWebModule : AbpModule
 {
     public override void PreConfigureServices(ServiceConfigurationContext context)
     {
         PreConfigure<IMvcBuilder>(mvcBuilder =>
         {
-            mvcBuilder.AddCompiledRazorAssemblyPartIfNotExists(typeof(FlexFieldsWebModule).Assembly);
+            mvcBuilder.AddCompiledRazorAssemblyPartIfNotExists(typeof(AbpFlexFieldsWebModule).Assembly);
         });
     }
 }

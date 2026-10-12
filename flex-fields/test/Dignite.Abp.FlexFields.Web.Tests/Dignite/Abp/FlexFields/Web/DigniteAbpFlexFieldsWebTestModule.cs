@@ -9,7 +9,7 @@ namespace Dignite.Abp.FlexFields.Web;
 [DependsOn(
     typeof(AbpTestBaseModule),
     typeof(AbpAutofacModule),
-    typeof(FlexFieldsWebModule)
+    typeof(AbpFlexFieldsWebModule)
     )]
 public class DigniteAbpFlexFieldsWebTestModule : AbpModule
 {

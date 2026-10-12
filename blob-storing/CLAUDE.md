@@ -102,8 +102,8 @@ list when it is generally useful.
 
 Two namespaces, because ABP maps a code namespace to exactly one localization resource and each package has its own
 resource: `Dignite.Abp.BlobStoring:…` (`BlobStoringPipelineErrorCodes`, resource `BlobStoringPipelineResource`, mapped in
-`DigniteAbpBlobStoringPipelineModule`) and `Dignite.Abp.BlobStoring.Imaging:…` (`BlobStoringImagingErrorCodes`, resource
-`BlobStoringImagingResource`, mapped in `DigniteAbpBlobStoringImagingModule`). Do not reuse the Pipeline namespace in the
+`AbpBlobStoringPipelineModule`) and `Dignite.Abp.BlobStoring.Imaging:…` (`BlobStoringImagingErrorCodes`, resource
+`BlobStoringImagingResource`, mapped in `AbpBlobStoringImagingModule`). Do not reuse the Pipeline namespace in the
 Imaging package, and do not add a third namespace without a third resource.
 
 ## `BlobStreamBuffering`

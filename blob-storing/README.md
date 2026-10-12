@@ -37,12 +37,12 @@ dotnet add package Dignite.Abp.BlobStoring.Imaging      # only for the image con
 dotnet add package Volo.Abp.Imaging.SkiaSharp           # one imaging provider, with the Imaging package
 ```
 
-Depend on the modules, and on the provider's module next to `DigniteAbpBlobStoringImagingModule`:
+Depend on the modules, and on the provider's module next to `AbpBlobStoringImagingModule`:
 
 ```csharp
 [DependsOn(
-    typeof(DigniteAbpBlobStoringPipelineModule),
-    typeof(DigniteAbpBlobStoringImagingModule),
+    typeof(AbpBlobStoringPipelineModule),
+    typeof(AbpBlobStoringImagingModule),
     typeof(AbpImagingSkiaSharpModule))]   // or AbpImagingImageSharpModule / AbpImagingMagickNetModule
 public class MyAppModule : AbpModule
 {

@@ -4,9 +4,9 @@ using Volo.Abp.Modularity;
 namespace Dignite.NotificationCenter.Push.Identity;
 
 [DependsOn(
-    typeof(NotificationCenterPushModule),
+    typeof(AbpNotificationCenterPushModule),
     typeof(AbpIdentityDomainModule)
     )]
-public class NotificationCenterPushIdentityModule : AbpModule
+public class AbpNotificationCenterPushIdentityModule : AbpModule
 {
 }

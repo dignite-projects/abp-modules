@@ -53,7 +53,7 @@ public class FlexFieldValueMigrator_Tests : FlexFieldsEntityFrameworkCoreTestBas
     [Fact]
     public void The_kernel_registers_a_migrator_for_every_host_type_with_no_downstream_code()
     {
-        // The open generic in FlexFieldsDomainModule is the whole adoption story - unlike
+        // The open generic in AbpFlexFieldsDomainModule is the whole adoption story - unlike
         // IFlexFieldIndexManager, no downstream subclass exists or is needed.
         Migrator.ShouldBeOfType<FlexFieldValueMigrator<TestArticle>>();
     }
