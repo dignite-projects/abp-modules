@@ -22,13 +22,13 @@ namespace Dignite.Abp.FlexFields;
 [DependsOn(
     typeof(AbpLocalizationModule)
     )]
-public class FlexFieldsAbstractionsModule : AbpModule
+public class AbpFlexFieldsAbstractionsModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         Configure<AbpVirtualFileSystemOptions>(options =>
         {
-            options.FileSets.AddEmbedded<FlexFieldsAbstractionsModule>();
+            options.FileSets.AddEmbedded<AbpFlexFieldsAbstractionsModule>();
         });
 
         Configure<AbpLocalizationOptions>(options =>

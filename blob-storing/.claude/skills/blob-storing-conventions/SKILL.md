@@ -77,8 +77,8 @@ before marking anything `ISingletonDependency`.
 ## Error codes and localization
 
 Codes live in `BlobStoringPipelineErrorCodes` (`Dignite.Abp.BlobStoring:…`, mapped to `BlobStoringPipelineResource` in
-`DigniteAbpBlobStoringPipelineModule`) and `BlobStoringImagingErrorCodes` (`Dignite.Abp.BlobStoring.Imaging:…`, mapped to
-`BlobStoringImagingResource` in `DigniteAbpBlobStoringImagingModule`). ABP maps a code namespace to exactly one resource,
+`AbpBlobStoringPipelineModule`) and `BlobStoringImagingErrorCodes` (`Dignite.Abp.BlobStoring.Imaging:…`, mapped to
+`BlobStoringImagingResource` in `AbpBlobStoringImagingModule`). ABP maps a code namespace to exactly one resource,
 which is why the Imaging package has a namespace of its own. Codes are named (`ContentTooLarge`, `ImageTooSmall`), not
 numbered. Every code needs a key in **all four** resource files
 (`Localization/Resources/{en,ja,zh-Hans,zh-Hant}.json`); data placeholders use `{Name}` and are filled with

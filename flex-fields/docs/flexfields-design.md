@@ -57,7 +57,7 @@
   - 桥接：`FlexFieldExtensions.ToFlexFieldData()`，`IFlexField -> FlexFieldData` 单向
   - 仓储：`IFlexFieldRepository<TField>`（字段定义轴，内核自己从不调用，纯为下游便利）
   - 宿主实体轴的缝：`IFlexFieldProvider<TEntity>`（内核唯一的信息入口）、`IFlexFieldValidator<TEntity>`、`IFlexFieldIndexManager<TEntity>`、`IFlexFieldQueryExecutor<TEntity>`、`IFlexFieldValueMigrator<TEntity>`（改名/删字段时重写袋子 key）
-  - **provider 中立的默认实现**（开放泛型注册在 `FlexFieldsDomainModule`，下游零代码）：`FlexFieldValidator<TEntity>`、`FlexFieldValueMigrator<TEntity>`。其余几个缝按 provider 分实现或由下游实现
+  - **provider 中立的默认实现**（开放泛型注册在 `AbpFlexFieldsDomainModule`，下游零代码）：`FlexFieldValidator<TEntity>`、`FlexFieldValueMigrator<TEntity>`。其余几个缝按 provider 分实现或由下游实现
   - **内核无具体 `FlexField` 实体**（下游类型实现 `IFlexField`）
 - **`.EntityFrameworkCore`**（支持不拥有；依赖 `.Domain`）：
   - `FlexFieldIndexValue`——**relational-only**，五个类型化槽位（String/Number/DateTime/Boolean/Guid）+ `Create(FlexFieldValueType, object)` 工厂。只属于这一层：它是关系型透视表的行值形状，`.MongoDb` 不会有对应类型

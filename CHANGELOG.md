@@ -16,6 +16,54 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Changed
+
+#### blob-storing
+
+- **Breaking - the module classes now follow ABP's `Abp<Module><Layer>Module` naming** (`AbpIdentityDomainModule`,
+  `AbpBlobStoringMinioModule`). Only the C# class names change; namespaces, PackageIds, assembly names and project
+  names are unchanged.
+  - `DigniteAbpBlobStoringPipelineModule` → `AbpBlobStoringPipelineModule`
+  - `DigniteAbpBlobStoringImagingModule` → `AbpBlobStoringImagingModule`
+
+  **Migrate:** update the `[DependsOn(typeof(...))]` references (and any other use of the class) in your own modules to
+  the new names; the `using` directives stay the same.
+
+#### flex-fields
+
+- **Breaking - the module classes now follow ABP's `Abp<Module><Layer>Module` naming.** Only the C# class names
+  change; namespaces, PackageIds, assembly names and project names are unchanged.
+  - `FlexFieldsAbstractionsModule` → `AbpFlexFieldsAbstractionsModule`
+  - `FlexFieldsDomainSharedModule` → `AbpFlexFieldsDomainSharedModule`
+  - `FlexFieldsDomainModule` → `AbpFlexFieldsDomainModule`
+  - `FlexFieldsEntityFrameworkCoreModule` → `AbpFlexFieldsEntityFrameworkCoreModule`
+  - `FlexFieldsMongoDbModule` → `AbpFlexFieldsMongoDbModule`
+  - `FlexFieldsWebModule` → `AbpFlexFieldsWebModule`
+  - `FlexFieldsCKEditorModule` → `AbpFlexFieldsCKEditorModule`
+  - `FlexFieldsCKEditorWebModule` → `AbpFlexFieldsCKEditorWebModule`
+  - `FlexFieldsInstallerModule` → `AbpFlexFieldsInstallerModule`
+
+  **Migrate:** update the `[DependsOn(typeof(...))]` references (and any other use of the class) in your own modules to
+  the new names; the `using` directives stay the same.
+
+#### notifications
+
+- **The Notification Center module classes now follow ABP's `Abp<Module><Layer>Module` naming.** Only the C# class
+  names change; namespaces, PackageIds, assembly names and project names (`Dignite.NotificationCenter.*`) are
+  unchanged.
+  - `NotificationCenterDomainSharedModule` → `AbpNotificationCenterDomainSharedModule`
+  - `NotificationCenterDomainModule` → `AbpNotificationCenterDomainModule`
+  - `NotificationCenterApplicationContractsModule` → `AbpNotificationCenterApplicationContractsModule`
+  - `NotificationCenterApplicationModule` → `AbpNotificationCenterApplicationModule`
+  - `NotificationCenterEntityFrameworkCoreModule` → `AbpNotificationCenterEntityFrameworkCoreModule`
+  - `NotificationCenterMongoDbModule` → `AbpNotificationCenterMongoDbModule`
+  - `NotificationCenterHttpApiModule` → `AbpNotificationCenterHttpApiModule`
+  - `NotificationCenterHttpApiClientModule` → `AbpNotificationCenterHttpApiClientModule`
+  - `NotificationCenterWebModule` → `AbpNotificationCenterWebModule`
+  - `NotificationCenterPushModule` → `AbpNotificationCenterPushModule`
+  - `NotificationCenterPushIdentityModule` → `AbpNotificationCenterPushIdentityModule`
+  - `NotificationCenterInstallerModule` → `AbpNotificationCenterInstallerModule`
+
 ## [10.0.0-rc.28] - 2026-10-12
 
 ### Added

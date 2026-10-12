@@ -11,11 +11,11 @@ namespace Dignite.NotificationCenter;
 /// <c>Dignite.Abp.Notifications.Client</c>.
 /// </remarks>
 [DependsOn(
-    typeof(NotificationCenterApplicationContractsModule),
-    typeof(NotificationCenterDomainModule),
+    typeof(AbpNotificationCenterApplicationContractsModule),
+    typeof(AbpNotificationCenterDomainModule),
     typeof(AbpNotificationsModule),
     typeof(AbpDddApplicationModule)
     )]
-public class NotificationCenterApplicationModule : AbpModule
+public class AbpNotificationCenterApplicationModule : AbpModule
 {
 }

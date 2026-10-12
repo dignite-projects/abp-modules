@@ -239,15 +239,15 @@ persistent per-user inbox, subscriptions, read/unread state, and the `/api/notif
 
 ```csharp
 [DependsOn(
-    typeof(AbpNotificationsModule),                            // optional: NotificationCenterApplicationModule brings it
+    typeof(AbpNotificationsModule),                            // optional: AbpNotificationCenterApplicationModule brings it
     typeof(AbpNotificationsSignalRModule),                     // real-time channel
     // typeof(AbpNotificationsEmailingModule),                  // optional: email channel
     // typeof(AbpNotificationsEmailingIdentityModule),          // optional: UserId -> Email via ABP Identity
     typeof(AbpNotificationsIdentityModule),                    // optional: permission gating
-    typeof(NotificationCenterApplicationModule),            // inbox / subscription logic
-    typeof(NotificationCenterHttpApiModule),                // REST API at /api/notification-center
-    typeof(NotificationCenterEntityFrameworkCoreModule),    // persistence (or ...MongoDbModule)
-    typeof(NotificationCenterWebModule)                     // optional: MVC bell + subscriptions UI
+    typeof(AbpNotificationCenterApplicationModule),            // inbox / subscription logic
+    typeof(AbpNotificationCenterHttpApiModule),                // REST API at /api/notification-center
+    typeof(AbpNotificationCenterEntityFrameworkCoreModule),    // persistence (or ...MongoDbModule)
+    typeof(AbpNotificationCenterWebModule)                     // optional: MVC bell + subscriptions UI
 )]
 public class MyHostModule : AbpModule { }
 ```
@@ -523,9 +523,9 @@ public class MyServiceModule : AbpModule { }
 // Notification service
 [DependsOn(
     typeof(AbpNotificationsSignalRModule),
-    typeof(NotificationCenterApplicationModule),          // brings AbpNotificationsModule
-    typeof(NotificationCenterHttpApiModule),
-    typeof(NotificationCenterEntityFrameworkCoreModule),  // or NotificationCenterMongoDbModule
+    typeof(AbpNotificationCenterApplicationModule),          // brings AbpNotificationsModule
+    typeof(AbpNotificationCenterHttpApiModule),
+    typeof(AbpNotificationCenterEntityFrameworkCoreModule),  // or AbpNotificationCenterMongoDbModule
     typeof(AbpNotificationsEntityFrameworkCoreModule)     // or AbpNotificationsMongoDbModule
 )]
 public class NotificationServiceModule : AbpModule
@@ -1077,8 +1077,8 @@ devices from it:
 ```csharp
 [DependsOn(
     typeof(AbpNotificationsPushExpoModule),        // the Push channel + the Expo provider
-    typeof(NotificationCenterPushModule)           // devices from the PushDevice registry
-    // typeof(NotificationCenterPushIdentityModule) // optional: push follows the ABP login session
+    typeof(AbpNotificationCenterPushModule)           // devices from the PushDevice registry
+    // typeof(AbpNotificationCenterPushIdentityModule) // optional: push follows the ABP login session
 )]
 public class MyHostModule : AbpModule { }
 ```

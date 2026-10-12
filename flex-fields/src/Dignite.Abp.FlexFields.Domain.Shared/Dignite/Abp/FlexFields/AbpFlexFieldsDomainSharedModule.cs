@@ -8,6 +8,6 @@ namespace Dignite.Abp.FlexFields;
 /// <c>AbpUsersDomainSharedModule</c>. Field contracts, configuration and localization live in
 /// <c>Dignite.Abp.FlexFields.Abstractions</c>, which does NOT reference this project.
 /// </summary>
-public class FlexFieldsDomainSharedModule : AbpModule
+public class AbpFlexFieldsDomainSharedModule : AbpModule
 {
 }
