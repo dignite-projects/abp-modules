@@ -46,6 +46,12 @@ so it stays clear which part of the repository actually moved.
   **Migrate:** update the `[DependsOn(typeof(...))]` references (and any other use of the class) in your own modules to
   the new names; the `using` directives stay the same.
 
+- **`@dignite/ng.flex-fields-ckeditor` moves to CKEditor 5 v49.** Its dependencies are now `ckeditor5` `^49.0.0`,
+  `@ckeditor/ckeditor5-angular` `^12.0.0` and `@ckeditor/ckeditor5-integrations-common` `^3.2.0` (were `^48.0.0`,
+  `^11.2.0`, `^2.4.0`), in step with the workspace that builds and tests it. An application still on CKEditor 48 would
+  end up with two copies of `ckeditor5`, which CKEditor refuses to load (`ckeditor-duplicated-modules`) - upgrade
+  the application's `ckeditor5` and `@ckeditor/ckeditor5-angular` together with this package.
+
 #### notifications
 
 - **The Notification Center module classes now follow ABP's `Abp<Module><Layer>Module` naming.** Only the C# class
