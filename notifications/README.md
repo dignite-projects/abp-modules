@@ -43,7 +43,7 @@ them.
 | Dignite release | ABP Framework | Runtime | Angular library | Angular peer range |
 |---|---|---|---|---|
 | `10.0.0-rc.4` | `10.5.x` (built against `10.5.0`) | .NET 10 | `10.0.0-rc.4` | Angular `^21.2.0` |
-| next release after `10.0.0-rc.27` | `10.7.x` (built against `10.7.0`) | .NET 10 | same version | Angular `^22.0.0` (`@abp/ng.*` `~10.7.0`) |
+| `10.0.0-rc.28` | `10.7.x` (built against `10.7.0`) | .NET 10 | same version | Angular `^22.0.0` (`@abp/ng.*` `~10.7.0`) |
 
 The NuGet and npm packages always use the same version. Pre-release npm packages use the `next`
 dist-tag; stable releases use `latest`. npm requires every package to have a `latest` tag, so until
