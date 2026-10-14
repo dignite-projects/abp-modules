@@ -104,15 +104,18 @@ import { NOTIFICATION_CENTER_INBOX_PATH } from '../enums/paths';
     `
       .abp-notification-bell { position: relative; display: inline-block; }
       .abp-notification-bell-btn { cursor: pointer; position: relative; font-size: 1.2rem; }
-      .abp-notification-badge { position: absolute; top: -4px; right: -8px; background: #dc3545; color: #fff; border-radius: 10px; padding: 0 5px; font-size: 0.7rem; }
-      .abp-notification-dropdown { position: absolute; right: 0; top: 100%; min-width: 380px; max-height: 400px; overflow-y: auto; background: #fff; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); z-index: 1000; }
-      .abp-notification-dropdown-header { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; }
-      .abp-notification-empty { padding: 12px; color: #888; }
-      .abp-notification-item { padding: 8px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
-      .abp-notification-item.abp-notification-unread { background: rgba(13, 110, 253, 0.05); }
+      .abp-notification-badge { position: absolute; top: -4px; right: -8px; background: var(--bs-danger, #dc3545); color: #fff; border-radius: 10px; padding: 0 5px; font-size: 0.7rem; }
+      /* Surface, text and border come from Bootstrap's own --bs-dropdown-* tokens via .dropdown-menu, so the
+         panel follows the host theme (light, dark or dim) the way the theme's other menus do. */
+      .abp-notification-dropdown { position: absolute; right: 0; top: 100%; min-width: 380px; max-height: 400px; overflow-y: auto; padding: 0; box-shadow: var(--bs-box-shadow, 0 2px 8px rgba(0, 0, 0, 0.15)); z-index: 1000; }
+      .abp-notification-dropdown-header { display: flex; justify-content: space-between; align-items: center; padding: 8px; color: var(--bs-dropdown-link-hover-color, inherit); border-bottom: 1px solid var(--bs-dropdown-divider-bg, var(--bs-border-color)); }
+      .abp-notification-empty { padding: 12px; color: var(--bs-secondary-color); }
+      .abp-notification-item { padding: 8px; border-bottom: 1px solid var(--bs-dropdown-divider-bg, var(--bs-border-color)); cursor: pointer; }
+      .abp-notification-item.abp-notification-unread { background: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.08); }
+      .abp-notification-item:hover, .abp-notification-item:focus-visible, .abp-notification-item.abp-notification-unread:hover { background: var(--bs-dropdown-link-hover-bg, var(--bs-tertiary-bg)); }
       .abp-notification-item-header { display: grid; grid-template-columns: minmax(0, 1fr) max-content; align-items: baseline; gap: 8px; }
       .abp-notification-item-title { min-width: 0; overflow-wrap: anywhere; font-size: 0.9rem; }
-      .abp-notification-item-time { font-size: 0.75rem; color: #888; white-space: nowrap; }
+      .abp-notification-item-time { font-size: 0.75rem; color: var(--bs-secondary-color); white-space: nowrap; }
       .abp-notification-item-image { max-width: 100%; border-radius: 4px; margin-top: 4px; }
       .abp-notification-view-all { display: block; padding: 8px; text-align: center; font-size: 0.85rem; text-decoration: none; }
     `,

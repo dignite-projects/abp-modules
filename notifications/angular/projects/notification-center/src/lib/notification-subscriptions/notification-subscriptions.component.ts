@@ -64,8 +64,8 @@ export interface NotificationSubscriptionGroup {
   styles: [
     `
       .abp-notification-subscriptions-table { width: 100%; border-collapse: collapse; }
-      .abp-notification-subscriptions-table th, .abp-notification-subscriptions-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #eee; }
-      .abp-notification-subscriptions-group th { background: rgba(0, 0, 0, 0.03); }
+      .abp-notification-subscriptions-table th, .abp-notification-subscriptions-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--bs-border-color); }
+      .abp-notification-subscriptions-group th { background: var(--bs-tertiary-bg); }
     `,
   ],
 })

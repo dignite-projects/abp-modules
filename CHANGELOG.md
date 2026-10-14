@@ -36,6 +36,13 @@ so it stays clear which part of the repository actually moved.
   them for check. The rows now live in a signal (`groups` is a `Signal<NotificationSubscriptionGroup[]>`, read as
   `groups()` - it was a plain array property). The bell and the inbox were not affected: they mark the view for
   check after every response. The demo host's "Publish to subscribers" hint had the same flaw and got the same fix.
+- **The Angular bell's dropdown, the inbox and the Subscriptions tab now follow a dark host theme.** Their component
+  styles hardcoded light colours (`#fff` panel, `#ddd`/`#eee` borders, `#888` muted text, a fixed blue unread
+  tint), so under a dark theme the bell's dropdown stayed a white panel while its text turned light, which read as
+  washed out. They now use Bootstrap's tokens: the dropdown paints with `--bs-dropdown-*` through `.dropdown-menu`
+  like the theme's other menus, muted text uses `--bs-secondary-color`, borders `--bs-border-color`, the unread
+  tint `--bs-primary-rgb`. Bell items also get a hover background. A host that restyled `.abp-notification-dropdown`
+  by overriding `background` or `border` keeps working - those declarations are simply no longer there to fight.
 
 ### Removed
 
