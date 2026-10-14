@@ -12,7 +12,14 @@
     forward past the advisory on its own. The 2 demo hosts (notifications/host/..., flex-fields/demo/...)
     opt out of central package management and would need their own inline copy of any such pin.
 
-    There are none at ABP 10.7.0. The pins carried up to ABP 10.5.0 were dropped because 10.7.0 resolves
+    Current pins at ABP 10.7.0:
+      - System.Security.Cryptography.Xml and .Pkcs (fixed in 10.0.13; GHSA-r955-8q5j-3h83, GHSA-7hqp-7c5m-4vq6,
+        GHSA-c399-9853-6jmj and GHSA-846f-f764-76mx high, GHSA-2fmv-rv2c-59x7 moderate - all published
+        2026-10-13): Volo.Abp.Identity.Domain 10.7.0 -> Microsoft.AspNetCore.DataProtection 10.0.11 ->
+        System.Security.Cryptography.Xml 10.0.11 -> System.Security.Cryptography.Pkcs 10.0.11. Drop both once
+        ABP's graph resolves 10.0.13 or later on its own.
+
+    The pins carried up to ABP 10.5.0 were dropped because 10.7.0 resolves
     a patched version by itself:
       - SQLitePCLRaw (GHSA-2m69-gcr7-jv3q, fixed in 2.1.12): Volo.Abp.EntityFrameworkCore.Sqlite 10.7.0 ->
         Microsoft.EntityFrameworkCore.Sqlite 10.0.11 -> SQLitePCLRaw.* 2.1.12 (10.5.0 resolved 2.1.11).
@@ -20,6 +27,11 @@
         7.2.5 (10.5.0 resolved 7.2.1). Scriban is therefore no longer promoted into
         Dignite.Abp.Notifications.Emailing's published dependency list; consumers get 7.2.5 through ABP.
   -->
+
+  <ItemGroup Label="Security pins (see the comment above)">
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.13" />
+  </ItemGroup>
 
   <ItemGroup Label="ABP 10.7.0">
     <PackageVersion Include="Volo.Abp.Core" Version="10.7.0" />
