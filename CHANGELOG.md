@@ -37,6 +37,19 @@ so it stays clear which part of the repository actually moved.
   `groups()` - it was a plain array property). The bell and the inbox were not affected: they mark the view for
   check after every response. The demo host's "Publish to subscribers" hint had the same flaw and got the same fix.
 
+### Removed
+
+#### notifications
+
+- **The `NotificationCenter` permission group and its three `NotificationCenter.Deliveries*` permissions are gone,
+  together with `NotificationCenterErrorCodes`.** They were left behind when the per-recipient delivery state
+  machine (retries, force-delivery) was cut before rc.3, and nothing checked them: they only put three checkboxes
+  in the permission management UI that granted nothing. `NotificationCenterPermissions`,
+  `NotificationCenterPermissionDefinitionProvider`, `NotificationCenterErrorCodes` and their `Permission:*` /
+  `NotificationCenter:Delivery*` localization texts are removed. Grants stored under the old names are now orphan
+  rows in `AbpPermissionGrants`; ABP ignores them, and they can be deleted at will. The README's sample
+  `DbContext` also listed a `NotificationDeliveryRecord` set from the same era; it now lists `PushDevices`.
+
 ## [10.0.0-rc.29] - 2026-10-12
 
 ### Changed

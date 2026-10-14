@@ -21,13 +21,6 @@
     "SubscriptionScope": "範囲",
     "AllEntities": "すべてのエンティティ",
     "NotificationGroup:Other": "その他",
-    "UnsupportedNotification": "このバージョンではこの通知を表示できません。",
-    "Permission:NotificationCenter": "通知センター",
-    "Permission:Deliveries": "配信運用状況を表示",
-    "Permission:Deliveries.Retry": "失敗した通知配信を再試行",
-    "Permission:Deliveries.ForceDeliver": "抑制された通知を強制配信",
-    "NotificationCenter:DeliveryCannotBeRetried": "現在の状態ではこの通知配信を再試行できません。",
-    "NotificationCenter:SuppressedDeliveryCannotBeRetried": "抑制された通知は通常の再試行では配信できません。ユーザー設定を上書きするには、個別に許可された強制配信操作を使用してください。",
-    "NotificationCenter:DeliveryCannotBeForceDelivered": "抑制された通知配信のみ強制配信できます。"
+    "UnsupportedNotification": "このバージョンではこの通知を表示できません。"
   }
 }
