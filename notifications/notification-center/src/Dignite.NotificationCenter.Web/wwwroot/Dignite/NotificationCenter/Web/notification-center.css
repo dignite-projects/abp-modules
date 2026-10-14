@@ -5,7 +5,12 @@
 }
 
 .dignite-notification-item.dignite-notification-unread {
-    background-color: rgba(13, 110, 253, 0.05);
+    background-color: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.08);
+}
+
+.dignite-notification-item:hover,
+.dignite-notification-item:focus-visible {
+    background-color: var(--bs-dropdown-link-hover-bg, var(--bs-tertiary-bg));
 }
 
 .dignite-notification-item-header {
@@ -35,7 +40,7 @@
 }
 
 .dignite-inbox-item.dignite-inbox-unread {
-    background-color: rgba(13, 110, 253, 0.05);
+    background-color: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.08);
     box-shadow: inset 3px 0 0 var(--bs-primary, #0d6efd);
 }
 

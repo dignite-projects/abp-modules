@@ -43,6 +43,8 @@ so it stays clear which part of the repository actually moved.
   like the theme's other menus, muted text uses `--bs-secondary-color`, borders `--bs-border-color`, the unread
   tint `--bs-primary-rgb`. Bell items also get a hover background. A host that restyled `.abp-notification-dropdown`
   by overriding `background` or `border` keeps working - those declarations are simply no longer there to fight.
+  The MVC bell already followed the theme through Bootstrap classes; its unread tint (bell and inbox) now uses
+  `--bs-primary-rgb` too, and its items get the same hover background, so both UIs look alike.
 
 ### Removed
 
