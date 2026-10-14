@@ -28,9 +28,8 @@ import { NotificationDataPayload } from '@dignite/ng.notification-center';
         align-items: center;
         gap: 10px;
         padding: 8px;
-        border: 1px solid #dfe4ea;
+        border: 1px solid var(--bs-border-color);
         border-radius: 6px;
-        background: #fff;
       }
 
       .app-order-shipped-image {
@@ -54,7 +53,7 @@ import { NotificationDataPayload } from '@dignite/ng.notification-center';
 
       .app-order-shipped-meta {
         margin-top: 2px;
-        color: #6c757d;
+        color: var(--bs-secondary-color);
         font-size: 0.78rem;
         line-height: 1.2;
       }

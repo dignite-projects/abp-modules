@@ -130,9 +130,17 @@ const ALWAYS = expand({
 const BACKGROUND_ONLY = expand({ '#ffffff': '#1b1b1b' });
 const TEXT_ONLY = expand({ '#161616': '#eeeeee' });
 
+/**
+ * The scrollbar thumb, applied ahead of {@link ALWAYS}: `#e7e9ec` is a border elsewhere and goes to
+ * `#222222` there, which as a thumb is all but invisible on a `#1b1b1b` track. See
+ * {@link isBackgroundProperty} for the track.
+ */
+const SCROLLBAR_ONLY = expand({ '#e7e9ec': '#444444' });
+
 /** Exported for testing: the whole substitution decision for one declaration. */
 export function rewriteValue(property: string, value: string): string {
-  let rewritten = replaceAll(value, ALWAYS);
+  let rewritten = property === 'scrollbar-color' ? replaceAll(value, SCROLLBAR_ONLY) : value;
+  rewritten = replaceAll(rewritten, ALWAYS);
 
   if (isBackgroundProperty(property)) {
     rewritten = replaceAll(rewritten, BACKGROUND_ONLY);
@@ -160,9 +168,21 @@ function replaceAll(value: string, pairs: readonly (readonly [string, string])[]
   return pairs.reduce((carry, [from, to]) => carry.split(from).join(to), value);
 }
 
-/** Custom properties are matched by name, because their values carry no hint of their role. */
+/**
+ * Custom properties are matched by name, because their values carry no hint of their role.
+ *
+ * `scrollbar-color` is `<thumb> <track>`, and LeptonX Lite sets it on `body` as `#e7e9ec #ffffff`, which
+ * every scrolling element inherits. The track is a surface, so the white goes through the background
+ * map; the thumb is lifted by {@link SCROLLBAR_ONLY}, giving `#444444 #1b1b1b`. Chrome honours a set
+ * `scrollbar-color` over `color-scheme`, so without this every scrollbar keeps a white track in dark
+ * mode.
+ */
 function isBackgroundProperty(property: string): boolean {
-  return property.startsWith('background') || /^--(bs|lpx)-.*-bg$/.test(property);
+  return (
+    property.startsWith('background') ||
+    property === 'scrollbar-color' ||
+    /^--(bs|lpx)-.*-bg$/.test(property)
+  );
 }
 
 function isTextProperty(property: string): boolean {

@@ -143,7 +143,7 @@ import { NotificationCenterEventsService } from './notification-center-events.se
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
-      .abp-notification-inbox-item.abp-notification-inbox-unread { background: rgba(13, 110, 253, 0.05); box-shadow: inset 3px 0 0 var(--bs-primary, #0d6efd); }
+      .abp-notification-inbox-item.abp-notification-inbox-unread { background: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.08); box-shadow: inset 3px 0 0 var(--bs-primary, #0d6efd); }
       .abp-notification-inbox-item-body { min-width: 0; cursor: pointer; }
       .abp-notification-inbox-item-header { display: grid; grid-template-columns: minmax(0, 1fr) max-content; align-items: baseline; gap: 8px; }
       .abp-notification-inbox-item-title { min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
