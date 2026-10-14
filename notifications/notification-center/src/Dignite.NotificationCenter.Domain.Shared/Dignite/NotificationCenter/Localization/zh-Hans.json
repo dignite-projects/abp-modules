@@ -21,13 +21,6 @@
     "SubscriptionScope": "范围",
     "AllEntities": "所有实体",
     "NotificationGroup:Other": "其他",
-    "UnsupportedNotification": "当前版本无法显示此通知。",
-    "Permission:NotificationCenter": "通知中心",
-    "Permission:Deliveries": "查看投递运行状态",
-    "Permission:Deliveries.Retry": "重试失败的通知投递",
-    "Permission:Deliveries.ForceDeliver": "强制投递已抑制的通知",
-    "NotificationCenter:DeliveryCannotBeRetried": "当前状态下无法重试此通知投递。",
-    "NotificationCenter:SuppressedDeliveryCannotBeRetried": "已抑制的通知不能通过普通重试投递；如需覆盖用户偏好，请使用具有独立权限的强制投递操作。",
-    "NotificationCenter:DeliveryCannotBeForceDelivered": "只有已抑制的通知投递才能被强制投递。"
+    "UnsupportedNotification": "当前版本无法显示此通知。"
   }
 }

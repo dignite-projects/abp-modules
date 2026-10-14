@@ -261,7 +261,7 @@ public class MyHostDbContext : AbpDbContext<MyHostDbContext>, INotificationCente
     public DbSet<Notification> Notifications { get; set; } = default!;
     public DbSet<UserNotification> UserNotifications { get; set; } = default!;
     public DbSet<NotificationSubscription> NotificationSubscriptions { get; set; } = default!;
-    public DbSet<NotificationDeliveryRecord> NotificationDeliveries { get; set; } = default!;
+    public DbSet<PushDevice> PushDevices { get; set; } = default!;
 
     public MyHostDbContext(DbContextOptions<MyHostDbContext> options) : base(options) { }
 
