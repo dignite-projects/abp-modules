@@ -16,6 +16,18 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Fixed
+
+#### notifications
+
+- **The Angular Subscriptions settings tab no longer stays empty until an unrelated click.**
+  `NotificationSubscriptionsComponent` loaded its rows on open, but the screen only showed them after something
+  else refreshed the view. Angular 22 made `OnPush` the default, so the host layout's wrappers
+  (`abp-router-outlet`, the LeptonX layouts) are `OnPush`, and a plain-field write in an HTTP callback never marks
+  them for check. The rows now live in a signal (`groups` is a `Signal<NotificationSubscriptionGroup[]>`, read as
+  `groups()` - it was a plain array property). The bell and the inbox were not affected: they mark the view for
+  check after every response. The demo host's "Publish to subscribers" hint had the same flaw and got the same fix.
+
 ## [10.0.0-rc.29] - 2026-10-12
 
 ### Changed
