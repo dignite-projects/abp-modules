@@ -16,6 +16,20 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Fixed
+
+#### notifications
+
+- **The packages that reference ABP Identity now resolve `System.Security.Cryptography.Xml` and `.Pkcs` `10.0.13`,
+  fixing five advisories published 2026-10-13.** `Volo.Abp.Identity.Domain` 10.7.0 pulls
+  `Microsoft.AspNetCore.DataProtection` 10.0.11, which resolved both packages at 10.0.11 (affected up to 10.0.12:
+  GHSA-r955-8q5j-3h83, GHSA-7hqp-7c5m-4vq6, GHSA-c399-9853-6jmj and GHSA-846f-f764-76mx high, GHSA-2fmv-rv2c-59x7
+  moderate). Both are pinned in `Directory.Packages.props`, so they now show up as direct `>= 10.0.13` dependencies in
+  the published nuspec of those packages (the audit flagged `Dignite.Abp.Notifications.Emailing.Identity` and
+  `Dignite.NotificationCenter.Push.Identity`) and a consumer gets the patched versions without pinning them itself.
+  The pins can go once ABP's own graph resolves 10.0.13 or later. CI's "Block vulnerable NuGet dependencies" step
+  was failing on these from 2026-10-13.
+
 ## [10.0.0-rc.29] - 2026-10-12
 
 ### Changed
