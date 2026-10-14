@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RestService } from '@abp/ng.core';
 import { RouterLink } from '@angular/router';
 
@@ -41,15 +41,17 @@ import { RouterLink } from '@angular/router';
       <button type="button" class="btn btn-outline-primary" (click)="publishToSubscribers()">
         Publish to subscribers
       </button>
-      @if (publishToSubscribersResult) {
-        <span class="ms-2 text-muted">{{ publishToSubscribersResult }}</span>
+      @if (publishToSubscribersResult()) {
+        <span class="ms-2 text-muted">{{ publishToSubscribersResult() }}</span>
       }
       </div>
     </div>
   `,
 })
 export class DemoNotificationsComponent {
-  publishToSubscribersResult = '';
+  // A signal, not a plain field: it is set in an HTTP callback, under the layout's OnPush ancestors, where a
+  // plain-field write never marks them for check and the hint would not show until an unrelated event.
+  readonly publishToSubscribersResult = signal('');
 
   private restService = inject(RestService);
 
@@ -63,15 +65,16 @@ export class DemoNotificationsComponent {
   }
 
   publishToSubscribers(): void {
-    this.publishToSubscribersResult = '';
+    this.publishToSubscribersResult.set('');
     this.restService
       .request<void, void>(
         { method: 'POST', url: '/api/app/demo-notification/publish-announcement-to-subscribers' },
         { apiName: 'default' },
       )
       .subscribe(() => {
-        this.publishToSubscribersResult =
-          'Published — check the bell. It only arrives if you were subscribed to "Announcement" above.';
+        this.publishToSubscribersResult.set(
+          'Published — check the bell. It only arrives if you were subscribed to "Announcement" above.',
+        );
       });
   }
 }

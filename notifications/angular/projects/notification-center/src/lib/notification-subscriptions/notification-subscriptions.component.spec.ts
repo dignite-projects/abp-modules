@@ -1,5 +1,7 @@
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { CoreTestingModule } from '@abp/ng.core/testing';
+import { Subject, of } from 'rxjs';
 import { NotificationSubscriptionService } from '../proxy/dignite/abp/notification-center';
 import { NotificationSubscriptionsComponent } from './notification-subscriptions.component';
 
@@ -86,9 +88,57 @@ describe('NotificationSubscriptionsComponent', () => {
     const fixture = TestBed.createComponent(NotificationSubscriptionsComponent);
     fixture.componentInstance.ngOnInit();
 
-    const groups = fixture.componentInstance.groups;
+    const groups = fixture.componentInstance.groups();
     expect(groups.map(group => group.name)).toEqual(['Orders', 'System', 'Dignite.NotificationCenter.Other']);
     expect(groups[0].subscriptions.map(s => s.entityId ?? null)).toEqual([null, '42']);
     expect(groups[2].displayName).toBe('Dignite.NotificationCenter.Other');
+  });
+});
+
+/**
+ * The component renders as a Settings tab in the host's page flow, under the layout's OnPush ancestors
+ * (`abp-router-outlet`, the LeptonX layouts). A plain-field write in the HTTP callback never marks those for
+ * check, so the table stayed empty until an unrelated event refreshed the view.
+ */
+@Component({
+  selector: 'abp-test-on-push-ancestor',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [NotificationSubscriptionsComponent],
+  template: '<abp-notification-subscriptions />',
+})
+class OnPushAncestorComponent {}
+
+@Component({
+  selector: 'abp-test-root',
+  imports: [OnPushAncestorComponent],
+  template: '<abp-test-on-push-ancestor />',
+})
+class RootComponent {}
+
+describe('NotificationSubscriptionsComponent under an OnPush ancestor', () => {
+  const subscriptions$ = new Subject<{ items: unknown[] }>();
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [CoreTestingModule.withConfig()],
+      providers: [{ provide: NotificationSubscriptionService, useValue: { getSubscriptions: () => subscriptions$ } }],
+    });
+  });
+
+  it('renders the rows once the response arrives, with no event to mark the ancestors', () => {
+    const fixture = TestBed.createComponent(RootComponent);
+    fixture.detectChanges();
+    const checkboxes = () => fixture.nativeElement.querySelectorAll('tbody input[type="checkbox"]');
+    expect(checkboxes()).toHaveLength(0);
+
+    subscriptions$.next({
+      items: [
+        { notificationName: 'order.shipped', groupName: 'Orders', groupDisplayName: 'Orders', isSubscribed: true },
+        { notificationName: 'system.announcement', groupName: 'System', groupDisplayName: 'System', isSubscribed: false },
+      ],
+    });
+    fixture.detectChanges();
+
+    expect(checkboxes()).toHaveLength(2);
   });
 });

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { LocalizationPipe } from '@abp/ng.core';
 import {
   NotificationSubscriptionService,
@@ -32,7 +32,7 @@ export interface NotificationSubscriptionGroup {
         </tr>
       </thead>
       <tbody>
-        @for (group of groups; track group.name) {
+        @for (group of groups(); track group.name) {
           <tr class="abp-notification-subscriptions-group">
             <th colspan="4">{{ group.displayName }}</th>
           </tr>
@@ -70,12 +70,18 @@ export interface NotificationSubscriptionGroup {
   ],
 })
 export class NotificationSubscriptionsComponent implements OnInit {
-  groups: NotificationSubscriptionGroup[] = [];
+  /**
+   * A signal, not a plain field: it is filled by an HTTP callback, and this component renders as a Settings
+   * tab in the host's page flow, under the layout's OnPush ancestors (`abp-router-outlet`, the LeptonX
+   * layouts). A plain-field write there never marks them for check, so the table stayed empty until an
+   * unrelated event happened to refresh the view.
+   */
+  readonly groups = signal<NotificationSubscriptionGroup[]>([]);
 
   private notificationService = inject(NotificationSubscriptionService);
 
   ngOnInit(): void {
-    this.notificationService.getSubscriptions().subscribe(r => (this.groups = this.groupByNotificationGroup(r.items)));
+    this.notificationService.getSubscriptions().subscribe(r => this.groups.set(this.groupByNotificationGroup(r.items)));
   }
 
   toggle(subscription: NotificationSubscriptionDto, subscribe: boolean): void {
