@@ -6,8 +6,8 @@ this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) — with two deviations from the
-classic scheme: every package in the repository shares **one lockstep version**, and `MAJOR` tracks
-the targeted **ABP Framework** version rather than this repository's own breaking changes. See
+classic scheme: every package in the repository shares **one lockstep version**, and `MAJOR.MINOR` is
+the targeted **ABP Framework** `MAJOR.MINOR` while `PATCH` is this repository's own counter. See
 [CONTRIBUTING.md → Versioning and releases](CONTRIBUTING.md#versioning-and-releases) for both.
 
 Because releases are lockstep, a version may contain changes to only one module — the other modules'
@@ -15,6 +15,22 @@ packages are still republished at that version with unchanged content. Entries a
 so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
+
+## [10.7.0] - 2026-10-15
+
+The first stable release. It contains the same packages as `10.0.0-rc.29` plus the fixes below.
+
+### Changed
+
+#### shared build and dependencies
+
+- **The version now says which ABP it is built on: `MAJOR.MINOR` is the ABP Framework `MAJOR.MINOR`, `PATCH` is
+  this repository's own.** `10.7.x` targets ABP 10.7 (and therefore Angular 22); moving to ABP 10.8 will release
+  `10.8.0`. Until now only `MAJOR` followed ABP, so the step from `10.0.0-rc.29` to `10.7.0` is a numbering change,
+  not a jump in content, and `10.0.0` was never published. New features can arrive in a `PATCH`; breaking
+  changes only ship when `MAJOR.MINOR` moves. CI's version check now fails when `<Version>` does not start with the
+  `Volo.Abp.Core` `MAJOR.MINOR`, or when an Angular package's `@abp/ng.*` dependency is not a `~MAJOR.MINOR.x`
+  range. See [CONTRIBUTING.md → Versioning and releases](CONTRIBUTING.md#versioning-and-releases).
 
 ### Fixed
 

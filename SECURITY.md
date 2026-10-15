@@ -7,11 +7,12 @@ Covers every package released from this repository — the `blob-storing/`, `not
 
 | Version | Supported |
 | ------- | --------- |
-| `10.0.x` pre-release | ✅ (pre-release; see [CONTRIBUTING → Versioning and releases](CONTRIBUTING.md#versioning-and-releases)) |
+| `10.7.x` (ABP 10.7) | ✅ |
+| `10.0.0-*` pre-releases | ❌ — upgrade to `10.7.x` |
 
-This project has not yet reached a stable release; pre-releases are supported on a best-effort
-basis. Once `10.0.0` (or later) ships, this table will track the currently-supported minor line(s)
-against the ABP Framework major version each targets.
+A version's `MAJOR.MINOR` is the ABP Framework line it targets (see
+[CONTRIBUTING → Versioning and releases](CONTRIBUTING.md#versioning-and-releases)). Fixes land on the
+latest line only; this table moves forward when a new ABP line is released here.
 
 Because every package in this repository is released in lockstep on a single version, a supported
 version line covers all three modules at once.
