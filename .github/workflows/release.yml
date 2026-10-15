@@ -15,7 +15,7 @@
 # workflow_dispatch remains a private preview build: it packs and smoke-tests everything, then
 # pushes a pre-release to GitHub Packages only.
 #
-# Triggers: push a v* tag (e.g. v10.0.0-rc.4 or v10.0.0) or use workflow_dispatch. For churny
+# Triggers: push a v* tag (e.g. v10.8.0-rc.1 or v10.7.0) or use workflow_dispatch. For churny
 # pre-release builds prefer workflow_dispatch: no tag, no draft Release - just bump <Version> in
 # Directory.Build.props, run, and the packages land in GitHub Packages.
 

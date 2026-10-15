@@ -73,7 +73,7 @@ from the libraries'.
 This project uses three-part [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`), as
 declared in [CHANGELOG.md](./CHANGELOG.md) — with two deliberate deviations from the classic scheme,
 described below. SemVer is not cosmetic here: the version is still the stability signal to
-downstream consumers, but MAJOR answers a different question than it does in a typical SemVer
+downstream consumers, but MAJOR.MINOR answers a different question than it does in a typical SemVer
 project, and the version is repository-wide rather than per-module.
 
 ### One version for the whole repository (lockstep)
@@ -92,36 +92,52 @@ that always needs checking.
 
 There is therefore **no per-module versioning** and no per-project `<Version>`. Don't add one.
 
-### MAJOR tracks the ABP Framework version, not this repository's own breaking changes
+### MAJOR.MINOR is the ABP Framework version; PATCH is ours
 
-`notifications/` supersedes a legacy package line already published on NuGet.org under this same
-`dignite-projects` org at versions `1.0.0` through `3.8.2` (`Dignite.Abp.Notifications*`; the other,
-`Dignite.FileExplorer.*`, left this repository in rc.25). To make these releases unambiguously win NuGet.org's "latest version"
-resolution — no package rename needed — `<Version>`'s **MAJOR** segment tracks the **major version
-of the ABP Framework** this release targets (pinned in `Directory.Packages.props`; currently ABP
-`10.7.0`, so MAJOR is `10`). Since ABP's major will not regress below 10, this permanently clears
-the legacy `3.8.2` line.
+`<Version>`'s **MAJOR.MINOR** is the **MAJOR.MINOR of the ABP Framework** this release is built
+against (the `Volo.Abp.*` pins in `Directory.Packages.props`; currently ABP `10.7.0`, so releases are
+`10.7.x`). A developer reading `10.7.2` knows, without opening a README, that it targets ABP 10.7 —
+and, since ABP's minor decides the Angular major, which Angular it pairs with.
+[`verify-version-lockstep.ps1`](./.github/scripts/verify-version-lockstep.ps1) enforces it: CI fails
+if `<Version>` does not start with the `Volo.Abp.Core` MAJOR.MINOR, or if any `@abp/ng.*` dependency
+of an Angular package is not a `~MAJOR.MINOR.x` range.
 
-**MINOR** and **PATCH** are this repository's own counters:
+**PATCH** is this repository's own counter, not ABP's patch:
 
-- **MINOR** — a backward-compatible addition, **or** a breaking change to either module's contracts.
-  There is no separate signal below MAJOR for "this is breaking" under this scheme — read the
-  CHANGELOG entry for a MINOR bump, don't assume safety from the version shape alone the way you
-  would under classic SemVer.
-- **PATCH** — a fix that changes no contract.
-- MINOR and PATCH **reset to `.0.0`** whenever the tracked ABP major changes. Moving to target ABP
-  11.x makes the version `11.0.0`, not `11.5.3`.
+| What happened | Version |
+|---|---|
+| A fix or a backward-compatible addition here, still on the same ABP minor | PATCH + 1 (`10.7.0` → `10.7.1`) |
+| ABP ships a patch (`10.7.3`) and nothing here needs to change | **No release.** ABP patches are compatible within their minor, and the `Volo.Abp.*` dependency is a floor (`>= 10.7.0`), so consumers already pick it up |
+| This repository moves to a new ABP minor or major | `MAJOR.MINOR` of that ABP, PATCH reset to `0` (`10.8.0`, `11.0.0`) — released even if nothing else changed, because the version is the claim that it was verified on that ABP line |
 
-This is not without precedent: several EF Core provider packages align `MAJOR.MINOR` with the EF
-Core version they support, while PATCH remains their own.
+Two consequences of giving MINOR away to ABP:
+
+- **New features land in PATCH.** Classic SemVer would bump MINOR for them; here MINOR is taken.
+  Read the CHANGELOG to tell a fix release from a feature release.
+- **Breaking changes wait for the next ABP minor.** A PATCH release never breaks a contract; a
+  breaking change ships with the next `MAJOR.MINOR` move, under a **Breaking** entry with a Migrate
+  section in the CHANGELOG. ABP itself makes small breaking changes at its own minors, so consumers
+  already expect to read notes at that boundary — ours line up with it instead of adding a second one.
+
+Why not the alternatives: mirroring ABP's full version (`10.7.0` = ABP 10.7.0) leaves no number for
+this repository's own fixes between ABP patches; a fourth segment (`10.7.0.3`) is not valid on npm,
+and our npm and NuGet packages share one version; build metadata (`1.2.0+abp.10.7`) is ignored by
+both registries' ordering and hidden in most UIs. EF Core provider packages use the same
+`MAJOR.MINOR`-aligned scheme.
+
+Why MAJOR can never drop below 10: `notifications/` supersedes a legacy package line already
+published on NuGet.org under this same `dignite-projects` org at versions `1.0.0` through `3.8.2`
+(`Dignite.Abp.Notifications*`; the other, `Dignite.FileExplorer.*`, left this repository in rc.25).
+Tracking ABP's major makes these releases win NuGet.org's "latest version" resolution with no package
+rename, and ABP's major will not regress below 10.
 
 ### Pre-release suffixes
 
-Use SemVer pre-release tags for previews on the way to a stable version:
-`10.0.0-preview.1` → `10.0.0-rc.1` → `10.0.0`. Both NuGet and npm understand their precedence (a
+Use SemVer pre-release tags for previews on the way to a stable version, typically while moving to
+the next ABP minor: `10.8.0-rc.1` → `10.8.0`. Both NuGet and npm understand their precedence (a
 suffixed version always ranks below the matching final version) and treat them as non-stable by
-default. Graduating to a stable version is an earned milestone — confidence in the contracts across
-both persistence providers and the REST APIs — not a default for a first release.
+default. The earlier pre-release line `10.0.0-preview.1` … `10.0.0-rc.29` predates this scheme; the first stable
+release is `10.7.0`, and `10.0.0` itself was never published.
 
 **Do not use CalVer** (e.g. `2026.7.0`) — it communicates when a release was cut, not whether it's
 safe to upgrade, which is the opposite of what this project's positioning needs.

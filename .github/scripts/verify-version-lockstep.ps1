@@ -13,6 +13,22 @@ if (-not $versionMatch.Success) {
 
 $dotnetVersion = $versionMatch.Groups[1].Value
 
+# MAJOR.MINOR of the release version is the ABP Framework MAJOR.MINOR it is built against, so a
+# developer reading "10.7.x" knows it targets ABP 10.7 - see CONTRIBUTING.md#versioning-and-releases.
+# Volo.Abp.Core stands in for every Volo.Abp.* pin in Directory.Packages.props (they move together).
+$packagesProps = Get-Content -Raw (Join-Path $repositoryRoot 'Directory.Packages.props')
+$abpMatch = [regex]::Match($packagesProps, '<PackageVersion\s+Include="Volo\.Abp\.Core"\s+Version="([^"]+)"')
+if (-not $abpMatch.Success) {
+    throw 'Could not read the Volo.Abp.Core version from Directory.Packages.props.'
+}
+
+$abpVersion = $abpMatch.Groups[1].Value
+$majorMinor = { param($v) ([regex]::Match($v, '^\d+\.\d+')).Value }
+$abpMajorMinor = & $majorMinor $abpVersion
+if ((& $majorMinor $dotnetVersion) -ne $abpMajorMinor) {
+    throw "Release version '$dotnetVersion' must start with the ABP Framework MAJOR.MINOR it targets ('$abpMajorMinor.', from Volo.Abp.Core $abpVersion in Directory.Packages.props)."
+}
+
 $angularPackages = @(
     'notifications\angular\projects\notification-center\package.json',
     'flex-fields\angular\projects\flex-fields\package.json',
@@ -48,6 +64,12 @@ foreach ($relativePath in $angularPackages) {
         }
 
         foreach ($dependency in $dependencies.PSObject.Properties) {
+            # The version promises one ABP minor line, so the npm range must admit exactly that line
+            # ("~10.7.0"), not the next minor a "^" range would let in.
+            if ($dependency.Name -like '@abp/ng.*' -and -not $dependency.Value.StartsWith("~$abpMajorMinor.")) {
+                throw "Angular package '$($package.name)' ($relativePath) declares $section '$($dependency.Name)': '$($dependency.Value)', but it must be a '~$abpMajorMinor.x' range to match the ABP line this release targets."
+            }
+
             if ($dependency.Name -notlike '@dignite/*') {
                 continue
             }

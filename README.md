@@ -108,10 +108,11 @@ ships the same version, from the single `<Version>` in the root `Directory.Build
 release whose content is unchanged. That trade is deliberate: one number to reason about instead of a
 per-module compatibility matrix.
 
-`MAJOR` tracks the **ABP Framework major version** this release targets, not this repository's own
-breaking changes. See [CONTRIBUTING.md → Versioning and releases](CONTRIBUTING.md#versioning-and-releases)
-before cutting a release or interpreting a version bump — the scheme deviates from classic SemVer in
-one specific, easy-to-misread way.
+**`MAJOR.MINOR` is the ABP Framework version it is built on; `PATCH` is ours.** `10.7.x` targets ABP
+10.7 (and so Angular 22); moving to ABP 10.8 releases `10.8.0`. A new ABP patch needs no release
+here. Breaking changes only ship when `MAJOR.MINOR` moves, and new features can arrive in a `PATCH`
+— see [CONTRIBUTING.md → Versioning and releases](CONTRIBUTING.md#versioning-and-releases) before
+cutting a release or interpreting a version bump.
 
 ## Contributing
 

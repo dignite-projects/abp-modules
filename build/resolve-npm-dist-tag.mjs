@@ -11,8 +11,8 @@
  * out a version three releases behind, and Yarn Classic resolved intra-repo ranges backwards onto it.
  * That was the second of the three conditions behind issue #211.
  *
- * The second half is why this is a script rather than a one-line flip. Once a stable `10.0.0` exists,
- * `latest` must stay on it: a later `10.1.0-rc.1` taking `latest` would silently move every consumer
+ * The second half is why this is a script rather than a one-line flip. Once a stable `10.7.0` exists,
+ * `latest` must stay on it: a later `10.8.0-rc.1` taking `latest` would silently move every consumer
  * doing a bare install from a stable release onto a pre-release, which is worse than the problem this
  * solves. Reading the registry rather than hardcoding a date or a flag means the rule retires itself
  * the moment the first stable ships, with nobody having to remember to come back and change it.
