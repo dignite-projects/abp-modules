@@ -2,22 +2,20 @@
 # Angular library package.json files are kept in lockstep; a pushed v* tag must match all four,
 # but tags do not drive the number.
 #
-# Tagged releases are public: NuGet packages go to NuGet.org through Trusted Publishing (GitHub
-# OIDC -> short-lived API key), and all three Angular packages go to npm through npm Trusted
-# Publishing (OIDC) too - no long-lived NPM_TOKEN secret. The npm dist-tag is `latest` for a stable
-# release, and for a pre-release too until the first stable release exists, `next` after that - see
-# build/resolve-npm-dist-tag.mjs. Each of the three packages has its own Trusted Publisher configured on
-# npmjs.com, scoped to this repo and this workflow file.
-# Pre-release NuGet packages are also mirrored to GitHub Packages under the same @dignite/*
-# names; pre-release Angular packages are mirrored too, but GitHub Packages' npm registry requires
-# the scope to equal the owning org, so those publish under @dignite-projects/* instead of the
-# public @dignite/* names used on npmjs.
-# workflow_dispatch remains a private preview build: it packs and smoke-tests everything, then
-# pushes a pre-release to GitHub Packages only.
+# Only stable releases are public. A stable version on a v* tag goes to NuGet.org through Trusted
+# Publishing (GitHub OIDC -> short-lived API key) and to npm through npm Trusted Publishing (OIDC)
+# too - no long-lived NPM_TOKEN secret - under the `latest` dist-tag. Each of the three npm packages
+# has its own Trusted Publisher configured on npmjs.com, scoped to this repo and this workflow file.
 #
-# Triggers: push a v* tag (e.g. v10.8.0-rc.1 or v10.7.0) or use workflow_dispatch. For churny
-# pre-release builds prefer workflow_dispatch: no tag, no draft Release - just bump <Version> in
-# Directory.Build.props, run, and the packages land in GitHub Packages.
+# Pre-releases (-rc.N, -preview.N), tagged or dispatched, go to GitHub Packages only, for this org's
+# own projects to test against: NuGet under the same Dignite.* IDs, npm under @dignite-projects/*
+# because GitHub Packages' npm registry requires the scope to equal the owning org. See
+# CONTRIBUTING.md#pre-releases-github-packages-only for how a consuming project installs them.
+#
+# Triggers: push a v* tag (e.g. v10.8.0-rc.1 or v10.7.0) or use workflow_dispatch. A pre-release tag
+# adds a draft GitHub pre-release on top of the GitHub Packages push; for churny pre-release builds
+# prefer workflow_dispatch: no tag, no draft Release - just bump <Version> in Directory.Build.props,
+# run, and the packages land in GitHub Packages.
 
 name: Release
 
@@ -79,21 +77,21 @@ jobs:
           VERSION='${{ steps.version.outputs.version }}'
           if [[ "$VERSION" == *-* ]]; then
             echo "channel=prerelease" >> "$GITHUB_OUTPUT"
-            echo "::notice::Version $VERSION is a pre-release."
+            echo "::notice::Version $VERSION is a pre-release: GitHub Packages only."
           else
             echo "channel=stable" >> "$GITHUB_OUTPUT"
             echo "::notice::Version $VERSION is stable."
           fi
 
-          # The npm dist-tag is decided separately from the channel above, which still answers only
-          # "is this a pre-release" - for the GitHub Packages mirror and the draft Release's own flag.
-          # `latest` is what a bare `npm install` resolves and what a resolver prefers for any range
-          # that admits it, so a pre-release takes it too for as long as no stable release exists.
-          # See build/resolve-npm-dist-tag.mjs for why that rule retires itself once one does, rather
-          # than needing someone to remember to change it back.
-          NPM_TAG="$(node ./build/resolve-npm-dist-tag.mjs "$VERSION")"
-          echo "npm-tag=$NPM_TAG" >> "$GITHUB_OUTPUT"
-          echo "::notice::Publishing to npm under the '$NPM_TAG' dist-tag."
+          # Only a stable version on a v* tag reaches NuGet.org and npmjs. Pre-releases - tagged or
+          # dispatched - stay on GitHub Packages for this org's own projects to test against; see
+          # CONTRIBUTING.md#pre-releases-github-packages-only.
+          if [[ "$VERSION" != *-* && "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "public=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Publishing $VERSION to NuGet.org and npmjs."
+          else
+            echo "public=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Restore
         run: dotnet restore Dignite.Abp.Modules.slnx
@@ -297,7 +295,7 @@ jobs:
         with:
           registry-url: 'https://registry.npmjs.org'
 
-      # Keep the existing authenticated GitHub Packages preview feed for every pre-release trigger.
+      # GitHub Packages is the only feed pre-releases go to, tagged or dispatched.
       - name: Push to GitHub Packages (pre-release)
         if: steps.channel.outputs.channel == 'prerelease'
         run: |
@@ -309,17 +307,18 @@ jobs:
               --skip-duplicate
           done
 
-      # npm equivalent of the GH Packages NuGet mirror above. GitHub Packages' npm registry
+      # npm equivalent of the GH Packages NuGet push above. GitHub Packages' npm registry
       # rejects any scope that doesn't match the owning org login, so @dignite/ng.flex-fields (etc.)
-      # can't be pushed there under its real name - only npmjs (tagged releases, below) can carry
-      # the public @dignite/* scope. Each tarball's package.json name is rewritten to
-      # @dignite-projects/* in a scratch copy just for this push; the packed artifact uploaded
-      # above and the eventual npmjs release keep the real @dignite/* name untouched.
+      # can't be pushed there under its real name - only npmjs (stable releases, below) can carry
+      # the public @dignite/* scope. Each tarball is rewritten in a scratch copy just for this push
+      # (build/rewrite-for-github-packages.mjs); the packed artifact uploaded above keeps the real
+      # @dignite/* names untouched. Published under `latest`: only pre-releases live on this feed,
+      # so `latest` there is simply the newest one.
       - name: Publish pre-release Angular packages to GitHub Packages
         if: steps.channel.outputs.channel == 'prerelease'
         run: |
           # A dedicated scratch .npmrc, not $NPM_CONFIG_USERCONFIG: that file is the one
-          # actions/setup-node's registry-url wrote for npmjs.org OIDC, read by "Publish tagged
+          # actions/setup-node's registry-url wrote for npmjs.org OIDC, read by "Publish stable
           # Angular packages to npm" below - appending a second registry/scope line to it (the
           # previous approach here) corrupted npm's parsing of that shared file, breaking OIDC
           # registry detection for the later npmjs.com publish with a garbled ENEEDAUTH error.
@@ -331,12 +330,14 @@ jobs:
             tarball=$(ls ./artifacts/npm/"$dir"/*.tgz)
             workdir=$(mktemp -d)
             tar -xzf "$tarball" -C "$workdir"
-            name=$(node -p "require('$workdir/package/package.json').name")
-            npm pkg set name="@dignite-projects/${name#@dignite/}" --prefix "$workdir/package"
+            # Renames the package to @dignite-projects/* and turns each @dignite/* dependency into
+            # an npm alias of its GitHub Packages copy - pre-releases are not on npmjs to resolve
+            # from. flex-fields is published before flex-fields-ckeditor, which depends on it.
+            name=$(node ./build/rewrite-for-github-packages.mjs "$workdir/package")
             # GitHub Packages refuses to overwrite an existing version, so a re-dispatch at an
             # unchanged <Version> (which the header comment above explicitly invites) or a re-run
-            # of a failed tag run dies here before ever reaching the npmjs step. Treat "already
-            # published" as a soft skip and let anything else fail.
+            # of a failed tag run would die here. Treat "already published" as a soft skip and let
+            # anything else fail.
             #
             # Redirect rather than `| tee`: this step's shell is `bash -e` with no pipefail, so a
             # pipeline's status is tee's (always 0) and a failed publish would report success -
@@ -344,14 +345,14 @@ jobs:
             # dignite-projects/vault-extract's release workflow before it added this guard.
             set +e
             npm publish "$workdir/package" --registry https://npm.pkg.github.com \
-              --tag '${{ steps.channel.outputs.npm-tag }}' --userconfig "$gh_packages_npmrc" \
+              --tag latest --userconfig "$gh_packages_npmrc" \
               > /tmp/npm-publish.log 2>&1
             status=$?
             set -e
             cat /tmp/npm-publish.log
             if [ $status -ne 0 ]; then
               if grep -qiE 'E409|cannot publish over|previously published' /tmp/npm-publish.log; then
-                echo "::notice::@dignite-projects/${name#@dignite/} is already published at this version; skipping."
+                echo "::notice::$name is already published at this version; skipping."
               else
                 exit $status
               fi
@@ -359,7 +360,7 @@ jobs:
           done
 
       - name: Validate NuGet Trusted Publishing identity
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: steps.channel.outputs.public == 'true'
         shell: bash
         env:
           NUGET_USER: ${{ vars.NUGET_USER }}
@@ -370,14 +371,14 @@ jobs:
           fi
 
       - name: Sign in to NuGet.org with Trusted Publishing
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: steps.channel.outputs.public == 'true'
         id: nuget-login
         uses: NuGet/login@v1
         with:
           user: ${{ vars.NUGET_USER }}
 
-      - name: Push tagged release to NuGet.org
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Push stable release to NuGet.org
+        if: steps.channel.outputs.public == 'true'
         shell: bash
         run: |
           for package in ./artifacts/*.nupkg; do
@@ -393,20 +394,20 @@ jobs:
       # has id-token: write). A package whose Trusted Publisher is missing or misconfigured on
       # npmjs.com fails loudly at its own `npm publish` line (E404/E401), which is intended; with
       # `bash -e` the remaining packages are then skipped, same as before.
-      - name: Publish tagged Angular packages to npm
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Publish stable Angular packages to npm
+        if: steps.channel.outputs.public == 'true'
         run: |
           npm publish ./artifacts/npm/notifications/*.tgz \
             --access public \
-            --tag '${{ steps.channel.outputs.npm-tag }}' \
+            --tag latest \
             --provenance
           npm publish ./artifacts/npm/flex-fields/*.tgz \
             --access public \
-            --tag '${{ steps.channel.outputs.npm-tag }}' \
+            --tag latest \
             --provenance
           npm publish ./artifacts/npm/flex-fields-ckeditor/*.tgz \
             --access public \
-            --tag '${{ steps.channel.outputs.npm-tag }}' \
+            --tag latest \
             --provenance
 
       # The real gate for issue #211 is "Verify packed Angular packages install as a single copy
@@ -422,7 +423,7 @@ jobs:
       # anything - it stops the draft GitHub Release and says loudly that the just-published set does
       # not install cleanly, which is the useful half of what remains once the packed check runs first.
       - name: Verify published packages install as a single copy each
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: steps.channel.outputs.public == 'true'
         shell: bash
         run: |
           # This step runs yarn (inside verify-npm-single-copy.mjs), and it sits downstream of the
