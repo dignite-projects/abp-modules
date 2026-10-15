@@ -16,6 +16,20 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Changed
+
+#### shared build and dependencies
+
+- **Pre-releases are no longer published to NuGet.org or npm.** From now on only stable versions reach the public
+  registries. Every `-rc.N` / `-preview.N`, tagged or dispatched, goes to this org's GitHub Packages feeds only, for
+  internal projects to test against: NuGet under the same package IDs, npm as `@dignite-projects/ng.*`. Each npm copy
+  there has its `@dignite/*` dependencies rewritten to npm aliases (`"@dignite/ng.flex-fields":
+  "npm:@dignite-projects/ng.flex-fields@<version>"`), because `flex-fields-ckeditor`'s exact dependency on
+  `@dignite/ng.flex-fields` would otherwise point at a version npmjs does not have. A consuming project installs a
+  pre-release through the same alias and keeps its `import`s unchanged. `build/resolve-npm-dist-tag.mjs` is removed:
+  npmjs now only ever gets `latest`. The pre-releases already on NuGet.org and npm up to `10.0.0-rc.29` stay there.
+  Setup for a consuming project: [CONTRIBUTING.md → Pre-releases](CONTRIBUTING.md#pre-releases-github-packages-only).
+
 ## [10.7.0] - 2026-10-15
 
 The first stable release. It contains the same packages as `10.0.0-rc.29` plus the fixes below.

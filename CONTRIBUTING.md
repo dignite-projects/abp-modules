@@ -139,6 +139,68 @@ suffixed version always ranks below the matching final version) and treat them a
 default. The earlier pre-release line `10.0.0-preview.1` … `10.0.0-rc.29` predates this scheme; the first stable
 release is `10.7.0`, and `10.0.0` itself was never published.
 
+### Pre-releases: GitHub Packages only
+
+**NuGet.org and npmjs only ever receive stable versions.** Every pre-release (`-rc.N`, `-preview.N`),
+whether cut from a tag or a `workflow_dispatch`, is published to this org's GitHub Packages feeds only,
+for this org's own projects to test against before the stable release. Pre-releases up to
+`10.0.0-rc.29` did reach the public registries; they stay there, since NuGet.org versions cannot be
+deleted, and are simply not added to.
+
+| | NuGet | npm |
+|---|---|---|
+| Feed | `https://nuget.pkg.github.com/dignite-projects/index.json` | `https://npm.pkg.github.com` |
+| Package names | Same IDs as on NuGet.org (`Dignite.Abp.Notifications`, …) | `@dignite-projects/ng.*` — GitHub Packages requires the scope to equal the org, so `@dignite/ng.x` is renamed |
+
+Both feeds require authentication even to read: a personal access token (classic) with
+`read:packages`, or in a consuming repository's own Actions, its `GITHUB_TOKEN` once that repository
+has been granted access to the packages.
+
+**NuGet** — add the feed next to NuGet.org in the consuming solution's `nuget.config`, then reference
+the pre-release version as usual:
+
+```xml
+<packageSources>
+  <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+  <add key="dignite-projects" value="https://nuget.pkg.github.com/dignite-projects/index.json" />
+</packageSources>
+<packageSourceCredentials>
+  <dignite-projects>
+    <add key="Username" value="<github user>" />
+    <add key="ClearTextPassword" value="%GITHUB_PACKAGES_TOKEN%" />
+  </dignite-projects>
+</packageSourceCredentials>
+```
+
+**npm** — point the `@dignite-projects` scope at GitHub Packages in the consuming workspace's
+`.npmrc`, and install each package under its real `@dignite/*` name through an npm alias, so no
+`import` changes:
+
+```ini
+@dignite-projects:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}
+```
+
+```json
+"@dignite/ng.flex-fields": "npm:@dignite-projects/ng.flex-fields@10.8.0-rc.1",
+"@dignite/ng.flex-fields-ckeditor": "npm:@dignite-projects/ng.flex-fields-ckeditor@10.8.0-rc.1"
+```
+
+The release workflow publishes each GitHub Packages copy with its own `@dignite/*` dependencies
+rewritten to that same alias form
+([`build/rewrite-for-github-packages.mjs`](./build/rewrite-for-github-packages.mjs)) — the
+`flex-fields-ckeditor` copy depends on
+`"@dignite/ng.flex-fields": "npm:@dignite-projects/ng.flex-fields@10.8.0-rc.1"`. Write the consumer's
+alias in exactly that form: an identical spec is one Yarn Classic lockfile entry and one installed
+copy, which is what issue #211 needs. Switching to the stable release is replacing each alias with the
+plain version (`"@dignite/ng.flex-fields": "10.8.0"`).
+
+**A downstream project's public release never depends on a pre-release.** Its own stable packages
+must reference a stable version of these packages, or its consumers cannot restore it from NuGet.org.
+That includes the cross-repository `ProjectReference` case under [Cutting a release](#cutting-a-release):
+`site` packed while this workspace sits on `10.8.0-rc.1` pins `>= 10.8.0-rc.1`, which exists only on
+GitHub Packages. Cut a downstream public release only while this workspace is on a stable version.
+
 **Do not use CalVer** (e.g. `2026.7.0`) — it communicates when a release was cut, not whether it's
 safe to upgrade, which is the opposite of what this project's positioning needs.
 
@@ -188,16 +250,11 @@ breaking `site`'s restore.
    (`.github/workflows/release.yml`) triggers on `v*` tags and ends by creating a **draft** GitHub
    Release from the CHANGELOG section — review and publish it by hand. `workflow_dispatch` does not
    create a GitHub Release.
-4. Tagged releases publish the NuGet packages to NuGet.org and all three Angular libraries to npm. The
-   npm dist-tag comes from [`build/resolve-npm-dist-tag.mjs`](./build/resolve-npm-dist-tag.mjs): a
-   stable version always takes `latest`; a pre-release also takes `latest` for as long as no stable
-   version of these packages has ever been published, and `next` from then on, so the first stable
-   release retires that rule by itself. While pre-releases hold `latest`, the workflow does not move
-   `next` — it has no standing npm credential to run `npm dist-tag add` with — so `next` stays
-   wherever it was last set by hand. Pre-releases, tagged or dispatched, are also mirrored to GitHub
-   Packages (npm under `@dignite-projects/*`, since that registry requires the scope to match the
-   owning org). `workflow_dispatch` is a private preview build: it pushes a pre-release to GitHub
-   Packages only and does not publish to either public registry.
+4. A **stable** version on a tag publishes the NuGet packages to NuGet.org and all three Angular
+   libraries to npm under the `latest` dist-tag. A **pre-release**, tagged or dispatched, goes to
+   GitHub Packages only — see [Pre-releases: GitHub Packages only](#pre-releases-github-packages-only);
+   a pre-release tag additionally gets a draft GitHub pre-release. `workflow_dispatch` never publishes
+   to a public registry, whatever the version.
 5. NuGet.org publishing uses Trusted Publishing rather than a stored API key. The NuGet.org policy
    must select the intended package owner and match GitHub repository
    `dignite-projects/abp-modules` plus workflow file `release.yml`. Set the repository variable
@@ -207,8 +264,8 @@ breaking `site`'s restore.
 Re-running `workflow_dispatch` without bumping the version first does not fail: NuGet pushes use
 `--skip-duplicate`, and the GitHub Packages npm step treats an already-published version (`E409`) as a
 soft skip, since that registry refuses to overwrite one. It also publishes nothing new, so it only
-re-verifies the build. The same soft skip is what lets a failed tag run be re-run past the GitHub
-Packages step to reach npmjs.
+re-verifies the build. The same soft skip is what lets a failed pre-release tag run be re-run past
+the GitHub Packages step.
 
 > **Migrating from the old repositories:** these packages were previously released from
 > `dignite-projects/abp-file-storing` and `dignite-projects/abp-notifications`. Each package's

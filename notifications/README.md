@@ -46,9 +46,9 @@ them.
 | `10.0.0-rc.29` | `10.7.x` (built against `10.7.0`) | .NET 10 | same version | Angular `^22.0.0` (`@abp/ng.*` `~10.7.0`) |
 | `10.7.x` | `10.7.x` (built against `10.7.0`) | .NET 10 | same version | Angular `^22.0.0` (`@abp/ng.*` `~10.7.0`) |
 
-The NuGet and npm packages always use the same version. Pre-release npm packages use the `next`
-dist-tag; stable releases use `latest`. npm requires every package to have a `latest` tag, so until
-the first stable version exists the initial pre-release is necessarily also exposed as `latest`.
+The NuGet and npm packages always use the same version. Only stable releases are published to
+NuGet.org and npm (`latest`); pre-releases go to this org's GitHub Packages feeds for internal
+testing — see [CONTRIBUTING → Pre-releases](../CONTRIBUTING.md#pre-releases-github-packages-only).
 
 **Core framework** (`core/`), laid out the way ABP lays out its framework features (see
 [ABP's package layout](#abps-package-layout)):
