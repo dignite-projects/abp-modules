@@ -111,6 +111,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
       <PrivateAssets>compile; contentFiles; build; buildMultitargeting; buildTransitive; analyzers; native</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Polly" Version="8.8.0" />
   </ItemGroup>
   
   <ItemGroup Condition="Exists('./openiddict.pfx')">
