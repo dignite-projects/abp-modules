@@ -46,6 +46,11 @@ so it stays clear which part of the repository actually moved.
   fields, MongoDB, the Angular and MVC UIs, and the CKEditor field type. `flex-fields/README.md`, the packages' NuGet
   README, is shortened to an introduction, the packages, a quick start, development notes and a link to the
   documentation.
+- **MCP Server documentation** at `docs/en/aspnetcore-mcp/`: an overview of why the shared server exists and how it
+  works, contributing tools, resources and prompts from a module (namespaces, dynamic resources, why `AddTools<T>()`),
+  hosting the server (options, authentication and RFC 9728 discovery, third-party tool libraries), and errors and the
+  unit of work. `aspnetcore-mcp/README.md`, the package's NuGet README, is shortened to an introduction, two short
+  examples and a link to the documentation.
 
 ### Changed
 
