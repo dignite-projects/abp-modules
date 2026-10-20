@@ -49,6 +49,42 @@
           "text": "Overview",
           "path": "flex-fields/index.md",
           "isIndex": true
+        },
+        {
+          "text": "Getting Started",
+          "path": "flex-fields/getting-started.md"
+        },
+        {
+          "text": "Field Types",
+          "path": "flex-fields/field-types.md"
+        },
+        {
+          "text": "Creating a Field Type",
+          "path": "flex-fields/custom-field-types.md"
+        },
+        {
+          "text": "Querying by Field Values",
+          "path": "flex-fields/querying.md"
+        },
+        {
+          "text": "Renaming and Deleting Fields",
+          "path": "flex-fields/renaming-and-deleting-fields.md"
+        },
+        {
+          "text": "MongoDB",
+          "path": "flex-fields/mongodb.md"
+        },
+        {
+          "text": "Angular UI",
+          "path": "flex-fields/angular-ui.md"
+        },
+        {
+          "text": "MVC UI",
+          "path": "flex-fields/mvc-ui.md"
+        },
+        {
+          "text": "CKEditor Field Type",
+          "path": "flex-fields/ckeditor.md"
         }
       ]
     },
