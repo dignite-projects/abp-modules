@@ -11,6 +11,34 @@
           "text": "Overview",
           "path": "blob-storing/index.md",
           "isIndex": true
+        },
+        {
+          "text": "Size Limit",
+          "path": "blob-storing/max-size.md"
+        },
+        {
+          "text": "Allowed Content Types",
+          "path": "blob-storing/allowed-content-types.md"
+        },
+        {
+          "text": "GZip Compression",
+          "path": "blob-storing/gzip.md"
+        },
+        {
+          "text": "Image Resize and Compress",
+          "path": "blob-storing/imaging.md"
+        },
+        {
+          "text": "MIME Type Detection",
+          "path": "blob-storing/mime-type-detection.md"
+        },
+        {
+          "text": "Saving Uploaded Files",
+          "path": "blob-storing/saving-uploaded-files.md"
+        },
+        {
+          "text": "Writing Your Own Contributors",
+          "path": "blob-storing/custom-contributors.md"
         }
       ]
     },

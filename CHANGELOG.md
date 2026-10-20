@@ -27,6 +27,11 @@ so it stays clear which part of the repository actually moved.
   moved from `notifications/docs/articles/` to
   `docs/en/articles/2026-07-16-introducing-abp-notification-center/post.md`, and its links now point at this
   repository instead of the archived `dignite-projects/abp-notifications`.
+- **BLOB Storing documentation** at `docs/en/blob-storing/`: an overview with the installation, container
+  configuration, the recommended order, stored formats and error codes, a page per contributor (size limit, allowed
+  content types, GZip, image resize and compress with the decode guard), MIME type detection, a complete upload
+  example, and writing your own contributors. `blob-storing/README.md`, the packages' NuGet README, is shortened to an
+  introduction, a quick start and a link to the documentation.
 
 ### Changed
 
