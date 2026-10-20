@@ -1,4 +1,8 @@
-# 拆分部署设计：独立的通知服务（定稿 · 待实现）
+# 拆分部署设计：独立的通知服务（已实现）
+
+> **状态：** 已于 `10.0.0-rc.23` 实现；`10.0.0-rc.24` 起包名改为 `Dignite.Abp.Notifications.Client` /
+> `.Domain` / `.EntityFrameworkCore`（文中的 `.Remote`、`.DefinitionStore.*` 即旧名）。本稿是当时的设计记录；之后的变化以
+> 代码、CHANGELOG 和用户文档 [Split Deployment](../../docs/en/notifications/split-deployment.md) 为准。
 
 > 让通知模块能以「发布方在一个进程、收件箱和渠道在另一个进程」的方式部署，第一个消费者是 Dignite.Cloud 的
 > NotificationService。本稿只写设计，不含代码；第 12 节是改动清单，第 15 节是评审中否决的方案及理由，

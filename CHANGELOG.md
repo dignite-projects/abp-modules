@@ -51,6 +51,10 @@ so it stays clear which part of the repository actually moved.
   hosting the server (options, authentication and RFC 9728 discovery, third-party tool libraries), and errors and the
   unit of work. `aspnetcore-mcp/README.md`, the package's NuGet README, is shortened to an introduction, two short
   examples and a link to the documentation.
+- The npm package READMEs of `@dignite/ng.notification-center`, `@dignite/ng.flex-fields` and
+  `@dignite/ng.flex-fields-ckeditor` link to the documentation; the notification-center one no longer pins its install
+  command to `10.0.0-rc.3`. The design documents under `notifications/dev-docs/` and `flex-fields/dev-docs/` say in
+  which release they were implemented, instead of still reading "to be implemented".
 
 ### Changed
 

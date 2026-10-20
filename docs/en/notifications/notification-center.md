@@ -31,7 +31,7 @@ A user who subscribes to a notification receives it whenever it is published **f
 
 A notification published without an entity reaches the subscribers of the whole notification. A notification about an entity reaches the subscribers of the whole notification **and** those of that entity; a user subscribed to both receives it once.
 
-Users manage their own subscriptions in the UI or through the REST API. A user can only subscribe to a notification whose [requirements](defining-notifications.md#requirements) they meet, and the requirements are checked again at delivery. To subscribe a user from your own code, for example the customer of an order to the notifications about that order, use `NotificationSubscriptionManager`:
+Users manage their own subscriptions in the UI or through the REST API. A user can only subscribe to a notification whose [requirements](defining-notifications.md#requirements) they meet, and the requirements are checked again at delivery. To subscribe a user from your own code, for example the customer of an order to the notifications about that order, use `NotificationSubscriptionManager`, of the `Dignite.Abp.Notifications` package that the Notification Center's application layer brings:
 
 ````csharp
 await _notificationSubscriptionManager.SubscribeAsync(

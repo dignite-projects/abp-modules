@@ -12,12 +12,12 @@ Which channels carry a notification is **not** part of its definition. The modul
 ## Configuring the Routes
 
 ````csharp
-// In a business module
+// In a business module, which references Dignite.Abp.Notifications.Abstractions only
 Configure<NotificationRoutingOptions>(options =>
 {
     options.ForNotifications(
         ["MyProject.OrderShipped", "MyProject.OrderCancelled"],
-        SignalRNotifier.ChannelName, PushNotifier.ChannelName);
+        "SignalR", "Push");
 });
 
 // In the application's module, which is loaded last
@@ -35,7 +35,7 @@ Configure<NotificationRoutingOptions>(options =>
 
 The rules are written in module order, and **later writes win**: a second rule for the same notification replaces the first one as a whole, without merging the channels. That is how the application, configured last, overrides a module's defaults.
 
-Channel names are trimmed and compared case-insensitively; notification names are case-sensitive. The built-in channels are `SignalR` (`SignalRNotifier.ChannelName`), `Email` (`EmailNotifier.ChannelName`) and `Push` (`PushNotifier.ChannelName`), but a channel name is just a string: the routes can name a channel whose notifier runs in another process.
+Channel names are trimmed and compared case-insensitively; notification names are case-sensitive. The built-in channels are `SignalR` (`SignalRNotifier.ChannelName`), `Email` (`EmailNotifier.ChannelName`) and `Push` (`PushNotifier.ChannelName`), but a channel name is just a string: a business module writes the string rather than reference a channel package, and the routes can name a channel whose notifier runs in another process.
 
 The routes can also be bound from configuration with the standard [options](https://abp.io/docs/latest/framework/fundamentals/options) binding. The keys of the `Notifications` dictionary are notification names:
 

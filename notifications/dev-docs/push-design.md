@@ -1,4 +1,7 @@
-# 设备推送（Push）渠道设计（草案 · 待评审）
+# 设备推送（Push）渠道设计（已实现）
+
+> **状态：** 已于 `10.0.0-rc.20` 实现。本稿是当时的设计记录，文中的 `UseChannels("Push")` 写法已在 `10.0.0-rc.21`
+> 由渠道路由取代；之后的变化以代码、CHANGELOG 和用户文档 [Push Notifier](../../docs/en/notifications/push.md) 为准。
 
 > 为 `Dignite.Abp.Notifications` 增加 iOS / Android 设备推送渠道。第一个真实消费者是
 > `campus/react-native`（Expo SDK 57 + EAS）。本稿只是设计，不含代码改动；第 14 节列出待决问题。

@@ -1,4 +1,7 @@
-# FlexFields 模块设计（设计定稿 · 待落码校准）
+# FlexFields 模块设计（已落码）
+
+> **状态：** 已落码，自 `10.0.0-rc.5` 起发布。本稿记录设计取舍与否决方案；与代码不一致之处以代码和用户文档
+> [FlexFields](../../docs/en/flex-fields/index.md) 为准。
 
 > `Dignite.Abp.DynamicForms`（现居 `dignite-abp` 仓）将拆分独立、改名 **FlexFields**，迁入本仓 `abp-modules`。
 > 本稿是多轮设计讨论的整理，**是起点不是终点**：落码后按实际代码回头调整。第 7 节列了仍未决的疑问。

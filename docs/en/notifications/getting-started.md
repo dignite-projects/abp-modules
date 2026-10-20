@@ -97,14 +97,16 @@ Every notification belongs to a **group**, which is how the inbox and the subscr
 
 ## Routing It to a Channel
 
-A definition does not say how a notification is delivered. Route it to the SignalR channel in the `ConfigureServices` method of your module:
+A definition does not say how a notification is delivered. Route it to the SignalR channel in the `ConfigureServices` method of a module:
 
 ````csharp
 Configure<NotificationRoutingOptions>(options =>
 {
-    options.ForNotification("MyProject.OrderShipped", SignalRNotifier.ChannelName);
+    options.ForNotification("MyProject.OrderShipped", "SignalR");
 });
 ````
+
+A channel name is a plain string; `SignalRNotifier.ChannelName` is the same value, for a module that references the SignalR package anyway.
 
 A notification without a route is still stored in the inbox, but no channel delivers it. See [Routing to Channels](routing.md).
 
