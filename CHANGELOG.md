@@ -39,6 +39,13 @@ so it stays clear which part of the repository actually moved.
   store. `notifications/README.md`, the packages' NuGet README, is shortened to an introduction, the packages, a quick
   start and a link to the documentation. The retention example now uses the real default table prefix, `Notif`; the
   README's showed `Abp`.
+- **FlexFields documentation** at `docs/en/flex-fields/`: an overview of the concepts and packages, getting started
+  with EF Core (the three entities, the mapping, the field provider, the index manager, query executor and repository,
+  saving, validating and querying), the eight built-in field types with their configuration keys and defaults,
+  composite types, nesting and normalization, creating a field type, querying by field values, renaming and deleting
+  fields, MongoDB, the Angular and MVC UIs, and the CKEditor field type. `flex-fields/README.md`, the packages' NuGet
+  README, is shortened to an introduction, the packages, a quick start, development notes and a link to the
+  documentation.
 
 ### Changed
 
