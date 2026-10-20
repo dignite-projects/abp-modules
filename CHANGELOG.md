@@ -32,6 +32,13 @@ so it stays clear which part of the repository actually moved.
   content types, GZip, image resize and compress with the decode guard), MIME type detection, a complete upload
   example, and writing your own contributors. `blob-storing/README.md`, the packages' NuGet README, is shortened to an
   introduction, a quick start and a link to the documentation.
+- **Notifications documentation** at `docs/en/notifications/`: an overview with the operation modes, packages and
+  topologies, getting started, defining and publishing notifications, routing, the SignalR, email and push channels,
+  writing your own notifier, the Notification Center (inbox, subscriptions, REST API, database tables), delivery
+  guarantees, retention and personal data erasure, the MVC and Angular UIs, and split deployment with the definition
+  store. `notifications/README.md`, the packages' NuGet README, is shortened to an introduction, the packages, a quick
+  start and a link to the documentation. The retention example now uses the real default table prefix, `Notif`; the
+  README's showed `Abp`.
 
 ### Changed
 

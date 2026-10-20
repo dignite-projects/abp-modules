@@ -59,6 +59,73 @@
           "text": "Overview",
           "path": "notifications/index.md",
           "isIndex": true
+        },
+        {
+          "text": "Getting Started",
+          "path": "notifications/getting-started.md"
+        },
+        {
+          "text": "Defining Notifications",
+          "path": "notifications/defining-notifications.md"
+        },
+        {
+          "text": "Publishing Notifications",
+          "path": "notifications/publishing-notifications.md"
+        },
+        {
+          "text": "Routing to Channels",
+          "path": "notifications/routing.md"
+        },
+        {
+          "text": "Channels",
+          "items": [
+            {
+              "text": "SignalR",
+              "path": "notifications/signalr.md"
+            },
+            {
+              "text": "Email",
+              "path": "notifications/email.md"
+            },
+            {
+              "text": "Device Push",
+              "path": "notifications/push.md"
+            },
+            {
+              "text": "Writing Your Own Notifier",
+              "path": "notifications/custom-notifiers.md"
+            }
+          ]
+        },
+        {
+          "text": "Notification Center",
+          "items": [
+            {
+              "text": "Overview",
+              "path": "notifications/notification-center.md",
+              "isIndex": true
+            },
+            {
+              "text": "Delivery Guarantees",
+              "path": "notifications/delivery-guarantees.md"
+            },
+            {
+              "text": "Retention and Personal Data",
+              "path": "notifications/retention-and-personal-data.md"
+            },
+            {
+              "text": "MVC UI",
+              "path": "notifications/mvc-ui.md"
+            },
+            {
+              "text": "Angular UI",
+              "path": "notifications/angular-ui.md"
+            }
+          ]
+        },
+        {
+          "text": "Split Deployment",
+          "path": "notifications/split-deployment.md"
         }
       ]
     },
