@@ -22,8 +22,8 @@ namespace Dignite.NotificationCenter;
 /// deleting by user id stays correct there.
 /// <para>
 /// The shared <see cref="Notification"/> payload is not touched: it has no owner and is referenced by every
-/// recipient's inbox row, so removing orphaned payloads is the host's retention job (see "Retention and lifecycle
-/// cleanup" in the README).
+/// recipient's inbox row, so removing orphaned payloads is the host's retention job (see
+/// docs/en/notifications/retention-and-personal-data.md).
 /// </para>
 /// <para>
 /// Every delete is idempotent, so a redelivered event simply finishes the job. The three deletes share one unit of
