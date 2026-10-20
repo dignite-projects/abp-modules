@@ -8,19 +8,27 @@
 
 "module: blob-storing":
   - changed-files:
-      - any-glob-to-any-file: 'blob-storing/**'
+      - any-glob-to-any-file:
+          - 'blob-storing/**'
+          - 'docs/en/blob-storing/**'
 
 "module: notifications":
   - changed-files:
-      - any-glob-to-any-file: 'notifications/**'
+      - any-glob-to-any-file:
+          - 'notifications/**'
+          - 'docs/en/notifications/**'
 
 "module: flex-fields":
   - changed-files:
-      - any-glob-to-any-file: 'flex-fields/**'
+      - any-glob-to-any-file:
+          - 'flex-fields/**'
+          - 'docs/en/flex-fields/**'
 
 "module: aspnetcore-mcp":
   - changed-files:
-      - any-glob-to-any-file: 'aspnetcore-mcp/**'
+      - any-glob-to-any-file:
+          - 'aspnetcore-mcp/**'
+          - 'docs/en/aspnetcore-mcp/**'
 
 "area: angular":
   - changed-files:
@@ -39,4 +47,6 @@
 
 "documentation":
   - changed-files:
-      - any-glob-to-any-file: '**/*.md'
+      - any-glob-to-any-file:
+          - '**/*.md'
+          - 'docs/**'

@@ -9,8 +9,8 @@ Published: `src/Dignite.Abp.BlobStoring.Pipeline` and `src/Dignite.Abp.BlobStori
 It was `Dignite.Abp.FileStoring` (an `IFileHandler` pipeline run by `IFileStorer`) until `10.0.0-rc.27`. ABP's pipeline
 is the same idea, so the old pipeline and its runner were deleted and the packages renamed to follow ABP's naming
 (`Dignite.Abp.BlobStoring.<Addition>`, as `Volo.Abp.BlobStoring.<Provider>`). Why, and the option that lost:
-[`docs/pipeline-contributors-decision.md`](./docs/pipeline-contributors-decision.md). Before that, File Explorer left in
-`10.0.0-rc.25`: [`docs/core-only-decision.md`](./docs/core-only-decision.md) (historical).
+[`dev-docs/pipeline-contributors-decision.md`](./dev-docs/pipeline-contributors-decision.md). Before that, File Explorer left in
+`10.0.0-rc.25`: [`dev-docs/core-only-decision.md`](./dev-docs/core-only-decision.md) (historical).
 
 ## What stays out
 

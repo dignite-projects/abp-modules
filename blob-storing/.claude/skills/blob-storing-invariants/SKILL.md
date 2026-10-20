@@ -16,7 +16,7 @@ BlobStoring**: ABP ships the pipeline mechanism, this ships contributors for it.
 `IBlobContainer.SaveAsync` / `GetAsync` for every blob of a container that lists it — that is the whole product. It
 keeps **no file metadata, has no upload entry point, no return object, no blob naming, no HTTP API and no UI**; the
 application that stores a file owns its record of it, its authorization and its blob names. The old `IFileStorer` /
-`IFileHandler` pipeline this replaced is gone on purpose: [`docs/pipeline-contributors-decision.md`](../../../docs/pipeline-contributors-decision.md).
+`IFileHandler` pipeline this replaced is gone on purpose: [`dev-docs/pipeline-contributors-decision.md`](../../../dev-docs/pipeline-contributors-decision.md).
 
 ## 1. Stream ownership follows ABP's contract — exactly
 

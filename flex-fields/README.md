@@ -13,7 +13,7 @@ defines "the concrete one."
 
 - **A self-built value bag, not `ExtraProperties`.** `IHasFlexFields.FlexFields` is FlexFields' own
   dictionary, isolated from ABP's shared `ExtraProperties` bag by design (see
-  [`docs/flexfields-design.md`](docs/flexfields-design.md) §4).
+  [`dev-docs/flexfields-design.md`](dev-docs/flexfields-design.md) §4).
 - **One seam in, one seam out.** A downstream implements `IFlexFieldProvider<TEntity>` to tell the
   kernel what fields a host entity has; the kernel gives back validation
   (`IFlexFieldValidator<TEntity>`), a query pushdown (`IFlexFieldQueryExecutor<TEntity>`), derived-index
@@ -83,7 +83,7 @@ protected override void OnModelCreating(ModelBuilder builder)
 }
 ```
 
-See [`docs/flexfields-design.md`](docs/flexfields-design.md) for the full design rationale. For a
+See [`dev-docs/flexfields-design.md`](dev-docs/flexfields-design.md) for the full design rationale. For a
 worked example, [`demo/`](demo/) is the same seam wired to a real, runnable feature
 (`Product`/`ProductField`, an Angular admin UI, seeded data) — run it with
 `dotnet run --project demo/Dignite.Abp.FlexFields.Demo -- --migrate-database` followed by
@@ -151,7 +151,7 @@ test/                                           per-layer test projects
 angular/projects/flex-fields                    publishable Angular library (@dignite/ng.flex-fields)
 angular/src                                     Angular demo app - local dev only, never published
 demo/                                           demo ABP host - local dev only, never packed
-docs/flexfields-design.md                       design rationale
+dev-docs/flexfields-design.md                   design rationale
 ```
 
 ## License

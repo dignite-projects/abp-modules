@@ -50,23 +50,24 @@ abp-modules/
 ├── Dignite.Abp.Modules.slnx     # aggregate solution (every module)
 ├── .github/workflows/           # one build+test workflow, one lockstep release workflow, one PR labeler
 ├── build/                       # build/test scripts + the npm/Angular package verification scripts
+├── docs/                        # user documentation for every module (ABP Docs format), and articles
 ├── aspnetcore-mcp/              # shared MCP server infrastructure (no domain model)
 ├── blob-storing/
 │   ├── Dignite.Abp.BlobStoring.slnx      # focused solution for this module alone
 │   ├── src/  test/                       # the published class libraries and their tests (no demo host)
-│   ├── docs/                             # decision records (why contributors, why no File Explorer here)
+│   ├── dev-docs/                         # decision records (why contributors, why no File Explorer here)
 │   └── .claude/skills/                   # module-specific conventions & invariants
 ├── notifications/
 │   ├── Dignite.Abp.Notifications.slnx  # focused solution for this module alone
 │   ├── core/  notification-center/       # the published class libraries
 │   ├── host/  angular/                   # local-dev demo app + Angular workspace
-│   ├── docs/                             # design documents
+│   ├── dev-docs/                         # design documents
 │   └── .claude/skills/                   # module-specific conventions & invariants
 └── flex-fields/
     ├── Dignite.Abp.FlexFields.slnx       # focused solution for this module alone (src/, test/ and demo/)
     ├── src/  test/                       # the published class libraries and their tests
     ├── demo/  angular/                   # local-dev demo app + Angular workspace
-    └── docs/flexfields-design.md         # design rationale
+    └── dev-docs/flexfields-design.md     # design rationale
 ```
 
 `host/` (or `demo/`) and `angular/` under a module are **local-dev demos only** — they run and
