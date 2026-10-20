@@ -172,6 +172,18 @@
           "text": "Overview",
           "path": "aspnetcore-mcp/index.md",
           "isIndex": true
+        },
+        {
+          "text": "Contributing Tools",
+          "path": "aspnetcore-mcp/contributing-tools.md"
+        },
+        {
+          "text": "Hosting the Server",
+          "path": "aspnetcore-mcp/hosting.md"
+        },
+        {
+          "text": "Errors and Unit of Work",
+          "path": "aspnetcore-mcp/errors-and-unit-of-work.md"
         }
       ]
     }
