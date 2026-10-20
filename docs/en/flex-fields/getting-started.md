@@ -168,7 +168,7 @@ public class ProductFlexFieldProvider : IFlexFieldProvider<Product>, ITransientD
 
 ## Adopting the Index Manager, the Query Executor and the Repository
 
-The EF Core package has base classes for the other three; your classes only name the foreign key of the index row and create it:
+The EF Core package has base classes for the other three; your classes only name the foreign key of the index row and create it. `IMyProjectDbContext` stands for the `DbContext` (or its interface) that maps the three entities:
 
 ````csharp
 public class ProductFlexFieldIndexManager

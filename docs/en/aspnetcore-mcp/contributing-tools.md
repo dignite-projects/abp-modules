@@ -44,7 +44,6 @@ A tool class uses the SDK's own attributes, `[McpServerToolType]`, `[McpServerTo
 
 ````csharp
 [McpServerToolType]
-[Authorize(MyModulePermissions.Products.Default)]
 public class MyModuleTools : ITransientDependency
 {
     private readonly IProductAppService _productAppService;
@@ -56,6 +55,7 @@ public class MyModuleTools : ITransientDependency
 
     [McpServerTool(Name = "my_module_search_products", ReadOnly = true)]
     [Description("Searches the product catalog by name. Returns at most 20 products.")]
+    [Authorize(MyModulePermissions.Products.Default)]
     public virtual async Task<PagedResultDto<ProductDto>> SearchProductsAsync(
         [Description("A part of the product name.")] string filter)
     {
@@ -78,7 +78,7 @@ public class MyModuleTools : ITransientDependency
 
 * Call the module's **application services**, so a tool gets the same validation, authorization and business rules as the HTTP API.
 * The descriptions are what the model reads to decide which tool to call and how, so write them for it: what the tool does, what it returns, and the limits.
-* A tool the current user has no permission for does not appear in `tools/list`.
+* Put `[Authorize]` on each tool method. A tool the current user has no permission for does not appear in `tools/list`.
 * Make the methods `virtual`, so an application can override a tool by deriving from the class and [replacing](https://abp.io/docs/latest/framework/fundamentals/dependency-injection#replace-a-service) it.
 
 ### Why Not the SDK's WithTools
