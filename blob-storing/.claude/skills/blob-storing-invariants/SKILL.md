@@ -85,7 +85,7 @@ always carries a signature, with content that has none, is rejected. Unknown con
 - **Stored-format** (`GZip`): the transform is undone while reading, so a blob can only be read with the same transforming
   contributors, in the same order, that saved it. Adding or removing one on a container that has blobs breaks every
   existing blob. A new contributor that undoes something in `OnGettingAsync` is stored-format: document it in its XML doc,
-  in the README and in `Add…Contributor`'s doc.
+  in its page under `docs/en/blob-storing/` and in `Add…Contributor`'s doc.
 - Order is part of a container's stored format: contributors added later come later on save and earlier on get.
 - The recommended order is validation (`MaxSize`, `AllowedContentTypes`) → image → GZip. Anything that must inspect the
   content runs before a stored-format transform makes it opaque.
