@@ -8,7 +8,7 @@ configuration, validation, a value bag, a query index — and **no domain model*
 Published: `src/` (six NuGet packages, plus `.Installer`), `angular/projects/flex-fields`
 (`@dignite/ng.flex-fields`). `demo/` and the Angular demo app are local-dev-only, never packed.
 
-Design rationale lives in [`docs/flexfields-design.md`](./docs/flexfields-design.md) — read §1–§5
+Design rationale lives in [`dev-docs/flexfields-design.md`](./dev-docs/flexfields-design.md) — read §1–§5
 before changing any contract; it records what was rejected and why.
 
 ## Structure
@@ -73,7 +73,7 @@ As of 2026-08-17 the registration keys were deliberately brought in line with th
 below — before that they were stragglers from the pre-rename `Dignite.Abp.DynamicForms` naming that
 the `IFormControl` → `IFieldType` class rename never touched (`TextFieldType.ControlName` was
 `"TextEdit"`, `NumberConfigurationNames` used a `NumericEditField.` prefix, etc. — see
-[`flexfields-design.md`](./docs/flexfields-design.md) §3). Any environment with field data persisted
+[`flexfields-design.md`](./dev-docs/flexfields-design.md) §3). Any environment with field data persisted
 under the old keys needs its own data migration before upgrading past that point; the kernel has no
 DbContext of its own to run one.
 

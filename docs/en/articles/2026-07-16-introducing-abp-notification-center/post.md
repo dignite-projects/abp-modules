@@ -5,7 +5,7 @@ Then the application needs recipient selection, real-time delivery, email, read/
 subscriptions, persistence, multi-tenancy, and different user interfaces. At that point, a simple
 message sender has become a subsystem.
 
-[Dignite ABP Notifications](https://github.com/dignite-projects/abp-notifications) is an open-source,
+[Dignite ABP Notifications](https://github.com/dignite-projects/abp-modules/tree/main/notifications) is an open-source,
 event-driven notification framework built for the ABP Framework. It separates notification delivery
 from the persistent inbox, so an application can start with lightweight real-time forwarding and add
 a full Notification Center only when it needs one.
@@ -433,7 +433,8 @@ publishing API continues to work as those capabilities are added.
 
 ## Source Code and Packages
 
-- [Source code and documentation](https://github.com/dignite-projects/abp-notifications)
+- [Source code](https://github.com/dignite-projects/abp-modules/tree/main/notifications)
+- [Documentation](../../notifications/index.md)
 - [Dignite.Abp.Notifications on NuGet](https://www.nuget.org/packages/Dignite.Abp.Notifications)
 - [Angular package on npm](https://www.npmjs.com/package/@dignite/ng.notification-center)
 - [ABP Framework](https://abp.io/)

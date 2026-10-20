@@ -5,7 +5,7 @@
 > [CONTRIBUTING.md](../CONTRIBUTING.md) for the build, versioning, and release process shared across
 > them. Formerly developed at `dignite-projects/abp-file-storing` and published as
 > `Dignite.Abp.FileStoring` until `10.0.0-rc.27`; the packages were renamed to follow ABP's naming
-> (see [`docs/pipeline-contributors-decision.md`](docs/pipeline-contributors-decision.md)).
+> (see [`dev-docs/pipeline-contributors-decision.md`](dev-docs/pipeline-contributors-decision.md)).
 
 Everyday `IBlobPipelineContributor` implementations for
 [ABP BlobStoring](https://abp.io/docs/latest/framework/infrastructure/blob-storing). ABP 10.7 added the BLOB

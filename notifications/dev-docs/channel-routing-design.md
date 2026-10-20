@@ -197,7 +197,7 @@ Task<IReadOnlyDictionary<Guid, string[]>> FilterAsync(
 - `host/.../DemoNotificationDefinitionProvider` → 渠道配置移到 host 模块的 `ConfigureServices`。
 - `README.md`：§「Register the notification definition」和 §「Use UseChannels only for external channels」改写；
   新增「Routing」小节说明两级规则、模块默认 + 宿主覆盖、显式只进收件箱、启动校验三档。
-- `docs/push-design.md`：三处 `UseChannels("Push")` 改为 Options 写法（第 13、22、322 行附近）。
+- `dev-docs/push-design.md`：三处 `UseChannels("Push")` 改为 Options 写法（第 13、22、322 行附近）。
 - `CLAUDE.md`（notifications）：「Adding a feature」里 `UseChannels(...)` 一句改为 Options。
 
 **新增**

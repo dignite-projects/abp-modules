@@ -24,14 +24,14 @@ These are the things most likely to be broken by an otherwise reasonable-looking
      `IBlobPipelineContributor` replaced. This is the **same exception** as rc.24 — a pre-release module adopting an
      ABP naming convention, with a Migrate section in the CHANGELOG — not a new precedent: the folder moving
      was not the reason, and a rename after the first stable release is not allowed
-     ([`blob-storing/docs/pipeline-contributors-decision.md`](blob-storing/docs/pipeline-contributors-decision.md)).
+     ([`blob-storing/dev-docs/pipeline-contributors-decision.md`](blob-storing/dev-docs/pipeline-contributors-decision.md)).
    - **Removal on record, `10.0.0-rc.25`:** `Dignite.FileExplorer.*` (Domain.Shared, Domain,
      Application.Contracts, Application, HttpApi, HttpApi.Client, EntityFrameworkCore, MongoDB, Mcp,
      Installer), `Dignite.Abp.FlexFields.FileExplorer` / `.FileExplorer.Web`, and the npm packages
      `@dignite/ng.file-explorer` / `@dignite/ng.flex-fields-file-explorer` are no longer published from
      this repository. The file browser became a Site feature in the `site` repository, under the Site
      namespace — new package identities there, not these IDs continued
-     ([`blob-storing/docs/core-only-decision.md`](blob-storing/docs/core-only-decision.md)). Removing a
+     ([`blob-storing/dev-docs/core-only-decision.md`](blob-storing/dev-docs/core-only-decision.md)). Removing a
      package is not renaming one: the remaining IDs are untouched, and a removed ID is never reused here.
    - **Removal on record, `10.0.0-rc.28`:** the `Dignite.Abp.FileStoring*` IDs are retired by the rename above, not
      reused for anything else.
@@ -62,3 +62,20 @@ These are the things most likely to be broken by an otherwise reasonable-looking
    library `.csproj`. The demo hosts (`notifications/host/`, `flex-fields/demo/`) are the deliberate
    exception — each opts out of central package management and pins inline. `blob-storing/` has no
    demo host: it is a library of pipeline contributors with no API or UI to demonstrate.
+
+## Documentation
+
+- **`docs/` is the user documentation**, in the [ABP Docs module](https://abp.io/docs/latest/modules/docs) format
+  that ABP's own `docs/` uses: one tree, `docs/docs-langs.json`, then `docs/en/docs-nav.json`, `docs/en/index.md`
+  and one folder per module (`docs/en/notifications/`, …, each with an `index.md` and its own `images/`). Pages
+  follow ABP's conventions — a `//[doc-seo]` block first, title-case headings, four-backtick code fences, relative
+  links ending in `.md`. A site reads the tree from GitHub at each release tag, so every file under `docs/` is
+  public and versioned; a page's file name is its address, so never rename a published page.
+- **`docs/en/articles/<yyyy-MM-dd>-<slug>/post.md`** are dated articles, kept in the tree as ABP keeps its
+  community articles, and left out of the navigation. They are snapshots: fix a broken link, never rewrite one
+  to match a later release — the module's own pages carry the current behaviour.
+- **`<module>/dev-docs/`** are design documents and decision records for contributors. They are not published to
+  the site and are not linked from `docs/`.
+- **`<module>/README.md`** is packed into every NuGet package of that module as its package README. The full
+  documentation belongs in `docs/`; the README introduces the module and links there with absolute URLs, since
+  nuget.org does not resolve links relative to the repository.

@@ -16,6 +16,18 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Added
+
+#### documentation
+
+- **User documentation in `docs/`**, one tree in the [ABP Docs module](https://abp.io/docs/latest/modules/docs) format
+  that ABP's own documentation uses: `docs/docs-langs.json`, `docs/en/docs-nav.json`, an overview at
+  `docs/en/index.md` and a folder per module. Each module's design documents moved from `<module>/docs/` to
+  `<module>/dev-docs/`, which the documentation does not include. The "Introducing Dignite ABP Notifications" article
+  moved from `notifications/docs/articles/` to
+  `docs/en/articles/2026-07-16-introducing-abp-notification-center/post.md`, and its links now point at this
+  repository instead of the archived `dignite-projects/abp-notifications`.
+
 ### Changed
 
 #### shared build and dependencies

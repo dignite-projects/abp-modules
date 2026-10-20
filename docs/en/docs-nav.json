@@ -1,0 +1,48 @@
+{
+  "items": [
+    {
+      "text": "Overview",
+      "path": "index.md"
+    },
+    {
+      "text": "BLOB Storing",
+      "items": [
+        {
+          "text": "Overview",
+          "path": "blob-storing/index.md",
+          "isIndex": true
+        }
+      ]
+    },
+    {
+      "text": "FlexFields",
+      "items": [
+        {
+          "text": "Overview",
+          "path": "flex-fields/index.md",
+          "isIndex": true
+        }
+      ]
+    },
+    {
+      "text": "Notifications",
+      "items": [
+        {
+          "text": "Overview",
+          "path": "notifications/index.md",
+          "isIndex": true
+        }
+      ]
+    },
+    {
+      "text": "MCP Server",
+      "items": [
+        {
+          "text": "Overview",
+          "path": "aspnetcore-mcp/index.md",
+          "isIndex": true
+        }
+      ]
+    }
+  ]
+}
