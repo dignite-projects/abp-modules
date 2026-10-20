@@ -9,6 +9,8 @@ Flavored Markdown.
 A bolt-on, not a built-in: flex-fields ships with no knowledge of CKEditor, so consumers who never
 need a rich-text field never pay for its dependency weight. Install this package only if you do.
 
+**Documentation:** [CKEditor Field Type](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/flex-fields/ckeditor.md)
+
 ## Install
 
 ```bash

@@ -10,6 +10,8 @@ validation, indexing) and never owns the domain model. This package is its front
 provides the rendering and registry axis that the C# side deliberately has no counterpart for —
 `IFieldType` on the server has no rendering member at all.
 
+**Documentation:** [Angular UI](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/flex-fields/angular-ui.md) · [FlexFields](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/flex-fields/index.md)
+
 ## Install
 
 ```bash
