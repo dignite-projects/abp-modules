@@ -9,8 +9,8 @@ developed together in one repository and released in lockstep.
 |---|---|---|
 | [`blob-storing/`](blob-storing/) | Everyday **pipeline contributors** for ABP BlobStoring: the `IBlobPipelineContributor`s ABP 10.7 leaves out — a size cap, a content-type allow-list checked against the real bytes, GZip, image resize and compress — plus content-based MIME detection. No upload service, metadata, API or UI — the application that owns the files keeps those. | [Docs](docs/en/blob-storing/index.md) |
 | [`notifications/`](notifications/) | An extensible, event-driven **notification framework** with pluggable channel notifiers (SignalR, email, device push), plus an optional **Notification Center** (persistent inbox, subscriptions, read/unread state, REST API) with MVC and Angular UI libraries. | [Docs](docs/en/notifications/index.md) |
-| [`flex-fields/`](flex-fields/) | Runtime-defined (**"flex"**) fields — a constraint kernel supplying field types, configuration, validation, a per-entity value bag and a derived query index, with EF Core and MongoDB providers, plus an Angular UI library. It owns no domain model: each consuming application defines its own fields. | [Docs](docs/en/flex-fields/index.md) |
-| [`aspnetcore-mcp/`](aspnetcore-mcp/) | Shared infrastructure, not a module: hosts the one **MCP (Model Context Protocol) server** an ABP application can have, and lets each module contribute AI-callable tools to it inside its own namespace (`Dignite.Site` and `Dignite.Vault.Extract` do, from their own repositories). | [Docs](docs/en/aspnetcore-mcp/index.md) |
+| [`flex-fields/`](flex-fields/) | Runtime-defined (**"flex"**) fields — a constraint kernel supplying field types, configuration, validation, a per-entity value bag and a derived query index, with EF Core and MongoDB providers, plus Angular and MVC UI. It owns no domain model: each consuming application defines its own fields. | [Docs](docs/en/flex-fields/index.md) |
+| [`aspnetcore-mcp/`](aspnetcore-mcp/) | Shared infrastructure, not a module: hosts the one **MCP (Model Context Protocol) server** an ABP application can have, and lets each module contribute AI-callable tools, resources and prompts to it inside its own namespace (`Dignite.Site` and `Dignite.Vault.Extract` do, from their own repositories). | [Docs](docs/en/aspnetcore-mcp/index.md) |
 
 The documentation of every module starts at [`docs/en/index.md`](docs/en/index.md).
 
@@ -54,6 +54,8 @@ abp-modules/
 ├── build/                       # build/test scripts + the npm/Angular package verification scripts
 ├── docs/                        # user documentation for every module (ABP Docs format), and articles
 ├── aspnetcore-mcp/              # shared MCP server infrastructure (no domain model)
+│   ├── Dignite.Abp.AspNetCore.Mcp.slnx   # focused solution for this tree alone
+│   └── src/  test/                       # the published class library and its tests
 ├── blob-storing/
 │   ├── Dignite.Abp.BlobStoring.slnx      # focused solution for this module alone
 │   ├── src/  test/                       # the published class libraries and their tests (no demo host)
@@ -91,6 +93,7 @@ To work on one module in isolation, use its own solution — same projects, smal
 dotnet build blob-storing/Dignite.Abp.BlobStoring.slnx
 dotnet build notifications/Dignite.Abp.Notifications.slnx
 dotnet build flex-fields/Dignite.Abp.FlexFields.slnx
+dotnet build aspnetcore-mcp/Dignite.Abp.AspNetCore.Mcp.slnx
 ```
 
 `dotnet test` starts an embedded mongod (MongoSandbox) for the MongoDB provider tests and uses
@@ -123,11 +126,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow, the version
 release procedure. Security reports go through [SECURITY.md](SECURITY.md) — please don't open a
 public issue for a vulnerability.
 
-Each module documents its own architectural invariants under `<module>/.claude/skills/` (written for
-AI-assisted contributions, but equally the reference for human contributors). Start with
-`<module>/CLAUDE.md` for the layer map, then the module's `*-invariants` skill — those encode the
-specific bugs each module was built or rewritten to fix, so they are the first thing to read before
-changing load-bearing code.
+`blob-storing/` and `notifications/` document their architectural invariants under
+`<module>/.claude/skills/` (written for AI-assisted contributions, but equally the reference for human
+contributors). Start with `<module>/CLAUDE.md` for the layer map, then the module's `*-invariants`
+skill — those encode the specific bugs each module was built or rewritten to fix, so they are the first
+thing to read before changing load-bearing code. `flex-fields/` has a `CLAUDE.md` and its design
+rationale in `dev-docs/`; `aspnetcore-mcp/` is documented by its README and [`docs/`](docs/en/aspnetcore-mcp/index.md).
 
 ## License
 
