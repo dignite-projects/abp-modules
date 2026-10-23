@@ -87,7 +87,7 @@ const fieldValue: FlexFieldValue = {
   <input formControlName="name" />
   <select formControlName="fieldTypeName">
     @for (type of fieldTypes; track type.name) {
-      <option [value]="type.name">{{ type.displayNameKey | abpLocalization }}</option>
+      <option [value]="type.name">{%{{{ type.displayNameKey | abpLocalization }}}%}</option>
     }
   </select>
 
