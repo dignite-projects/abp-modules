@@ -58,6 +58,64 @@ public class AbpMcpAuthentication_Tests
         authentication.ChallengedScheme.ShouldBeNull();
     }
 
+    /// <summary>
+    /// The SDK's challenge names only the resource metadata. A client takes its scope from the challenge first, so
+    /// the scopes the metadata advertises are said there too - run through the real SDK handler, not a stand-in.
+    /// </summary>
+    [Fact]
+    public async Task Should_Name_The_Advertised_Scope_In_The_Challenge()
+    {
+        var challenge = await ChallengeAsync(metadata =>
+        {
+            metadata.Resource = "https://api.example.com/campus-mcp";
+            metadata.AuthorizationServers.Add("https://id.example.com/");
+            metadata.ScopesSupported.Add("CampusService");
+        });
+
+        challenge.ShouldContain("resource_metadata=\"");
+        challenge.ShouldEndWith(", scope=\"CampusService\"");
+    }
+
+    [Fact]
+    public async Task Should_Join_Several_Advertised_Scopes_With_A_Space()
+    {
+        var challenge = await ChallengeAsync(metadata =>
+        {
+            metadata.Resource = "https://api.example.com/mcp";
+            metadata.AuthorizationServers.Add("https://id.example.com/");
+            metadata.ScopesSupported.Add("read");
+            metadata.ScopesSupported.Add("write");
+        });
+
+        challenge.ShouldEndWith(", scope=\"read write\"");
+    }
+
+    [Fact]
+    public async Task Should_Leave_The_Challenge_Alone_When_No_Scope_Is_Advertised()
+    {
+        var challenge = await ChallengeAsync(Metadata("https://api.example.com/mcp"));
+
+        challenge.ShouldContain("resource_metadata=\"");
+        challenge.ShouldNotContain("scope=");
+    }
+
+    /// <summary>A scope that is not a token would need escaping inside the quoted string; it is left out of the header rather than guessed at.</summary>
+    [Theory]
+    [InlineData("read write")]
+    [InlineData("a\"b")]
+    [InlineData("a\\b")]
+    public async Task Should_Not_Put_An_Invalid_Scope_In_The_Challenge(string scope)
+    {
+        var challenge = await ChallengeAsync(metadata =>
+        {
+            metadata.Resource = "https://api.example.com/mcp";
+            metadata.AuthorizationServers.Add("https://id.example.com/");
+            metadata.ScopesSupported.Add(scope);
+        });
+
+        challenge.ShouldNotContain("scope=");
+    }
+
     [Fact]
     public void Should_Reconfigure_Rather_Than_Fail_When_Called_Twice()
     {
@@ -143,7 +201,27 @@ public class AbpMcpAuthentication_Tests
         Should.NotThrow(() => AbpMcpAuthenticationDiscoveryChecker.EnsureChallengeHandlerIsInstalled(provider));
     }
 
-    private static readonly AuthorizationPolicy Policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+    /// <summary>The WWW-Authenticate value of a real MCP challenge: the registered scheme, the real SDK handler.</summary>
+    private static async Task<string> ChallengeAsync(Action<ModelContextProtocol.Authentication.ProtectedResourceMetadata> metadata)
+    {
+        var services = new ServiceCollection().AddLogging();
+        services.AddAbpMcpAuthenticationDiscovery(metadata);
+        using var provider = services.BuildServiceProvider();
+        using var scope = provider.CreateScope();
+
+        var context = new DefaultHttpContext { RequestServices = scope.ServiceProvider };
+        context.Request.Scheme = "https";
+        context.Request.Host = new HostString("api.example.com");
+        context.SetEndpoint(new Endpoint(_ => Task.CompletedTask, new EndpointMetadataCollection(AbpMcpEndpointMetadata.Instance), "mcp"));
+
+        await new AbpMcpAuthorizationMiddlewareResultHandler(new RecordingResultHandler())
+            .HandleAsync(_ => Task.CompletedTask, context, Policy, PolicyAuthorizationResult.Challenge());
+
+        context.Response.StatusCode.ShouldBe(StatusCodes.Status401Unauthorized);
+        return context.Response.Headers.WWWAuthenticate.ToString();
+    }
+
+    private static readonly AuthorizationPolicy Policy =new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
 
     private static Action<ModelContextProtocol.Authentication.ProtectedResourceMetadata> Metadata(string resource)
     {

@@ -51,9 +51,11 @@ context.Services.AddAbpMcpAuthenticationDiscovery(metadata =>
 });
 ````
 
-It only takes over the **challenge**: an unauthenticated MCP request gets `401` with `WWW-Authenticate: Bearer resource_metadata="..."`, instead of the application's default, which in an MVC application is a `302` to the login page that no MCP client can follow.
+It only takes over the **challenge**: an unauthenticated MCP request gets `401` with `WWW-Authenticate: Bearer resource_metadata="...", scope="MyApplication"`, instead of the application's default, which in an MVC application is a `302` to the login page that no MCP client can follow.
 
 It does that by wrapping the application's `IAuthorizationMiddlewareResultHandler`. An application with a handler of its own registers it **before** calling `AddAbpMcpAuthenticationDiscovery`; a handler registered afterwards would replace the wrapper, and the application refuses to start rather than let the MCP `401` silently turn back into a login redirect. Calling it again only replaces the metadata.
+
+The `scope` part is the metadata's `ScopesSupported`, joined with spaces. A client takes the scope to ask the authorization server for from the challenge first, then from the metadata ([MCP authorization, scope selection](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization)); some clients that find neither ask for every scope the authorization server lists, and an authorization server that only allows the MCP client a few of them refuses the request. Saying it in the challenge as well as in the metadata leaves no such client to guess. Nothing is added when `ScopesSupported` is empty.
 
 ## Multi-Tenancy
 
