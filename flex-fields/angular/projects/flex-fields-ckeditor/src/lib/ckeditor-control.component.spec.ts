@@ -42,6 +42,7 @@ vi.mock('ckeditor5', () => {
     ImageToolbar: plugin,
     ImageCaption: plugin,
     ImageStyle: plugin,
+    Alignment: plugin,
     Markdown: plugin,
   };
 });

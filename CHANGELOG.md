@@ -16,6 +16,16 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Added
+
+#### flex-fields
+
+- **`@dignite/ng.flex-fields-ckeditor`: left, center and right alignment buttons in the `Full` (`ClassicEditor`)
+  toolbar**, for fields whose `ContentFormat` is HTML. Alignment is stored as the Bootstrap classes `text-start`,
+  `text-center` and `text-end` rather than an inline `text-align` style, which Angular's sanitizer would strip from
+  the read-only view. Markdown fields and `Basic` mode are unchanged. A host that renders the stored HTML outside
+  Bootstrap needs those three classes in its own stylesheet.
+
 ## [10.7.1] - 2026-10-29
 
 ### Added

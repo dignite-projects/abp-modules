@@ -19,8 +19,8 @@ export interface BuildEditorConfigOptions {
 
 /**
  * Composes this bolt-on's toolbar. Full mode gets every toolbar feature this bolt-on ships: headings,
- * basic styles, lists, links, code blocks, blockquote, tables, (when an images container is configured)
- * image upload, and a Source button. Basic is deliberately a lighter, inline-text-only experience - see
+ * basic styles, lists, links, code blocks, (HTML content only) left/center/right alignment, blockquote,
+ * tables, (when an images container is configured) image upload, and a Source button. Basic is deliberately a lighter, inline-text-only experience - see
  * `resolveEditorClass`'s own doc on why it exists as a separate mode at all - so it drops every
  * block-structure/media/tooling feature that doesn't fit plain text adjustments: blockquote, table,
  * image upload, undo/redo, and source editing (which CKEditor 5's own SourceEditing plugin only
@@ -69,6 +69,15 @@ export function buildEditorConfig(module: CKEditor5Module, options: BuildEditorC
     // Blockquote, tables, undo/redo, and source editing are all Full-only - Basic stays a plain
     // text-adjustments toolbar (heading/basic styles/lists/code block only, from the shared list above).
     plugins.push(module.BlockQuote, module.Table, module.TableToolbar, module.SourceEditing);
+
+    if (options.contentFormat === CKEditorContentFormat.Html) {
+      // Text alignment is Html-only: GFM has no way to say "centered", so a Markdown field would show
+      // the buttons and then silently drop the alignment on save. It sits ahead of blockquote, keeping
+      // the paragraph-level tools together before the structure/tooling ones.
+      plugins.push(module.Alignment);
+      toolbar.push('|', 'alignment:left', 'alignment:center', 'alignment:right');
+    }
+
     toolbar.push('|', 'blockQuote', 'insertTable', '|', 'undo', 'redo', '|', 'sourceEditing');
 
     if (options.imageUploadEnabled) {
@@ -98,6 +107,18 @@ export function buildEditorConfig(module: CKEditor5Module, options: BuildEditorC
     toolbar,
     table: {
       contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells'],
+    },
+    // Classes instead of the default inline `text-align`: the read-only view binds the stored HTML
+    // through `[innerHTML]`, and Angular's sanitizer strips `style` attributes, so inline alignment would
+    // vanish there. These are Bootstrap's own utilities, which an ABP Angular host already loads; the
+    // option list has to name a class for every entry once it names one. Ignored when Alignment is not
+    // among the plugins (Basic mode, Markdown).
+    alignment: {
+      options: [
+        { name: 'left', className: 'text-start' },
+        { name: 'center', className: 'text-center' },
+        { name: 'right', className: 'text-end' },
+      ],
     },
   };
 }

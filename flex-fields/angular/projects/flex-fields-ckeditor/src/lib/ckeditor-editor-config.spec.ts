@@ -7,7 +7,7 @@ import { buildEditorConfig, resolveEditorClass } from './ckeditor-editor-config'
 const PLUGIN_NAMES = [
   'Essentials', 'Paragraph', 'Heading', 'Bold', 'Italic', 'Underline', 'Strikethrough', 'Link', 'List',
   'CodeBlock', 'BlockQuote', 'Table', 'TableToolbar', 'SourceEditing', 'Image', 'ImageUpload',
-  'ImageToolbar', 'ImageCaption', 'ImageStyle', 'Markdown', 'ClassicEditor', 'BalloonEditor',
+  'ImageToolbar', 'ImageCaption', 'ImageStyle', 'Alignment', 'Markdown', 'ClassicEditor', 'BalloonEditor',
 ];
 
 function fakeModule(): Parameters<typeof buildEditorConfig>[0] {
@@ -22,6 +22,7 @@ const BASE_PLUGINS = [
   'Essentials', 'Paragraph', 'Heading', 'Bold', 'Italic', 'Underline', 'Strikethrough', 'Link', 'List',
   'CodeBlock',
 ];
+const ALIGNMENT_TOOLBAR = ['|', 'alignment:left', 'alignment:center', 'alignment:right'];
 const BASE_TOOLBAR = [
   'heading', '|', 'bold', 'italic', 'underline', 'strikethrough', '|', 'link', 'bulletedList',
   'numberedList', '|', 'codeBlock',
@@ -39,17 +40,50 @@ describe('buildEditorConfig', () => {
     expect(config.toolbar).toEqual(BASE_TOOLBAR);
   });
 
-  it('adds blockquote, table, undo/redo, and source editing for Full mode without image upload', () => {
+  it('adds alignment, blockquote, table, undo/redo, and source editing for Full mode without image upload', () => {
     const config = buildEditorConfig(fakeModule(), {
       mode: CKEditorMode.Full,
       contentFormat: CKEditorContentFormat.Html,
       imageUploadEnabled: false,
     });
 
-    expect(config.plugins).toEqual([...BASE_PLUGINS, 'BlockQuote', 'Table', 'TableToolbar', 'SourceEditing']);
+    expect(config.plugins).toEqual([...BASE_PLUGINS, 'BlockQuote', 'Table', 'TableToolbar', 'SourceEditing', 'Alignment']);
     expect(config.toolbar).toEqual([
-      ...BASE_TOOLBAR, '|', 'blockQuote', 'insertTable', '|', 'undo', 'redo', '|', 'sourceEditing',
+      ...BASE_TOOLBAR, ...ALIGNMENT_TOOLBAR, '|', 'blockQuote', 'insertTable', '|', 'undo', 'redo', '|', 'sourceEditing',
     ]);
+  });
+
+  it('leaves alignment out of Basic mode and out of Markdown fields, which cannot store it', () => {
+    const basic = buildEditorConfig(fakeModule(), {
+      mode: CKEditorMode.Basic,
+      contentFormat: CKEditorContentFormat.Html,
+      imageUploadEnabled: false,
+    });
+    const fullMarkdown = buildEditorConfig(fakeModule(), {
+      mode: CKEditorMode.Full,
+      contentFormat: CKEditorContentFormat.Markdown,
+      imageUploadEnabled: false,
+    });
+
+    expect(basic.plugins).not.toContain('Alignment');
+    expect(fullMarkdown.plugins).not.toContain('Alignment');
+    expect(fullMarkdown.toolbar).not.toContain('alignment:center');
+  });
+
+  it('stores alignment as Bootstrap classes, since the read-only view strips inline styles', () => {
+    const config = buildEditorConfig(fakeModule(), {
+      mode: CKEditorMode.Full,
+      contentFormat: CKEditorContentFormat.Html,
+      imageUploadEnabled: false,
+    });
+
+    expect(config.alignment).toEqual({
+      options: [
+        { name: 'left', className: 'text-start' },
+        { name: 'center', className: 'text-center' },
+        { name: 'right', className: 'text-end' },
+      ],
+    });
   });
 
   it('never adds image plugins in Basic mode, even when an images container is configured', () => {
@@ -71,11 +105,11 @@ describe('buildEditorConfig', () => {
     });
 
     expect(config.plugins).toEqual([
-      ...BASE_PLUGINS, 'BlockQuote', 'Table', 'TableToolbar', 'SourceEditing',
+      ...BASE_PLUGINS, 'BlockQuote', 'Table', 'TableToolbar', 'SourceEditing', 'Alignment',
       'Image', 'ImageUpload', 'ImageToolbar', 'ImageCaption', 'ImageStyle',
     ]);
     expect(config.toolbar).toEqual([
-      ...BASE_TOOLBAR, '|', 'blockQuote', 'insertTable', '|', 'uploadImage', '|', 'undo', 'redo', '|',
+      ...BASE_TOOLBAR, ...ALIGNMENT_TOOLBAR, '|', 'blockQuote', 'insertTable', '|', 'uploadImage', '|', 'undo', 'redo', '|',
       'sourceEditing',
     ]);
   });
