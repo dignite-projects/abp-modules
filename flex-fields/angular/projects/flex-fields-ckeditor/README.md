@@ -80,7 +80,8 @@ holds a commercial CKEditor license and wants those terms instead can register i
 
 `Basic` is a deliberately lightweight, inline-text-only experience: heading, bold/italic/underline/
 strikethrough, link, bulleted/numbered lists, and code block — nothing else, regardless of
-`ContentFormat`. `Full` gets the complete set on top of that: blockquote, table, image upload (when
+`ContentFormat`. `Full` gets the complete set on top of that: left/center/right alignment (HTML `ContentFormat` only —
+Markdown cannot store it, so those fields get no alignment buttons), blockquote, table, image upload (when
 `ImagesContainerName` is configured and the host registered an upload provider), undo/redo, and a `Source` toolbar button (CKEditor 5's
 `SourceEditing` plugin, GPL) for viewing/editing the raw stored value directly — HTML, or for a
 Markdown-`ContentFormat` field, the raw Markdown text. `SourceEditing` is Full-only regardless: CKEditor
@@ -88,6 +89,12 @@ Markdown-`ContentFormat` field, the raw Markdown text. `SourceEditing` is Full-o
 `BalloonEditor`/`ClassicEditor` editor classes respectively, but are named for the editing-power
 difference that actually matters when choosing a mode, not the editor-shell implementation detail. See
 `buildEditorConfig` in `ckeditor-editor-config.ts` for the exact plugin/toolbar composition.
+
+Alignment is stored as Bootstrap's `text-start` / `text-center` / `text-end` classes on the block, not as an
+inline `text-align` style: Angular's sanitizer strips `style` attributes from `ff-ckeditor-view`'s
+`[innerHTML]`, so inline alignment would show in the editor and vanish in the read-only view. An ABP Angular host
+already loads Bootstrap; a server-rendered page showing the value (`Dignite.Abp.FlexFields.CKEditor.Web` keeps
+`class` through its sanitizer) needs those three classes from its own stylesheet.
 
 ## Image upload
 
@@ -207,9 +214,9 @@ export const appConfig: ApplicationConfig = {
 To add one of CKEditor 5's own plugins, take it from `context.ckeditor5` rather than importing it:
 
 ```ts
-const withAlignment: CKEditorConfigContributor = (config, { ckeditor5 }) => {
-  config.extraPlugins = [...(config.extraPlugins ?? []), ckeditor5.Alignment];
-  (config.toolbar as string[]).push('|', 'alignment');
+const withHighlight: CKEditorConfigContributor = (config, { ckeditor5 }) => {
+  config.extraPlugins = [...(config.extraPlugins ?? []), ckeditor5.Highlight];
+  (config.toolbar as string[]).push('|', 'highlight');
 };
 ```
 

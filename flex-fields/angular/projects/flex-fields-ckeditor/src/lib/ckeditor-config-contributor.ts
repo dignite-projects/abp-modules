@@ -7,8 +7,8 @@ import { CKEditorMode } from './ckeditor-mode';
 /** What a {@link CKEditorConfigContributor} is told about the editor it is configuring. */
 export interface CKEditorConfigContext {
   /**
-   * The `ckeditor5` package, already loaded. Take a built-in plugin from here (`ckeditor5.Alignment`)
-   * rather than with a static `import { Alignment } from 'ckeditor5'`: a static import pulls the whole
+   * The `ckeditor5` package, already loaded. Take a built-in plugin from here (`ckeditor5.Highlight`)
+   * rather than with a static `import { Highlight } from 'ckeditor5'`: a static import pulls the whole
    * multi-megabyte package into the host's main bundle, out of the lazy chunk this package loads it in.
    * Type-only imports (`import type { Editor } from 'ckeditor5'`) are safe.
    */
