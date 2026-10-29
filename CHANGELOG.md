@@ -58,6 +58,11 @@ so it stays clear which part of the repository actually moved.
 
 ### Changed
 
+#### aspnetcore-mcp
+
+- **The MCP `401` challenge now names the scope.** `WWW-Authenticate` was `Bearer resource_metadata="…"` and is now `Bearer resource_metadata="…", scope="…"`, with the scopes the resource metadata advertises (`ProtectedResourceMetadata.ScopesSupported`, set in `AddAbpMcpAuthenticationDiscovery`). The MCP authorization specification has a client take its scopes from the challenge first and the metadata's `scopes_supported` second; some clients that found nothing in the challenge fell back to the authorization server's own list of every scope it knows and asked for all of them, which the server refused (`invalid_scope`, a 400 page at sign-in). Nothing changes for a host that advertises no scope, and a scope that is not a valid token is left out rather than escaped. No configuration is needed: a host that already sets `ScopesSupported` gets the scope in the challenge.
+- **`ModelContextProtocol.AspNetCore` is 2.3.0** (was 2.1.0). It needs `Microsoft.Extensions.Hosting.Abstractions` 10.0.13, so that pin moves from 10.0.12 too. A project that pins `ModelContextProtocol.AspNetCore` itself (`Dignite.Vault.Extract.Mcp`'s repository pins 2.1.0) has to move to 2.3.0 with it: NuGet refuses a lower direct pin than the one this package requires.
+
 #### shared build and dependencies
 
 - **Pre-releases are no longer published to NuGet.org or npm.** From now on only stable versions reach the public
