@@ -16,6 +16,8 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+## [10.7.1] - 2026-10-29
+
 ### Added
 
 #### documentation
