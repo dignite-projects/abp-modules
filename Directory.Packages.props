@@ -105,7 +105,7 @@
     references no image library.
   -->
   <ItemGroup Label="SkiaSharp Linux native assets (blob-storing Imaging tests only)">
-    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="3.119.0" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="4.154.0" />
   </ItemGroup>
 
   <ItemGroup Label="System.Text.Json (only needed for netstandard targets; in-box on net10.0)">
@@ -142,7 +142,7 @@
   <ItemGroup Label="Test stack">
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="NSubstitute" Version="6.2.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Proxies" Version="10.0.12" />
@@ -182,7 +182,7 @@
         Directory.Build.props. Versions match what the ABP Framework itself ships.
   -->
   <ItemGroup Label="Build-time tooling">
-    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
+    <PackageVersion Include="coverlet.collector" Version="10.1.0" />
     <PackageVersion Include="Fody" Version="6.9.3" />
     <PackageVersion Include="ConfigureAwait.Fody" Version="3.3.2" />
   </ItemGroup>
