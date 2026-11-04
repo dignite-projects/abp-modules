@@ -32,6 +32,8 @@ Configure<AbpBlobStoringOptions>(options =>
 
 > `image/*` admits **every** image type, `image/svg+xml` among them. SVG is markup that can carry script, not a raster image. List the exact raster types (`image/png`, `image/jpeg`, `image/webp`, ...) if a container must not take SVG.
 
+> `font/*` admits the four [web font](mime-type-detection.md#web-fonts) types the detector recognizes: `font/woff2`, `font/woff`, `font/ttf` and `font/otf`. A container that took fonts only because it allowed unidentified content needs them on its list.
+
 ## The BLOB Name Is Checked Too
 
 The detector also reconciles the content with the **extension of the BLOB name**. Content that contradicts its extension (an executable named `photo.png`, a ZIP file named `report.pdf`) is rejected with the `Dignite.Abp.BlobStoring:ContentTypeMismatch` error code, even when its real type is on the list. See [MIME Type Detection](mime-type-detection.md) for the rules.

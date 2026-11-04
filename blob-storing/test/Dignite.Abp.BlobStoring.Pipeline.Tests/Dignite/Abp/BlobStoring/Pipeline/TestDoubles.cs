@@ -116,6 +116,36 @@ public static class Samples
         Encoding.UTF8.GetBytes("ID3 tags carry the title and artist of a song; this note is about them.");
 
     /// <summary>
+    /// Text that starts like a web font - "wOFF", "wOF2", or an sfnt version ("true", "OTTO") - and must not be
+    /// mistaken for one.
+    /// </summary>
+    public static byte[] TextStartingWithWoff { get; } =
+        Encoding.UTF8.GetBytes("wOFF is the web open font format, and this note about it keeps going past the header.");
+
+    public static byte[] TextStartingWithWoff2 { get; } =
+        Encoding.UTF8.GetBytes("wOF2 is the second version of the web font format; this note carries on past the header.");
+
+    public static byte[] TextStartingWithTrue { get; } =
+        Encoding.UTF8.GetBytes("true story: this note begins with a word that is also an sfnt version, and carries on.");
+
+    public static byte[] TextStartingWithOtto { get; } =
+        Encoding.UTF8.GetBytes("OTTO is a name, and this note starts with it and goes on long enough to cover the probe.");
+
+    // The next three are what keep text out of the sfnt check. Read as a table count, the two bytes after "true" or
+    // "OTTO" are at least 0x0909 (two tabs); these are among the smallest counts text can produce (2,313, 2,570 and
+    // 3,338). All the text after the count is printable ASCII, which passes the checks on the table directory, so
+    // only the cap on the table count turns them down.
+
+    public static byte[] TextStartingWithTrueAndTabs { get; } = Encoding.UTF8.GetBytes(
+        "true\t\tThe quick brown fox jumps over the lazy dog, and then goes on for a good while longer.");
+
+    public static byte[] TextStartingWithTrueAndNewlines { get; } = Encoding.UTF8.GetBytes(
+        "true\n\nThe quick brown fox jumps over the lazy dog, and then goes on for a good while longer.");
+
+    public static byte[] TextStartingWithOttoAndLineBreak { get; } = Encoding.UTF8.GetBytes(
+        "OTTO\r\nThe quick brown fox jumps over the lazy dog, and then goes on for a good while longer.");
+
+    /// <summary>
     /// Latin-1 text: not valid UTF-8, still text.
     /// </summary>
     public static byte[] Latin1Text { get; } = Encoding.Latin1.GetBytes("name;city\nRené;Zürich\nJosé;São Paulo\n");
@@ -159,6 +189,11 @@ public static class Samples
 
     public static byte[] PlainZip { get; } = CreateZip(("readme.txt", "just a plain archive"));
 
+    /// <summary>
+    /// Pseudo-random bytes (a fixed seed, so the same every run) with no signature of any kind.
+    /// </summary>
+    public static byte[] RandomBinary { get; } = CreateRandomBinary(1);
+
     public static byte[] Get(string name) => name switch
     {
         nameof(Png) => Png,
@@ -182,8 +217,28 @@ public static class Samples
         nameof(UnknownBinary) => UnknownBinary,
         nameof(WordDocument) => WordDocument,
         nameof(PlainZip) => PlainZip,
-        _ => throw new ArgumentOutOfRangeException(nameof(name), name, null)
+        nameof(TextStartingWithWoff) => TextStartingWithWoff,
+        nameof(TextStartingWithWoff2) => TextStartingWithWoff2,
+        nameof(TextStartingWithTrue) => TextStartingWithTrue,
+        nameof(TextStartingWithOtto) => TextStartingWithOtto,
+        nameof(TextStartingWithTrueAndTabs) => TextStartingWithTrueAndTabs,
+        nameof(TextStartingWithTrueAndNewlines) => TextStartingWithTrueAndNewlines,
+        nameof(TextStartingWithOttoAndLineBreak) => TextStartingWithOttoAndLineBreak,
+        nameof(RandomBinary) => RandomBinary,
+        _ => FontSamples.Get(name)
     };
+
+    /// <summary>
+    /// 1 KB of pseudo-random bytes from a fixed <paramref name="seed"/>, the first ones replaced by
+    /// <paramref name="prefix"/>.
+    /// </summary>
+    public static byte[] CreateRandomBinary(int seed, params byte[] prefix)
+    {
+        var bytes = new byte[1024];
+        new Random(seed).NextBytes(bytes);
+        prefix.CopyTo(bytes, 0);
+        return bytes;
+    }
 
     public static byte[] Gzip(byte[] content)
     {

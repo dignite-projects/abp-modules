@@ -64,6 +64,86 @@ public class MimeTypeDetector_Tests : AbpIntegratedTest<BlobStoringPipelineTestM
     }
 
     [Theory]
+    [InlineData(nameof(FontSamples.Woff), "font.woff", "font/woff")]
+    [InlineData(nameof(FontSamples.Woff2), "font.woff2", "font/woff2")]
+    [InlineData(nameof(FontSamples.TrueType), "font.ttf", "font/ttf")]
+    [InlineData(nameof(FontSamples.AppleTrueType), "font.ttf", "font/ttf")] // the "true" sfnt version is TrueType too
+    [InlineData(nameof(FontSamples.OpenType), "font.otf", "font/otf")]
+    [InlineData(nameof(FontSamples.Woff2), "Inter-Regular.WOFF2", "font/woff2")]
+    [InlineData(nameof(FontSamples.Woff2), "themes/42/fonts/inter.woff2", "font/woff2")] // path-like BLOB name
+    [InlineData(nameof(FontSamples.Woff), null, "font/woff")]
+    [InlineData(nameof(FontSamples.Woff2), "font", "font/woff2")]
+    [InlineData(nameof(FontSamples.TrueType), "font.dat", "font/ttf")]
+    [InlineData(nameof(FontSamples.OpenType), null, "font/otf")]
+    [InlineData(nameof(FontSamples.TrueType), "font.otf", "font/ttf")] // same kind: the content wins
+    [InlineData(nameof(FontSamples.OpenType), "font.ttf", "font/otf")]
+    [InlineData(nameof(FontSamples.Woff2), "font.woff", "font/woff2")]
+    [InlineData(nameof(FontSamples.Woff), "font.ttf", "font/woff")]
+    [InlineData(nameof(FontSamples.WoffWithAppleTrueTypeFlavor), "font.woff", "font/woff")]
+    [InlineData(nameof(FontSamples.Woff2WithCollectionFlavor), "font.woff2", "font/woff2")]
+    [InlineData(nameof(FontSamples.TrueTypeWithManyTables), "font.ttf", "font/ttf")] // its table directory runs past the probed bytes
+    public async Task DetectAsync_Should_Detect_Web_Fonts_From_Their_Bytes(string sample, string? fileName, string expected)
+    {
+        var stream = new MemoryStream(Samples.Get(sample));
+
+        (await _detector.DetectAsync(stream, fileName)).ShouldBe(expected);
+        stream.Position.ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData(nameof(Samples.TextStartingWithWoff), "notes.txt", "text/plain")]
+    [InlineData(nameof(Samples.TextStartingWithWoff2), "notes.txt", "text/plain")]
+    [InlineData(nameof(Samples.TextStartingWithTrue), "notes.txt", "text/plain")]
+    [InlineData(nameof(Samples.TextStartingWithOtto), "notes.txt", "text/plain")]
+    [InlineData(nameof(Samples.TextStartingWithOtto), null, "text/plain")]
+    // The smallest table counts text can produce: only the cap on the table count tells it from an sfnt font.
+    [InlineData(nameof(Samples.TextStartingWithTrueAndTabs), "notes.txt", "text/plain")]
+    [InlineData(nameof(Samples.TextStartingWithTrueAndNewlines), "notes.txt", "text/plain")]
+    [InlineData(nameof(Samples.TextStartingWithOttoAndLineBreak), "notes.txt", "text/plain")]
+    [InlineData(nameof(Samples.TextStartingWithTrueAndNewlines), null, "text/plain")]
+    [InlineData(nameof(Samples.RandomBinary), "data.bin", MimeTypeDetector.DefaultMimeType)]
+    [InlineData(nameof(Samples.RandomBinary), null, MimeTypeDetector.DefaultMimeType)]
+    // A font signature that the rest of the header does not bear out is not a font.
+    [InlineData(nameof(FontSamples.TrueTypeWithoutTables), null, MimeTypeDetector.DefaultMimeType)]
+    [InlineData(nameof(FontSamples.TrueTypeWithTooManyTables), null, MimeTypeDetector.DefaultMimeType)]
+    [InlineData(nameof(FontSamples.TruncatedTrueType), null, MimeTypeDetector.DefaultMimeType)] // no whole table record
+    [InlineData(nameof(FontSamples.TrueTypeWithBinaryTableTag), null, MimeTypeDetector.DefaultMimeType)]
+    [InlineData(nameof(FontSamples.TrueTypeWithTableInsideDirectory), null, MimeTypeDetector.DefaultMimeType)]
+    [InlineData(nameof(FontSamples.TrueTypeWithTableBeyond32Bits), null, MimeTypeDetector.DefaultMimeType)]
+    [InlineData(nameof(FontSamples.WoffWithoutTables), null, MimeTypeDetector.DefaultMimeType)]
+    [InlineData(nameof(FontSamples.WoffWithTooManyTables), null, MimeTypeDetector.DefaultMimeType)]
+    [InlineData(nameof(FontSamples.Woff2WithoutTables), null, MimeTypeDetector.DefaultMimeType)]
+    [InlineData(nameof(FontSamples.WoffWithUnknownFlavor), null, MimeTypeDetector.DefaultMimeType)]
+    [InlineData(nameof(FontSamples.WoffWithReservedFieldSet), null, MimeTypeDetector.DefaultMimeType)]
+    [InlineData(nameof(FontSamples.WoffShorterThanItsHeader), null, MimeTypeDetector.DefaultMimeType)]
+    [InlineData(nameof(FontSamples.WoffTruncated), null, MimeTypeDetector.DefaultMimeType)] // shorter than the header
+    [InlineData(nameof(FontSamples.Woff2Truncated), null, MimeTypeDetector.DefaultMimeType)]
+    public async Task DetectAsync_Should_Not_Take_Other_Content_For_A_Font(string sample, string? fileName, string expected)
+    {
+        (await _detector.DetectAsync(new MemoryStream(Samples.Get(sample)), fileName)).ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("00010000")] // TrueType
+    [InlineData("74727565")] // "true"
+    [InlineData("4F54544F")] // "OTTO"
+    [InlineData("774F4646")] // "wOFF"
+    [InlineData("774F4632")] // "wOF2"
+    public async Task DetectAsync_Should_Not_Take_Random_Bytes_Behind_A_Font_Signature_For_A_Font(string signatureHex)
+    {
+        var signature = Convert.FromHexString(signatureHex);
+
+        for (var seed = 0; seed < 200; seed++)
+        {
+            var content = Samples.CreateRandomBinary(seed, signature);
+
+            var mimeType = await _detector.DetectAsync(new MemoryStream(content), null);
+
+            mimeType.StartsWith("font/", StringComparison.Ordinal).ShouldBeFalse($"seed {seed} was detected as {mimeType}");
+        }
+    }
+
+    [Theory]
     [InlineData(nameof(Samples.Html), null, "text/html")]
     [InlineData(nameof(Samples.Html), "page.html", "text/html")]
     [InlineData(nameof(Samples.Html), "notes.txt", "text/html")] // text kind: the sniffed markup wins
@@ -97,6 +177,27 @@ public class MimeTypeDetector_Tests : AbpIntegratedTest<BlobStoringPipelineTestM
     [InlineData(nameof(Samples.WordDocument), "report.pdf")]
     [InlineData(nameof(Samples.Png), "notes.txt")]           // binary where text is claimed
     [InlineData(nameof(Samples.UnknownBinary), "photo.jpg")] // the format always has a signature
+    [InlineData(nameof(Samples.Executable), "font.woff2")]   // executable disguised as a font
+    [InlineData(nameof(Samples.Executable), "font.ttf")]
+    [InlineData(nameof(Samples.ZipHeader), "font.otf")]
+    [InlineData(nameof(Samples.Png), "font.woff")]
+    [InlineData(nameof(FontSamples.Woff2), "photo.png")]     // font disguised as an image
+    [InlineData(nameof(FontSamples.TrueType), "photo.png")]
+    [InlineData(nameof(FontSamples.OpenType), "report.pdf")]
+    [InlineData(nameof(FontSamples.Woff), "notes.txt")]      // binary where text is claimed
+    [InlineData(nameof(FontSamples.Woff), "setup.exe")]
+    [InlineData(nameof(Samples.Text), "font.ttf")]           // text is not a font
+    [InlineData(nameof(Samples.Text), "font.woff2")]
+    [InlineData(nameof(Samples.Svg), "font.woff")]
+    [InlineData(nameof(Samples.TextStartingWithWoff), "font.woff")]
+    [InlineData(nameof(Samples.TextStartingWithTrue), "font.ttf")]
+    [InlineData(nameof(Samples.TextStartingWithOtto), "font.otf")]
+    [InlineData(nameof(Samples.UnknownBinary), "font.otf")]  // the format always has a signature
+    [InlineData(nameof(Samples.RandomBinary), "font.ttf")]
+    [InlineData(nameof(Samples.TextStartingWithTrueAndNewlines), "font.ttf")]
+    [InlineData(nameof(FontSamples.TrueTypeWithoutTables), "font.ttf")]
+    [InlineData(nameof(FontSamples.TrueTypeWithTableInsideDirectory), "font.ttf")]
+    [InlineData(nameof(FontSamples.WoffTruncated), "font.woff")]
     public async Task DetectAsync_Should_Reject_A_Disguised_File(string sample, string fileName)
     {
         var exception = await Should.ThrowAsync<BusinessException>(
@@ -126,10 +227,12 @@ public class MimeTypeDetector_Tests : AbpIntegratedTest<BlobStoringPipelineTestM
         (await _detector.DetectAsync(new MemoryStream(), "empty")).ShouldBe(MimeTypeDetector.DefaultMimeType);
     }
 
-    [Fact]
-    public async Task DetectAsync_Should_Reject_An_Empty_File_Whose_Format_Has_A_Signature()
+    [Theory]
+    [InlineData("photo.png")]
+    [InlineData("font.woff2")]
+    public async Task DetectAsync_Should_Reject_An_Empty_File_Whose_Format_Has_A_Signature(string fileName)
     {
-        var exception = await Should.ThrowAsync<BusinessException>(() => _detector.DetectAsync(new MemoryStream(), "photo.png"));
+        var exception = await Should.ThrowAsync<BusinessException>(() => _detector.DetectAsync(new MemoryStream(), fileName));
 
         exception.Code.ShouldBe(BlobStoringPipelineErrorCodes.ContentTypeMismatch);
     }

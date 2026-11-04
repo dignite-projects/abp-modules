@@ -42,14 +42,29 @@ It returns the MIME type, or `application/octet-stream` (`MimeTypeDetector.Defau
 The engine is [FileSignatures](https://github.com/neilharvey/FileSignatures) (MIT), behind its `IFileFormatInspector` service. It also looks inside archives, so an Office Open XML or OpenDocument file is told apart from a plain ZIP file.
 
 * Signatures short enough to occur in text (`BM`, `MZ`, `ID3`, ...) must be confirmed by the rest of the header.
-* A header probe of its own covers formats FileSignatures does not know: WAV, AVIF, HEIC and other ISO media brands, MP3 frames without an ID3 tag, generic compound files and empty ZIP files.
+* A header probe of its own covers formats FileSignatures does not know: WAV, AVIF, HEIC and other ISO media brands, MP3 frames without an ID3 tag, generic compound files, empty ZIP files and [web fonts](#web-fonts).
 * Only the first 1,445 bytes are sampled, plus the archive structure of ZIP-based formats. A ZIP file whose `[Content_Types].xml` entry is larger than 1 MB is not opened, and is classified as a plain ZIP file.
+
+## Web Fonts
+
+The detector recognizes the four font formats a web page links, and reports their standard MIME types:
+
+| Format | Signature | MIME type | Extension |
+| --- | --- | --- | --- |
+| WOFF | `wOFF` | `font/woff` | `.woff` |
+| WOFF2 | `wOF2` | `font/woff2` | `.woff2` |
+| TrueType | `00 01 00 00`, or `true` | `font/ttf` | `.ttf` |
+| OpenType with CFF outlines | `OTTO` | `font/otf` | `.otf` |
+
+* **The signature alone is not enough.** Four bytes also occur at the start of text and of arbitrary binary content, so the rest of the font header has to agree. A WOFF or WOFF2 header needs the font's own `sfnt` version, a plausible table count, a zero reserved field and a length that holds the header. A TrueType or OpenType header needs a plausible table count and a table directory that makes sense: table tags of printable ASCII, and tables that start after the directory. Content that fails these checks is not a font.
+* **The four font types are one kind.** A font named `.png`, `.txt` or `.pdf`, an executable named `.woff2`, and content that is not a font named `.ttf` are rejected with the `Dignite.Abp.BlobStoring:ContentTypeMismatch` error code. Within the kind the content wins: a WOFF2 file named `.woff` is `font/woff2`. An OpenType font with TrueType outlines starts with the TrueType signature, so it is `font/ttf`, even when it is named `.otf`.
+* **Not recognized.** Font collections (`.ttc`) and Embedded OpenType (`.eot`) are not detected; the content is `application/octet-stream`.
 
 ## The Detection Policy
 
 * **Content first.** Content with a known signature decides the type.
 * **The extension is reconciled by kind.** If the extension of `fileName` is of a different kind than the content (an executable named `.png`, a ZIP file named `.pdf`, a PNG image named `.txt`), the content is rejected with the `Dignite.Abp.BlobStoring:ContentTypeMismatch` error code. Within one kind, the content wins: a PNG image named `.jpg` is `image/png`. Generic containers are the exception, where the extension says which format the container holds: a ZIP file named `.epub` is `application/epub+zip`.
-* **Some extensions require a signature.** Each known extension is marked as either always carrying a signature (`.png`, `.pdf`, `.docx`, `.zip`, `.exe`, ...) or not (`.txt`, `.svg`, `.mp4`, `.mp3`, `.tar`, ...). Content without a recognized signature that is named with the first kind is rejected as a mismatch; named with the second kind, it takes the type of its extension.
+* **Some extensions require a signature.** Each known extension is marked as either always carrying a signature (`.png`, `.pdf`, `.docx`, `.zip`, `.exe`, `.woff2`, ...) or not (`.txt`, `.svg`, `.mp4`, `.mp3`, `.tar`, ...). Content without a recognized signature that is named with the first kind is rejected as a mismatch; named with the second kind, it takes the type of its extension.
 * **Text is sniffed.** Content without a signature is tested for text: it must not contain a [binary data byte](https://mimesniff.spec.whatwg.org/#binary-data-byte), but it does not have to be valid UTF-8, so legacy encodings still count as text. HTML, SVG and XML are recognized from their markup (the root element, after skipping a byte order mark, comments, processing instructions and a doctype). Other text takes the type of its text extension, or `text/plain`. All text types are one kind, so HTML named `.txt` is `text/html`, while text named `.png` is a mismatch.
 * **Unknown is `application/octet-stream`.** That includes binary content with an unknown or missing extension. An empty stream takes the type of its extension, unless that format requires a signature.
 
