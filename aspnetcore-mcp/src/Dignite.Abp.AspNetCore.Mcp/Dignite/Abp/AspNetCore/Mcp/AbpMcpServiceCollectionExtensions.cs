@@ -32,6 +32,9 @@ public static class AbpMcpServiceCollectionExtensions
         Check.NotNull(services, nameof(services));
         Check.NotNull(configure, nameof(configure));
 
+        // A primitive reads AbpMcpServerOptions.SerializerOptions when it is built. A host has options already;
+        // this is for a container assembled by hand, such as a module's own unit test, where it would not resolve.
+        services.AddOptions();
         services.TryAddSingleton<AbpMcpPrimitiveCache>();
 
         var module = services.GetOrAddAbpMcpModuleRegistry().GetOrAdd(name);

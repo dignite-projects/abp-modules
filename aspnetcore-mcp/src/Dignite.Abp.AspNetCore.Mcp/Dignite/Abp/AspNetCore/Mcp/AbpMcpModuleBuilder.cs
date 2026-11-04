@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using ModelContextProtocol.Server;
 using Volo.Abp;
 
@@ -85,8 +87,8 @@ public class AbpMcpModuleBuilder
             _services.AddSingleton<McpServerTool>(serviceProvider => serviceProvider
                 .GetRequiredService<AbpMcpPrimitiveCache>()
                 .GetOrCreate(registration, () => method.IsStatic
-                    ? McpServerTool.Create(method, (object?)null, new McpServerToolCreateOptions { Services = serviceProvider })
-                    : McpServerTool.Create(method, request => ResolveTarget(request, toolType), new McpServerToolCreateOptions { Services = serviceProvider })));
+                    ? McpServerTool.Create(method, (object?)null, CreateToolOptions(serviceProvider))
+                    : McpServerTool.Create(method, request => ResolveTarget(request, toolType), CreateToolOptions(serviceProvider))));
         }
 
         return this;
@@ -108,8 +110,8 @@ public class AbpMcpModuleBuilder
             _services.AddSingleton<McpServerResource>(serviceProvider => serviceProvider
                 .GetRequiredService<AbpMcpPrimitiveCache>()
                 .GetOrCreate(registration, () => method.IsStatic
-                    ? McpServerResource.Create(method, (object?)null, new McpServerResourceCreateOptions { Services = serviceProvider })
-                    : McpServerResource.Create(method, request => ResolveTarget(request, resourceType), new McpServerResourceCreateOptions { Services = serviceProvider })));
+                    ? McpServerResource.Create(method, (object?)null, CreateResourceOptions(serviceProvider))
+                    : McpServerResource.Create(method, request => ResolveTarget(request, resourceType), CreateResourceOptions(serviceProvider))));
         }
 
         return this;
@@ -131,8 +133,8 @@ public class AbpMcpModuleBuilder
             _services.AddSingleton<McpServerPrompt>(serviceProvider => serviceProvider
                 .GetRequiredService<AbpMcpPrimitiveCache>()
                 .GetOrCreate(registration, () => method.IsStatic
-                    ? McpServerPrompt.Create(method, (object?)null, new McpServerPromptCreateOptions { Services = serviceProvider })
-                    : McpServerPrompt.Create(method, request => ResolveTarget(request, promptType), new McpServerPromptCreateOptions { Services = serviceProvider })));
+                    ? McpServerPrompt.Create(method, (object?)null, CreatePromptOptions(serviceProvider))
+                    : McpServerPrompt.Create(method, request => ResolveTarget(request, promptType), CreatePromptOptions(serviceProvider))));
         }
 
         return this;
@@ -172,6 +174,48 @@ public class AbpMcpModuleBuilder
         }
 
         return methods;
+    }
+
+    /// <summary>
+    /// The create options of the three primitive kinds. They differ only in type, so a change made to one -
+    /// the serializer options here - is made to all three.
+    /// <para>
+    /// <see cref="AbpMcpServerOptions.SerializerOptions"/> is read when the primitive is built, from the finished
+    /// container: <c>AddTools</c> runs while services are still being registered, before the host's
+    /// <c>Configure&lt;AbpMcpServerOptions&gt;</c> has run. Without it the SDK falls back to
+    /// <c>McpJsonUtilities.DefaultOptions</c>, whose encoder escapes every non-ASCII character.
+    /// </para>
+    /// </summary>
+    private static McpServerToolCreateOptions CreateToolOptions(IServiceProvider serviceProvider)
+    {
+        return new McpServerToolCreateOptions
+        {
+            Services = serviceProvider,
+            SerializerOptions = GetSerializerOptions(serviceProvider)
+        };
+    }
+
+    private static McpServerResourceCreateOptions CreateResourceOptions(IServiceProvider serviceProvider)
+    {
+        return new McpServerResourceCreateOptions
+        {
+            Services = serviceProvider,
+            SerializerOptions = GetSerializerOptions(serviceProvider)
+        };
+    }
+
+    private static McpServerPromptCreateOptions CreatePromptOptions(IServiceProvider serviceProvider)
+    {
+        return new McpServerPromptCreateOptions
+        {
+            Services = serviceProvider,
+            SerializerOptions = GetSerializerOptions(serviceProvider)
+        };
+    }
+
+    private static JsonSerializerOptions GetSerializerOptions(IServiceProvider serviceProvider)
+    {
+        return serviceProvider.GetRequiredService<IOptions<AbpMcpServerOptions>>().Value.SerializerOptions;
     }
 
     /// <summary>

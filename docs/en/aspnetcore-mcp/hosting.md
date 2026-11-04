@@ -31,6 +31,54 @@ Configure<AbpMcpServerOptions>(options =>
 | `MaxRequestBodySize` | 4 MB | The largest request body accepted, enforced before the body is read, so an oversized request gets `413` instead of being buffered first. `null` leaves the server's own limit (30 MB on Kestrel). A module whose tools take large arguments, such as base64 uploads, raises it. |
 | `EndpointConventions` | Empty | Conventions applied to the endpoint after its authorization: rate limiting, CORS, a stricter policy. |
 | `AllowUnownedPrimitives` | `false` | See [Third-Party Tool Libraries](#third-party-tool-libraries). |
+| `SerializerOptions` | A copy of the SDK's JSON options that writes most characters as they are | The JSON options of every tool, resource and prompt registered with `AddAbpMcpModule`: tools write their results and tools and prompts read their arguments with them. See [Tool Results as JSON](#tool-results-as-json). |
+
+## Tool Results as JSON
+
+A tool that returns a DTO, a list or any other object has it written as JSON text in its result, and that text is what the model reads. The server writes it with `AbpMcpServerOptions.SerializerOptions`. By default these are the MCP SDK's own JSON options, copied: web naming, enums as strings and `null` properties left out, exactly as the SDK writes them, with one difference: most characters are written as they are, not as `\uXXXX` escapes.
+
+The SDK's own encoder writes every non-ASCII character, and `<`, `>`, `&`, `'`, `"`, `+` and the backtick, as `\uXXXX`. Chinese text then reaches the model as `\u5F00\u59CB`, HTML as `\u003Cdiv class=\u0022x\u0022\u003E` and the `+` of a time zone offset as `\u002B`, several times longer than the text itself, which costs tokens and makes it hard to read:
+
+````text
+SDK default:  {"title":"\u5F00\u59CB","html":"\u003Cdiv class=\u0022x\u0022\u003E"}
+This server:  {"title":"开始","html":"<div class=\"x\">"}
+````
+
+Not escaping them is safe here, because the text is JSON in a text block of the result, not markup. The JSON-RPC message that carries the result is still written by the SDK's own options, so the HTTP response is escaped as before. A client that put a tool result into a web page without encoding it would already be exposed to a tool that returns a string, which is passed on as it is.
+
+Some characters are still escaped, because JSON requires it or the encoder does not write them as they are:
+
+* `"` and `\` inside a string, written `\"` and `\\`.
+* Control characters.
+* Whitespace other than the ASCII space, among them the no-break space U+00A0 and the ideographic space U+3000, which Chinese text often starts a paragraph with.
+* The line and paragraph separators U+2028 and U+2029, the byte order mark U+FEFF, and private-use and unassigned code points.
+* Every character outside the Basic Multilingual Plane, such as emoji and rare Chinese characters, written as a pair of escapes (`\uD83D\uDE00` for U+1F600).
+
+The parsed value is always the same.
+
+### Changing the Options
+
+Add to the default rather than replacing it, for example a converter for a type of your own:
+
+````csharp
+Configure<AbpMcpServerOptions>(options =>
+{
+    options.SerializerOptions.Converters.Add(new MoneyJsonConverter());
+});
+````
+
+An instance made with `new JsonSerializerOptions()` has none of the SDK's contracts, so DTOs would be written differently. To get the SDK's escaping back, start from its options instead:
+
+````csharp
+Configure<AbpMcpServerOptions>(options =>
+{
+    options.SerializerOptions = new JsonSerializerOptions(McpJsonUtilities.DefaultOptions);
+});
+````
+
+To change what is escaped, set `Encoder` on the options. An encoder made with `JavaScriptEncoder.Create(UnicodeRanges.All)` still escapes the ideographic space and every character outside the Basic Multilingual Plane, so writing those as they are takes an encoder of your own, derived from `JavaScriptEncoder`.
+
+The options are shared by all primitives and become read-only when the first one is built, so set them in `Configure<AbpMcpServerOptions>` and not while the application runs. A tool, resource or prompt registered with the SDK's own `WithTools<T>()` and so on, see [Third-Party Tool Libraries](#third-party-tool-libraries), is written with the options that registration was given.
 
 ## Authentication
 

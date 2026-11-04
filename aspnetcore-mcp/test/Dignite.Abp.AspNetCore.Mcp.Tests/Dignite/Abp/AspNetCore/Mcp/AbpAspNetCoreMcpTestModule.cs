@@ -1,5 +1,7 @@
 using System;
 using System.Security.Claims;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,6 +44,14 @@ public class AbpAspNetCoreMcpTestModule : AbpModule
             options.ServerName = ServerName;
             options.ServerVersion = "9.9.9";
             options.Instructions = HostInstructions;
+
+            // Added to the default serializer options, as a host would: it is what test_get_stamp needs.
+            options.SerializerOptions.Converters.Add(new TestStampConverter());
+
+            // Inserted first, not added: the SDK's own enum converter is already in the list and answers first.
+            // It is what a prompt needs to read "dry_run", which it alone cannot.
+            options.SerializerOptions.Converters.Insert(
+                0, new JsonStringEnumConverter<TestRunMode>(JsonNamingPolicy.SnakeCaseLower));
         });
 
         context.Services.AddSingleton<TestLoggerProvider>();
@@ -50,7 +60,9 @@ public class AbpAspNetCoreMcpTestModule : AbpModule
         context.Services.AddAbpMcpModule("test", mcp => mcp
             .AddTools<TestTools>()
             .AddTools<TestUnitOfWorkTools>()
+            .AddTools<TestJsonTools>()
             .AddResources<TestResources>()
+            .AddPrompts<TestPrompts>()
             .AddResourceListContributor<TestResourceListContributor>()
             .AddInstructions(ModuleInstructions));
     }
