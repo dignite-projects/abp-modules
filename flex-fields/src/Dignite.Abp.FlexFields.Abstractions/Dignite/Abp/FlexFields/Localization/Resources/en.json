@@ -80,6 +80,26 @@
     "Validate:Matrix:UnknownFieldType": "{0}: field type '{1}' is not registered - a sub-field's type may have been removed.",
     "Validate:Matrix:SubFieldError": "{0}: block {1}, field '{2}': {3}",
     "Validate:Table:UnknownFieldType": "{0}: field type '{1}' is not registered - a column's type may have been removed.",
-    "Validate:Table:RowError": "{0}: row {1}, column '{2}': {3}"
+    "Validate:Table:RowError": "{0}: row {1}, column '{2}': {3}",
+    "Configuration:Invalid": "The configuration of the {0} field type is not valid. {1}",
+    "Configuration:UnknownKey": "'{0}' is not a configuration key of the {1} field type. The valid keys are: {2}.",
+    "Configuration:UnknownKeyNoneAccepted": "'{0}' is not a configuration key of the {1} field type, which takes no configuration.",
+    "Configuration:UnknownKeyCaseHint": "Keys are case-sensitive: did you mean '{0}'?",
+    "Configuration:InvalidValue": "The value of '{0}' must be {1}, but it is {2}.",
+    "Configuration:Required": "'{0}' is required by the {1} field type.",
+    "Configuration:InlineField": "In the inline field '{0}' ({1}): {2}",
+    "Configuration:Unreadable": "The configuration of the {0} field type is not in a shape the field type can read.",
+    "Configuration:UnknownInlineFieldType": "The inline field '{0}' has the field type '{1}', which is not registered. The registered field types are: {2}.",
+    "Configuration:Value:String": "a string",
+    "Configuration:Value:Integer": "an integer",
+    "Configuration:Value:Number": "a number",
+    "Configuration:Value:Boolean": "true or false",
+    "Configuration:Value:DateTime": "an ISO 8601 date or date-time string, such as 2026-01-31 or 2026-01-31T10:00:00Z",
+    "Configuration:Value:Guid": "a GUID string",
+    "Configuration:Value:Enum": "an integer, one of {0}",
+    "Configuration:Value:Array": "an array",
+    "Configuration:Value:ArrayShaped": "an array of the form {0}",
+    "Configuration:Value:Object": "an object",
+    "Configuration:Value:ObjectShaped": "an object of the form {0}"
   }
 }

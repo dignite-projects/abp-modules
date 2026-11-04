@@ -31,4 +31,34 @@ public class FieldTypeDto
     /// when this is false; <c>ProductFieldAppService</c> rejects the combination outright.
     /// </summary>
     public bool Indexable { get; set; }
+
+    /// <summary>
+    /// The configuration keys this field type understands - <see cref="IFieldType.ConfigurationKeys"/> - or
+    /// null when it declares none, in which case its configuration is not checked and nothing can be said
+    /// about it. An empty list is the opposite: the field type takes no configuration.
+    /// </summary>
+    public List<FieldConfigurationKeyDto>? ConfigurationKeys { get; set; }
+}
+
+/// <summary>
+/// One entry of <see cref="FieldTypeDto.ConfigurationKeys"/>: what a client needs to write the key
+/// correctly, so that it does not have to read the repository to learn how.
+/// </summary>
+public class FieldConfigurationKeyDto
+{
+    /// <summary>The key as stored, case-sensitive.</summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The value it takes, as <see cref="FieldConfigurationKey.Shape"/> writes it: <c>integer</c>,
+    /// <c>integer: 0 (SingleLine) | 1 (MultipleLine)</c>, <c>[{ "text": string, ... }]</c>.
+    /// </summary>
+    public string Type { get; set; } = string.Empty;
+
+    public string? Description { get; set; }
+
+    /// <summary>What the field behaves as when the key is absent; null when there is no fixed default.</summary>
+    public object? DefaultValue { get; set; }
+
+    public bool Required { get; set; }
 }

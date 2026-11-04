@@ -40,6 +40,31 @@ public class CKEditorFieldType : FieldTypeBase
 
     public override FlexFieldValueType? IndexValueType => null;
 
+    private static readonly FieldConfigurationKey[] Keys =
+    {
+        new(CKEditorConfigurationNames.Mode, FieldConfigurationValueKind.Enum, typeof(CKEditorMode))
+        {
+            DefaultValue = (int)new CKEditorConfiguration().Mode,
+            Description = "How much editing power the editor has: a floating toolbar for text formatting and lists, or a full toolbar."
+        },
+        new(CKEditorConfigurationNames.ContentFormat, FieldConfigurationValueKind.Enum, typeof(CKEditorContentFormat))
+        {
+            DefaultValue = (int)new CKEditorConfiguration().ContentFormat,
+            Description = "The format the value is stored in. Changing it does not convert values already stored."
+        },
+        new(CKEditorConfigurationNames.ImagesContainerName, FieldConfigurationValueKind.String)
+        {
+            Description = "The blob container inline images are uploaded to. Without it the editor offers no image upload."
+        },
+        new(CKEditorConfigurationNames.InitialContent, FieldConfigurationValueKind.String)
+        {
+            DefaultValue = new CKEditorConfiguration().InitialContent,
+            Description = "The content of a new, empty field."
+        }
+    };
+
+    public override IReadOnlyList<FieldConfigurationKey>? ConfigurationKeys => Keys;
+
     public override IReadOnlyList<ValidationResult> Validate(FieldValidationArgs args)
     {
         var errors = new List<ValidationResult>();

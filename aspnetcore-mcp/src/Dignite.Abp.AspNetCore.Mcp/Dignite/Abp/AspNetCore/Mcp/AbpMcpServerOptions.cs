@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using ModelContextProtocol;
 
 namespace Dignite.Abp.AspNetCore.Mcp;
 
@@ -54,6 +57,44 @@ public class AbpMcpServerOptions
     /// third-party MCP tool library that cannot be changed; duplicate names are still refused either way.
     /// </summary>
     public bool AllowUnownedPrimitives { get; set; }
+
+    /// <summary>
+    /// The JSON options every tool, resource and prompt registered through <see cref="AbpMcpModuleBuilder"/>
+    /// is built with: a tool and a prompt read their arguments with them, and a tool writes its result with
+    /// them - the text a model reads when a tool returns a DTO. (A prompt returns text or content blocks as they
+    /// are. A resource is given them too, but the SDK writes no DTO for it and converts its URI variables itself,
+    /// so they change nothing a resource does yet.)
+    /// <para>
+    /// Defaults to a copy of the SDK's <see cref="McpJsonUtilities.DefaultOptions"/> - so its type resolver,
+    /// web naming, string enums and null handling are unchanged - with one difference:
+    /// <see cref="JavaScriptEncoder.UnsafeRelaxedJsonEscaping"/> as the encoder. The SDK's own encoder escapes
+    /// every non-ASCII character and <c>&lt;</c>, <c>&gt;</c>, <c>&amp;</c>, <c>'</c>, <c>"</c>, <c>+</c> and the
+    /// backtick as <c>\uXXXX</c>, so Chinese text or an HTML template reaches the model several times longer than
+    /// it is. The relaxed encoder writes them as they are. It still escapes <c>"</c> and <c>\</c> (as JSON
+    /// requires), control characters, whitespace other than the ASCII space (U+00A0 and the ideographic space
+    /// U+3000 among them), U+2028, U+2029 and U+FEFF, private-use and unassigned code points, and every
+    /// character outside the Basic Multilingual Plane (emoji, rare Chinese characters). An encoder made from
+    /// Unicode ranges does not write those either; that takes an encoder of your own, set as <c>Encoder</c>
+    /// on these options.
+    /// The result is JSON in a text block, never HTML, and the JSON-RPC message that carries it is still written
+    /// by the SDK's own options, so the HTTP response is escaped as before.
+    /// </para>
+    /// <para>
+    /// Change it by adding to the default (<c>options.SerializerOptions.Converters.Add(...)</c>) rather than
+    /// replacing it: an instance built with <c>new JsonSerializerOptions()</c> has none of the SDK's contracts and
+    /// would serialize a DTO differently. It is shared by every primitive and made read-only by the first
+    /// one built, so set it in <c>Configure&lt;AbpMcpServerOptions&gt;</c> and not while the application runs.
+    /// </para>
+    /// </summary>
+    public JsonSerializerOptions SerializerOptions { get; set; } = CreateDefaultSerializerOptions();
+
+    private static JsonSerializerOptions CreateDefaultSerializerOptions()
+    {
+        return new JsonSerializerOptions(McpJsonUtilities.DefaultOptions)
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+    }
 
     /// <summary>
     /// Extra conventions applied to the mapped endpoint, after <c>RequireAuthorization()</c> - rate

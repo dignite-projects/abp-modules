@@ -80,6 +80,7 @@ public class MyModuleTools : ITransientDependency
 * The descriptions are what the model reads to decide which tool to call and how, so write them for it: what the tool does, what it returns, and the limits.
 * Put `[Authorize]` on each tool method. A tool the current user has no permission for does not appear in `tools/list`.
 * Make the methods `virtual`, so an application can override a tool by deriving from the class and [replacing](https://abp.io/docs/latest/framework/fundamentals/dependency-injection#replace-a-service) it.
+* A tool that returns a DTO has it written as JSON text with the application's `AbpMcpServerOptions.SerializerOptions`, which keeps non-ASCII text and HTML readable; see [Tool Results as JSON](hosting.md#tool-results-as-json). A tool that returns a `string` returns it as it is.
 
 ### Why Not the SDK's WithTools
 

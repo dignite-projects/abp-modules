@@ -26,17 +26,20 @@ public class ProductFieldAppService : DemoAppService
     private readonly IFlexFieldValueMigrator<Product> _valueMigrator;
     private readonly IFlexFieldIndexManager<Product> _indexManager;
     private readonly IFieldTypeResolver _fieldTypeResolver;
+    private readonly IFieldConfigurationValidator _configurationValidator;
 
     public ProductFieldAppService(
         IFlexFieldRepository<ProductField> fieldRepository,
         IFlexFieldValueMigrator<Product> valueMigrator,
         IFlexFieldIndexManager<Product> indexManager,
-        IFieldTypeResolver fieldTypeResolver)
+        IFieldTypeResolver fieldTypeResolver,
+        IFieldConfigurationValidator configurationValidator)
     {
         _fieldRepository = fieldRepository;
         _valueMigrator = valueMigrator;
         _indexManager = indexManager;
         _fieldTypeResolver = fieldTypeResolver;
+        _configurationValidator = configurationValidator;
     }
 
     public virtual async Task<ProductFieldDto> GetAsync(Guid id)
@@ -62,6 +65,16 @@ public class ProductFieldAppService : DemoAppService
             {
                 Name = fieldType.Name,
                 Indexable = fieldType.IsIndexable(),
+                ConfigurationKeys = fieldType.ConfigurationKeys?
+                    .Select(key => new FieldConfigurationKeyDto
+                    {
+                        Name = key.Name,
+                        Type = key.Shape,
+                        Description = key.Description,
+                        DefaultValue = key.DefaultValue,
+                        Required = key.Required,
+                    })
+                    .ToList(),
             })
             .ToList();
 
@@ -88,6 +101,7 @@ public class ProductFieldAppService : DemoAppService
 
         var configuration = input.Configuration.ToConfiguration();
         CheckNestingDepth(input.FieldTypeName, configuration);
+        _configurationValidator.Check(input.FieldTypeName, configuration);
 
         var field = new ProductField(GuidGenerator.Create(), input.Name, input.DisplayName, input.FieldTypeName)
         {
@@ -120,6 +134,10 @@ public class ProductFieldAppService : DemoAppService
 
         var configuration = input.Configuration.ToConfiguration();
         CheckNestingDepth(field.FieldTypeName, configuration);
+
+        // A client that renames a field sends the stored configuration back with the new name, and that must not
+        // be refused for a key it did not touch: what is stored is passed as `previous`.
+        _configurationValidator.Check(field.FieldTypeName, configuration, field.Configuration);
 
         if (!string.Equals(field.Name, input.Name, StringComparison.Ordinal))
         {

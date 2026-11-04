@@ -17,6 +17,13 @@
     <PackageReference Include="Volo.Abp.Core" />
     <PackageReference Include="Volo.Abp.Localization" />
     <!--
+      For AbpValidationException, which FieldConfigurationValidator.Check throws. It already arrives transitively
+      through Volo.Abp.Localization, but a type this project's public behavior depends on is not left to a
+      dependency's dependencies. The Abstractions variant for the same reason as the two below: the exception
+      lives there, and Volo.Abp.Validation brings the whole validation module.
+    -->
+    <PackageReference Include="Volo.Abp.Validation.Abstractions" />
+    <!--
       For the field-lifecycle ETOs only. The Abstractions variants are deliberate: EventNameAttribute and
       the handler interfaces live in Volo.Abp.EventBus.Abstractions, and IMultiTenant in
       Volo.Abp.MultiTenancy.Abstractions (whose own dependencies are already here via Volo.Abp.Localization).

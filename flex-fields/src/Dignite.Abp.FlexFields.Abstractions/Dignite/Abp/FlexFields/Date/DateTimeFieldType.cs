@@ -14,6 +14,27 @@ public class DateTimeFieldType : FieldTypeBase
 
     public override FlexFieldValueType? IndexValueType => FlexFieldValueType.DateTime;
 
+    private static readonly FieldConfigurationKey[] Keys =
+    {
+        new(DateTimeConfigurationNames.InputMode, FieldConfigurationValueKind.Enum, typeof(DateTimeInputMode))
+        {
+            DefaultValue = (int)new DateTimeConfiguration().InputMode,
+            Description = "What the user picks: a date, a date and time, or a year and month."
+        },
+        new(DateTimeConfigurationNames.Min, FieldConfigurationValueKind.DateTime)
+        {
+            EmptyStringIsUnset = true,
+            Description = "The earliest value accepted."
+        },
+        new(DateTimeConfigurationNames.Max, FieldConfigurationValueKind.DateTime)
+        {
+            EmptyStringIsUnset = true,
+            Description = "The latest value accepted."
+        }
+    };
+
+    public override IReadOnlyList<FieldConfigurationKey>? ConfigurationKeys => Keys;
+
     public override IReadOnlyList<ValidationResult> Validate(FieldValidationArgs args)
     {
         var configuration = new DateTimeConfiguration(args.Field.Configuration);

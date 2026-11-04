@@ -21,4 +21,11 @@
     <ProjectReference Include="..\..\src\Dignite.Abp.FlexFields.Abstractions\Dignite.Abp.FlexFields.Abstractions.csproj" />
   </ItemGroup>
 
+  <!-- The one exception, for FieldConfigurationValidator_Tests: the CKEditor bolt-on declares configuration
+       keys like the built-ins and has no test project of its own. It is referenced, never made a module
+       dependency, so its field type is not registered here - and it references Abstractions only itself. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Dignite.Abp.FlexFields.CKEditor\Dignite.Abp.FlexFields.CKEditor.csproj" />
+  </ItemGroup>
+
 </Project>

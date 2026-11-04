@@ -14,6 +14,17 @@ public class BooleanFieldType : FieldTypeBase
 
     public override FlexFieldValueType? IndexValueType => FlexFieldValueType.Boolean;
 
+    private static readonly FieldConfigurationKey[] Keys =
+    {
+        new(BooleanConfigurationNames.Default, FieldConfigurationValueKind.Boolean)
+        {
+            DefaultValue = new BooleanConfiguration().Default,
+            Description = "The initial value of a new entity."
+        }
+    };
+
+    public override IReadOnlyList<FieldConfigurationKey>? ConfigurationKeys => Keys;
+
     public override IReadOnlyList<ValidationResult> Validate(FieldValidationArgs args)
     {
         return Array.Empty<ValidationResult>();

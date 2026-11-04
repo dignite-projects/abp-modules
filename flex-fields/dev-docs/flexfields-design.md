@@ -188,3 +188,28 @@ public interface IFlexFieldRepository<TField> : IBasicRepository<TField, Guid> w
 - **`IFieldType` 上加一个 `IsComposite` 布尔**。凡是关心"是不是复合"的调用方，紧接着都要走内联字段（量深度、递归校验、描述结构）；一个裸布尔只会让每个调用方各自按具体类型 switch 一次去拿那些字段——正是该接口要消除的耦合。
 - **把两个契约放进外挂包**（`FlexFields.Composite` 之类，对照 `FlexFields.FileExplorer` 的先例）。外挂包的判据是"有没有自己的领域依赖"：FileExplorer 依赖 `Dignite.FileExplorer`，所以必须外挂；Matrix/Table 只依赖内核已有的词汇（`FieldConfigurationDictionary`、`FlexFieldDictionary`、`FieldTypeBase`），没有任何外部依赖可隔离。而契约一旦外挂，上面那条"宿主必须能不认识具体类型就提问"的路径立刻断掉。
 - **在 `Validate` 内部顺手把值改写掉**（省掉 `INormalizesValue`）。见上文"分家"一条：会把"返回错误"这个契约悄悄变成"返回错误并且可能改你的值"。
+
+## 10. 配置键声明与写时校验（2026-11，10.7.x）
+
+**问题。** `FieldConfigurationDictionary` 是 `Dictionary<string, object>`，什么键都收：模型把 `Text.Mode` 写成 `Text.Multiline`，被原样存下、没有任何读者认它，字段表现得像从没配过——没有一句报错。更糟的是值的类型也不查：`Select.Options` 写成字符串数组能存进去，而读它的 `GetConfiguration<List<SelectListItem>>` 在第一次读字段时才抛 `JsonException`。内核没有字段定义保存路径（第 2 节），能做的只有两件事：让字段类型**说出**自己认哪些键，再给宿主一个**能调用的检查**。
+
+**定案。**
+
+- **声明在 `IFieldType.ConfigurationKeys`**，默认接口成员，返回 `IReadOnlyList<FieldConfigurationKey>?`。**`null` = 没声明 = 不检查**；**空列表 = 声明"不接收任何配置" = 所有键都拒**。两者必须分开：第三方类型是在这个成员出现之前编译的，对它们"没说"绝不能解释成"全部拒绝"。默认接口成员让只实现了 `IFieldType`（没继承 `FieldTypeBase`）的类型既不用改、也不会加载失败。
+- **`FieldConfigurationKey`** 带键名、值的种类（`String/Integer/Number/Boolean/DateTime/Guid/Enum/Array/Object`）、可选的 `ValueType`（枚举类型，或数组/对象要反序列化成的 CLR 类型）、默认值、一句描述、`Required`、`EmptyStringIsUnset`（空字符串视为未设置；最初叫 `Nullable`，与 `System.Nullable` 重名且会让人以为 null 才需要它，null 本来就总是"未设置"，发版前改名）。默认值**从配置类读**（`new TextConfiguration().Mode`），不在声明里重抄一遍——配置类的 getter 才是字段真正的默认值。`Shape`（给人和 AI 看的值形状，如 `[{ "text": string, ... }]`）**由 `ValueKind`+`ValueType` 推出来**，不手写——手写的形状迟早和校验器接受的东西漂开。
+- **`IFieldConfigurationValidator`** 在 `.Abstractions`（字段类型在那儿，服务要读 `FlexFieldsResource` 本地化）。`Validate` 返回 `ValidationResult` 列表（成员名 `Configuration[key]`，沿用 MVC 对字典项的命名），`Check` 把它们打包成 `AbpValidationException`。选**校验异常而不是 `BusinessException`**：MCP 的错误过滤器把前者归为 `validation` 并把 `ValidationResult` 逐条带出（"改掉 fields 里的参数再试"），后者归为 `conflict`；HTTP 上也是 400 而不是 403。所有问题一次报完，不是一次一个。
+- **内核不调用它，宿主调用**，与 `CompositeFieldNesting` 完全同构（第 9 节）：调用点是宿主接收客户端字段定义的 create / update。demo 的 `ProductFieldAppService` 是示范，同时把声明的键放进它的字段类型列表。
+- **只管写，不管读。** 校验在读路径上不存在；历史上存下的配置——键没声明、值是别的类型——照旧能读。这条与"持久化的键即数据"（第 3 节）同源。
+- **更新要传 `previous`。** 只改显示名的客户端会把存着的配置原样发回来，旧定义里没声明的键、别的类型的值就会让这次无关的改动被拒。所以 `Validate/Check` 带可选的 `previous`（存着的配置）：值和之前一模一样的键、和之前一模一样（名字+类型+配置）的内联字段不再检查，客户端新增或改动的才查；必填键"之前就缺"也不算这次的错。比较用的归一化（`JsonElement`、装箱数字、`List<object>` 都先转成紧凑 JSON）在内核里，宿主不必各写一遍。内联字段按"整条定义是否原样存在"判断，不按名字配对（不同块类型里字段可以重名）；改了一条就整条重查。字段类型变了时不传 `previous`，整份都是新的。
+- **复合类型的内联字段不被外层的错误挡住，也不要求外层声明了键。** 最初的写法是外层键有错就不往内联走（怕 `GetInlineFields` 读不出来），结果既违背"所有问题一次报完"，也让没声明键的复合类型整个绕过内联检查。现在照常走：读不出来时，若外层键已经报过就不再重复，否则报一条"配置格式不对"（存下去只是把失败推到第一次读）；`previous` 同样读不出来时是旧账，不算这次的。内联字段的类型名没注册也报（见下"否掉"里被推翻的那条）。
+- **接受的集合 = 读取器能读的集合。** `GetConfiguration<T>` 经字符串转换，Angular 的 `Number` 编辑器输入框是 `type="text"`，所以它存下来的 `Number.Min` 是 `"10"`；`DateTime.Min` 是 `"2026-01"`，清空是 `""`。拒掉这些会让内核自己的编辑器存不了盘。反过来读取器**读不了**的才拒：枚举只按整数读（`"MultipleLine"` 会让 `JsonSerializer.Deserialize<TextMode>` 抛），非 `EmptyStringIsUnset` 键的空字符串读取时抛。校验器比读取器略严的地方（字符串键给数字、越界的枚举整数，读取器读得出来）是有意的：读得出来但没有意义的，不放进去。
+- **声明复述 `*ConfigurationNames` 常量，不发明名字**，且有反射测试守着两者相等。Angular 编辑器写、服务端没命名的键（`Number.Placeholder`，Angular 一直在写在读，服务端没有对应常量）此时会被校验器拒掉，所以补了常量和 `NumberConfiguration.Placeholder`——这是一个已落库的键，不是新发明的。
+
+**否掉的方案：**
+
+- **在 `FieldConfigurationBase` 里反射配置类的属性来推导键。** 看起来零重复，但键的默认值（`Text.CharLimit` 随 `Mode` 变）、值的种类、`EmptyStringIsUnset` 和描述都不在属性里；而且第三方类型也要能声明，反射推导会把"没声明"变成"声明了一个推导出的集合"。
+- **单独的 `IDescribesConfiguration` 能力接口（照 Site 的 `IHasValueShape`）。** 可行，但宿主每次列字段类型都要 `as` 一下；声明本就是字段类型最基本的事实之一，和 `IndexValueType` 同级，放在 `IFieldType` 上、用默认实现兜住兼容更直接。
+- **未声明的类型"默认拒绝所有键"。** 会让每个第三方字段类型在升级后无法保存任何配置。
+- **校验器在读路径兜底（"读到未知键就抛"）。** 违背"历史数据必须可读"。
+- **顶层的未知字段类型名也由校验器报错。** 没做：宿主保存的是一个它自己管理的类型名，是否允许保存一个未注册类型是宿主的决定，留给宿主。
+- **内联字段的未注册类型也留给 `InlineFieldValidator`（值校验时才报）。** 最初这样定，后来推翻：宿主看不进配置里面，定义保存时没有任何地方能拦住内联字段里拼错的类型名——和拼错的键是同一类错误，也正是这个功能要抓的。"类型已被移除、只改显示名的旧定义会变严"的顾虑由 `previous` 解决（原样存在的内联字段不再检查）。

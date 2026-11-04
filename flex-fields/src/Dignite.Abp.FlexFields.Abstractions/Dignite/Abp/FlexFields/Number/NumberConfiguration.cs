@@ -36,6 +36,11 @@ public class NumberConfiguration : FieldConfigurationBase
         set => ConfigurationDictionary.SetConfiguration(NumberConfigurationNames.FormatSpecifier, value);
     }
 
+    public string? Placeholder {
+        get => ConfigurationDictionary.GetConfiguration<string?>(NumberConfigurationNames.Placeholder, null);
+        set => ConfigurationDictionary.SetConfiguration(NumberConfigurationNames.Placeholder, value);
+    }
+
     public NumberConfiguration(FieldConfigurationDictionary fieldConfiguration)
         : base(fieldConfiguration)
     {

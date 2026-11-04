@@ -14,6 +14,21 @@ public class TreeFieldType : FieldTypeBase
 
     public override FlexFieldValueType? IndexValueType => FlexFieldValueType.String;
 
+    private static readonly FieldConfigurationKey[] Keys =
+    {
+        new(TreeConfigurationNames.Nodes, FieldConfigurationValueKind.Array, typeof(List<TreeNodeItem>))
+        {
+            Description = "The tree. A value of the field has to be the value of one of its nodes."
+        },
+        new(TreeConfigurationNames.Multiple, FieldConfigurationValueKind.Boolean)
+        {
+            DefaultValue = new TreeConfiguration().Multiple,
+            Description = "Whether several nodes can be selected. The value is then a list of node values."
+        }
+    };
+
+    public override IReadOnlyList<FieldConfigurationKey>? ConfigurationKeys => Keys;
+
     public override IReadOnlyList<ValidationResult> Validate(FieldValidationArgs args)
     {
         var configuration = new TreeConfiguration(args.Field.Configuration);

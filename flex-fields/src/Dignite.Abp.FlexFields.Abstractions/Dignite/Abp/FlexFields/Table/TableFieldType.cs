@@ -29,6 +29,16 @@ public class TableFieldType : FieldTypeBase, ICompositeFieldType, INormalizesVal
 
     public override FlexFieldValueType? IndexValueType => null;
 
+    private static readonly FieldConfigurationKey[] Keys =
+    {
+        new(TableConfigurationNames.Columns, FieldConfigurationValueKind.Array, typeof(List<InlineFieldDefinition>))
+        {
+            Description = "The columns every row has, as inline field definitions."
+        }
+    };
+
+    public override IReadOnlyList<FieldConfigurationKey>? ConfigurationKeys => Keys;
+
     public IEnumerable<InlineFieldDefinition> GetInlineFields(FieldConfigurationDictionary configuration)
     {
         return new TableConfiguration(configuration).Columns;

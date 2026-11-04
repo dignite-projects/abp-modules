@@ -14,6 +14,30 @@ public class SelectFieldType : FieldTypeBase
 
     public override FlexFieldValueType? IndexValueType => FlexFieldValueType.String;
 
+    private static readonly FieldConfigurationKey[] Keys =
+    {
+        new(SelectConfigurationNames.Options, FieldConfigurationValueKind.Array, typeof(List<SelectListItem>))
+        {
+            Description = "The options. A value of the field has to be the value of one of them."
+        },
+        new(SelectConfigurationNames.Multiple, FieldConfigurationValueKind.Boolean)
+        {
+            DefaultValue = new SelectConfiguration().Multiple,
+            Description = "Whether several options can be selected. The value is then a list of option values."
+        },
+        new(SelectConfigurationNames.NullText, FieldConfigurationValueKind.String)
+        {
+            Description = "The text of the empty choice."
+        },
+        new(SelectConfigurationNames.Size, FieldConfigurationValueKind.Integer)
+        {
+            EmptyStringIsUnset = true,
+            Description = "The number of visible rows of the input."
+        }
+    };
+
+    public override IReadOnlyList<FieldConfigurationKey>? ConfigurationKeys => Keys;
+
     public override IReadOnlyList<ValidationResult> Validate(FieldValidationArgs args)
     {
         var configuration = new SelectConfiguration(args.Field.Configuration);

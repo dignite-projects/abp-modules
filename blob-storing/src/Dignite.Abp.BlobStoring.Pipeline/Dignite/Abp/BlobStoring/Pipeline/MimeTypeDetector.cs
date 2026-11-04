@@ -21,13 +21,14 @@ namespace Dignite.Abp.BlobStoring.Pipeline;
 /// archives, so an Office Open XML or OpenDocument file is told apart from a plain ZIP. Signatures short
 /// enough to occur in text (<c>BM</c>, <c>MZ</c>, <c>ID3</c>, ...) must be confirmed by the rest of the
 /// header (<see cref="IsSignatureConfirmed"/>). Formats FileSignatures does not know (WAV, AVIF/HEIC, other
-/// ISO media brands, MP3 frames without an ID3 tag, generic compound files, Mach-O, empty ZIPs) fall back to
-/// <see cref="DetectFromContent"/>.</item>
+/// ISO media brands, MP3 frames without an ID3 tag, generic compound files, Mach-O, empty ZIPs, web fonts) fall
+/// back to <see cref="DetectFromContent"/>, where the font signatures (<c>wOFF</c>, <c>wOF2</c>, and the four
+/// byte <c>sfnt</c> versions of TrueType and OpenType) are likewise confirmed by the rest of the font header.</item>
 /// <item>Content with a known signature decides the type. If the extension names a type of a different kind
 /// (an executable named <c>.png</c>, a ZIP named <c>.pdf</c>, a PNG named <c>.txt</c>), it is rejected.
-/// Within one kind the content wins (a PNG named <c>.jpg</c> is <c>image/png</c>), except for generic
-/// containers, where the extension says which format the container holds (a ZIP named <c>.epub</c> is
-/// <c>application/epub+zip</c>).</item>
+/// Within one kind the content wins (a PNG named <c>.jpg</c> is <c>image/png</c>, an OpenType font named
+/// <c>.ttf</c> is <c>font/otf</c>), except for generic containers, where the extension says which format the
+/// container holds (a ZIP named <c>.epub</c> is <c>application/epub+zip</c>).</item>
 /// <item>Content without a signature is sniffed for text (<see cref="IsText"/>): XML, HTML and SVG are
 /// recognised from their markup (<see cref="DetectTextFormat"/>), other text takes the extension's text type
 /// or <c>text/plain</c>. All text types are one kind, so HTML named <c>.txt</c> is <c>text/html</c>; text named
@@ -64,6 +65,28 @@ public class MimeTypeDetector : IMimeTypeDetector, ITransientDependency
 
     private const string RasterImageKind = "raster-image";
 
+    private const string FontKind = "font";
+
+    // Web fonts. An sfnt font (TrueType, OpenType) starts with a 12-byte header followed by a 16-byte record per
+    // table; WOFF and WOFF2 start with a fixed header of 44 and 48 bytes.
+    private const int SfntHeaderLength = 12;
+    private const int SfntTableRecordLength = 16;
+    private const int WoffHeaderLength = 44;
+    private const int Woff2HeaderLength = 48;
+
+    // Real fonts have a few dozen tables. This cap is also the only thing that keeps text starting with "true" or
+    // "OTTO" from being taken for an sfnt font: the checks on the table directory (printable tags, offsets past
+    // the directory) are all satisfied by ASCII text. Text holds no NUL or low control byte, so a pair of its bytes
+    // read as a big-endian number is at least 0x0909 (two tabs) and never a table count of 256 or less. Raising
+    // the cap to 0x0909 or more lets such text through; the tests with text starting "true\t\t", "true\n\n" and
+    // "OTTO\r\n" fail if it is.
+    private const int MaxFontTables = 256;
+
+    private const uint TrueTypeVersion = 0x00010000;
+    private const uint AppleTrueTypeVersion = 0x74727565; // "true"
+    private const uint OpenTypeCffVersion = 0x4F54544F; // "OTTO"
+    private const uint TrueTypeCollectionVersion = 0x74746366; // "ttcf"
+
     private static readonly Dictionary<string, (string MimeType, bool RequiresSignature)> Extensions =
         new(StringComparer.OrdinalIgnoreCase)
         {
@@ -81,6 +104,12 @@ public class MimeTypeDetector : IMimeTypeDetector, ITransientDependency
             [".svg"] = ("image/svg+xml", false),
             [".avif"] = ("image/avif", false),
             [".heic"] = ("image/heic", false),
+
+            // Fonts. Every font format starts with a signature at offset 0.
+            [".woff"] = ("font/woff", true),
+            [".woff2"] = ("font/woff2", true),
+            [".ttf"] = ("font/ttf", true),
+            [".otf"] = ("font/otf", true),
 
             // Documents
             [".pdf"] = ("application/pdf", true),
@@ -500,7 +529,7 @@ public class MimeTypeDetector : IMimeTypeDetector, ITransientDependency
             return "application/wasm";
         }
 
-        return null;
+        return DetectFont(header);
     }
 
     /// <summary>
@@ -612,6 +641,7 @@ public class MimeTypeDetector : IMimeTypeDetector, ITransientDependency
             "application/x-msdownload" or "application/x-elf" or "application/x-mach-binary" => "executable",
             "application/json" or "application/xml" or "image/svg+xml" => TextKind,
             _ when mimeType.StartsWith("text/", StringComparison.OrdinalIgnoreCase) => TextKind,
+            _ when mimeType.StartsWith("font/", StringComparison.OrdinalIgnoreCase) => FontKind,
             _ => mimeType
         };
     }
@@ -777,6 +807,101 @@ public class MimeTypeDetector : IMimeTypeDetector, ITransientDependency
 
         var peHeaderOffset = BinaryPrimitives.ReadUInt32LittleEndian(header.Slice(0x3C, 4));
         return peHeaderOffset is >= 0x40 and < 0x1000;
+    }
+
+    private static string? DetectFont(ReadOnlySpan<byte> header)
+    {
+        if (header.Length < 4)
+        {
+            return null;
+        }
+
+        if (header.StartsWith("wOFF"u8))
+        {
+            return IsWebFont(header, WoffHeaderLength) ? "font/woff" : null;
+        }
+
+        if (header.StartsWith("wOF2"u8))
+        {
+            return IsWebFont(header, Woff2HeaderLength) ? "font/woff2" : null;
+        }
+
+        // TrueType and OpenType share the sfnt container; its version says which outlines the font has.
+        // OpenType with TrueType outlines carries the TrueType version and is font/ttf.
+        return BinaryPrimitives.ReadUInt32BigEndian(header) switch
+        {
+            TrueTypeVersion or AppleTrueTypeVersion => IsSfnt(header) ? "font/ttf" : null,
+            OpenTypeCffVersion => IsSfnt(header) ? "font/otf" : null,
+            _ => null
+        };
+    }
+
+    private static bool IsWebFont(ReadOnlySpan<byte> header, int headerLength)
+    {
+        // "wOFF" and "wOF2" alone would also match text; require the rest of the fixed header to agree: the
+        // flavor is an sfnt version, the table count is plausible, the reserved field is zero, and the length of
+        // the file can hold the header.
+        if (header.Length < headerLength)
+        {
+            return false;
+        }
+
+        var flavor = BinaryPrimitives.ReadUInt32BigEndian(header.Slice(4, 4));
+        var length = BinaryPrimitives.ReadUInt32BigEndian(header.Slice(8, 4));
+        var tableCount = BinaryPrimitives.ReadUInt16BigEndian(header.Slice(12, 2));
+        var reserved = BinaryPrimitives.ReadUInt16BigEndian(header.Slice(14, 2));
+
+        return flavor is TrueTypeVersion or AppleTrueTypeVersion or OpenTypeCffVersion or TrueTypeCollectionVersion &&
+               length >= headerLength &&
+               tableCount is >= 1 and <= MaxFontTables &&
+               reserved == 0;
+    }
+
+    private static bool IsSfnt(ReadOnlySpan<byte> header)
+    {
+        // The version alone ("true", "OTTO") would also match text. The table count keeps text out (see
+        // MaxFontTables); the table directory keeps other binary content out: tags of printable ASCII, and tables
+        // that start after the directory and fit in 32 bits. Only the records inside the sample are checked.
+        // searchRange, entrySelector and rangeShift are derived from the table count, so they add nothing and are
+        // not required.
+        if (header.Length < SfntHeaderLength + SfntTableRecordLength)
+        {
+            return false;
+        }
+
+        var tableCount = BinaryPrimitives.ReadUInt16BigEndian(header.Slice(4, 2));
+        if (tableCount is 0 or > MaxFontTables)
+        {
+            return false;
+        }
+
+        var directoryEnd = SfntHeaderLength + SfntTableRecordLength * tableCount;
+        var records = Math.Min(tableCount, (header.Length - SfntHeaderLength) / SfntTableRecordLength);
+        for (var i = 0; i < records; i++)
+        {
+            var record = header.Slice(SfntHeaderLength + i * SfntTableRecordLength, SfntTableRecordLength);
+            var offset = BinaryPrimitives.ReadUInt32BigEndian(record.Slice(8, 4));
+            var length = BinaryPrimitives.ReadUInt32BigEndian(record.Slice(12, 4));
+            if (!IsTableTag(record[..4]) || offset < directoryEnd || (ulong)offset + length > uint.MaxValue)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool IsTableTag(ReadOnlySpan<byte> tag)
+    {
+        foreach (var b in tag)
+        {
+            if (b is < 0x20 or > 0x7E)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static bool IsId3Tag(ReadOnlySpan<byte> header)
