@@ -80,6 +80,26 @@
     "Validate:Matrix:UnknownFieldType": "{0}：字段类型“{1}”未注册，子字段所用的类型可能已被移除。",
     "Validate:Matrix:SubFieldError": "{0}：第 {1} 块，字段“{2}”：{3}",
     "Validate:Table:UnknownFieldType": "{0}：字段类型“{1}”未注册，列所用的类型可能已被移除。",
-    "Validate:Table:RowError": "{0}：第 {1} 行，列“{2}”：{3}"
+    "Validate:Table:RowError": "{0}：第 {1} 行，列“{2}”：{3}",
+    "Configuration:Invalid": "{0} 字段类型的配置无效。{1}",
+    "Configuration:UnknownKey": "“{0}”不是 {1} 字段类型的配置键。有效的键：{2}。",
+    "Configuration:UnknownKeyNoneAccepted": "“{0}”不是 {1} 字段类型的配置键，该字段类型不接受任何配置。",
+    "Configuration:UnknownKeyCaseHint": "配置键区分大小写：您指的是“{0}”吗？",
+    "Configuration:InvalidValue": "“{0}”的值必须是{1}，但实际是 {2}。",
+    "Configuration:Required": "{1} 字段类型要求必须配置“{0}”。",
+    "Configuration:InlineField": "内联字段“{0}”（{1}）：{2}",
+    "Configuration:Unreadable": "{0} 字段类型的配置格式不正确，该字段类型无法读取。",
+    "Configuration:UnknownInlineFieldType": "内联字段“{0}”的字段类型“{1}”未注册。已注册的字段类型：{2}。",
+    "Configuration:Value:String": "字符串",
+    "Configuration:Value:Integer": "整数",
+    "Configuration:Value:Number": "数字",
+    "Configuration:Value:Boolean": "true 或 false",
+    "Configuration:Value:DateTime": "ISO 8601 格式的日期或日期时间字符串，如 2026-01-31 或 2026-01-31T10:00:00Z",
+    "Configuration:Value:Guid": "GUID 字符串",
+    "Configuration:Value:Enum": "整数，取值为 {0} 之一",
+    "Configuration:Value:Array": "数组",
+    "Configuration:Value:ArrayShaped": "形如 {0} 的数组",
+    "Configuration:Value:Object": "对象",
+    "Configuration:Value:ObjectShaped": "形如 {0} 的对象"
   }
 }

@@ -42,6 +42,16 @@ public class MatrixFieldType : FieldTypeBase, ICompositeFieldType, INormalizesVa
 
     public override FlexFieldValueType? IndexValueType => null;
 
+    private static readonly FieldConfigurationKey[] Keys =
+    {
+        new(MatrixConfigurationNames.BlockTypes, FieldConfigurationValueKind.Array, typeof(List<MatrixBlockType>))
+        {
+            Description = "The block types a value can be made of, each with a name, a display name and the inline fields of its blocks."
+        }
+    };
+
+    public override IReadOnlyList<FieldConfigurationKey>? ConfigurationKeys => Keys;
+
     public IEnumerable<InlineFieldDefinition> GetInlineFields(FieldConfigurationDictionary configuration)
     {
         return new MatrixConfiguration(configuration).BlockTypes.SelectMany(blockType => blockType.Fields);

@@ -91,6 +91,39 @@ DbContext of its own to run one.
 Renaming any of these again "for consistency" orphans every field already stored under the current
 key. `built-in-field-types.spec.ts` asserts all of them for that reason.
 
+## Declared configuration keys
+
+A configuration is a `Dictionary<string, object>`, which stores any key and says nothing when one is
+misspelled. A field type can therefore **declare** its keys, and a host can have a configuration checked
+against them:
+
+- **`IFieldType.ConfigurationKeys`** — a default interface member returning `IReadOnlyList<FieldConfigurationKey>?`.
+  **`null` = "not declared" = not checked** (every third-party type written before it existed, and any that does
+  not override it); **an empty list = "takes no configuration"** = every key refused. Never turn `null` into
+  "refuse everything". `FieldConfigurationKey` carries the name, a `ValueKind` (+ optional `ValueType` for enums and
+  shaped arrays/objects), `DefaultValue`, `Description`, `Required` and `EmptyStringIsUnset`; `Shape` is derived from
+  them. **A `DefaultValue` is read from the configuration class (`new TextConfiguration().Mode`), never restated**:
+  the class's getter is the default the field really has.
+- **`IFieldConfigurationValidator`** (`Validate` → `ValidationResult`s, `Check` → `AbpValidationException`) lives in
+  `.Abstractions`, because the field types are there. **The kernel never calls it** — the same arrangement as
+  `CompositeFieldNesting`: a host calls it where it accepts a definition from a client, and the demo's
+  `ProductFieldAppService` is the worked example. It descends into the inline fields of an `ICompositeFieldType`
+  within `CompositeFieldNesting.MaxDepth` — also when the type declares no keys of its own, and also when its own
+  keys are wrong — and refuses an inline field whose field type is not registered.
+- **An update passes what is stored as `previous`** (`Check(type, configuration, previous)`): a client that renames a
+  field sends the stored configuration back, and a key or inline field that is exactly as stored is not checked
+  again. Without it a definition saved before a key was declared could not even be renamed.
+- **It accepts only what the reader can read, and is never on the read path.** `GetConfiguration<T>` converts through
+  a string, and the Angular `Number` editor's inputs are text boxes, so `"10"` is a valid `Number.Min`; an enum is read
+  by its integer only, so `"MultipleLine"` is refused. Stored configuration must stay readable whatever it holds:
+  validate what a client sends, never what is stored.
+- **A declaration restates the `*ConfigurationNames` constants — it never invents a name**, and they are persisted
+  data (see above). `FieldConfigurationValidator_Tests.Declared_keys_are_exactly_the_keys_the_configuration_classes_name`
+  fails when a constant is added without being declared, or the reverse. **A key an Angular config component writes
+  must be declared**, or the validator refuses the editor's own save: `Number.Placeholder` was written by the Angular
+  `Number` editor for a long time before the server named it. When adding a key, add the constant, the property, the
+  declaration and the Angular configuration together.
+
 ## Composite field types (`Matrix`, `Table`)
 
 Two of the eight built-ins are **composite**: their *configuration* declares further whole field

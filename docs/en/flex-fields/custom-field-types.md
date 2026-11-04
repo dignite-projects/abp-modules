@@ -31,6 +31,15 @@ public class ColorFieldType : FieldTypeBase
 
     public override FlexFieldValueType? IndexValueType => FlexFieldValueType.String;
 
+    public override IReadOnlyList<FieldConfigurationKey>? ConfigurationKeys { get; } = new[]
+    {
+        new FieldConfigurationKey(ColorConfiguration.AllowAlphaName, FieldConfigurationValueKind.Boolean)
+        {
+            DefaultValue = new ColorConfiguration().AllowAlpha,
+            Description = "Whether a color may carry an alpha channel, as #RRGGBBAA."
+        }
+    };
+
     public override FieldConfigurationBase GetConfiguration(FieldConfigurationDictionary configuration)
     {
         return new ColorConfiguration(configuration);
@@ -70,6 +79,7 @@ public class ColorFieldType : FieldTypeBase
 * **`Name`**: The registration name, which every field definition of this type stores in its `FieldTypeName`. It is **stored data**: choose a stable, prefixed name and never change it.
 * **`DisplayName`**: The localized name, for a field designer. `L` localizes from the resource set in `LocalizationResource`, the `FlexFields` resource by default.
 * **`IndexValueType`**: The typed slot the type's searchable values go into, or `null` when the type cannot be searched, such as rich text.
+* **`ConfigurationKeys`**: Optional. The keys of the configuration that the type understands, with the kind of value each takes. A client's configuration is then [checked](field-types.md#checking-a-configuration) against them, and a field designer or an AI assistant can ask what they are. Name each key with the constant the configuration class reads it by, and read each default from the configuration class (`new ColorConfiguration().AllowAlpha`) rather than writing it a second time. Leave it out, and the configuration of the type is not checked at all, as before.
 * **`Validate`**: Returns the validation errors of a value, with the field's name as the member name. `args.Field` is the [`FlexFieldValue`](index.md#concepts), with the definition, the usage flags and the value. Remember that a value may be a `JsonElement` after a round trip.
 * **`GetSearchableValues`**: Decomposes a value into the values to index. The default returns the value itself for a searchable usage with a value; override it for a multi-valued type, as `Select` and `Tree` do, to return one per selected value.
 

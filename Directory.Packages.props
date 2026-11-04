@@ -38,6 +38,7 @@
     <PackageVersion Include="Volo.Abp.BlobStoring" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.BlobStoring.Memory" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Validation" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Validation.Abstractions" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Imaging.Abstractions" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Imaging.SkiaSharp" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Ddd.Domain" Version="10.7.0" />

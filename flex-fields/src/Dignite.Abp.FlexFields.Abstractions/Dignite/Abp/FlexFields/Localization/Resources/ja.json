@@ -80,6 +80,26 @@
     "Validate:Matrix:UnknownFieldType": "{0}：フィールドタイプ「{1}」は登録されていません。サブフィールドのタイプが削除された可能性があります。",
     "Validate:Matrix:SubFieldError": "{0}：ブロック {1}、フィールド「{2}」：{3}",
     "Validate:Table:UnknownFieldType": "{0}：フィールドタイプ「{1}」は登録されていません。列のタイプが削除された可能性があります。",
-    "Validate:Table:RowError": "{0}：行 {1}、列「{2}」：{3}"
+    "Validate:Table:RowError": "{0}：行 {1}、列「{2}」：{3}",
+    "Configuration:Invalid": "{0} フィールドタイプの設定が正しくありません。{1}",
+    "Configuration:UnknownKey": "「{0}」は {1} フィールドタイプの設定キーではありません。有効なキー：{2}。",
+    "Configuration:UnknownKeyNoneAccepted": "「{0}」は {1} フィールドタイプの設定キーではありません。このタイプは設定を受け付けません。",
+    "Configuration:UnknownKeyCaseHint": "キーは大文字と小文字を区別します。「{0}」ではありませんか？",
+    "Configuration:InvalidValue": "「{0}」の値は{1}でなければなりませんが、{2} が指定されました。",
+    "Configuration:Required": "「{0}」は {1} フィールドタイプで必須です。",
+    "Configuration:InlineField": "インラインフィールド「{0}」（{1}）：{2}",
+    "Configuration:Unreadable": "{0} フィールドタイプの設定は、そのフィールドタイプが読み取れる形式ではありません。",
+    "Configuration:UnknownInlineFieldType": "インラインフィールド「{0}」のフィールドタイプ「{1}」は登録されていません。登録済みのフィールドタイプ：{2}。",
+    "Configuration:Value:String": "文字列",
+    "Configuration:Value:Integer": "整数",
+    "Configuration:Value:Number": "数値",
+    "Configuration:Value:Boolean": "true または false",
+    "Configuration:Value:DateTime": "ISO 8601 形式の日付または日時の文字列（例：2026-01-31、2026-01-31T10:00:00Z）",
+    "Configuration:Value:Guid": "GUID の文字列",
+    "Configuration:Value:Enum": "整数（{0} のいずれか）",
+    "Configuration:Value:Array": "配列",
+    "Configuration:Value:ArrayShaped": "{0} の形式の配列",
+    "Configuration:Value:Object": "オブジェクト",
+    "Configuration:Value:ObjectShaped": "{0} の形式のオブジェクト"
   }
 }

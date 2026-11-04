@@ -14,6 +14,40 @@ public class NumberFieldType : FieldTypeBase
 
     public override FlexFieldValueType? IndexValueType => FlexFieldValueType.Number;
 
+    private static readonly FieldConfigurationKey[] Keys =
+    {
+        new(NumberConfigurationNames.Min, FieldConfigurationValueKind.Number)
+        {
+            EmptyStringIsUnset = true,
+            Description = "The smallest value accepted."
+        },
+        new(NumberConfigurationNames.Max, FieldConfigurationValueKind.Number)
+        {
+            EmptyStringIsUnset = true,
+            Description = "The largest value accepted."
+        },
+        new(NumberConfigurationNames.Decimals, FieldConfigurationValueKind.Integer)
+        {
+            DefaultValue = new NumberConfiguration().Decimals,
+            Description = "The most decimal places a value may have."
+        },
+        new(NumberConfigurationNames.Step, FieldConfigurationValueKind.Number)
+        {
+            EmptyStringIsUnset = true,
+            Description = "The interval between valid values, for the input."
+        },
+        new(NumberConfigurationNames.FormatSpecifier, FieldConfigurationValueKind.String)
+        {
+            Description = "A .NET standard numeric format string, applied when the value is displayed. The key has no 'Number.' prefix."
+        },
+        new(NumberConfigurationNames.Placeholder, FieldConfigurationValueKind.String)
+        {
+            Description = "The placeholder of the input."
+        }
+    };
+
+    public override IReadOnlyList<FieldConfigurationKey>? ConfigurationKeys => Keys;
+
     public override IReadOnlyList<ValidationResult> Validate(FieldValidationArgs args)
     {
         var configuration = new NumberConfiguration(args.Field.Configuration);

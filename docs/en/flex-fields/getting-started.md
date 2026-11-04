@@ -290,9 +290,10 @@ Only the values of **searchable** fields are indexed. See [Querying by Field Val
 
 ## Managing the Field Definitions
 
-The field definitions are your entities, managed by your own application service. Three things need FlexFields:
+The field definitions are your entities, managed by your own application service. Four things need FlexFields:
 
 * Offer the field types to choose from with `IFieldTypeResolver.GetAll()`.
+* Check the configuration a client sends with `IFieldConfigurationValidator.Check`, before you save it, passing the stored configuration as `previous` on an update; see [Checking a Configuration](field-types.md#checking-a-configuration).
 * After switching a field's `Searchable` flag on, or changing its field type, rebuild the index with `IFlexFieldIndexManager<Product>.RebuildAsync()`.
 * A field's `Name` is the key of its values, so renaming or deleting a field is a data migration; see [Renaming and Deleting Fields](renaming-and-deleting-fields.md).
 

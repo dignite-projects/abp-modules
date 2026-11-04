@@ -54,6 +54,13 @@ public abstract class FieldTypeBase : IFieldType, ITransientDependency
     public abstract FieldConfigurationBase GetConfiguration(FieldConfigurationDictionary configuration);
 
     /// <summary>
+    /// Not declared by default, so a field type that says nothing is not validated - see
+    /// <see cref="IFieldType.ConfigurationKeys"/>. Override it to declare the keys the type reads, naming each
+    /// with the same constant its configuration class reads it by.
+    /// </summary>
+    public virtual IReadOnlyList<FieldConfigurationKey>? ConfigurationKeys => null;
+
+    /// <summary>
     /// Default single-value decomposition: the raw value itself, when the field type is indexable, the
     /// usage is searchable, and there is a value. Multi-valued field types (Select, Tree) override this to
     /// yield one per selected value.
