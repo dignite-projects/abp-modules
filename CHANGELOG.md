@@ -16,7 +16,27 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+## [10.7.2] - 2026-11-04
+
 ### Added
+
+#### blob-storing
+
+- **`MimeTypeDetector` recognizes web fonts from their bytes.** WOFF (`wOFF`) is `font/woff`, WOFF2 (`wOF2`) is
+  `font/woff2`, TrueType (`00 01 00 00` or `true`) is `font/ttf` and OpenType with CFF outlines (`OTTO`) is
+  `font/otf`; a font used to come out as `application/octet-stream`. Four bytes also occur at the start of text and of
+  arbitrary binary content, so a signature is confirmed by the rest of the header: a WOFF or WOFF2 header needs the
+  font's own `sfnt` version, a plausible table count, a zero reserved field and a length that holds the header, and a
+  TrueType or OpenType header needs a plausible table count and a sensible table directory (printable ASCII tags,
+  tables that start after the directory). The extensions `.woff`, `.woff2`, `.ttf` and `.otf` are known and always
+  carry a signature, and the four font types are one kind, like the raster images. A font named `.png` or `.txt`, an
+  executable named `.woff2`, and content that is not a font named `.ttf` are rejected with `ContentTypeMismatch`; a
+  font in a file named with another font's extension is the type its bytes say (a WOFF2 file named `.woff` is
+  `font/woff2`, an OpenType font with TrueType outlines named `.otf` is `font/ttf`). Font collections (`.ttc`) and
+  Embedded OpenType are not recognized. **A container that took fonts only because it allowed unidentified content**
+  (`AllowUnidentified`, or `application/octet-stream` on its list) **now rejects them, since their type is `font/*`:**
+  add the font types (`font/woff2`, `font/woff`, `font/ttf`, `font/otf`, or `font/*`) to its `AllowedContentTypes`.
+  See [Web Fonts](docs/en/blob-storing/mime-type-detection.md#web-fonts).
 
 #### flex-fields
 
@@ -25,6 +45,35 @@ so it stays clear which part of the repository actually moved.
   `text-center` and `text-end` rather than an inline `text-align` style, which Angular's sanitizer would strip from
   the read-only view. Markdown fields and `Basic` mode are unchanged. A host that renders the stored HTML outside
   Bootstrap needs those three classes in its own stylesheet.
+- **A field type declares its configuration keys, and a configuration is checked against them.** A field's
+  `Configuration` is a dictionary, so a misspelled key (`Text.Multiline` for `Text.Mode`) was stored without a word
+  and had no effect. `IFieldType.ConfigurationKeys` now lists the keys a field type understands, each a
+  `FieldConfigurationKey` with its name, the kind and `Shape` of its value, its default, a description and whether it
+  is required; the eight built-in field types and `CKEditor` declare theirs. `IFieldConfigurationValidator` checks a
+  configuration against the declaration and refuses an unknown key (the message names the key and the field type and
+  lists the valid keys), a value of the wrong kind (`"MultipleLine"` for the integer `Text.Mode`, plain strings for
+  `Select.Options`) and a missing required key, and checks the inline fields of `Matrix` and `Table` against their own
+  field types, refusing one whose field type is not registered. `Check` throws an `AbpValidationException` carrying
+  every problem; `Validate` returns them as `ValidationResult`s. The messages are localized in English, Japanese,
+  Simplified and Traditional Chinese. Like `CompositeFieldNesting`, the kernel does not call it: a host calls it where
+  it accepts a field definition from a client, and the demo's `ProductFieldAppService` is the worked example, which also
+  lists the declared keys in its field type listing. **On an update the host passes the stored configuration as
+  `previous`**: a client that only renames a field sends the stored configuration back, and a key or an inline field
+  that is exactly as stored is not checked again, so a definition saved before a key was declared can still be
+  renamed. **Nothing changes for a host that does not call it, nor for a field type that declares nothing**:
+  `ConfigurationKeys` is a default interface member that returns `null`, which means "not declared, not checked" (an
+  empty list means "takes no configuration"), and reading a stored configuration is never validated. Only what the
+  kernel's reader can read is accepted, so the numeric strings the Angular `Number` editor sends are accepted and an
+  enum member given by name is not. A key's default is read from its configuration class rather than restated.
+  `NumberConfiguration` gains `Placeholder` (`Number.Placeholder`), a key the
+  Angular `Number` components have always written and read but the server did not name. See
+  [Checking a Configuration](docs/en/flex-fields/field-types.md#checking-a-configuration).
+
+### Changed
+
+#### aspnetcore-mcp
+
+- **Tool results no longer escape non-ASCII or markup characters.** A tool that returns a DTO has it written as JSON text, and the SDK's default encoder wrote every non-ASCII character and `<`, `>`, `&`, `'`, `"`, `+` and the backtick as `\uXXXX`: Chinese text came back as `\u5F00\u59CB` and HTML as `\u003Cdiv class=\u0022x\u0022\u003E`, several times longer than it is for the model that reads it. Tools registered through `AddAbpMcpModule` now use the new `AbpMcpServerOptions.SerializerOptions`, a copy of the SDK's `McpJsonUtilities.DefaultOptions` (so web naming, string enums and null handling are unchanged) with `JavaScriptEncoder.UnsafeRelaxedJsonEscaping` as its encoder. The text is JSON in a content block, never HTML, and the JSON-RPC message around it is still written, and escaped, by the SDK. The parsed result is identical, so a client that parses it needs no change; the only observable difference is the raw text. Some characters stay escaped: `"` and `\` inside a string, control characters, whitespace other than the ASCII space (the no-break space U+00A0 and the ideographic space U+3000 among them), U+2028, U+2029 and U+FEFF, private-use and unassigned code points, and every character outside the Basic Multilingual Plane (emoji, rare Chinese characters), which is written as a surrogate-pair escape. Prompts read their arguments with the same options; resources are given them too, but SDK 2.3.0 returns no DTO from a resource and converts its URI variables itself. `AddAbpMcpModule` now also calls `AddOptions()`, so the options resolve in a container assembled without a host. See [Tool Results as JSON](docs/en/aspnetcore-mcp/hosting.md#tool-results-as-json) for adding converters and for getting the SDK's escaping back.
 
 ## [10.7.1] - 2026-10-29
 
