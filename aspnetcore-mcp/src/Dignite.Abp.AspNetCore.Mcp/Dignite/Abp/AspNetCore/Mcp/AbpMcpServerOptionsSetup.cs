@@ -78,13 +78,7 @@ public class AbpMcpServerOptionsSetup : IConfigureOptions<McpServerOptions>
     /// </summary>
     protected virtual string? ComposeInstructions()
     {
-        var sections = new[] { Options.Instructions }
-            .Concat(Registry.Modules.SelectMany(module => module.Instructions))
-            .Where(section => !section.IsNullOrWhiteSpace())
-            .Select(section => section!.Trim())
-            .ToList();
-
-        return sections.Count == 0 ? null : string.Join("\n\n", sections);
+        return AbpMcpInstructions.Compose(Options.Instructions, Registry.Modules);
     }
 
     private static ValueTask<ListResourcesResult> ListResourcesAsync(

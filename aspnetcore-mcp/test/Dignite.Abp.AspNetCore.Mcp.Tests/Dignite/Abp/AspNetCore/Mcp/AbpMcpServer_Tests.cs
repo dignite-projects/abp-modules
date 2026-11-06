@@ -191,4 +191,23 @@ public class AbpMcpServer_Tests : AbpMcpIntegratedTestBase
 
         endpoint.Metadata.GetMetadata<IRequestSizeLimitMetadata>()!.MaxRequestBodySize.ShouldBe(4 * 1024 * 1024);
     }
+
+    /// <summary>
+    /// A host that never splits its server gets what it always got: one endpoint at /mcp that serves every module,
+    /// and the SDK's transport left exactly as the SDK builds it.
+    /// </summary>
+    [Fact]
+    public void Should_Keep_One_Unsplit_Endpoint_By_Default()
+    {
+        var endpoint = GetRequiredService<EndpointDataSource>().Endpoints
+            .Single(candidate => candidate.Metadata.GetMetadata<AbpMcpEndpointMetadata>() != null)
+            .Metadata.GetMetadata<AbpMcpEndpoint>()!;
+
+        endpoint.RoutePattern.ShouldBe("/mcp");
+        endpoint.IsDefault.ShouldBeTrue();
+        endpoint.ServesEveryModule.ShouldBeTrue();
+        GetRequiredService<AbpMcpEndpointProvider>().IsSplit.ShouldBeFalse();
+        GetRequiredService<Microsoft.Extensions.Options.IOptions<ModelContextProtocol.AspNetCore.HttpServerTransportOptions>>()
+            .Value.ConfigureSessionOptions.ShouldBeNull();
+    }
 }

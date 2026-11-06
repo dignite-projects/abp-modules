@@ -19,13 +19,13 @@ This package splits the roles the way ABP does for [SignalR](https://abp.io/docs
 
 | | Owns | Never touches |
 |---|---|---|
-| **This package** | The server, the stateless Streamable HTTP transport, the `/mcp` endpoint, permission filtering, a unit of work per call, one structured error format, the server's name and composed instructions, startup validation, optional authentication discovery | Any business concept |
+| **This package** | The server, the stateless Streamable HTTP transport, the `/mcp` endpoint (or several), permission filtering, a unit of work per call, one structured error format, the server's name and composed instructions, startup validation, optional authentication discovery | Any business concept |
 | **A module's `*.Mcp` project** | Its tool, resource and prompt classes, its namespace, its section of the instructions | The server's name, transport, endpoint, global filters |
-| **The application** | Deployment: the route, the server name, authentication, rate limiting | MCP server code |
+| **The application** | Deployment: the routes and which modules each serves, the server name, authentication, rate limiting | MCP server code |
 
 ## How It Works
 
-* **Transport**: Stateless Streamable HTTP, at `/mcp`. Every MCP request is an ordinary HTTP request through the application's pipeline, so authentication, tenant resolution and the unit of work are in place before a tool runs.
+* **Transport**: Stateless Streamable HTTP, at `/mcp`. An application can also map the one server at [several endpoints](hosting.md#several-endpoints), each showing only the modules it names, with its own instructions and conventions: a public endpoint and one for signed-in users, for example. Every MCP request is an ordinary HTTP request through the application's pipeline, so authentication, tenant resolution and the unit of work are in place before a tool runs.
 * **Authorization**: The endpoint requires an authenticated user. `[Authorize]` on a tool, a resource or a prompt is honored twice: what the user may not call does not appear in the list results, and a call that slips through is refused. ABP resolves a permission name as a policy, so `[Authorize(MyPermissions.Products.Default)]` works as it does on an application service.
 * **Namespaces**: Each module claims a namespace, a tool name prefix and a resource URI scheme, and the server **refuses to start** on any overlap. See [Contributing Tools](contributing-tools.md#namespaces).
 * **Errors and transactions**: An exception becomes a structured error result the model can act on, and each call runs in its own unit of work. See [Errors and Unit of Work](errors-and-unit-of-work.md).

@@ -29,7 +29,19 @@ public class AbpMcpResourceListAggregator : ITransientDependency
         Registry = registry;
     }
 
-    public virtual async Task<ListResourcesResult> ListAsync(IServiceProvider requestServices, CancellationToken cancellationToken)
+    public virtual Task<ListResourcesResult> ListAsync(IServiceProvider requestServices, CancellationToken cancellationToken)
+    {
+        return ListAsync(requestServices, Registry.Modules, cancellationToken);
+    }
+
+    /// <summary>
+    /// Runs the contributors of <paramref name="modules"/> only - the modules one endpoint serves, when the server
+    /// is split across several (see <see cref="AbpMcpServerOptions.Endpoints"/>).
+    /// </summary>
+    public virtual async Task<ListResourcesResult> ListAsync(
+        IServiceProvider requestServices,
+        IEnumerable<AbpMcpModule> modules,
+        CancellationToken cancellationToken)
     {
         var result = new ListResourcesResult();
 
@@ -41,7 +53,7 @@ public class AbpMcpResourceListAggregator : ITransientDependency
                 .Select(resource => resource.ProtocolResource!.Uri),
             StringComparer.Ordinal);
 
-        foreach (var module in Registry.Modules)
+        foreach (var module in modules)
         {
             foreach (var contributorType in module.ResourceListContributors)
             {

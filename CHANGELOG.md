@@ -16,6 +16,29 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Added
+
+#### aspnetcore-mcp
+
+- **One MCP server at several endpoints, each showing only the modules it names.** An application whose modules have
+  different audiences - a public calculation module next to an administration module for signed-in users - had to
+  serve both at one `/mcp`, so an anonymous client listed the administration tools too and read their instructions on
+  connect. `AbpMcpServerOptions.Endpoints` now adds endpoints of the same server (`new AbpMcpEndpointOptions("/site-mcp")
+  { Modules = { "site" } }`), and `AbpMcpServerOptions.Modules` names what the default endpoint, at `RoutePattern`,
+  serves. Each endpoint lists, calls, reads and gets only its own modules' tools, resources and prompts (another
+  endpoint's fails as an unknown name), composes its instructions from its own opening `Instructions` and its modules'
+  sections, runs its own `resources/list` contributors and applies its own `EndpointConventions`; the server's
+  `EndpointConventions` and `Instructions` are now the default endpoint's only. An endpoint's `MaxRequestBodySize` falls
+  back to the server's. With `AddAbpMcpAuthenticationDiscovery`, each endpoint's `401` points at its own RFC 9728
+  document (`/.well-known/oauth-protected-resource/site-mcp`), a copy of the configured one whose `resource` names the
+  endpoint, changed by the endpoint's `ConfigureResourceMetadata` - which also gives its challenge its own `scope`.
+  Once any endpoint names a module, every module must be named by exactly one: the application refuses to start on a
+  module no endpoint serves (it is not given to the default endpoint, which may be the public one), a module two
+  endpoints serve, a name no module registered, an endpoint that names none, two endpoints at one route, or a split
+  server whose transport is not stateless. A server with neither `Modules` nor `Endpoints` is unchanged: one endpoint
+  that serves every module, and the SDK's transport options untouched. See
+  [Several Endpoints](docs/en/aspnetcore-mcp/hosting.md#several-endpoints).
+
 ## [10.7.3] - 2026-11-06
 
 ### Fixed
