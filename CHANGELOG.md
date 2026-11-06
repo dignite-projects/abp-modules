@@ -16,6 +16,8 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+## [10.7.3] - 2026-11-06
+
 ### Fixed
 
 #### flex-fields
