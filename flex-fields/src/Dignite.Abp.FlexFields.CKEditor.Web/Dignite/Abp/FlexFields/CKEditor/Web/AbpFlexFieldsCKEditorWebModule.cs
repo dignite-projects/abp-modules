@@ -45,11 +45,18 @@ public class AbpFlexFieldsCKEditorWebModule : AbpModule
     /// in the default AllowedAttributes (deliberately, against classjacking - see the package's own
     /// README), but CKEditor 5's own output structurally depends on it: &lt;figure class="image"&gt;,
     /// &lt;figure class="table"&gt;, and &lt;code class="language-xxx"&gt; code-block language hints.
+    /// <para>
+    /// The second: the default AllowedSchemes are only <c>http</c> and <c>https</c>, so a link the toolbar's link button
+    /// makes to an e-mail address or a phone number lost its <c>href</c> and rendered as plain text. <c>mailto</c> and
+    /// <c>tel</c> are added; <c>javascript:</c> and <c>data:</c> stay out.
+    /// </para>
     /// </summary>
     private static HtmlSanitizer CreateSanitizer()
     {
         var sanitizer = new HtmlSanitizer();
         sanitizer.AllowedAttributes.Add("class");
+        sanitizer.AllowedSchemes.Add("mailto");
+        sanitizer.AllowedSchemes.Add("tel");
         return sanitizer;
     }
 }
