@@ -99,6 +99,13 @@ Use `AddTools<T>()`, not the SDK's `WithTools<T>()`. Besides recording which nam
 
 The rules are checked against a module's own registrations, so a module's tests catch a violation before any application combines it with another module.
 
+### Namespaces and Endpoints
+
+A namespace is also how an application places a module when it maps the server at [several endpoints](hosting.md#several-endpoints): each endpoint names the modules it serves, and a module's tools, resources, prompts and instructions reach only the clients of that endpoint. Two things follow for a module:
+
+* **A new namespace is a change its hosts must act on.** Once an application has split its server, every namespace must be named by exactly one endpoint, so a release of your package that registers a namespace it did not register before stops such an application from starting until the application names it. Adding tools to a namespace you already own changes nothing for them. Announce a new namespace in your release notes, with the endpoint it is meant for.
+* **Write your instructions for your own tools only.** Another module may be served at another endpoint, so its tools may not be there to call.
+
 ## Dynamic Resources
 
 The SDK lists static `[McpServerResource]` registrations by itself. For resources that are the caller's own data, such as one entry per document type, implement `IAbpMcpResourceListContributor` and register it with `AddResourceListContributor<T>()`:
