@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Dignite.Abp.FlexFields.Web\Dignite.Abp.FlexFields.Web.csproj" />
+    <ProjectReference Include="..\..\src\Dignite.Abp.FlexFields.CKEditor.Web\Dignite.Abp.FlexFields.CKEditor.Web.csproj" />
   </ItemGroup>
 
 </Project>

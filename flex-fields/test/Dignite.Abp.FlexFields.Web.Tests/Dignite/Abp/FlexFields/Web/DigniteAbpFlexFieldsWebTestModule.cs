@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Dignite.Abp.FlexFields.CKEditor.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp;
 using Volo.Abp.Autofac;
@@ -9,7 +10,8 @@ namespace Dignite.Abp.FlexFields.Web;
 [DependsOn(
     typeof(AbpTestBaseModule),
     typeof(AbpAutofacModule),
-    typeof(AbpFlexFieldsWebModule)
+    typeof(AbpFlexFieldsWebModule),
+    typeof(AbpFlexFieldsCKEditorWebModule)
     )]
 public class DigniteAbpFlexFieldsWebTestModule : AbpModule
 {

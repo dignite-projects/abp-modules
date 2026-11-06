@@ -16,6 +16,14 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Fixed
+
+#### flex-fields
+
+- **A rich-text field keeps its links to an e-mail address or a phone number.** The CKEditor field's view sanitized
+  its HTML with the default allowed schemes, `http` and `https` only, so a `mailto:` or `tel:` link lost its `href` and
+  rendered as plain text. `mailto` and `tel` are now allowed; `javascript:` and `data:` are still removed.
+
 ## [10.7.2] - 2026-11-04
 
 ### Added
