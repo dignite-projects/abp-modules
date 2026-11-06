@@ -34,7 +34,7 @@ This package splits the roles the way ABP does for [SignalR](https://abp.io/docs
 
 | Package | Description |
 |---|---|
-| `Dignite.Abp.AspNetCore.Mcp` | The server, `AddAbpMcpModule` for modules, and the options and authentication discovery for applications. Built on `ModelContextProtocol.AspNetCore` 2.1. |
+| `Dignite.Abp.AspNetCore.Mcp` | The server, `AddAbpMcpModule` for modules, and the options and authentication discovery for applications. Built on `ModelContextProtocol.AspNetCore` 2.3. |
 
 A module's `*.Mcp` project depends on this package and on the module's application contracts; an application gets it with the modules it installs.
 

@@ -10,12 +10,12 @@ Hosts one **[Model Context Protocol](https://modelcontextprotocol.io) (MCP) serv
 resources and prompts to it. It is infrastructure, not a module with a domain model of its own: it does
 not reference, and is not owned by, any module in this repository.
 
-> **.NET 10 · ABP 10.7 · ModelContextProtocol 2.1.0 · LGPL-3.0-only**
+> **.NET 10 · ABP 10.7 · ModelContextProtocol 2.3.0 · LGPL-3.0-only**
 
 The C# MCP SDK keeps exactly **one server per service container**: every module's tools land in the same
 server, while the server info, the instructions, the transport, the endpoint and every request filter exist
 once — and the SDK drops a second tool with an existing name without an error. This package splits the roles
-the way ABP does for SignalR: it owns the server (stateless Streamable HTTP at `/mcp`, ABP-permission
+the way ABP does for SignalR: it owns the server (stateless Streamable HTTP at `/mcp` or at several endpoints, ABP-permission
 filtering, a unit of work per call, one structured error envelope, startup validation of every module's
 namespace), each feature module's `*.Mcp` project only contributes its primitives, and the host only
 configures deployment.
@@ -24,8 +24,8 @@ configures deployment.
 
 **[Read the documentation](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/aspnetcore-mcp/index.md)**
 — contributing tools, resources and prompts from a module (namespaces, dynamic resources), hosting the server
-(options, bearer authentication with RFC 9728 discovery, third-party tool libraries), and errors and the unit of
-work.
+(options, several endpoints, bearer authentication with RFC 9728 discovery, third-party tool libraries), and
+errors and the unit of work.
 
 ## Contributing to the server (a feature module)
 
@@ -68,6 +68,24 @@ context.Services.AddAbpMcpAuthenticationDiscovery(metadata =>
 ```
 
 Authentication is the host's existing bearer scheme, through the endpoint's default policy.
+
+When the modules have different audiences, such as a public calculation module next to an administration
+module for signed-in users, map the same server at several endpoints, each serving only the modules it names:
+
+```csharp
+Configure<AbpMcpServerOptions>(options =>
+{
+    options.Modules.Add("calc");                // the default endpoint, at /mcp
+    options.EndpointConventions.Add(endpoint => endpoint.AllowAnonymous());
+
+    var admin = new AbpMcpEndpointOptions("/site-mcp");
+    admin.Modules.Add("site");                  // signed-in users only, its own RFC 9728 document
+    options.Endpoints.Add(admin);
+});
+```
+
+Once split, every module must be named by exactly one endpoint, or the application refuses to start. See
+[Several Endpoints](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/aspnetcore-mcp/hosting.md#several-endpoints).
 
 ## License
 
