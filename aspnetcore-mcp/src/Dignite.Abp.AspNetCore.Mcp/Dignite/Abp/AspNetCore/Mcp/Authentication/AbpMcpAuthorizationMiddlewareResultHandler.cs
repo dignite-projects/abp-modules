@@ -77,10 +77,14 @@ public class AbpMcpAuthorizationMiddlewareResultHandler : IAuthorizationMiddlewa
     /// </summary>
     protected virtual void AddScopeToChallenge(HttpContext context)
     {
-        var scopes = context.RequestServices
-            .GetService<IOptionsMonitor<McpAuthenticationOptions>>()
-            ?.Get(McpAuthenticationDefaults.AuthenticationScheme)
-            .ResourceMetadata?.ScopesSupported;
+        // The scopes of the endpoint the request reached: an endpoint of a split server advertises its own
+        // (AbpMcpEndpointOptions.ConfigureResourceMetadata).
+        var scopes = AbpMcpEndpointResourceMetadata.ForRequest(
+            context,
+            context.RequestServices
+                .GetService<IOptionsMonitor<McpAuthenticationOptions>>()
+                ?.Get(McpAuthenticationDefaults.AuthenticationScheme)
+                .ResourceMetadata)?.ScopesSupported;
 
         if (scopes == null || scopes.Count == 0 || scopes.Any(scope => !IsScopeToken(scope)))
         {

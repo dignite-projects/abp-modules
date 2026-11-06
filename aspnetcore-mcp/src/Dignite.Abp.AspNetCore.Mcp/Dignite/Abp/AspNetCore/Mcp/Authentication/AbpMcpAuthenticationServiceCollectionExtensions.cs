@@ -32,7 +32,9 @@ public static class AbpMcpAuthenticationServiceCollectionExtensions
     /// <param name="configureResourceMetadata">
     /// Describes this resource server. Set at least <see cref="ProtectedResourceMetadata.Resource"/> (this
     /// host's public origin) and <see cref="ProtectedResourceMetadata.AuthorizationServers"/>. Both must be
-    /// configured values, never derived from the incoming request's Host header.
+    /// configured values, never derived from the incoming request's Host header. This is the default endpoint's
+    /// document; each further endpoint (<see cref="Dignite.Abp.AspNetCore.Mcp.AbpMcpServerOptions.Endpoints"/>) serves a
+    /// copy that names it, changed by its <see cref="Dignite.Abp.AspNetCore.Mcp.AbpMcpEndpointOptions.ConfigureResourceMetadata"/>.
     /// </param>
     /// <param name="configureOptions">
     /// Optional further settings of the MCP authentication scheme - for example
@@ -81,6 +83,22 @@ public static class AbpMcpAuthenticationServiceCollectionExtensions
             });
 
             DecorateAuthorizationMiddlewareResultHandler(services);
+
+            // Each endpoint of a split server gets its own document, at the address its 401 points to - see
+            // AbpMcpEndpointResourceMetadata. Wrapped in a post-configure, after configureOptions has run, so an
+            // event handler of the host's own still runs - after this one, seeing the endpoint's document.
+            services.PostConfigure<McpAuthenticationOptions>(McpAuthenticationDefaults.AuthenticationScheme, options =>
+            {
+                var hostHandler = options.Events.OnResourceMetadataRequest;
+                options.Events.OnResourceMetadataRequest = async context =>
+                {
+                    await AbpMcpEndpointResourceMetadata.SelectAsync(context);
+                    if (hostHandler != null)
+                    {
+                        await hostHandler(context);
+                    }
+                };
+            });
         }
 
         services.Configure<McpAuthenticationOptions>(McpAuthenticationDefaults.AuthenticationScheme, options =>

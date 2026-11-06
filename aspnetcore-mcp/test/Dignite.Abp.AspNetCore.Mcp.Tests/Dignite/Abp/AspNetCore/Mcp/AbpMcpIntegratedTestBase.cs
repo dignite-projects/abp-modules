@@ -12,12 +12,17 @@ namespace Dignite.Abp.AspNetCore.Mcp;
 /// <summary>A real MCP client over HTTP against the test host, through the full ABP pipeline.</summary>
 public abstract class AbpMcpIntegratedTestBase : AbpWebApplicationFactoryIntegratedTest<Program>
 {
-    protected async Task<McpClient> ConnectAsync(string? permissions = null, string? dynamicPermission = null)
+    protected async Task<McpClient> ConnectAsync(
+        string? permissions = null,
+        string? dynamicPermission = null,
+        string path = "/mcp",
+        bool anonymous = false)
     {
-        var headers = new Dictionary<string, string>
+        var headers = new Dictionary<string, string>();
+        if (!anonymous)
         {
-            [TestAuthenticationHandler.UserHeader] = Guid.NewGuid().ToString()
-        };
+            headers[TestAuthenticationHandler.UserHeader] = Guid.NewGuid().ToString();
+        }
         if (permissions != null)
         {
             headers[TestAuthenticationHandler.PermissionsHeader] = permissions;
@@ -30,7 +35,7 @@ public abstract class AbpMcpIntegratedTestBase : AbpWebApplicationFactoryIntegra
         var transport = new HttpClientTransport(
             new HttpClientTransportOptions
             {
-                Endpoint = new Uri(Client.BaseAddress!, "/mcp"),
+                Endpoint = new Uri(Client.BaseAddress!, path),
                 TransportMode = HttpTransportMode.StreamableHttp,
                 AdditionalHeaders = headers
             },

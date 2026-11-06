@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using ModelContextProtocol.AspNetCore;
 using ModelContextProtocol.Server;
 using Volo.Abp;
 using Volo.Abp.AspNetCore;
@@ -68,35 +69,44 @@ public class AbpAspNetCoreMcpModule : AbpModule
         // fixed after startup, so it is computed once.
         context.Services.AddSingleton<IConfigureOptions<McpServerOptions>, AbpMcpServerOptionsSetup>();
 
+        // When the server is split across endpoints (AbpMcpServerOptions.Endpoints), narrows each request's server to
+        // the endpoint it reached. Does nothing for a server with one endpoint.
+        context.Services.TryAddEnumerable(
+            ServiceDescriptor.Singleton<IPostConfigureOptions<HttpServerTransportOptions>, AbpMcpEndpointTransportOptionsSetup>());
+
         Configure<AbpEndpointRouterOptions>(routerOptions =>
         {
             routerOptions.EndpointConfigureActions.Add(endpointContext =>
             {
-                var mcpOptions = endpointContext.ScopeServiceProvider
-                    .GetRequiredService<IOptions<AbpMcpServerOptions>>().Value;
+                var endpointProvider = endpointContext.ScopeServiceProvider.GetRequiredService<AbpMcpEndpointProvider>();
 
-                // The default authorization policy, deliberately WITHOUT naming an authentication scheme.
-                // Naming one makes ASP.NET Core's PolicyEvaluator re-authenticate through it and assign
-                // the result to HttpContext.User - replacing the principal that ABP's dynamic claims
-                // middleware already refreshed, so role changes and revocations made after a token was
-                // issued would not reach MCP requests. The MCP-specific 401 (RFC 9728 discovery) is
-                // produced by AbpMcpAuthorizationMiddlewareResultHandler instead, which only takes over
-                // the challenge and leaves authentication alone.
-                var endpoint = endpointContext.Endpoints
-                    .MapMcp(mcpOptions.RoutePattern)
-                    .RequireAuthorization()
-                    .WithMetadata(AbpMcpEndpointMetadata.Instance);
-
-                // Bounds the body before the SDK buffers and deserializes it - a tool can only check its
-                // own arguments after the whole request is already in memory.
-                if (mcpOptions.MaxRequestBodySize.HasValue)
+                foreach (var mcpEndpoint in endpointProvider.Endpoints)
                 {
-                    endpoint.WithMetadata(new AbpMcpRequestSizeLimitMetadata(mcpOptions.MaxRequestBodySize.Value));
-                }
+                    // The default authorization policy, deliberately WITHOUT naming an authentication scheme.
+                    // Naming one makes ASP.NET Core's PolicyEvaluator re-authenticate through it and assign
+                    // the result to HttpContext.User - replacing the principal that ABP's dynamic claims
+                    // middleware already refreshed, so role changes and revocations made after a token was
+                    // issued would not reach MCP requests. The MCP-specific 401 (RFC 9728 discovery) is
+                    // produced by AbpMcpAuthorizationMiddlewareResultHandler instead, which only takes over
+                    // the challenge and leaves authentication alone.
+                    // The AbpMcpEndpoint itself is metadata too: it is how a request, and its challenge, know
+                    // which endpoint - which part of a split server - they belong to.
+                    var endpoint = endpointContext.Endpoints
+                        .MapMcp(mcpEndpoint.RoutePattern)
+                        .RequireAuthorization()
+                        .WithMetadata(AbpMcpEndpointMetadata.Instance, mcpEndpoint);
 
-                foreach (var convention in mcpOptions.EndpointConventions)
-                {
-                    convention(endpoint);
+                    // Bounds the body before the SDK buffers and deserializes it - a tool can only check its
+                    // own arguments after the whole request is already in memory.
+                    if (mcpEndpoint.MaxRequestBodySize.HasValue)
+                    {
+                        endpoint.WithMetadata(new AbpMcpRequestSizeLimitMetadata(mcpEndpoint.MaxRequestBodySize.Value));
+                    }
+
+                    foreach (var convention in mcpEndpoint.EndpointConventions)
+                    {
+                        convention(endpoint);
+                    }
                 }
             });
         });
@@ -108,6 +118,11 @@ public class AbpAspNetCoreMcpModule : AbpModule
         // that falls outside its module's namespace. The SDK would otherwise keep whichever registered
         // first and drop the other without a word.
         context.ServiceProvider.GetRequiredService<AbpMcpPrimitiveValidator>().Validate();
+
+        // Fails startup on a module served by no endpoint or by two, a module name no module registered, two
+        // endpoints at one route - before UseConfiguredEndpoints maps any of them.
+        context.ServiceProvider.GetRequiredService<AbpMcpEndpointProvider>().Validate(
+            context.ServiceProvider.GetRequiredService<IOptions<HttpServerTransportOptions>>().Value);
 
         AbpMcpAuthenticationDiscoveryChecker.EnsureChallengeHandlerIsInstalled(context.ServiceProvider);
     }

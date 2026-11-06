@@ -37,7 +37,8 @@ public class AbpMcpServerOptions
     /// <summary>
     /// An optional opening section for the instructions handed to a client on connect - what this
     /// server is as a whole. Each contributing module's own section follows it, in module dependency
-    /// order; see <see cref="AbpMcpModuleBuilder.AddInstructions"/>.
+    /// order; see <see cref="AbpMcpModuleBuilder.AddInstructions"/>. With further <see cref="Endpoints"/>, it
+    /// opens the default endpoint's instructions only, and each endpoint has an opening of its own.
     /// </summary>
     public string? Instructions { get; set; }
 
@@ -100,6 +101,26 @@ public class AbpMcpServerOptions
     /// Extra conventions applied to the mapped endpoint, after <c>RequireAuthorization()</c> - rate
     /// limiting, CORS, a stricter policy. For example
     /// <c>options.EndpointConventions.Add(endpoint => endpoint.RequireRateLimiting("mcp"))</c>.
+    /// With further <see cref="Endpoints"/>, these are the default endpoint's (<see cref="RoutePattern"/>) only.
     /// </summary>
     public List<Action<IEndpointConventionBuilder>> EndpointConventions { get; } = new();
+
+    /// <summary>
+    /// The MCP modules (namespaces) served at <see cref="RoutePattern"/>, by the name each registered with
+    /// <c>AddAbpMcpModule</c>.
+    /// <para>
+    /// Empty, and with no <see cref="Endpoints"/>, the endpoint serves every module - one endpoint, as before
+    /// endpoints could be split. As soon as this or any endpoint names a module, <b>every</b> module must be
+    /// named by exactly one endpoint, and the application refuses to start otherwise: a module installed later
+    /// would otherwise land on whichever endpoint happens to be the default, which may be an anonymous one.
+    /// </para>
+    /// </summary>
+    public List<string> Modules { get; } = new();
+
+    /// <summary>
+    /// Further endpoints of the same server, each serving the modules it names; see <see cref="AbpMcpEndpointOptions"/>.
+    /// The endpoint configured by this class's own <see cref="RoutePattern"/>, <see cref="Instructions"/>,
+    /// <see cref="MaxRequestBodySize"/>, <see cref="EndpointConventions"/> and <see cref="Modules"/> is always mapped too.
+    /// </summary>
+    public List<AbpMcpEndpointOptions> Endpoints { get; } = new();
 }
