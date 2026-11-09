@@ -3,7 +3,7 @@
 #
 # The label names below must already exist in the repository (Settings -> Labels) or a labeler run
 # will error. "documentation" usually exists by default; create the "module: *" and "area: *" ones
-# once. The four trees (three independent modules plus the shared aspnetcore-mcp/ server) are separate,
+# once. The five trees (three independent modules plus the aspnetcore-mcp/ and openiddict/ infrastructure trees) are separate,
 # so most PRs match exactly one "module:" label.
 
 "module: blob-storing":
@@ -29,6 +29,12 @@
       - any-glob-to-any-file:
           - 'aspnetcore-mcp/**'
           - 'docs/en/aspnetcore-mcp/**'
+
+"module: openiddict":
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'openiddict/**'
+          - 'docs/en/openiddict/**'
 
 "area: angular":
   - changed-files:

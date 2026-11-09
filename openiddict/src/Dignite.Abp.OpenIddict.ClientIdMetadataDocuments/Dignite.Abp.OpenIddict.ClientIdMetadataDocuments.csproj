@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>Lets an ABP Framework authorization server built on OpenIddict accept OAuth Client ID Metadata Documents (CIMD), the client registration the MCP authorization specification recommends: a client uses an HTTPS URL as its client_id, and the server fetches the JSON document at that URL to learn the client's name and redirect URIs, with no pre-registration and no dynamic client registration. The document is fetched with SSRF guards, the client is registered in OpenIddict's own application store for the length of the document's cache lifetime, and the discovery document advertises the support. Built from two OpenIddict event handlers only, so it can be retired once OpenIddict supports CIMD natively. Independent of Dignite.Abp.AspNetCore.Mcp: the authorization server does not need to host an MCP server.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- OpenIddict's server and its ABP store (applications, authorizations, tokens), ABP's background
+         workers and distributed lock come with it. -->
+    <PackageReference Include="Volo.Abp.OpenIddict.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Dignite.Abp.OpenIddict.ClientIdMetadataDocuments.Tests" />
+  </ItemGroup>
+
+</Project>

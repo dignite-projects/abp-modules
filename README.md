@@ -11,6 +11,7 @@ developed together in one repository and released in lockstep.
 | [`notifications/`](notifications/) | An extensible, event-driven **notification framework** with pluggable channel notifiers (SignalR, email, device push), plus an optional **Notification Center** (persistent inbox, subscriptions, read/unread state, REST API) with MVC and Angular UI libraries. | [Docs](docs/en/notifications/index.md) |
 | [`flex-fields/`](flex-fields/) | Runtime-defined (**"flex"**) fields — a constraint kernel supplying field types, configuration, validation, a per-entity value bag and a derived query index, with EF Core and MongoDB providers, plus Angular and MVC UI. It owns no domain model: each consuming application defines its own fields. | [Docs](docs/en/flex-fields/index.md) |
 | [`aspnetcore-mcp/`](aspnetcore-mcp/) | Shared infrastructure, not a module: hosts the one **MCP (Model Context Protocol) server** an ABP application can have, and lets each module contribute AI-callable tools, resources and prompts to it inside its own namespace (`Dignite.Site` and `Dignite.Vault.Extract` do, from their own repositories). | [Docs](docs/en/aspnetcore-mcp/index.md) |
+| [`openiddict/`](openiddict/) | Infrastructure, not a module: additions to ABP's **OpenIddict** module for an authorization server — **Client ID Metadata Documents**, the client registration ChatGPT's and Claude's MCP connectors use, with no pre-registration and no dynamic registration. Independent of `aspnetcore-mcp/`. | [Docs](docs/en/openiddict/index.md) |
 
 The documentation of every module starts at [`docs/en/index.md`](docs/en/index.md).
 
@@ -67,11 +68,14 @@ abp-modules/
 │   ├── host/  angular/                   # local-dev demo app + Angular workspace
 │   ├── dev-docs/                         # design documents
 │   └── .claude/skills/                   # module-specific conventions & invariants
-└── flex-fields/
-    ├── Dignite.Abp.FlexFields.slnx       # focused solution for this module alone (src/, test/ and demo/)
-    ├── src/  test/                       # the published class libraries and their tests
-    ├── demo/  angular/                   # local-dev demo app + Angular workspace
-    └── dev-docs/flexfields-design.md     # design rationale
+├── flex-fields/
+│   ├── Dignite.Abp.FlexFields.slnx       # focused solution for this module alone (src/, test/ and demo/)
+│   ├── src/  test/                       # the published class libraries and their tests
+│   ├── demo/  angular/                   # local-dev demo app + Angular workspace
+│   └── dev-docs/flexfields-design.md     # design rationale
+└── openiddict/                  # OpenIddict additions for authorization servers (no domain model)
+    ├── Dignite.Abp.OpenIddict.slnx       # focused solution for this tree alone
+    └── src/  test/                       # the published class library and its tests
 ```
 
 `host/` (or `demo/`) and `angular/` under a module are **local-dev demos only** — they run and
@@ -94,6 +98,7 @@ dotnet build blob-storing/Dignite.Abp.BlobStoring.slnx
 dotnet build notifications/Dignite.Abp.Notifications.slnx
 dotnet build flex-fields/Dignite.Abp.FlexFields.slnx
 dotnet build aspnetcore-mcp/Dignite.Abp.AspNetCore.Mcp.slnx
+dotnet build openiddict/Dignite.Abp.OpenIddict.slnx
 ```
 
 `dotnet test` starts an embedded mongod (MongoSandbox) for the MongoDB provider tests and uses
@@ -131,7 +136,8 @@ public issue for a vulnerability.
 contributors). Start with `<module>/CLAUDE.md` for the layer map, then the module's `*-invariants`
 skill — those encode the specific bugs each module was built or rewritten to fix, so they are the first
 thing to read before changing load-bearing code. `flex-fields/` has a `CLAUDE.md` and its design
-rationale in `dev-docs/`; `aspnetcore-mcp/` is documented by its README and [`docs/`](docs/en/aspnetcore-mcp/index.md).
+rationale in `dev-docs/`; `aspnetcore-mcp/` and `openiddict/` are documented by their READMEs and `docs/`
+([MCP Server](docs/en/aspnetcore-mcp/index.md), [OpenIddict](docs/en/openiddict/index.md)).
 
 ## License
 
