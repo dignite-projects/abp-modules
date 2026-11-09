@@ -20,4 +20,5 @@ They are independent of the other modules in this repository. In particular, the
 ## See Also
 
 * [Client ID Metadata Documents](client-id-metadata-documents.md)
+* [Adding It to an Authorization Server](adding-to-an-authorization-server.md)
 * [OpenIddict Module](https://abp.io/docs/latest/modules/openiddict)

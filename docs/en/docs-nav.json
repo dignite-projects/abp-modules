@@ -198,6 +198,10 @@
         {
           "text": "Client ID Metadata Documents",
           "path": "openiddict/client-id-metadata-documents.md"
+        },
+        {
+          "text": "Adding It to an Authorization Server",
+          "path": "openiddict/adding-to-an-authorization-server.md"
         }
       ]
     }

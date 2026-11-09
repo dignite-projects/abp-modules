@@ -24,6 +24,8 @@ A `client_id` that is not an `https` URL is looked up as usual, so pre-registere
 
 ## Installation
 
+To add it to an authorization server that already runs, follow the checklist in [Adding It to an Authorization Server](adding-to-an-authorization-server.md): the decisions to make first, the code to change and how to verify it locally. In short:
+
 Add the `Dignite.Abp.OpenIddict.ClientIdMetadataDocuments` NuGet package to the authorization server project, depend on the module, and say which scopes a CIMD client may request:
 
 ````csharp
@@ -152,6 +154,7 @@ The worker does not run when `IsCleanupEnabled` is `false`, or when ABP's backgr
 
 ## See Also
 
+* [Adding It to an Authorization Server](adding-to-an-authorization-server.md)
 * [OpenIddict](index.md)
 * [MCP Server](../aspnetcore-mcp/index.md)
 * [MCP Authorization: Client Registration](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/client-registration)
