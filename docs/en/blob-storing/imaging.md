@@ -1,18 +1,19 @@
 ```json
 //[doc-seo]
 {
-    "Description": "Resize and compress images saved to an ABP BLOB container, on ABP's image manipulation providers, with a decode guard against oversized images."
+    "Description": "Remove editing metadata from, resize and compress images saved to an ABP BLOB container, on ABP's image manipulation providers, with a decode guard against oversized images."
 }
 ```
 
-# Image Resize and Compress
+# Image Contributors
 
-The `Dignite.Abp.BlobStoring.Imaging` package provides two contributors that work on images saved to a container:
+The `Dignite.Abp.BlobStoring.Imaging` package provides three contributors that work on images saved to a container:
 
+* The **image metadata** contributor removes the metadata that editing software piles into a JPEG or PNG, without touching the image.
 * The **image resize** contributor shrinks images larger than a maximum size, and rejects images smaller than a minimum.
 * The **image compress** contributor re-encodes images, keeping their format and dimensions, and stores the result only when it is smaller.
 
-Both use ABP's [image manipulation](https://abp.io/docs/latest/framework/infrastructure/image-manipulation) abstractions (`IImageResizer` and `IImageCompressor`), and both check an image against the [image decode guard](#image-decode-guard) before anything decodes it.
+Resize and compress use ABP's [image manipulation](https://abp.io/docs/latest/framework/infrastructure/image-manipulation) abstractions (`IImageResizer` and `IImageCompressor`), and both check an image against the [image decode guard](#image-decode-guard) before anything decodes it. The metadata contributor decodes nothing and needs no provider.
 
 ## Installation
 
@@ -43,7 +44,33 @@ The Imaging package references no image library, so the choice of provider, and 
 * **ImageSharp** (`Volo.Abp.Imaging.ImageSharp`, `AbpImagingImageSharpModule`): ABP's provider currently resolves SixLabors.ImageSharp 3.1.11, which has published security advisories. The fixed releases (3.2.0 and later, and 4.x) require a Six Labors license key at build time.
 * **Magick.NET** (`Volo.Abp.Imaging.MagickNet`, `AbpImagingMagickNetModule`).
 
-> Without any provider, the image contributors find nothing that can handle an image, and store every image unchanged.
+> Without any provider, the resize and compress contributors find nothing that can handle an image, and store every image unchanged.
+
+## Image Metadata
+
+Use the `AddImageMetadataStripContributor` extension method, after the validation contributors and **before** the image resize contributor, so the decode guard and the resize see the image without its metadata:
+
+````csharp
+container.AddMaxSizeContributor(c => c.MaxSizeInBytes = 25 * 1024 * 1024);
+container.AddAllowedContentTypesContributor(c => c.AllowedContentTypes = ["image/jpeg", "image/png"]);
+container.AddImageMetadataStripContributor();
+container.AddImageResizeContributor(c =>
+{
+    c.MaxWidth = 4096;
+    c.MaxHeight = 4096;
+});
+````
+
+Design tools write metadata that no viewer reads, and it can outweigh the image many times. Photoshop records in `photoshop:DocumentAncestors` the ID of every document ever pasted or placed into a file, and the documents those came from; a 1984 x 935 banner exported from it weighed 18 MB, of which the image was 0.9 MB. What the contributor removes:
+
+* From a **JPEG**: Extended XMP (the APP1 segments named `http://ns.adobe.com/xmp/extension/`, where Photoshop puts what does not fit in the main XMP packet), the Photoshop image resources (APP13) and comments (COM).
+* From a **PNG**: the text chunks (`tEXt`, `zTXt` and `iTXt`, where Photoshop writes its XMP) and `tIME`.
+
+Everything else is kept **byte for byte**: the image data, the main XMP packet (at most 64 KB, where an HDR gain map and rights statements are declared), EXIF, the ICC profile, the Adobe segment and anything after the image. So the pixels, the colours and the orientation are exactly those saved.
+
+The contributor has no options yet, and it works in managed code without decoding, so the image decode guard does not apply to it. Another format, content whose structure it cannot walk, and an image with nothing to remove are stored unchanged. Like the other image contributors, it does nothing while reading and can be added to a container that already has BLOBs.
+
+> Because EXIF stays, a camera's GPS position stays too. This contributor shrinks files; it is not a privacy filter, and not a sanitizer (see [Image Rewriting](#image-rewriting)).
 
 ## Image Resize
 
@@ -94,7 +121,7 @@ The compressed image replaces the content only when the provider reports success
 
 ## How They Work
 
-While **saving**, both contributors:
+While **saving**, the resize and compress contributors:
 
 1. Make the content seekable, capped at the container's `MaxSizeInBytes` like the [allowed content types](allowed-content-types.md) contributor.
 2. Detect its type with the [MIME type detector](mime-type-detection.md). Content that is not `image/*` **passes through untouched**: a container may hold mixed content, so add the allowed content types contributor if a container must accept images only.
@@ -105,7 +132,7 @@ While **reading**, they do nothing. They do not change the stored format either:
 
 ## Image Decode Guard
 
-An imaging provider decodes an image into memory, about four bytes per pixel, before it can resize or compress it. A small file can declare a huge canvas, so the image contributors check an image **before** it reaches the provider. The limits are set per container with the `ConfigureImageDecodeGuard` extension method:
+An imaging provider decodes an image into memory, about four bytes per pixel, before it can resize or compress it. A small file can declare a huge canvas, so the resize and compress contributors check an image **before** it reaches the provider. The limits are set per container with the `ConfigureImageDecodeGuard` extension method:
 
 ````csharp
 container.ConfigureImageDecodeGuard(guard =>
@@ -133,13 +160,13 @@ Every value must be greater than `0`, and the timeout can be at most `int.MaxVal
 * Processing that takes longer than `DecodeTimeout` fails with `Dignite.Abp.BlobStoring.Imaging:ImageDecodeTimeout`.
 * A provider that fails on the content (a corrupt image) fails with `Dignite.Abp.BlobStoring.Imaging:ImageProcessingFailed`.
 
-The dimensions are read from the image header, without decoding, for PNG, JPEG, GIF, BMP, WebP and TIFF. For any other format, or a header the reader does not understand, the dimension, pixel and ratio checks are skipped; the decode timeout and the container's buffering cap still apply.
+The dimensions are read from the image header, without decoding, for PNG, JPEG, GIF, BMP, WebP and TIFF. The reader is public as `ImageHeaderReader.Read(stream)`, for code outside the pipeline that decodes a stored image, such as an endpoint that resizes on request, and should apply the same bound first. For any other format, or a header the reader does not understand, the dimension, pixel and ratio checks are skipped; the decode timeout and the container's buffering cap still apply.
 
 > **The decode timeout is cooperative.** It cancels the token passed to the imaging provider, so it only interrupts a provider that observes the token while decoding. ImageSharp does; SkiaSharp and Magick.NET decode synchronously. With those, the header-based dimension checks and the byte cap are the protections that apply.
 
 ## Image Rewriting
 
-When the provider actually produces a new image (a resize that resized, a compression that came out smaller), what is stored is a re-encode of the pixels, which is what the [OWASP File Upload Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html) calls *image rewriting*. An image that already fits, or that does not compress, is stored as uploaded, so do not rely on these contributors to strip content hidden in an image.
+When the provider actually produces a new image (a resize that resized, a compression that came out smaller), what is stored is a re-encode of the pixels, which is what the [OWASP File Upload Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html) calls *image rewriting*. An image that already fits, or that does not compress, is stored as uploaded, so do not rely on these contributors to strip content hidden in an image. The metadata contributor does not change that: it removes known metadata and copies everything else, including the bytes after the image.
 
 ## See Also
 

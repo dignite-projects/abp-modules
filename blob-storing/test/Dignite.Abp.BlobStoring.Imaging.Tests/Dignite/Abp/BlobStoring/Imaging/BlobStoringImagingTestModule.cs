@@ -29,6 +29,8 @@ public class BlobStoringImagingTestModule : AbpModule
     public const string GuardedContainer = "guarded";
     public const string CompressContainer = "compress";
     public const string ComposedContainer = "composed";
+    public const string MetadataStripContainer = "metadata-strip";
+    public const string MetadataStripThenResizeContainer = "metadata-strip-then-resize";
 
     public const int ResizeMaxSize = 200;
     public const int ResizeMaxWidth = 300;
@@ -88,6 +90,21 @@ public class BlobStoringImagingTestModule : AbpModule
                     c.MaxHeight = ComposedMaxSize;
                 });
                 container.AddImageCompressContributor();
+            });
+
+            options.Containers.Configure(MetadataStripContainer, container =>
+                container.AddImageMetadataStripContributor());
+
+            options.Containers.Configure(MetadataStripThenResizeContainer, container =>
+            {
+                container.AddMaxSizeContributor(c => c.MaxSizeInBytes = ComposedMaxSizeInBytes);
+                container.AddAllowedContentTypesContributor(c => c.AllowedContentTypes = ["image/*"]);
+                container.AddImageMetadataStripContributor();
+                container.AddImageResizeContributor(c =>
+                {
+                    c.MaxWidth = ComposedMaxSize;
+                    c.MaxHeight = ComposedMaxSize;
+                });
             });
         });
     }

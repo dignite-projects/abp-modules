@@ -10,8 +10,12 @@ namespace Dignite.Abp.BlobStoring.Imaging;
 /// JPEG (the SOF segment, walking past APP and other segments), GIF (logical screen), BMP (12-byte core and 40-byte
 /// and larger info headers), WebP (<c>VP8 </c>, <c>VP8L</c>, <c>VP8X</c>) and TIFF (the first IFD, either byte
 /// order). Anything else, or a header it cannot make sense of, yields <c>null</c>.
+/// <para>
+/// Public so that code outside the pipeline can apply the same bound before it decodes an image, such as an endpoint
+/// that resizes a stored image on request.
+/// </para>
 /// </summary>
-internal static class ImageHeaderReader
+public static class ImageHeaderReader
 {
     // Bounds for the walks through JPEG segments and TIFF directory entries, so a hostile header cannot
     // make the reader loop for long.
