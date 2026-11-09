@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Dignite.Abp.OpenIddict.ClientIdMetadataDocuments/Dignite.Abp.OpenIddict.ClientIdMetadataDocuments.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Dignite.Abp.OpenIddict.ClientIdMetadataDocuments.Tests/Dignite.Abp.OpenIddict.ClientIdMetadataDocuments.Tests.csproj" />
+  </Folder>
+</Solution>

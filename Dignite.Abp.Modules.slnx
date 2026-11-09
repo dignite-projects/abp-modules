@@ -87,4 +87,12 @@
   <Folder Name="/flex-fields/demo/">
     <Project Path="flex-fields/demo/Dignite.Abp.FlexFields.Demo/Dignite.Abp.FlexFields.Demo.csproj" />
   </Folder>
+
+  <Folder Name="/openiddict/" />
+  <Folder Name="/openiddict/src/">
+    <Project Path="openiddict/src/Dignite.Abp.OpenIddict.ClientIdMetadataDocuments/Dignite.Abp.OpenIddict.ClientIdMetadataDocuments.csproj" />
+  </Folder>
+  <Folder Name="/openiddict/test/">
+    <Project Path="openiddict/test/Dignite.Abp.OpenIddict.ClientIdMetadataDocuments.Tests/Dignite.Abp.OpenIddict.ClientIdMetadataDocuments.Tests.csproj" />
+  </Folder>
 </Solution>

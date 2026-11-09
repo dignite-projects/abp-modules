@@ -1,8 +1,8 @@
 # Dignite ABP Modules — monorepo guide
 
 Three independently installable **ABP Framework** module trees, developed together and released in
-lockstep, plus one shared, domain-agnostic infrastructure tree (`aspnetcore-mcp/`) that modules in
-other repositories depend on.
+lockstep, plus two domain-agnostic infrastructure trees: `aspnetcore-mcp/`, the shared MCP server that modules in
+other repositories depend on, and `openiddict/`, additions to ABP's OpenIddict module for authorization servers.
 
 ## Repository-wide invariants
 
@@ -57,6 +57,18 @@ These are the things most likely to be broken by an otherwise reasonable-looking
      project may reference `aspnetcore-mcp/`; `aspnetcore-mcp/` never references a module. Each
      contributing module claims its own MCP namespace (tool-name prefix + resource URI scheme) via
      `AddAbpMcpModule`, and the server refuses to start on any overlap.
+   - `openiddict/` (`Dignite.Abp.OpenIddict.*`) is another infrastructure tree, not a module: additions to
+     ABP's OpenIddict module for an **authorization server**, with no domain model of its own. Its first
+     package, `Dignite.Abp.OpenIddict.ClientIdMetadataDocuments` (OAuth Client ID Metadata Documents), is
+     needed by every authorization server MCP clients sign in to (shiji's HttpApi.Host, cloud's auth-server,
+     vault-extract's host) and kept in one place because it is SSRF-sensitive code that follows the clients'
+     behaviour. It is deliberately **not** in `aspnetcore-mcp/`: it fails that tree's test (its consumers are
+     authorization servers, not MCP-contributing modules), and that tree's README and package metadata would be
+     packed into it. `openiddict/` and `aspnetcore-mcp/` **never reference each other** in either direction: an
+     authorization server need not host an MCP server, and an MCP server need not be an authorization server.
+     Its packages depend only on ABP's OpenIddict packages, plug in through OpenIddict event handlers and replace
+     none of OpenIddict's services, so each can be retired - with the whole tree, if it is the last - once
+     OpenIddict covers it natively.
 
 3. **Library package versions live in the root `Directory.Packages.props`**, never inline in a
    library `.csproj`. The demo hosts (`notifications/host/`, `flex-fields/demo/`) are the deliberate

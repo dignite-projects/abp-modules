@@ -1,7 +1,7 @@
 ```json
 //[doc-seo]
 {
-    "Description": "Reusable ABP Framework modules from Dignite: BLOB storing pipeline contributors, runtime-defined FlexFields, an extensible notification framework and a shared MCP server."
+    "Description": "Reusable ABP Framework modules from Dignite: BLOB storing pipeline contributors, runtime-defined FlexFields, an extensible notification framework, a shared MCP server and Client ID Metadata Documents for OpenIddict."
 }
 ```
 
@@ -15,6 +15,7 @@ Dignite ABP Modules is a set of **reusable modules for the [ABP Framework](https
 * [**FlexFields**](flex-fields/index.md): Runtime-defined fields for any entity: field types, configuration, validation, a per-entity value bag and a query index, with EF Core and MongoDB providers and Angular and MVC UI.
 * [**Notifications**](notifications/index.md): An event-driven notification framework with pluggable channels (SignalR, email, device push), plus an optional **Notification Center** with a persistent inbox, subscriptions, a REST API and Angular and MVC UI.
 * [**MCP Server**](aspnetcore-mcp/index.md): Hosts one [Model Context Protocol](https://modelcontextprotocol.io) server in an ABP application and lets each module contribute AI-callable tools, resources and prompts to it.
+* [**OpenIddict**](openiddict/index.md): Additions to ABP's OpenIddict module for an authorization server: [Client ID Metadata Documents](openiddict/client-id-metadata-documents.md), the client registration ChatGPT's and Claude's MCP connectors use.
 
 ## Requirements
 

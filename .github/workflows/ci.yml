@@ -81,6 +81,11 @@ jobs:
       - name: Run AspNetCore Mcp tests
         run: dotnet test aspnetcore-mcp/test/Dignite.Abp.AspNetCore.Mcp.Tests/Dignite.Abp.AspNetCore.Mcp.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/aspnetcore-mcp
 
+      # --- openiddict tests ---
+      # Additions to ABP's OpenIddict module. Its tests run a real OpenIddict pipeline over an EF Core store (SQLite).
+      - name: Run OpenIddict ClientIdMetadataDocuments tests
+        run: dotnet test openiddict/test/Dignite.Abp.OpenIddict.ClientIdMetadataDocuments.Tests/Dignite.Abp.OpenIddict.ClientIdMetadataDocuments.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/openiddict
+
       # --- blob-storing tests ---
       # Coverage from every blob-storing test project below lands under coverage/blob-storing so it
       # can be uploaded to Codecov under its own "blob-storing" flag (see the upload step after the
@@ -157,6 +162,10 @@ jobs:
       - name: Smoke-test aspnetcore-mcp NuGet packages
         shell: pwsh
         run: ./build/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}' -Module aspnetcore-mcp
+
+      - name: Smoke-test openiddict NuGet packages
+        shell: pwsh
+        run: ./build/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}' -Module openiddict
 
       # --- notifications Angular (angular/projects/notification-center) ---
       - name: Install notifications Angular dependencies
@@ -338,5 +347,14 @@ jobs:
         with:
           directory: ./artifacts-ci/coverage/aspnetcore-mcp
           flags: aspnetcore-mcp
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload openiddict coverage to Codecov
+        uses: codecov/codecov-action@v7
+        continue-on-error: true
+        with:
+          directory: ./artifacts-ci/coverage/openiddict
+          flags: openiddict
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}

@@ -1,7 +1,7 @@
 # Changelog
 
 All notable changes to the packages released from this repository — the `blob-storing/`,
-`notifications/` and `flex-fields/` modules, and the shared `aspnetcore-mcp/` tree — are documented in
+`notifications/` and `flex-fields/` modules, and the `aspnetcore-mcp/` and `openiddict/` trees — are documented in
 this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
@@ -15,6 +15,28 @@ packages are still republished at that version with unchanged content. Entries a
 so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
+
+### Added
+
+#### openiddict
+
+- **New top-level tree `openiddict/`, package `Dignite.Abp.OpenIddict.ClientIdMetadataDocuments`: an ABP +
+  OpenIddict authorization server accepts OAuth Client ID Metadata Documents (CIMD), the client registration
+  ChatGPT's and Claude's MCP connectors use.** A client whose
+  `client_id` is an HTTPS URL is registered from the JSON document at that URL, with no pre-registration and no dynamic
+  client registration; neither OpenIddict 7.7 nor ABP 10.7 supports it yet. Depend on
+  `AbpOpenIddictClientIdMetadataDocumentsModule` and add the scopes a CIMD client may request to
+  `AbpClientIdMetadataDocumentOptions.Scopes` (required; the application refuses to start without them). The document
+  is fetched with SSRF guards (https only, no redirects, no proxy, only public addresses, 5 seconds, 5 KB), and the
+  client is registered in OpenIddict's own store as a public PKCE client for as long as its `Cache-Control` says
+  (5 minutes to 24 hours), named on the consent page with its redirect hosts. It gets an `rsrc:` permission, in both
+  trailing-slash forms, for every resource the server registered with `RegisterResources`, so RFC 8707 resource
+  indicators no longer fail as `ID2192`. The discovery document advertises `client_id_metadata_document_supported`
+  and drops `private_key_jwt` (`RemovePrivateKeyJwtFromDiscovery`); `AllowedHosts` limits the client hosts; a
+  background worker deletes expired registrations nothing refers to (`IsCleanupEnabled`). Pre-registered clients are
+  untouched. The package is two OpenIddict event handlers, independent of `Dignite.Abp.AspNetCore.Mcp`, to be retired
+  once OpenIddict supports CIMD. See
+  [Client ID Metadata Documents](docs/en/openiddict/client-id-metadata-documents.md).
 
 ## [10.7.5] - 2026-11-09
 

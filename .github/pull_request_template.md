@@ -14,6 +14,7 @@ Resolves #xxxx (write the related issue number if there is one)
 - [ ] `notifications/` (Dignite.Abp.Notifications / Dignite.NotificationCenter)
 - [ ] `flex-fields/` (Dignite.Abp.FlexFields / @dignite/ng.flex-fields)
 - [ ] `aspnetcore-mcp/` (Dignite.Abp.AspNetCore.Mcp)
+- [ ] `openiddict/` (Dignite.Abp.OpenIddict.*)
 - [ ] Repo-wide (build, CI, docs, shared config)
 
 ### Checklist

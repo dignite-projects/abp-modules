@@ -1,0 +1,21 @@
+<Project>
+
+  <!-- MSBuild imports only the NEAREST Directory.Build.props per project and stops walking up, so
+       this file must explicitly import the repo root's to inherit the lockstep <Version> /
+       <AssemblyVersion> / shared metadata. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <Product>Dignite Abp OpenIddict</Product>
+    <PackageTags>abp;openiddict;oauth;cimd;client-id-metadata-document;mcp</PackageTags>
+  </PropertyGroup>
+
+  <!-- This tree's OWN README.md is the packed PackageReadmeFile, as in every other tree: the root
+       README.md is a monorepo landing page. CONTRIBUTING/SECURITY/CHANGELOG/LICENSE are repo-wide
+       and live only at the root. -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory).github\icon.png" Pack="true" PackagePath="\" Visible="false" />
+  </ItemGroup>
+
+</Project>

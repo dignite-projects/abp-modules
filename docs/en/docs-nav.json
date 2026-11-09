@@ -186,6 +186,20 @@
           "path": "aspnetcore-mcp/errors-and-unit-of-work.md"
         }
       ]
+    },
+    {
+      "text": "OpenIddict",
+      "items": [
+        {
+          "text": "Overview",
+          "path": "openiddict/index.md",
+          "isIndex": true
+        },
+        {
+          "text": "Client ID Metadata Documents",
+          "path": "openiddict/client-id-metadata-documents.md"
+        }
+      ]
     }
   ]
 }

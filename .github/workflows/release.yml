@@ -122,6 +122,10 @@ jobs:
       - name: Run AspNetCore Mcp tests
         run: dotnet test aspnetcore-mcp/test/Dignite.Abp.AspNetCore.Mcp.Tests/Dignite.Abp.AspNetCore.Mcp.Tests.csproj --no-build --configuration Release --verbosity normal
 
+      # --- openiddict tests ---
+      - name: Run OpenIddict ClientIdMetadataDocuments tests
+        run: dotnet test openiddict/test/Dignite.Abp.OpenIddict.ClientIdMetadataDocuments.Tests/Dignite.Abp.OpenIddict.ClientIdMetadataDocuments.Tests.csproj --no-build --configuration Release --verbosity normal
+
       # --- blob-storing tests ---
       - name: Run BlobStoring Pipeline tests
         run: dotnet test blob-storing/test/Dignite.Abp.BlobStoring.Pipeline.Tests/Dignite.Abp.BlobStoring.Pipeline.Tests.csproj --no-build --configuration Release --verbosity normal
@@ -178,6 +182,10 @@ jobs:
       - name: Smoke-test aspnetcore-mcp NuGet packages
         shell: pwsh
         run: ./build/smoke-test-nuget-packages.ps1 ./artifacts '${{ steps.version.outputs.version }}' -Module aspnetcore-mcp
+
+      - name: Smoke-test openiddict NuGet packages
+        shell: pwsh
+        run: ./build/smoke-test-nuget-packages.ps1 ./artifacts '${{ steps.version.outputs.version }}' -Module openiddict
 
       # --- notifications Angular ---
       - name: Install notifications Angular dependencies
