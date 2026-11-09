@@ -16,6 +16,8 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+## [10.7.5] - 2026-11-09
+
 ### Added
 
 #### blob-storing
