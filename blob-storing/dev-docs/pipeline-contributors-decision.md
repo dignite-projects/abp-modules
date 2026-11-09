@@ -105,8 +105,15 @@ Deferred: **`ImageMetadataStrip`.** ABP's imaging abstraction has no operation f
 and Magick.NET keep EXIF data when they re-encode an image, SkiaSharp drops it — so a contributor would have to be
 provider-specific. Not built on a guess.
 
-Candidates for a second batch: `Watermark`, `SvgSanitize`, `ImageFormatConvert`, a ClamAV scan (its own package, so the core
-takes no scanner dependency), and `ImageMetadataStrip`.
+> **Update, 10.7.5 (2026-11-09):** built, without a provider. The premise above was that removing metadata means
+> re-encoding through `IImageCompressor`. It does not have to: `ImageMetadataStripContributor` walks JPEG segments and
+> PNG chunks in managed code and drops the ones that hold editing metadata, copying every other byte, so the result is
+> the same whatever provider the application chose. The need that settled it was a real one in the Site repository: an
+> 18 MB Photoshop export whose image was 0.9 MB. It removes editing metadata only and keeps EXIF; a privacy filter
+> (EXIF and GPS) would be an option on it, still undesigned.
+
+Candidates for a second batch: `Watermark`, `SvgSanitize`, `ImageFormatConvert`, and a ClamAV scan (its own package, so the
+core takes no scanner dependency).
 
 Not planned:
 

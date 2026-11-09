@@ -3,7 +3,8 @@
 Everyday `IBlobPipelineContributor` implementations for **ABP BlobStoring** (LGPL-3.0-only). ABP 10.7 ships the
 BLOB content pipeline — `IBlobPipelineContributor`, per-container `BlobContainerConfiguration.PipelineContributors`,
 run inside `IBlobContainer.SaveAsync` / `GetAsync` — but no contributors. This module is those: a size cap, a
-content-type allow-list based on the real bytes, GZip, image resize and compress, and the MIME detector they share.
+content-type allow-list based on the real bytes, GZip, image metadata removal, resize and compress, and the MIME
+detector they share.
 Published: `src/Dignite.Abp.BlobStoring.Pipeline` and `src/Dignite.Abp.BlobStoring.Imaging`. Nothing else lives here.
 
 It was `Dignite.Abp.FileStoring` (an `IFileHandler` pipeline run by `IFileStorer`) until `10.0.0-rc.27`. ABP's pipeline
@@ -38,7 +39,9 @@ One solution, `Dignite.Abp.BlobStoring.slnx`, central package management (versio
   `BlobStoringPipelineConfigurationNames`, `BlobStoringPipelineErrorCodes`, localization. Depends on
   `Volo.Abp.BlobStoring` and FileSignatures.
 - **`src/Dignite.Abp.BlobStoring.Imaging`** — `ImageResizeContributor`, `ImageCompressContributor` (both on
-  `ImageContributorBase`), their configurations, `ImageDecodeGuardConfiguration`, `ImageHeaderReader` (internal),
+  `ImageContributorBase`), `ImageMetadataStripContributor` (a plain contributor: it walks JPEG segments and PNG chunks in
+  managed code through the internal `ImageMetadataStripper`, decodes nothing, so no decode guard), their
+  configurations, `ImageDecodeGuardConfiguration`, `ImageHeaderReader` (public since 10.7.5),
   `ImagingBlobContainerConfigurationExtensions`, `BlobStoringImagingErrorCodes`, localization. Depends on the Pipeline
   package and `Volo.Abp.Imaging.Abstractions` — **no image library**; the application picks one of ABP's providers.
 - **`test/Dignite.Abp.BlobStoring.Pipeline.Tests`** and **`test/Dignite.Abp.BlobStoring.Imaging.Tests`** — integration

@@ -16,6 +16,23 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Added
+
+#### blob-storing
+
+- **`ImageMetadataStripContributor` removes the metadata that editing software piles into a JPEG or PNG, keeping
+  every byte of the image.** A 1984 x 935 banner exported from Photoshop weighed 18 MB, of which the image was 0.9 MB:
+  the rest was Extended XMP holding `photoshop:DocumentAncestors`, the ID of every document ever pasted or placed into
+  it. `container.AddImageMetadataStripContributor()`, after the validation contributors and before
+  `AddImageResizeContributor`, drops a JPEG's Extended XMP, Photoshop image resources (APP13) and comments, and a PNG's
+  text chunks (`tEXt`, `zTXt`, `iTXt`) and `tIME`. The image data, the main XMP packet, EXIF, the ICC profile, the
+  Adobe segment and anything after the image are copied as they are, so the pixels, colours and orientation are those
+  saved. It decodes nothing and needs no imaging provider; other content, a file it cannot walk and an image with
+  nothing to remove are stored unchanged. It keeps EXIF, GPS included: it is not a privacy filter. See
+  [Image Metadata](docs/en/blob-storing/imaging.md#image-metadata).
+- **`ImageHeaderReader` is public**, so code outside the pipeline that decodes a stored image (an endpoint that
+  resizes on request) can bound it by the header first, as the decode guard does.
+
 ## [10.7.4] - 2026-11-06
 
 ### Added

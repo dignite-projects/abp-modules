@@ -31,7 +31,7 @@ a complete upload example, writing your own contributors, and the error codes.
 | Package | Contains |
 |---|---|
 | `Dignite.Abp.BlobStoring.Pipeline` | `MaxSize`, `AllowedContentTypes` and `GZip` contributors; `IMimeTypeDetector`, the content-based MIME detector they share; `BlobStreamBuffering`, capped buffering for contributors |
-| `Dignite.Abp.BlobStoring.Imaging` | `ImageResize` and `ImageCompress` contributors; the image decode guard. References no image library: add one of ABP's imaging providers yourself |
+| `Dignite.Abp.BlobStoring.Imaging` | `ImageMetadataStrip`, `ImageResize` and `ImageCompress` contributors; the image decode guard and `ImageHeaderReader`. References no image library: add one of ABP's imaging providers yourself |
 
 ## Quick start
 
@@ -58,6 +58,7 @@ public class MyAppModule : AbpModule
 
                 container.AddMaxSizeContributor(c => c.MaxSizeInBytes = 12 * 1024 * 1024);
                 container.AddAllowedContentTypesContributor(c => c.AllowedContentTypes = ["image/*"]);
+                container.AddImageMetadataStripContributor();
                 container.AddImageResizeContributor(c =>
                 {
                     c.MaxWidth = 2048;
@@ -81,9 +82,6 @@ Candidates for a second batch:
 - `SvgSanitize`
 - `ImageFormatConvert`
 - ClamAV scan (as its own package, so the core stays free of a scanner dependency)
-- `ImageMetadataStrip` — held back because ABP's imaging abstraction has no such operation and the providers differ
-  (ImageSharp and Magick.NET keep EXIF data when they re-encode; SkiaSharp drops it), so it would have to be
-  provider-specific
 
 Not planned:
 

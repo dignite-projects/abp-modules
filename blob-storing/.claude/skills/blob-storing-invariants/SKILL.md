@@ -80,7 +80,7 @@ always carries a signature, with content that has none, is rejected. Unknown con
 
 ## 5. One-way transforms and stored-format transforms are different, and say so
 
-- **One-way** (`ImageResize`, `ImageCompress`, `MaxSize`, `AllowedContentTypes`): nothing is undone while reading, so a
+- **One-way** (`ImageMetadataStrip`, `ImageResize`, `ImageCompress`, `MaxSize`, `AllowedContentTypes`): nothing is undone while reading, so a
   contributor can be added to or removed from a container that already has blobs; existing blobs read as stored.
 - **Stored-format** (`GZip`): the transform is undone while reading, so a blob can only be read with the same transforming
   contributors, in the same order, that saved it. Adding or removing one on a container that has blobs breaks every

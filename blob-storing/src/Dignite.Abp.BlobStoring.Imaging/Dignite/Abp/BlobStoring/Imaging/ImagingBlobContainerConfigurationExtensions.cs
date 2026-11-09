@@ -16,6 +16,31 @@ namespace Dignite.Abp.BlobStoring.Imaging;
 /// </summary>
 public static class ImagingBlobContainerConfigurationExtensions
 {
+    public static ImageMetadataStripContributorConfiguration GetImageMetadataStripContributorConfiguration(
+        this BlobContainerConfiguration containerConfiguration)
+    {
+        return new ImageMetadataStripContributorConfiguration(containerConfiguration);
+    }
+
+    /// <summary>
+    /// Adds <see cref="ImageMetadataStripContributor"/>. Add it after <c>AddMaxSizeContributor</c> and
+    /// <c>AddAllowedContentTypesContributor</c>, and before <see cref="AddImageResizeContributor"/>, so the decode
+    /// guard measures the image by what is left.
+    /// </summary>
+    public static BlobContainerConfiguration AddImageMetadataStripContributor(
+        this BlobContainerConfiguration containerConfiguration,
+        Action<ImageMetadataStripContributorConfiguration>? configureAction = null)
+    {
+        Check.NotNull(containerConfiguration, nameof(containerConfiguration));
+
+        var configuration = new ImageMetadataStripContributorConfiguration(containerConfiguration);
+        configureAction?.Invoke(configuration);
+        configuration.Validate();
+
+        containerConfiguration.PipelineContributors.TryAdd<ImageMetadataStripContributor>();
+        return containerConfiguration;
+    }
+
     public static ImageResizeContributorConfiguration GetImageResizeContributorConfiguration(
         this BlobContainerConfiguration containerConfiguration)
     {
