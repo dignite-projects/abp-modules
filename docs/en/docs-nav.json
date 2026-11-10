@@ -49,6 +49,22 @@
           "text": "Overview",
           "path": "drive/index.md",
           "isIndex": true
+        },
+        {
+          "text": "Setting Up the Drive",
+          "path": "drive/drive-host.md"
+        },
+        {
+          "text": "Using the Drive From an Application",
+          "path": "drive/provider.md"
+        },
+        {
+          "text": "Tickets",
+          "path": "drive/tickets.md"
+        },
+        {
+          "text": "Hosting Modes",
+          "path": "drive/hosting.md"
         }
       ]
     },

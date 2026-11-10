@@ -6,19 +6,20 @@ as its own service. The plan and the phases are in
 [issue #379](https://github.com/dignite-projects/abp-modules/issues/379); the decisions and their reasons are in
 [`dev-docs/drive-decision.md`](dev-docs/drive-decision.md).
 
-**State: Phase 1, in progress.** The storage core is in: `FileDescriptor`, `FileDescriptorManager` (detect, hash,
-dedup, save, compensate) and `UseDriveContainer`, with EF Core and MongoDB; the tenant allocation (`DriveFeatures`,
+**State: Phase 1 (the storage tier) done; Phase 2 (the file library) next.** In: `FileDescriptor`,
+`FileDescriptorManager` (detect, hash, dedup, save, compensate) and `UseDriveContainer`, with EF Core and MongoDB; the tenant allocation (`DriveFeatures`,
 `DriveUsageManager`); the container presets (`Use…Preset`), containers declared in the `Drive` configuration section
 (`DriveContainerSettings`, presets by name from `DrivePresetOptions`) and the startup checks
 (`DriveContainerValidator`); `IDriveBlobService` with its in-process implementation, and the provider
 (`DriveBlobProvider`, `UseDrive`); the BLOB API (`DriveBlobController`, `DriveBlobAppService`, `IDriveClientAuthorizer`)
 and its C# client proxies (`RemoteDriveBlobService`); public reads with sizing (`DrivePublicController`,
 `DrivePublicAppService`, `IDrivePublicUrlBuilder`); tickets (`DriveTicketController`, `DriveTicketRedemptionController`,
-`DriveTicketProtector`, `IDriveTicketClient`). `Dignite.Drive.Mcp` is still a skeleton (the template's `Sample*`
+`DriveTicketProtector`, `IDriveTicketClient`); the user documentation in `docs/en/drive/`. Not yet: directories, user
+drives' file API and permissions, `Dignite.Drive.Mcp` (a skeleton) and `@dignite/ng.drive` (the template's `Sample*`
 placeholders are gone).
 Nothing is published: the packages are not packable by default (`Directory.Build.props`, until the owner releases Drive),
 so no release ships them, and CI passes `-p:PackDrive=true` to keep verifying how they pack. The "Responsibility"
-column describes the design, most of which arrives in Phases 1-2.
+column describes the design; the file-library parts of it arrive in Phase 2.
 
 ## Structure
 
