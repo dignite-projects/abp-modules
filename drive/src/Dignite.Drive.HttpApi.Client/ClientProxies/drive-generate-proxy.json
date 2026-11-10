@@ -1,0 +1,667 @@
+{
+  "modules": {
+    "drive": {
+      "rootPath": "drive",
+      "remoteServiceName": "Drive",
+      "controllers": {
+        "Dignite.Drive.Blobs.DriveBlobController": {
+          "controllerName": "DriveBlob",
+          "controllerGroupName": "DriveBlob",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "Dignite.Drive.Blobs.DriveBlobController",
+          "summary": null,
+          "remarks": null,
+          "description": null,
+          "displayName": null,
+          "interfaces": [
+            {
+              "type": "Dignite.Drive.Blobs.IDriveBlobService",
+              "name": "IDriveBlobService",
+              "methods": [
+                {
+                  "name": "SaveAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "containerName",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "blobName",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "content",
+                      "typeAsString": "Volo.Abp.Content.IRemoteStreamContent, Volo.Abp.Core",
+                      "type": "Volo.Abp.Content.IRemoteStreamContent",
+                      "typeSimple": "Volo.Abp.Content.IRemoteStreamContent",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "overrideExisting",
+                      "typeAsString": "System.Boolean, System.Private.CoreLib",
+                      "type": "System.Boolean",
+                      "typeSimple": "boolean",
+                      "isOptional": true,
+                      "defaultValue": false,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Dignite.Drive.Blobs.DriveBlobDto",
+                    "typeSimple": "Dignite.Drive.Blobs.DriveBlobDto",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "GetOrNullAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "containerName",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "blobName",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Content.IRemoteStreamContent",
+                    "typeSimple": "Volo.Abp.Content.IRemoteStreamContent",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": true
+                  }
+                },
+                {
+                  "name": "ExistsAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "containerName",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "blobName",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Boolean",
+                    "typeSimple": "boolean",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "DeleteAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "containerName",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "blobName",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Boolean",
+                    "typeSimple": "boolean",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "SaveAsyncByContainerNameAndBlobNameAndContentAndOverrideExisting": {
+              "uniqueName": "SaveAsyncByContainerNameAndBlobNameAndContentAndOverrideExisting",
+              "name": "SaveAsync",
+              "httpMethod": "PUT",
+              "url": "api/drive/blobs/{containerName}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "containerName",
+                  "typeAsString": "System.String, System.Private.CoreLib",
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "name": "blobName",
+                  "typeAsString": "System.String, System.Private.CoreLib",
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "name": "content",
+                  "typeAsString": "Volo.Abp.Content.IRemoteStreamContent, Volo.Abp.Core",
+                  "type": "Volo.Abp.Content.IRemoteStreamContent",
+                  "typeSimple": "Volo.Abp.Content.IRemoteStreamContent",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "name": "overrideExisting",
+                  "typeAsString": "System.Boolean, System.Private.CoreLib",
+                  "type": "System.Boolean",
+                  "typeSimple": "boolean",
+                  "isOptional": true,
+                  "defaultValue": false,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "containerName",
+                  "name": "containerName",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "blobName",
+                  "name": "blobName",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Query",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "content",
+                  "name": "content",
+                  "jsonName": null,
+                  "type": "Volo.Abp.Content.IRemoteStreamContent",
+                  "typeSimple": "Volo.Abp.Content.IRemoteStreamContent",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "FormFile",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "overrideExisting",
+                  "name": "overrideExisting",
+                  "jsonName": null,
+                  "type": "System.Boolean",
+                  "typeSimple": "boolean",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Query",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "Dignite.Drive.Blobs.DriveBlobDto",
+                "typeSimple": "Dignite.Drive.Blobs.DriveBlobDto",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Drive.Blobs.IDriveBlobService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "GetOrNullAsyncByContainerNameAndBlobName": {
+              "uniqueName": "GetOrNullAsyncByContainerNameAndBlobName",
+              "name": "GetOrNullAsync",
+              "httpMethod": "GET",
+              "url": "api/drive/blobs/{containerName}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "containerName",
+                  "typeAsString": "System.String, System.Private.CoreLib",
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "name": "blobName",
+                  "typeAsString": "System.String, System.Private.CoreLib",
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "containerName",
+                  "name": "containerName",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "blobName",
+                  "name": "blobName",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Query",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Content.IRemoteStreamContent",
+                "typeSimple": "Volo.Abp.Content.IRemoteStreamContent",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": true
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Drive.Blobs.IDriveBlobService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "ExistsAsyncByContainerNameAndBlobName": {
+              "uniqueName": "ExistsAsyncByContainerNameAndBlobName",
+              "name": "ExistsAsync",
+              "httpMethod": "GET",
+              "url": "api/drive/blobs/{containerName}/exists",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "containerName",
+                  "typeAsString": "System.String, System.Private.CoreLib",
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "name": "blobName",
+                  "typeAsString": "System.String, System.Private.CoreLib",
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "containerName",
+                  "name": "containerName",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "blobName",
+                  "name": "blobName",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Query",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "System.Boolean",
+                "typeSimple": "boolean",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Drive.Blobs.IDriveBlobService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "DeleteAsyncByContainerNameAndBlobName": {
+              "uniqueName": "DeleteAsyncByContainerNameAndBlobName",
+              "name": "DeleteAsync",
+              "httpMethod": "DELETE",
+              "url": "api/drive/blobs/{containerName}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "containerName",
+                  "typeAsString": "System.String, System.Private.CoreLib",
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "name": "blobName",
+                  "typeAsString": "System.String, System.Private.CoreLib",
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "containerName",
+                  "name": "containerName",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "blobName",
+                  "name": "blobName",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Query",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "System.Boolean",
+                "typeSimple": "boolean",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Drive.Blobs.IDriveBlobService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            }
+          }
+        },
+        "Dignite.Drive.Tickets.DriveTicketController": {
+          "controllerName": "DriveTicket",
+          "controllerGroupName": "DriveTicket",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "Dignite.Drive.Tickets.DriveTicketController",
+          "summary": null,
+          "remarks": null,
+          "description": null,
+          "displayName": null,
+          "interfaces": [
+            {
+              "type": "Dignite.Drive.Tickets.IDriveTicketService",
+              "name": "IDriveTicketService",
+              "methods": [
+                {
+                  "name": "CreateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "Dignite.Drive.Tickets.CreateDriveTicketInput, Dignite.Drive.Application.Contracts",
+                      "type": "Dignite.Drive.Tickets.CreateDriveTicketInput",
+                      "typeSimple": "Dignite.Drive.Tickets.CreateDriveTicketInput",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Dignite.Drive.Tickets.DriveTicketDto",
+                    "typeSimple": "Dignite.Drive.Tickets.DriveTicketDto",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "CreateAsyncByInput": {
+              "uniqueName": "CreateAsyncByInput",
+              "name": "CreateAsync",
+              "httpMethod": "POST",
+              "url": "api/drive/tickets",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "Dignite.Drive.Tickets.CreateDriveTicketInput, Dignite.Drive.Application.Contracts",
+                  "type": "Dignite.Drive.Tickets.CreateDriveTicketInput",
+                  "typeSimple": "Dignite.Drive.Tickets.CreateDriveTicketInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "Dignite.Drive.Tickets.CreateDriveTicketInput",
+                  "typeSimple": "Dignite.Drive.Tickets.CreateDriveTicketInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "Dignite.Drive.Tickets.DriveTicketDto",
+                "typeSimple": "Dignite.Drive.Tickets.DriveTicketDto",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Drive.Tickets.IDriveTicketService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            }
+          }
+        }
+      }
+    }
+  },
+  "types": {}
+}

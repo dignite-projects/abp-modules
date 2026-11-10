@@ -42,15 +42,20 @@
     <PackageVersion Include="Volo.Abp.Imaging.Abstractions" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Imaging.SkiaSharp" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Ddd.Domain" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Ddd.Domain.Shared" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Ddd.Application" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Ddd.Application.Contracts" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Authorization" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Authorization.Abstractions" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore.TestBase" Version="10.7.0" />
+    <!-- drive/test/Dignite.Drive.HttpApi.Tests: resolves the tenant the remote BLOB provider sends (__tenant) -->
+    <PackageVersion Include="Volo.Abp.AspNetCore.MultiTenancy" Version="10.7.0" />
     <!-- openiddict/ (and the EF Core store of its tests) -->
     <PackageVersion Include="Volo.Abp.OpenIddict.AspNetCore" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.OpenIddict.EntityFrameworkCore" Version="10.7.0" />
+    <!-- drive/: IApplicationFinder, to check the clients a Drive container allows where the host can look them up -->
+    <PackageVersion Include="Volo.Abp.OpenIddict.Domain.Shared" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore.Mvc" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Http.Client" Version="10.7.0" />
@@ -74,6 +79,9 @@
     <PackageVersion Include="Volo.Abp.BackgroundJobs.Abstractions" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.BackgroundWorkers" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.DistributedLocking.Abstractions" Version="10.7.0" />
+    <!-- drive/: IDataProtectionProvider, which signs the Drive's tickets. Only the abstractions: the host's ASP.NET Core
+         provides the key ring. Same version as Microsoft.Extensions.FileProviders.Embedded below. -->
+    <PackageVersion Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="10.0.12" />
     <PackageVersion Include="Volo.Abp.AspNetCore.SignalR" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Json.SystemTextJson" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared" Version="10.7.0" />

@@ -1,0 +1,18 @@
+{
+  "culture": "en",
+  "texts": {
+    "MyAccount":  "My account",
+    "SamplePageMessage": "A sample page for the Drive module",
+    "Drive:ContainerNotFound": "There is no Drive container named '{ContainerName}'.",
+    "Drive:BlobAlreadyExists": "The Drive container '{ContainerName}' already has a file named '{BlobName}'.",
+    "Drive:BlobNotFound": "The Drive container '{ContainerName}' has no file named '{BlobName}'.",
+    "Drive:InvalidTicket": "The link is not valid. It may have expired or been used already.",
+    "Drive:DriveDisabled": "The Drive is not enabled for this tenant.",
+    "Drive:StorageQuotaExceeded": "Storing this file would exceed the Drive storage of {StorageSize} MB.",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Enable the Drive",
+    "Feature:DriveEnableDescription": "Whether the tenant may store files in the Drive.",
+    "Feature:DriveStorageSize": "Drive storage (MB)",
+    "Feature:DriveStorageSizeDescription": "The most the tenant may store in the Drive, in megabytes. 0 means no limit."
+  }
+}

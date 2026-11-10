@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>Domain layer of Dignite Drive, a per-tenant cloud drive for ABP applications.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.Ddd.Domain" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.Drive.Domain.Shared\Dignite.Drive.Domain.Shared.csproj" />
+    <!-- The declared edge drive/ -> blob-storing/ (root CLAUDE.md, invariant 2): the Drive runs blob-storing's
+         pipeline and imaging contributors (the container presets) and its MIME detector. dotnet pack turns them into
+         same-version PackageReferences. -->
+    <ProjectReference Include="..\..\..\blob-storing\src\Dignite.Abp.BlobStoring.Pipeline\Dignite.Abp.BlobStoring.Pipeline.csproj" />
+    <ProjectReference Include="..\..\..\blob-storing\src\Dignite.Abp.BlobStoring.Imaging\Dignite.Abp.BlobStoring.Imaging.csproj" />
+  </ItemGroup>
+
+</Project>

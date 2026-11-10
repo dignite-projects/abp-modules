@@ -17,6 +17,31 @@
     <Project Path="blob-storing/test/Dignite.Abp.BlobStoring.Pipeline.Tests/Dignite.Abp.BlobStoring.Pipeline.Tests.csproj" />
   </Folder>
 
+  <Folder Name="/drive/" />
+  <Folder Name="/drive/src/">
+    <Project Path="drive/src/Dignite.Abp.BlobStoring.Drive/Dignite.Abp.BlobStoring.Drive.csproj" />
+    <Project Path="drive/src/Dignite.Drive.Application/Dignite.Drive.Application.csproj" />
+    <Project Path="drive/src/Dignite.Drive.Application.Contracts/Dignite.Drive.Application.Contracts.csproj" />
+    <Project Path="drive/src/Dignite.Drive.Domain/Dignite.Drive.Domain.csproj" />
+    <Project Path="drive/src/Dignite.Drive.Domain.Shared/Dignite.Drive.Domain.Shared.csproj" />
+    <Project Path="drive/src/Dignite.Drive.EntityFrameworkCore/Dignite.Drive.EntityFrameworkCore.csproj" />
+    <Project Path="drive/src/Dignite.Drive.HttpApi/Dignite.Drive.HttpApi.csproj" />
+    <Project Path="drive/src/Dignite.Drive.HttpApi.Client/Dignite.Drive.HttpApi.Client.csproj" />
+    <Project Path="drive/src/Dignite.Drive.Installer/Dignite.Drive.Installer.csproj" />
+    <Project Path="drive/src/Dignite.Drive.Mcp/Dignite.Drive.Mcp.csproj" />
+    <Project Path="drive/src/Dignite.Drive.MongoDB/Dignite.Drive.MongoDB.csproj" />
+  </Folder>
+  <Folder Name="/drive/test/">
+    <Project Path="drive/test/Dignite.Drive.Application.Tests/Dignite.Drive.Application.Tests.csproj" />
+    <Project Path="drive/test/Dignite.Drive.Domain.Tests/Dignite.Drive.Domain.Tests.csproj" />
+    <Project Path="drive/test/Dignite.Drive.EntityFrameworkCore.Tests/Dignite.Drive.EntityFrameworkCore.Tests.csproj" />
+    <Project Path="drive/test/Dignite.Drive.HttpApi.Tests/Dignite.Drive.HttpApi.Tests.csproj" />
+    <Project Path="drive/test/Dignite.Drive.MongoDB.Tests/Dignite.Drive.MongoDB.Tests.csproj" />
+    <Project Path="drive/test/Dignite.Drive.TestBase/Dignite.Drive.TestBase.csproj" />
+  </Folder>
+  <Folder Name="/drive/host/">
+    <Project Path="drive/host/Dignite.Drive.Host/Dignite.Drive.Host.csproj" />
+  </Folder>
   <Folder Name="/notifications/" />
   <Folder Name="/notifications/core/" />
   <Folder Name="/notifications/core/src/">

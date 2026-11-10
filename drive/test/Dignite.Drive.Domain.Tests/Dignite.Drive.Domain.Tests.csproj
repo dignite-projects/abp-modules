@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <RootNamespace />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Volo.Abp.BlobStoring.Memory" />
+    <!-- The imaging provider the images preset runs on in the tests; the Drive itself references none. -->
+    <PackageReference Include="Volo.Abp.Imaging.SkiaSharp" />
+    <!-- SkiaSharp brings the Windows and macOS native libraries only; this one lets the tests run on Linux CI runners. -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Dignite.Drive.Domain\Dignite.Drive.Domain.csproj" />
+    <ProjectReference Include="..\Dignite.Drive.TestBase\Dignite.Drive.TestBase.csproj" />
+  </ItemGroup>
+
+</Project>

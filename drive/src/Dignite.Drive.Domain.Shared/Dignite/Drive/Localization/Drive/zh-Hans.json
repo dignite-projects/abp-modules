@@ -1,0 +1,18 @@
+{
+  "culture": "zh-Hans",
+  "texts": {
+    "MyAccount": "我的账户",
+    "SamplePageMessage": "Drive 模块的示例页面",
+    "Drive:ContainerNotFound": "Drive 中没有名为“{ContainerName}”的容器。",
+    "Drive:BlobAlreadyExists": "Drive 容器“{ContainerName}”中已有名为“{BlobName}”的文件。",
+    "Drive:BlobNotFound": "Drive 容器“{ContainerName}”中没有名为“{BlobName}”的文件。",
+    "Drive:InvalidTicket": "链接无效，可能已过期或已被使用。",
+    "Drive:DriveDisabled": "此租户未启用 Drive。",
+    "Drive:StorageQuotaExceeded": "保存此文件将超出 {StorageSize} MB 的 Drive 存储空间。",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "启用 Drive",
+    "Feature:DriveEnableDescription": "租户是否可以在 Drive 中存储文件。",
+    "Feature:DriveStorageSize": "Drive 存储空间（MB）",
+    "Feature:DriveStorageSizeDescription": "租户在 Drive 中最多可存储的容量，单位为 MB。0 表示不限制。"
+  }
+}

@@ -31,6 +31,7 @@ if ((& $majorMinor $dotnetVersion) -ne $abpMajorMinor) {
 
 $angularPackages = @(
     'notifications\angular\projects\notification-center\package.json',
+    'drive\angular\projects\drive\package.json',
     'flex-fields\angular\projects\flex-fields\package.json',
     'flex-fields\angular\projects\flex-fields-ckeditor\package.json'
 )
