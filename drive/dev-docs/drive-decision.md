@@ -92,6 +92,13 @@ role holds permissions of several services in an ABP microservice solution.
   nullable `DedupKey` (tenant, container, hash) while it is live, cleared when it is deleted, under a plain unique index:
   every provider treats `NULL`s as distinct there (EF Core adds the `IS NOT NULL` filter on SQL Server itself), and
   MongoDB gets a partial unique index on the field's presence.
+- **The BLOB API takes the BLOB name in the query string and has no `HEAD`**, decided 2026-11-10. The plan had
+  `api/drive/blobs/{container}/{name}` with `PUT`/`GET`/`HEAD`/`DELETE`. The routes are
+  `api/drive/blobs/{containerName}?blobName=…` (`PUT`, `GET`, `DELETE`) and `GET …/{containerName}/exists?blobName=…`.
+  A BLOB name may be a path (`2026/11/photo.png`): as a route value, ABP's generated C# proxies encode its `/` and
+  ASP.NET Core's catch-all routes do not reliably decode `%2F`, while a query value means the same on both sides. ABP's
+  static proxies do not generate `HEAD` calls, so existence is its own `GET` — the plan listed an existence check anyway.
+  The remote provider is the API's only intended caller, so the shape follows what its proxies can express.
 
 ## Still open
 
