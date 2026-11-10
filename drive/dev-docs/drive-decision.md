@@ -56,6 +56,24 @@ role holds permissions of several services in an ABP microservice solution.
   it to keep verifying how they pack. To publish: delete that property group and the opt-in in `ci.yml`, add the drive
   smoke test back to `release.yml`, wire `@dignite/ng.drive` into the npm publish step (it needs a Trusted Publisher on
   npmjs.com first and a place in `verify-npm-single-copy.mjs`), and check the names again.
+- **The blob API authorizes clients with an allowed-client list on each system container's configuration**, decided
+  2026-11-10. It needs no permission data on the blob path, so a Drive running as its own service needs neither the
+  OpenIddict tables nor shared grant tables for it. Rules that come with it:
+  - The caller must be a client, not a user. A token that carries a user id is rejected: user tokens carry `client_id`
+    too, so an allow-listed first-party client would otherwise let its users write (browsers go through tickets).
+  - The check sits behind an interface (`IDriveClientAuthorizer`), so `C`-provider resource grants can be added later as
+    a second source, allowed when either source allows.
+  - An empty list allows no remote caller (in-process callers are trusted); an unknown client id is a startup warning.
+  - One list per container covers read, write and delete; split it when a read-only client exists.
+  - Revoking an application stays the authorization server's job (disable the client); the list only limits which
+    containers a client may touch.
+
+  Why not `C` grants: ABP registers the management side for `C` resource grants
+  (`ApplicationResourcePermissionManagementProvider`) only where `IApplicationFinder` exists, which is where
+  `Volo.Abp.OpenIddict.Domain` and its tables are, not in a standalone Drive service. "Manage at runtime in ABP's
+  dialog" would therefore mean managing them in the authorization server against a shared grants table, every blob call
+  would read the permission store, and system containers would have to be modeled as permission resources. Revisit it
+  if applications are onboarded often or by third parties.
 - **Usage is metered per tenant only**, decided 2026-11-10: one Feature, `Drive.StorageSize`, and no per-container
   usage accounting in v1.
 
@@ -63,8 +81,6 @@ role holds permissions of several services in an ABP microservice solution.
 
 Owner decisions the plan lists that this record does not settle yet:
 
-- How the blob API authorizes clients: an allowed-client list on the container configuration (what the plan assumes) or
-  `C`-provider resource grants on the container. To be settled before Phase 1.
 - Whether an application may promote a system container into the Drive's UI.
 - Where the flex-fields file field type lives (registration key `FileExplorer`).
 - What becomes of Site's `site_*` file MCP tools once the Drive has its own.

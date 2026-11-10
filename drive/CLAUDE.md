@@ -53,7 +53,9 @@ root one, so the lockstep `<Version>` applies.
    `/directories`, `/containers`) authenticates users against the Drive's own permissions and works on *user drives*.
    Merging them brings back bridging to business permission names, which the design exists to avoid.
 2. **No bridging to business permission names, and no user authorization on the blob path.** An application's rules run
-   in the application, before the provider; "whoever may create content may upload" is role administration.
+   in the application, before the provider; "whoever may create content may upload" is role administration. The blob
+   API authorizes *clients* by an allowed-client list on each system container, and rejects any token that carries a
+   user id.
 3. **One descriptor table for both roles.** Every blob has a `FileDescriptor`; dedup is descriptors sharing one physical
    blob, which is removed with its last descriptor. Tenant usage is computed from this table, **per tenant only**.
 4. **Authorization lives in application services only** (`[Authorize]` on the class, resource checks in methods); domain
