@@ -1,7 +1,7 @@
-﻿namespace Dignite.Drive.EntityFrameworkCore;
+namespace Dignite.Drive.EntityFrameworkCore;
 
-/* This class can be used as a base class for EF Core integration tests,
- * while SampleRepository_Tests uses a different approach.
+/* A base class for EF Core-specific integration tests; provider-agnostic scenarios live in
+ * Domain.Tests / Application.Tests as abstract classes, inherited here per provider.
  */
 public abstract class DriveEntityFrameworkCoreTestBase : DriveTestBase<DriveEntityFrameworkCoreTestModule>
 {

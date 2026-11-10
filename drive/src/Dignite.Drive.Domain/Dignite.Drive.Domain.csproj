@@ -12,6 +12,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Dignite.Drive.Domain.Shared\Dignite.Drive.Domain.Shared.csproj" />
+    <!-- The declared edge drive/ -> blob-storing/ (root CLAUDE.md, invariant 2): the Drive runs blob-storing's
+         pipeline contributors and its MIME detector. dotnet pack turns it into a same-version PackageReference. -->
+    <ProjectReference Include="..\..\..\blob-storing\src\Dignite.Abp.BlobStoring.Pipeline\Dignite.Abp.BlobStoring.Pipeline.csproj" />
   </ItemGroup>
 
 </Project>

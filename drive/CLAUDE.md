@@ -6,8 +6,9 @@ as its own service. The plan and the phases are in
 [issue #379](https://github.com/dignite-projects/abp-modules/issues/379); the decisions and their reasons are in
 [`dev-docs/drive-decision.md`](dev-docs/drive-decision.md).
 
-**State: Phase 0.** Every project below exists as a skeleton: the ABP-generated module code with its `Sample*`
-placeholders (the first real feature replaces them), and empty modules for the provider and `Dignite.Drive.Mcp`.
+**State: Phase 1, in progress.** The storage core is in: `FileDescriptor`, `FileDescriptorManager` (detect, hash,
+dedup, save, compensate) and `UseDriveContainer`, with EF Core and MongoDB. The other projects are still skeletons (the
+template's `Sample*` placeholders are gone), with empty modules for the provider and `Dignite.Drive.Mcp`.
 Nothing is published: the packages are not packable by default (`Directory.Build.props`, until the owner releases Drive),
 so no release ships them, and CI passes `-p:PackDrive=true` to keep verifying how they pack. The "Responsibility"
 column describes the design, most of which arrives in Phases 1-2.
@@ -22,7 +23,7 @@ One `.slnx` — `Dignite.Drive.slnx`:
   |---|---|---|
   | `Dignite.Abp.BlobStoring.Drive` | The `IBlobProvider`: `DriveBlobProvider`, `UseDrive(...)`, `IDrivePublicUrlBuilder`, `IDriveTicketClient` | `Volo.Abp.BlobStoring`, `Application.Contracts` |
   | `Dignite.Drive.Domain.Shared` | Constants, error codes, the file type table, localization | ABP |
-  | `Dignite.Drive.Domain` | `FileDescriptor`, `DirectoryDescriptor`, their managers and repositories, container kinds, features, usage | `Domain.Shared` (later `blob-storing/`) |
+  | `Dignite.Drive.Domain` | `FileDescriptor`, `DirectoryDescriptor`, their managers and repositories, container kinds, features, usage | `Domain.Shared`, `blob-storing/` (`Dignite.Abp.BlobStoring.Pipeline`) |
   | `Dignite.Drive.Application.Contracts` | `IDriveBlobService` (what the provider calls), file/directory/container service interfaces, DTOs, permission names | `Domain.Shared` |
   | `Dignite.Drive.Application` | The in-process `IDriveBlobService`, application services, resource authorization, tickets | `Domain`, `Application.Contracts` |
   | `Dignite.Drive.HttpApi` / `.HttpApi.Client` | Blob API, file API, tickets, public read / static proxies, incl. the remote `IDriveBlobService` | `Application.Contracts` |

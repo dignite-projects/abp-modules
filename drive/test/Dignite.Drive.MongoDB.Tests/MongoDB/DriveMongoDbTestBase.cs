@@ -1,7 +1,7 @@
-﻿namespace Dignite.Drive.MongoDB;
+namespace Dignite.Drive.MongoDB;
 
-/* This class can be used as a base class for MongoDB integration tests,
- * while SampleRepository_Tests uses a different approach.
+/* A base class for MongoDB-specific integration tests; provider-agnostic scenarios live in
+ * Domain.Tests / Application.Tests as abstract classes, inherited here per provider.
  */
 public abstract class DriveMongoDbTestBase : DriveTestBase<DriveMongoDbTestModule>
 {

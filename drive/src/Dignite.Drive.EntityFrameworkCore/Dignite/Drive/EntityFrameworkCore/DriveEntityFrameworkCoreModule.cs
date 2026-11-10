@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.EntityFrameworkCore;
 using Volo.Abp.Modularity;
 
@@ -15,10 +15,8 @@ public class DriveEntityFrameworkCoreModule : AbpModule
         context.Services.AddAbpDbContext<DriveDbContext>(options =>
         {
             options.AddDefaultRepositories<IDriveDbContext>(includeAllEntities: true);
-            
-            /* Add custom repositories here. Example:
-            * options.AddRepository<Question, EfCoreQuestionRepository>();
-            */
+
+            options.AddRepository<FileDescriptor, EfCoreFileDescriptorRepository>();
         });
     }
 }

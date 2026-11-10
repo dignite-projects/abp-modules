@@ -2,6 +2,7 @@
   "culture": "zh-Hans",
   "texts": {
     "MyAccount": "我的账户",
-    "SamplePageMessage": "Drive 模块的示例页面"
+    "SamplePageMessage": "Drive 模块的示例页面",
+    "Drive:ContainerNotFound": "Drive 中没有名为“{ContainerName}”的容器。"
   }
 }

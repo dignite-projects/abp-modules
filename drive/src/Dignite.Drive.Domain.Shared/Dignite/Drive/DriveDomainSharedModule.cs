@@ -1,4 +1,4 @@
-﻿using Volo.Abp.Modularity;
+using Volo.Abp.Modularity;
 using Volo.Abp.Localization;
 using Dignite.Drive.Localization;
 using Volo.Abp.Domain;
@@ -32,7 +32,7 @@ public class DriveDomainSharedModule : AbpModule
 
         Configure<AbpExceptionLocalizationOptions>(options =>
         {
-            options.MapCodeNamespace("Drive", typeof(DriveResource));
+            options.MapCodeNamespace(DriveErrorCodes.Namespace, typeof(DriveResource));
         });
     }
 }

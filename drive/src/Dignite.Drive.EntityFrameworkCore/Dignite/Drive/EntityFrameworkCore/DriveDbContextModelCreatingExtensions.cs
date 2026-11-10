@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Volo.Abp;
+using Volo.Abp.EntityFrameworkCore.Modeling;
 
 namespace Dignite.Drive.EntityFrameworkCore;
 
@@ -10,24 +11,31 @@ public static class DriveDbContextModelCreatingExtensions
     {
         Check.NotNull(builder, nameof(builder));
 
-        /* Configure all entities here. Example:
-
-        builder.Entity<Question>(b =>
+        builder.Entity<FileDescriptor>(b =>
         {
-            //Configure table & schema name
-            b.ToTable(DriveDbProperties.DbTablePrefix + "Questions", DriveDbProperties.DbSchema);
-
+            b.ToTable(DriveDbProperties.DbTablePrefix + "FileDescriptors", DriveDbProperties.DbSchema);
             b.ConfigureByConvention();
 
-            //Properties
-            b.Property(q => q.Title).IsRequired().HasMaxLength(QuestionConsts.MaxTitleLength);
+            b.Property(f => f.ContainerName).IsRequired().HasMaxLength(FileDescriptorConsts.MaxContainerNameLength);
+            b.Property(f => f.Name).IsRequired().HasMaxLength(FileDescriptorConsts.MaxNameLength);
+            b.Property(f => f.BlobName).IsRequired().HasMaxLength(FileDescriptorConsts.MaxBlobNameLength);
+            b.Property(f => f.MimeType).IsRequired().HasMaxLength(FileDescriptorConsts.MaxMimeTypeLength);
+            b.Property(f => f.Hash).IsRequired().HasMaxLength(FileDescriptorConsts.MaxHashLength);
+            b.Property(f => f.DedupKey).HasMaxLength(FileDescriptorConsts.MaxDedupKeyLength);
+            b.Property(f => f.ClientId).HasMaxLength(FileDescriptorConsts.MaxClientIdLength);
 
-            //Relations
-            b.HasMany(question => question.Tags).WithOne().HasForeignKey(qt => qt.QuestionId);
+            // Content dedup's arbiter (FileDescriptorManager.CreateAsync): one live writer per tenant, container and
+            // hash. A plain unique index on a nullable column, not a filtered one, so it works on every EF Core
+            // provider: only the live writer of a BLOB carries a key, and rows without one do not collide (EF Core adds
+            // the IS NOT NULL filter on SQL Server by itself).
+            b.HasIndex(f => f.DedupKey).IsUnique();
 
-            //Indexes
-            b.HasIndex(q => q.CreationTime);
+            // A system container's address: the provider reads, overwrites and deletes by name.
+            b.HasIndex(f => new { f.TenantId, f.ContainerName, f.Name });
+            // The dedup lookup.
+            b.HasIndex(f => new { f.TenantId, f.ContainerName, f.Hash });
+            // "Does anything still use this BLOB" - asked on every delete.
+            b.HasIndex(f => new { f.TenantId, f.ContainerName, f.BlobName });
         });
-        */
     }
 }
