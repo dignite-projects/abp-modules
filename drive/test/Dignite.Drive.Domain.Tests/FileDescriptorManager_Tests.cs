@@ -98,8 +98,9 @@ public abstract class FileDescriptorManager_Tests<TStartupModule> : DriveDomainT
         var name = "existing-" + Guid.NewGuid().ToString("N") + ".pdf";
         await CreateAsync(DriveTestContainers.Files, name, DriveTestFiles.Pdf("first " + name));
 
-        await Should.ThrowAsync<BlobAlreadyExistsException>(() =>
+        var exception = await Should.ThrowAsync<BusinessException>(() =>
             CreateAsync(DriveTestContainers.Files, name, DriveTestFiles.Pdf("second " + name)));
+        exception.Code.ShouldBe(DriveErrorCodes.BlobAlreadyExists);
     }
 
     [Fact]

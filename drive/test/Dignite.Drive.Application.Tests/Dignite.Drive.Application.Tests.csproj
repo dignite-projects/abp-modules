@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Dignite.Drive.Application\Dignite.Drive.Application.csproj" />
+    <ProjectReference Include="..\..\src\Dignite.Abp.BlobStoring.Drive\Dignite.Abp.BlobStoring.Drive.csproj" />
     <ProjectReference Include="..\Dignite.Drive.Domain.Tests\Dignite.Drive.Domain.Tests.csproj" />
   </ItemGroup>
 

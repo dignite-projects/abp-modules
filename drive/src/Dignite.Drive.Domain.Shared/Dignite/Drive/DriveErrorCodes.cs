@@ -14,6 +14,13 @@ public static class DriveErrorCodes
     public const string ContainerNotFound = Namespace + ":ContainerNotFound";
 
     /// <summary>
+    /// The container already has a file of that name and the caller did not ask to overwrite it. Data:
+    /// <c>ContainerName</c>, <c>BlobName</c>. The BLOB storing provider turns it back into ABP's
+    /// <c>BlobAlreadyExistsException</c>.
+    /// </summary>
+    public const string BlobAlreadyExists = Namespace + ":BlobAlreadyExists";
+
+    /// <summary>
     /// The tenant's <c>Drive.Enable</c> feature is off.
     /// </summary>
     public const string DriveDisabled = Namespace + ":DriveDisabled";

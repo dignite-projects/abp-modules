@@ -55,7 +55,7 @@ public class FileDescriptorManager : DomainService
     /// Stores <paramref name="stream"/> in <paramref name="containerName"/> under <paramref name="name"/> and records it.
     /// <para>
     /// When a live descriptor already has <paramref name="name"/>, the call fails with
-    /// <see cref="BlobAlreadyExistsException"/> unless <paramref name="overrideExisting"/> is set; then the new
+    /// <see cref="DriveErrorCodes.BlobAlreadyExists"/> unless <paramref name="overrideExisting"/> is set; then the new
     /// descriptor replaces it once it is stored, and the old one is deleted as <see cref="DeleteAsync"/> deletes.
     /// </para>
     /// <para>
@@ -104,8 +104,9 @@ public class FileDescriptorManager : DomainService
         var existing = await FileDescriptorRepository.FindByNameAsync(containerName, name, cancellationToken);
         if (existing != null && !overrideExisting)
         {
-            throw new BlobAlreadyExistsException(
-                $"The Drive container '{containerName}' already has a file named '{name}'. Set overrideExisting if it should be overwritten.");
+            throw new BusinessException(DriveErrorCodes.BlobAlreadyExists)
+                .WithData("ContainerName", containerName)
+                .WithData("BlobName", name);
         }
 
         var maxBytes = BlobStreamBuffering.GetMaxBufferedBytes(BlobContainerConfigurationProvider.Get(containerName));

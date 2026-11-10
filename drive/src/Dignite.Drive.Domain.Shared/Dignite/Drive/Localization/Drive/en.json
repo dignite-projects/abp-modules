@@ -4,6 +4,7 @@
     "MyAccount":  "My account",
     "SamplePageMessage": "A sample page for the Drive module",
     "Drive:ContainerNotFound": "There is no Drive container named '{ContainerName}'.",
+    "Drive:BlobAlreadyExists": "The Drive container '{ContainerName}' already has a file named '{BlobName}'.",
     "Drive:DriveDisabled": "The Drive is not enabled for this tenant.",
     "Drive:StorageQuotaExceeded": "Storing this file would exceed the Drive storage of {StorageSize} MB.",
     "Feature:DriveGroup": "Drive",

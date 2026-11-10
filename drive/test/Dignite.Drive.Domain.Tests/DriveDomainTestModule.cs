@@ -17,6 +17,8 @@ public class DriveDomainTestModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
+        SingletonMemoryBlobProvider.Register(context.Services);
+
         // The Drive host's side: Drive containers on the in-memory provider, one with upload rules.
         Configure<AbpBlobStoringOptions>(options =>
         {

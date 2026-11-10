@@ -9,8 +9,10 @@ as its own service. The plan and the phases are in
 **State: Phase 1, in progress.** The storage core is in: `FileDescriptor`, `FileDescriptorManager` (detect, hash,
 dedup, save, compensate) and `UseDriveContainer`, with EF Core and MongoDB; the tenant allocation (`DriveFeatures`,
 `DriveUsageManager`); the container presets (`Use…Preset`), containers declared in the `Drive` configuration section
-(`DriveContainerSettings`, presets by name from `DrivePresetOptions`) and the startup checks (`DriveContainerValidator`). The other projects are still skeletons (the
-template's `Sample*` placeholders are gone), with empty modules for the provider and `Dignite.Drive.Mcp`.
+(`DriveContainerSettings`, presets by name from `DrivePresetOptions`) and the startup checks
+(`DriveContainerValidator`); `IDriveBlobService` with its in-process implementation, and the provider
+(`DriveBlobProvider`, `UseDrive`). HttpApi, HttpApi.Client and `Dignite.Drive.Mcp` are still skeletons (the template's
+`Sample*` placeholders are gone).
 Nothing is published: the packages are not packable by default (`Directory.Build.props`, until the owner releases Drive),
 so no release ships them, and CI passes `-p:PackDrive=true` to keep verifying how they pack. The "Responsibility"
 column describes the design, most of which arrives in Phases 1-2.
