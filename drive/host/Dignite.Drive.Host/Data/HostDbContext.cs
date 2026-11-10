@@ -10,6 +10,7 @@ using Volo.Abp.OpenIddict.EntityFrameworkCore;
 using Volo.Abp.PermissionManagement.EntityFrameworkCore;
 using Volo.Abp.SettingManagement.EntityFrameworkCore;
 using Volo.Abp.TenantManagement.EntityFrameworkCore;
+using Dignite.Drive.EntityFrameworkCore;
 
 namespace Dignite.Drive.Host.Data;
 
@@ -39,6 +40,7 @@ public class HostDbContext : AbpDbContext<HostDbContext>
         builder.ConfigureIdentity();
         builder.ConfigureOpenIddict();
         builder.ConfigureTenantManagement();
+        builder.ConfigureDrive();
 
         /* Configure your own entities here */
     }

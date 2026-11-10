@@ -15,7 +15,7 @@
   <ItemGroup>
     <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.12" />
     <PackageReference Include="AspNetCore.HealthChecks.UI" Version="9.0.0" />
     <PackageReference Include="KubernetesClient" Version="18.0.5"/>
     <PackageReference Include="IdentityModel" Version="7.0.0" />
@@ -127,4 +127,10 @@
 
 
 
+  <!-- The Drive itself (this repository): the Drive installed in this host, in-process. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Dignite.Drive.Application\Dignite.Drive.Application.csproj" />
+    <ProjectReference Include="..\..\src\Dignite.Drive.HttpApi\Dignite.Drive.HttpApi.csproj" />
+    <ProjectReference Include="..\..\src\Dignite.Drive.EntityFrameworkCore\Dignite.Drive.EntityFrameworkCore.csproj" />
+  </ItemGroup>
 </Project>

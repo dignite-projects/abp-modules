@@ -61,6 +61,8 @@ using Volo.Abp.EntityFrameworkCore.Sqlite;
 using Volo.Abp.Studio.Client.AspNetCore;
 
 using Microsoft.Extensions.Hosting;
+using Dignite.Drive;
+using Dignite.Drive.EntityFrameworkCore;
 
 namespace Dignite.Drive.Host;
 
@@ -115,7 +117,13 @@ namespace Dignite.Drive.Host;
     typeof(AbpBackgroundJobsEntityFrameworkCoreModule),
     typeof(BlobStoringDatabaseEntityFrameworkCoreModule),
     typeof(AbpBlobStoringFileSystemModule),
-    typeof(AbpEntityFrameworkCoreSqliteModule)
+    typeof(AbpEntityFrameworkCoreSqliteModule),
+
+    // Dignite Drive (this repository), in this host's process. Its containers are declared in appsettings.json
+    // ("Drive" section) and take the default container's file-system provider below.
+    typeof(DriveApplicationModule),
+    typeof(DriveHttpApiModule),
+    typeof(DriveEntityFrameworkCoreModule)
 )]
 public class HostModule : AbpModule
 {

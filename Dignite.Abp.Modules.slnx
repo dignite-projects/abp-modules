@@ -35,6 +35,7 @@
     <Project Path="drive/test/Dignite.Drive.Application.Tests/Dignite.Drive.Application.Tests.csproj" />
     <Project Path="drive/test/Dignite.Drive.Domain.Tests/Dignite.Drive.Domain.Tests.csproj" />
     <Project Path="drive/test/Dignite.Drive.EntityFrameworkCore.Tests/Dignite.Drive.EntityFrameworkCore.Tests.csproj" />
+    <Project Path="drive/test/Dignite.Drive.HttpApi.Tests/Dignite.Drive.HttpApi.Tests.csproj" />
     <Project Path="drive/test/Dignite.Drive.MongoDB.Tests/Dignite.Drive.MongoDB.Tests.csproj" />
     <Project Path="drive/test/Dignite.Drive.TestBase/Dignite.Drive.TestBase.csproj" />
   </Folder>

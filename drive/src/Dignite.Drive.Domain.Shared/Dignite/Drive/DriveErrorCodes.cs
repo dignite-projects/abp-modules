@@ -21,6 +21,12 @@ public static class DriveErrorCodes
     public const string BlobAlreadyExists = Namespace + ":BlobAlreadyExists";
 
     /// <summary>
+    /// The container has no file of that name (the BLOB API's answer where the in-process service returns
+    /// <c>null</c>). Data: <c>ContainerName</c>, <c>BlobName</c>.
+    /// </summary>
+    public const string BlobNotFound = Namespace + ":BlobNotFound";
+
+    /// <summary>
     /// The tenant's <c>Drive.Enable</c> feature is off.
     /// </summary>
     public const string DriveDisabled = Namespace + ":DriveDisabled";

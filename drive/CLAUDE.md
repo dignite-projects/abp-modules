@@ -11,8 +11,9 @@ dedup, save, compensate) and `UseDriveContainer`, with EF Core and MongoDB; the 
 `DriveUsageManager`); the container presets (`Use…Preset`), containers declared in the `Drive` configuration section
 (`DriveContainerSettings`, presets by name from `DrivePresetOptions`) and the startup checks
 (`DriveContainerValidator`); `IDriveBlobService` with its in-process implementation, and the provider
-(`DriveBlobProvider`, `UseDrive`). HttpApi, HttpApi.Client and `Dignite.Drive.Mcp` are still skeletons (the template's
-`Sample*` placeholders are gone).
+(`DriveBlobProvider`, `UseDrive`); the BLOB API (`DriveBlobController`, `DriveBlobAppService`, `IDriveClientAuthorizer`)
+and its C# client proxies (`RemoteDriveBlobService`). `Dignite.Drive.Mcp` is still a skeleton (the template's `Sample*`
+placeholders are gone).
 Nothing is published: the packages are not packable by default (`Directory.Build.props`, until the owner releases Drive),
 so no release ships them, and CI passes `-p:PackDrive=true` to keep verifying how they pack. The "Responsibility"
 column describes the design, most of which arrives in Phases 1-2.
@@ -36,11 +37,16 @@ One `.slnx` — `Dignite.Drive.slnx`:
   | `Dignite.Drive.Installer` | ABP Studio / Suite install entry point, embeds `Dignite.Drive.abpmdl` | `Volo.Abp.VirtualFileSystem` |
 
 - **`test/`** — `TestBase` (`IsTestProject=false`, shared base classes), `Domain.Tests` / `Application.Tests`
-  (provider-agnostic scenarios), `EntityFrameworkCore.Tests` (SQLite) and `MongoDB.Tests` (embedded mongod). The last
-  two are the ones `dotnet test` and CI run; the scenarios reach them by project reference.
+  (provider-agnostic scenarios), `EntityFrameworkCore.Tests` (SQLite) and `MongoDB.Tests` (embedded mongod), which the
+  scenarios reach by project reference, and `HttpApi.Tests` (a TestServer host that runs the Drive as a service and calls
+  it over HTTP through the C# client proxies). The last three are the ones `dotnet test` and CI run.
 - **`host/`** — demo host (`Dignite.Drive.Host`), local development only, never packed:
   `dotnet run --project host/Dignite.Drive.Host`. Its own `Directory.Build.props` / `Directory.Packages.props` opt it out
-  of the repo-root central package management. It does not reference the Drive projects yet.
+  of the repo-root central package management. It installs the Drive in-process (Application, HttpApi, EF Core; its
+  containers are in `appsettings.json`); its migrations are in `Migrations/`. It is also where the C# client proxies come
+  from: with the host running (`abp install-libs` in its folder first), run
+  `abp generate-proxy -t csharp -u https://localhost:44352 -m drive --without-contracts` in
+  `src/Dignite.Drive.HttpApi.Client`.
 - **`angular/`** — one workspace that is both the Angular host app (`src/`) and the publishable `@dignite/ng.drive`
   library (`projects/drive`); npm only, not in the `.slnx`. `projects/dev-app` is the *source project* for generating the
   library's proxies: `abp generate-proxy -t ng -m drive --source dev-app --target drive` (Host's root namespace is

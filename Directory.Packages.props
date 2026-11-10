@@ -49,6 +49,8 @@
     <PackageVersion Include="Volo.Abp.Authorization.Abstractions" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore.TestBase" Version="10.7.0" />
+    <!-- drive/test/Dignite.Drive.HttpApi.Tests: resolves the tenant the remote BLOB provider sends (__tenant) -->
+    <PackageVersion Include="Volo.Abp.AspNetCore.MultiTenancy" Version="10.7.0" />
     <!-- openiddict/ (and the EF Core store of its tests) -->
     <PackageVersion Include="Volo.Abp.OpenIddict.AspNetCore" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.OpenIddict.EntityFrameworkCore" Version="10.7.0" />
