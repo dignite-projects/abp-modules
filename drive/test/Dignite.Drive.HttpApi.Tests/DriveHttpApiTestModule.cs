@@ -17,6 +17,7 @@ using Volo.Abp.Data;
 using Volo.Abp.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore.Sqlite;
 using Volo.Abp.Http.Client;
+using Volo.Abp.Imaging;
 using Volo.Abp.Modularity;
 using Volo.Abp.MultiTenancy;
 using Volo.Abp.MultiTenancy.ConfigurationStore;
@@ -38,6 +39,7 @@ namespace Dignite.Drive;
     typeof(DriveEntityFrameworkCoreModule),
     typeof(AbpEntityFrameworkCoreSqliteModule),
     typeof(AbpBlobStoringMemoryModule),
+    typeof(AbpImagingSkiaSharpModule),
     typeof(DriveHttpApiClientModule),
     typeof(AbpBlobStoringDriveModule)
 )]
@@ -52,6 +54,12 @@ public class DriveHttpApiTestModule : AbpModule
     public const string ClosedContainer = "closed";
 
     public const string UserDriveContainer = "user-drive";
+
+    /// <summary>System container that allows <see cref="AllowedClient"/> and is read publicly.</summary>
+    public const string PublicContainer = "public";
+
+    /// <summary>The application's container, to <see cref="PublicContainer"/> over HTTP.</summary>
+    public const string AppPublicContainer = "app-public";
 
     /// <summary>The application's container, to <see cref="OpenContainer"/> over HTTP.</summary>
     public const string AppContainer = "app-remote";
@@ -150,6 +158,21 @@ public class DriveHttpApiTestModule : AbpModule
             {
                 container.UseDriveContainer(drive => drive.Kind = DriveContainerKind.UserDrive);
                 container.UseMemory();
+            });
+
+            options.Containers.Configure(PublicContainer, container =>
+            {
+                container.UseDriveContainer(drive =>
+                {
+                    drive.AllowedClientIds = new[] { AllowedClient };
+                    drive.PublicRead = true;
+                });
+                container.UseMemory();
+            });
+
+            options.Containers.Configure(AppPublicContainer, container =>
+            {
+                container.UseDrive(drive => drive.DriveContainer = PublicContainer);
             });
 
             options.Containers.Configure(AppContainer, container =>

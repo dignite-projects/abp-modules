@@ -99,6 +99,14 @@ role holds permissions of several services in an ABP microservice solution.
   ASP.NET Core's catch-all routes do not reliably decode `%2F`, while a query value means the same on both sides. ABP's
   static proxies do not generate `HEAD` calls, so existence is its own `GET` — the plan listed an existence check anyway.
   The remote provider is the API's only intended caller, so the shape follows what its proxies can express.
+- **A public read names its tenant with `?__tenant=`**, decided 2026-11-10. A public read is anonymous, and a BLOB name
+  is unique only within its tenant, so the address has to say whose file it is. `IDrivePublicUrlBuilder` appends
+  `__tenant={id}` when the file belongs to a tenant, read by ABP's query-string tenant resolver (on by default); a host
+  that resolves tenants by domain serves the address without it too. The route stays
+  `api/drive/public/{container}/{blob}`. Not like Site, whose addresses name no tenant: a Drive run as its own service
+  usually cannot tell a tenant from its own domain. Rejected: the tenant in the route (more robust against a host's
+  resolver setup, but it overrides the tenant ABP resolved and departs from the planned route). The endpoint removes
+  `Set-Cookie`, so the tenant a query string resolved is never remembered in a shared cache.
 
 ## Still open
 
