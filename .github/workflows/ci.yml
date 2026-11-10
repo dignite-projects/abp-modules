@@ -154,10 +154,12 @@ jobs:
           if-no-files-found: error
 
       # Projects with IsPackable=false (the demo hosts + test projects) are skipped automatically.
+      # Drive's packages are not packable by default (drive/Directory.Build.props: it is not published until it
+      # is complete); -p:PackDrive=true opts in here so that how they pack stays verified by the smoke test below.
       # Every packable project in the aggregate solution is produced - deliberately not counted here, a
       # number in this comment had already drifted (it said 33 while 38 were being packed).
       - name: Pack NuGet packages
-        run: dotnet pack Dignite.Abp.Modules.slnx --no-build --configuration Release --output ./artifacts-ci/nuget
+        run: dotnet pack Dignite.Abp.Modules.slnx --no-build --configuration Release --output ./artifacts-ci/nuget -p:PackDrive=true
 
       - name: Smoke-test blob-storing NuGet packages
         shell: pwsh

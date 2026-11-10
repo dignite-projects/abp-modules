@@ -51,6 +51,11 @@ role holds permissions of several services in an ABP microservice solution.
   permission group and remote service name `Drive`; route prefix `api/drive`; MCP tool prefix `drive_`; table prefix
   `Drive`; docs in `docs/en/drive/`; label `module: drive`. They were free on nuget.org and npm on 2026-11-10; check
   again before the first publish. The `Dignite.FileExplorer.*` IDs stay retired and are never reused.
+- **Nothing is published until Drive is complete**, decided 2026-11-10. `drive/Directory.Build.props` makes every
+  Drive package non-packable unless `-p:PackDrive=true` is passed, so a release packs and pushes none of them; CI passes
+  it to keep verifying how they pack. To publish: delete that property group and the opt-in in `ci.yml`, add the drive
+  smoke test back to `release.yml`, wire `@dignite/ng.drive` into the npm publish step (it needs a Trusted Publisher on
+  npmjs.com first and a place in `verify-npm-single-copy.mjs`), and check the names again.
 - **Usage is metered per tenant only**, decided 2026-11-10: one Feature, `Drive.StorageSize`, and no per-container
   usage accounting in v1.
 

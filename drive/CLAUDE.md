@@ -8,7 +8,9 @@ as its own service. The plan and the phases are in
 
 **State: Phase 0.** Every project below exists as a skeleton: the ABP-generated module code with its `Sample*`
 placeholders (the first real feature replaces them), and empty modules for the provider and `Dignite.Drive.Mcp`.
-Nothing is published yet, so the "Responsibility" column describes the design, most of which arrives in Phases 1-2.
+Nothing is published: the packages are not packable by default (`Directory.Build.props`, until the owner releases Drive),
+so no release ships them, and CI passes `-p:PackDrive=true` to keep verifying how they pack. The "Responsibility"
+column describes the design, most of which arrives in Phases 1-2.
 
 ## Structure
 

@@ -168,7 +168,8 @@ jobs:
       - name: Run Drive (MongoDB) tests
         run: dotnet test drive/test/Dignite.Drive.MongoDB.Tests/Dignite.Drive.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal
 
-      # Projects with IsPackable=false (the demo hosts + test projects) are skipped automatically.
+      # Projects with IsPackable=false (the demo hosts + test projects) are skipped automatically, and so are
+      # Drive's packages until it is published (drive/Directory.Build.props) - hence no drive smoke test below.
       # Every packable project in the aggregate solution is produced - deliberately not counted here, a
       # number in this comment had already drifted (it said 33 while 38 were being packed).
       - name: Pack NuGet packages
@@ -185,10 +186,6 @@ jobs:
       - name: Smoke-test flex-fields NuGet packages
         shell: pwsh
         run: ./build/smoke-test-nuget-packages.ps1 ./artifacts '${{ steps.version.outputs.version }}' -Module flex-fields
-
-      - name: Smoke-test drive NuGet packages
-        shell: pwsh
-        run: ./build/smoke-test-nuget-packages.ps1 ./artifacts '${{ steps.version.outputs.version }}' -Module drive
 
       - name: Smoke-test aspnetcore-mcp NuGet packages
         shell: pwsh
