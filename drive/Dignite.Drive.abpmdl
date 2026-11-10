@@ -1,0 +1,71 @@
+{
+  "folders": {
+    "items": {
+      "src": {},
+      "test": {},
+      "host": {}
+    }
+  },
+  "packages": {
+    "Dignite.Drive.Domain": {
+      "path": "src/Dignite.Drive.Domain/Dignite.Drive.Domain.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Drive.Application.Contracts": {
+      "path": "src/Dignite.Drive.Application.Contracts/Dignite.Drive.Application.Contracts.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Drive.Application": {
+      "path": "src/Dignite.Drive.Application/Dignite.Drive.Application.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Drive.EntityFrameworkCore": {
+      "path": "src/Dignite.Drive.EntityFrameworkCore/Dignite.Drive.EntityFrameworkCore.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Drive.MongoDB": {
+      "path": "src/Dignite.Drive.MongoDB/Dignite.Drive.MongoDB.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Drive.HttpApi": {
+      "path": "src/Dignite.Drive.HttpApi/Dignite.Drive.HttpApi.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Drive.HttpApi.Client": {
+      "path": "src/Dignite.Drive.HttpApi.Client/Dignite.Drive.HttpApi.Client.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Drive.TestBase": {
+      "path": "test/Dignite.Drive.TestBase/Dignite.Drive.TestBase.abppkg",
+      "folder": "test"
+    },
+    "Dignite.Drive.EntityFrameworkCore.Tests": {
+      "path": "test/Dignite.Drive.EntityFrameworkCore.Tests/Dignite.Drive.EntityFrameworkCore.Tests.abppkg",
+      "folder": "test"
+    },
+    "Dignite.Drive.MongoDB.Tests": {
+      "path": "test/Dignite.Drive.MongoDB.Tests/Dignite.Drive.MongoDB.Tests.abppkg",
+      "folder": "test"
+    },
+    "Dignite.Drive.Domain.Tests": {
+      "path": "test/Dignite.Drive.Domain.Tests/Dignite.Drive.Domain.Tests.abppkg",
+      "folder": "test"
+    },
+    "Dignite.Drive.Application.Tests": {
+      "path": "test/Dignite.Drive.Application.Tests/Dignite.Drive.Application.Tests.abppkg",
+      "folder": "test"
+    },
+    "Dignite.Drive.Domain.Shared": {
+      "path": "src/Dignite.Drive.Domain.Shared/Dignite.Drive.Domain.Shared.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Drive.Installer": {
+       "path": "src/Dignite.Drive.Installer/Dignite.Drive.Installer.abppkg",
+       "folder": "src"
+    },
+    "Dignite.Drive.Host": {
+      "path": "host/Dignite.Drive.Host/Dignite.Drive.Host.abppkg",
+      "folder": "host"
+    }
+  }
+}

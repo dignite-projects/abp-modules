@@ -1,0 +1,29 @@
+<Solution>
+    <Configurations>
+        <Platform Name="Any CPU" />
+    </Configurations>
+
+    <Folder Name="/src/">
+        <Project Path="src/Dignite.Drive.Domain.Shared/Dignite.Drive.Domain.Shared.csproj" />
+        <Project Path="src/Dignite.Drive.Domain/Dignite.Drive.Domain.csproj" />
+        <Project Path="src/Dignite.Drive.Application.Contracts/Dignite.Drive.Application.Contracts.csproj" />
+        <Project Path="src/Dignite.Drive.Application/Dignite.Drive.Application.csproj" />
+        <Project Path="src/Dignite.Drive.EntityFrameworkCore/Dignite.Drive.EntityFrameworkCore.csproj" />
+        <Project Path="src/Dignite.Drive.MongoDB/Dignite.Drive.MongoDB.csproj" />
+        <Project Path="src/Dignite.Drive.HttpApi/Dignite.Drive.HttpApi.csproj" />
+        <Project Path="src/Dignite.Drive.HttpApi.Client/Dignite.Drive.HttpApi.Client.csproj" />
+        <Project Path="src/Dignite.Drive.Installer/Dignite.Drive.Installer.csproj" />
+    </Folder>
+    
+    <Folder Name="/test/">
+        <Project Path="test/Dignite.Drive.TestBase/Dignite.Drive.TestBase.csproj" />
+        <Project Path="test/Dignite.Drive.EntityFrameworkCore.Tests/Dignite.Drive.EntityFrameworkCore.Tests.csproj" />
+        <Project Path="test/Dignite.Drive.MongoDB.Tests/Dignite.Drive.MongoDB.Tests.csproj" />
+        <Project Path="test/Dignite.Drive.Domain.Tests/Dignite.Drive.Domain.Tests.csproj" />
+        <Project Path="test/Dignite.Drive.Application.Tests/Dignite.Drive.Application.Tests.csproj" />
+    </Folder>
+
+    <Folder Name="/host/">
+        <Project Path="host/Dignite.Drive.Host/Dignite.Drive.Host.csproj" />
+    </Folder>
+</Solution>
