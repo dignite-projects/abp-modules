@@ -22,6 +22,12 @@ public interface IFileDescriptorRepository : IBasicRepository<FileDescriptor, Gu
         string hash,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// The bytes the current tenant stores: the <see cref="FileDescriptor.Size"/> of each physical BLOB named by a live
+    /// descriptor, counted once however many descriptors share it.
+    /// </summary>
+    Task<long> GetUsedStorageSizeAsync(CancellationToken cancellationToken = default);
+
     /// <summary>Whether a live descriptor names <paramref name="blobName"/> as its physical BLOB.</summary>
     Task<bool> IsBlobInUseAsync(
         string containerName,

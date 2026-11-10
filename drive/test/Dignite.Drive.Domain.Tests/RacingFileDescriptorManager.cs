@@ -18,8 +18,9 @@ public class RacingFileDescriptorManager : FileDescriptorManager
         IFileDescriptorRepository fileDescriptorRepository,
         IBlobContainerFactory blobContainerFactory,
         IBlobContainerConfigurationProvider blobContainerConfigurationProvider,
-        IMimeTypeDetector mimeTypeDetector)
-        : base(fileDescriptorRepository, blobContainerFactory, blobContainerConfigurationProvider, mimeTypeDetector)
+        IMimeTypeDetector mimeTypeDetector,
+        DriveUsageManager usageManager)
+        : base(fileDescriptorRepository, blobContainerFactory, blobContainerConfigurationProvider, mimeTypeDetector, usageManager)
     {
     }
 

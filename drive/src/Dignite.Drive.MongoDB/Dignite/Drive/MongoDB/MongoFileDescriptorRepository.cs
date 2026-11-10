@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MongoDB.Driver.Linq;
@@ -34,6 +35,16 @@ public class MongoFileDescriptorRepository : MongoDbRepository<IDriveMongoDbCont
             f => f.ContainerName == containerName && f.Hash == hash,
             includeDetails: false,
             GetCancellationToken(cancellationToken));
+    }
+
+    public virtual async Task<long> GetUsedStorageSizeAsync(CancellationToken cancellationToken = default)
+    {
+        // Descriptors sharing a BLOB carry the same size, so the distinct (container, BLOB, size) rows are the BLOBs.
+        var token = GetCancellationToken(cancellationToken);
+        return await (await GetQueryableAsync(token))
+            .Select(f => new { f.ContainerName, f.BlobName, f.Size })
+            .Distinct()
+            .SumAsync(b => b.Size, token);
     }
 
     public virtual async Task<bool> IsBlobInUseAsync(

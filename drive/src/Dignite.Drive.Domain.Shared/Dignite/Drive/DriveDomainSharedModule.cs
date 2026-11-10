@@ -2,6 +2,7 @@ using Volo.Abp.Modularity;
 using Volo.Abp.Localization;
 using Dignite.Drive.Localization;
 using Volo.Abp.Domain;
+using Volo.Abp.Features;
 using Volo.Abp.Localization.ExceptionHandling;
 using Volo.Abp.Validation;
 using Volo.Abp.Validation.Localization;
@@ -11,6 +12,7 @@ namespace Dignite.Drive;
 
 [DependsOn(
     typeof(AbpValidationModule),
+    typeof(AbpFeaturesModule),
     typeof(AbpDddDomainSharedModule)
 )]
 public class DriveDomainSharedModule : AbpModule

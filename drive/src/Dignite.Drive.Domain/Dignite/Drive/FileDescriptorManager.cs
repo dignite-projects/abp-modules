@@ -35,16 +35,20 @@ public class FileDescriptorManager : DomainService
 
     protected IMimeTypeDetector MimeTypeDetector { get; }
 
+    protected DriveUsageManager UsageManager { get; }
+
     public FileDescriptorManager(
         IFileDescriptorRepository fileDescriptorRepository,
         IBlobContainerFactory blobContainerFactory,
         IBlobContainerConfigurationProvider blobContainerConfigurationProvider,
-        IMimeTypeDetector mimeTypeDetector)
+        IMimeTypeDetector mimeTypeDetector,
+        DriveUsageManager usageManager)
     {
         FileDescriptorRepository = fileDescriptorRepository;
         BlobContainerFactory = blobContainerFactory;
         BlobContainerConfigurationProvider = blobContainerConfigurationProvider;
         MimeTypeDetector = mimeTypeDetector;
+        UsageManager = usageManager;
     }
 
     /// <summary>
@@ -60,6 +64,13 @@ public class FileDescriptorManager : DomainService
     /// oversized upload fails with <c>Dignite.Abp.BlobStoring:ContentTooLarge</c> before anything is stored. Its type
     /// is detected from the bytes and reconciled with the extension of <paramref name="name"/>
     /// (<c>Dignite.Abp.BlobStoring:ContentTypeMismatch</c>), and it is hashed (SHA-256, upper-case hex).
+    /// </para>
+    /// <para>
+    /// The tenant's allocation is checked first: a tenant whose Drive is off is refused
+    /// (<see cref="DriveErrorCodes.DriveDisabled"/>), and content that has to be stored - not a dedup hit, which adds
+    /// no bytes - is refused when it would take the tenant past its storage size
+    /// (<see cref="DriveErrorCodes.StorageQuotaExceeded"/>, measured by the upload's length, see
+    /// <see cref="DriveUsageManager"/>). A replaced descriptor's bytes still count while the check runs.
     /// </para>
     /// <para>
     /// Dedup comes before any write: when a live descriptor in the same container (and tenant) has the same hash, the
@@ -88,6 +99,7 @@ public class FileDescriptorManager : DomainService
         GetDriveContainerConfiguration(containerName);
         Check.NotNullOrWhiteSpace(name, nameof(name), FileDescriptorConsts.MaxNameLength);
         Check.NotNull(stream, nameof(stream));
+        await UsageManager.CheckEnabledAsync();
 
         var existing = await FileDescriptorRepository.FindByNameAsync(containerName, name, cancellationToken);
         if (existing != null && !overrideExisting)
@@ -213,10 +225,11 @@ public class FileDescriptorManager : DomainService
         string? clientId,
         CancellationToken cancellationToken)
     {
-        var blobName = CreateBlobName(mimeType);
-
         // Taken before the save: the content belongs to the pipeline while it runs.
         var uploadLength = content.Length;
+        await UsageManager.CheckCanStoreAsync(uploadLength, cancellationToken);
+
+        var blobName = CreateBlobName(mimeType);
         var container = BlobContainerFactory.Create(containerName);
         try
         {
