@@ -52,6 +52,8 @@
     <!-- openiddict/ (and the EF Core store of its tests) -->
     <PackageVersion Include="Volo.Abp.OpenIddict.AspNetCore" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.OpenIddict.EntityFrameworkCore" Version="10.7.0" />
+    <!-- drive/: IApplicationFinder, to check the clients a Drive container allows where the host can look them up -->
+    <PackageVersion Include="Volo.Abp.OpenIddict.Domain.Shared" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore.Mvc" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Http.Client" Version="10.7.0" />

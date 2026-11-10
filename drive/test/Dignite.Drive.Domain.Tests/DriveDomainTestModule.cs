@@ -1,6 +1,8 @@
-﻿using Dignite.Abp.BlobStoring.Pipeline;
+using Dignite.Abp.BlobStoring.Pipeline;
+using Dignite.Drive.Presets;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.BlobStoring.Memory;
+using Volo.Abp.Imaging;
 using Volo.Abp.Modularity;
 
 namespace Dignite.Drive;
@@ -8,6 +10,7 @@ namespace Dignite.Drive;
 [DependsOn(
     typeof(DriveDomainModule),
     typeof(AbpBlobStoringMemoryModule),
+    typeof(AbpImagingSkiaSharpModule),
     typeof(DriveTestBaseModule)
 )]
 public class DriveDomainTestModule : AbpModule
@@ -29,6 +32,18 @@ public class DriveDomainTestModule : AbpModule
                 container.UseMemory();
                 container.AddMaxSizeContributor(c => c.MaxSizeInBytes = DriveTestContainers.LimitedMaxSizeInBytes);
                 container.AddAllowedContentTypesContributor(c => c.AllowedContentTypes = new[] { "application/pdf" });
+            });
+
+            options.Containers.Configure(DriveTestContainers.Images, container =>
+            {
+                container.UseDriveContainer();
+                container.UseMemory();
+                container.UseImagesPreset(preset =>
+                {
+                    preset.MaxSizeInMegabytes = 1;
+                    preset.MaxWidth = DriveTestContainers.ImagesMaxWidth;
+                    preset.MaxHeight = DriveTestContainers.ImagesMaxWidth;
+                });
             });
 
             // Not a Drive container: the manager refuses it.

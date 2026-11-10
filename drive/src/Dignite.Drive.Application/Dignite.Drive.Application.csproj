@@ -9,6 +9,8 @@
   <ItemGroup>
     <PackageReference Include="Volo.Abp.Mapperly" />
     <PackageReference Include="Volo.Abp.Ddd.Application" />
+    <!-- Only for IApplicationFinder (DriveContainerValidator); resolved optionally, no module dependency. -->
+    <PackageReference Include="Volo.Abp.OpenIddict.Domain.Shared" />
   </ItemGroup>
 
   <ItemGroup>
