@@ -27,6 +27,12 @@ public static class DriveErrorCodes
     public const string BlobNotFound = Namespace + ":BlobNotFound";
 
     /// <summary>
+    /// The ticket cannot be redeemed: not signed by this Drive, expired, already used, of the other kind, or its issuer
+    /// may no longer use the container. Which of them is not told.
+    /// </summary>
+    public const string InvalidTicket = Namespace + ":InvalidTicket";
+
+    /// <summary>
     /// The tenant's <c>Drive.Enable</c> feature is off.
     /// </summary>
     public const string DriveDisabled = Namespace + ":DriveDisabled";

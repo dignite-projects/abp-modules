@@ -11,6 +11,8 @@
     <PackageReference Include="Volo.Abp.Ddd.Application" />
     <!-- Only for IApplicationFinder (DriveContainerValidator); resolved optionally, no module dependency. -->
     <PackageReference Include="Volo.Abp.OpenIddict.Domain.Shared" />
+    <!-- IDataProtectionProvider, which signs the tickets (DriveTicketProtector); the host provides the key ring. -->
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,40 +1,26 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
-using Volo.Abp.Authorization;
-using Volo.Abp.Clients;
 using Volo.Abp.Content;
 using Volo.Abp.DependencyInjection;
 
 namespace Dignite.Drive.Blobs;
 
 /// <summary>
-/// The BLOB API's <see cref="IDriveBlobService"/>: the in-process implementation behind an authorization of the caller.
-/// <list type="bullet">
-/// <item>The caller must be an OAuth client (a <c>client_id</c> claim).</item>
-/// <item>A token that carries a user is refused, whatever its client: a user token carries <c>client_id</c> too, so an
-/// allowed first-party client would otherwise let its users write. Browsers reach the Drive through tickets.</item>
-/// <item>The client must be allowed in the container (<see cref="IDriveClientAuthorizer"/>).</item>
-/// </list>
-/// The writer is recorded as the client. Exposed only through <c>DriveBlobController</c>.
+/// The BLOB API's <see cref="IDriveBlobService"/>: the in-process implementation behind an authorization of the caller
+/// (<see cref="DriveClientChecker"/>: an allowed OAuth client, never a user). The writer is recorded as the client. Exposed only through <c>DriveBlobController</c>.
 /// </summary>
 [Authorize]
 [RemoteService(IsEnabled = false)]
 [ExposeServices(typeof(IDriveBlobAppService), typeof(DriveBlobAppService))]
 public class DriveBlobAppService : DriveBlobService, IDriveBlobAppService
 {
-    protected IDriveClientAuthorizer ClientAuthorizer { get; }
+    protected DriveClientChecker ClientChecker { get; }
 
-    protected ICurrentClient CurrentClient { get; }
-
-    public DriveBlobAppService(
-        FileDescriptorManager fileDescriptorManager,
-        IDriveClientAuthorizer clientAuthorizer,
-        ICurrentClient currentClient)
+    public DriveBlobAppService(FileDescriptorManager fileDescriptorManager, DriveClientChecker clientChecker)
         : base(fileDescriptorManager)
     {
-        ClientAuthorizer = clientAuthorizer;
-        CurrentClient = currentClient;
+        ClientChecker = clientChecker;
     }
 
     public override async Task<DriveBlobDto> SaveAsync(string containerName, string blobName, IRemoteStreamContent content, bool overrideExisting = false)
@@ -65,26 +51,9 @@ public class DriveBlobAppService : DriveBlobService, IDriveBlobAppService
         return await base.DeleteAsync(containerName, blobName);
     }
 
-    /// <summary>The calling client's id, once it may use <paramref name="containerName"/>.</summary>
-    protected virtual async Task<string> CheckClientAsync(string containerName)
+    /// <summary>The calling client's id, once it may use <paramref name="containerName"/> (<see cref="DriveClientChecker"/>).</summary>
+    protected virtual Task<string> CheckClientAsync(string containerName)
     {
-        var clientId = CurrentClient.Id;
-        if (string.IsNullOrWhiteSpace(clientId))
-        {
-            throw new AbpAuthorizationException("The Drive's BLOB API is for OAuth clients: the token names no client.");
-        }
-
-        if (CurrentUser.Id != null)
-        {
-            throw new AbpAuthorizationException(
-                "The Drive's BLOB API refuses tokens that carry a user: an application calls it with its own client credentials, and a browser uses a ticket.");
-        }
-
-        if (!await ClientAuthorizer.IsAllowedAsync(containerName, clientId!))
-        {
-            throw new AbpAuthorizationException($"The client '{clientId}' may not use the Drive container '{containerName}'.");
-        }
-
-        return clientId!;
+        return ClientChecker.CheckAsync(containerName);
     }
 }

@@ -6,6 +6,7 @@
     "Drive:ContainerNotFound": "Drive 中没有名为“{ContainerName}”的容器。",
     "Drive:BlobAlreadyExists": "Drive 容器“{ContainerName}”中已有名为“{BlobName}”的文件。",
     "Drive:BlobNotFound": "Drive 容器“{ContainerName}”中没有名为“{BlobName}”的文件。",
+    "Drive:InvalidTicket": "链接无效，可能已过期或已被使用。",
     "Drive:DriveDisabled": "此租户未启用 Drive。",
     "Drive:StorageQuotaExceeded": "保存此文件将超出 {StorageSize} MB 的 Drive 存储空间。",
     "Feature:DriveGroup": "Drive",

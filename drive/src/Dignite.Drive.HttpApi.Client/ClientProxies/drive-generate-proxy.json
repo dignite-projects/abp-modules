@@ -559,6 +559,106 @@
               "displayName": null
             }
           }
+        },
+        "Dignite.Drive.Tickets.DriveTicketController": {
+          "controllerName": "DriveTicket",
+          "controllerGroupName": "DriveTicket",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "Dignite.Drive.Tickets.DriveTicketController",
+          "summary": null,
+          "remarks": null,
+          "description": null,
+          "displayName": null,
+          "interfaces": [
+            {
+              "type": "Dignite.Drive.Tickets.IDriveTicketService",
+              "name": "IDriveTicketService",
+              "methods": [
+                {
+                  "name": "CreateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "Dignite.Drive.Tickets.CreateDriveTicketInput, Dignite.Drive.Application.Contracts",
+                      "type": "Dignite.Drive.Tickets.CreateDriveTicketInput",
+                      "typeSimple": "Dignite.Drive.Tickets.CreateDriveTicketInput",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Dignite.Drive.Tickets.DriveTicketDto",
+                    "typeSimple": "Dignite.Drive.Tickets.DriveTicketDto",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "CreateAsyncByInput": {
+              "uniqueName": "CreateAsyncByInput",
+              "name": "CreateAsync",
+              "httpMethod": "POST",
+              "url": "api/drive/tickets",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "Dignite.Drive.Tickets.CreateDriveTicketInput, Dignite.Drive.Application.Contracts",
+                  "type": "Dignite.Drive.Tickets.CreateDriveTicketInput",
+                  "typeSimple": "Dignite.Drive.Tickets.CreateDriveTicketInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "Dignite.Drive.Tickets.CreateDriveTicketInput",
+                  "typeSimple": "Dignite.Drive.Tickets.CreateDriveTicketInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "Dignite.Drive.Tickets.DriveTicketDto",
+                "typeSimple": "Dignite.Drive.Tickets.DriveTicketDto",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Drive.Tickets.IDriveTicketService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            }
+          }
         }
       }
     }

@@ -107,6 +107,16 @@ role holds permissions of several services in an ABP microservice solution.
   usually cannot tell a tenant from its own domain. Rejected: the tenant in the route (more robust against a host's
   resolver setup, but it overrides the tenant ABP resolved and departs from the planned route). The endpoint removes
   `Set-Cookie`, so the tenant a query string resolved is never remembered in a shared cache.
+- **Tickets in Phase 1**, decided 2026-11-10 with the Phase 1 plan. The plan had tickets redeemed by the BLOB API and
+  carrying the issuer's claims, re-checked at redemption. On the integration entry the issuer is an application, so a
+  ticket names its client id (none for a trusted in-process issuer) and redemption checks that the client is still
+  allowed in the container; the directory a ticket may name arrives with directories in Phase 2. Tickets are redeemed at
+  their own addresses, `POST api/drive/tickets/upload?ticket=` (form field `content`) and
+  `GET api/drive/tickets/download?ticket=`, not the BLOB API: those are anonymous browser addresses without
+  antiforgery, while the BLOB API admits clients only. The ticket names its tenant, so the addresses carry no
+  `__tenant`. An upload ticket is good for one *successful* upload (a refused one can be retried until it expires); a
+  download ticket is good until it expires (10 minutes by default, at most an hour), since a browser may fetch a file
+  more than once.
 
 ## Still open
 

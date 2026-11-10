@@ -37,6 +37,7 @@ public class DriveHttpApiModule : AbpModule
             options.Map(DriveErrorCodes.ContainerNotFound, HttpStatusCode.NotFound);
             options.Map(DriveErrorCodes.BlobNotFound, HttpStatusCode.NotFound);
             options.Map(DriveErrorCodes.BlobAlreadyExists, HttpStatusCode.Conflict);
+            options.Map(DriveErrorCodes.InvalidTicket, HttpStatusCode.Forbidden);
         });
     }
 }

@@ -79,6 +79,9 @@
     <PackageVersion Include="Volo.Abp.BackgroundJobs.Abstractions" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.BackgroundWorkers" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.DistributedLocking.Abstractions" Version="10.7.0" />
+    <!-- drive/: IDataProtectionProvider, which signs the Drive's tickets. Only the abstractions: the host's ASP.NET Core
+         provides the key ring. Same version as Microsoft.Extensions.FileProviders.Embedded below. -->
+    <PackageVersion Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="10.0.12" />
     <PackageVersion Include="Volo.Abp.AspNetCore.SignalR" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Json.SystemTextJson" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared" Version="10.7.0" />

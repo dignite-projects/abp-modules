@@ -13,7 +13,8 @@ dedup, save, compensate) and `UseDriveContainer`, with EF Core and MongoDB; the 
 (`DriveContainerValidator`); `IDriveBlobService` with its in-process implementation, and the provider
 (`DriveBlobProvider`, `UseDrive`); the BLOB API (`DriveBlobController`, `DriveBlobAppService`, `IDriveClientAuthorizer`)
 and its C# client proxies (`RemoteDriveBlobService`); public reads with sizing (`DrivePublicController`,
-`DrivePublicAppService`, `IDrivePublicUrlBuilder`). `Dignite.Drive.Mcp` is still a skeleton (the template's `Sample*`
+`DrivePublicAppService`, `IDrivePublicUrlBuilder`); tickets (`DriveTicketController`, `DriveTicketRedemptionController`,
+`DriveTicketProtector`, `IDriveTicketClient`). `Dignite.Drive.Mcp` is still a skeleton (the template's `Sample*`
 placeholders are gone).
 Nothing is published: the packages are not packable by default (`Directory.Build.props`, until the owner releases Drive),
 so no release ships them, and CI passes `-p:PackDrive=true` to keep verifying how they pack. The "Responsibility"

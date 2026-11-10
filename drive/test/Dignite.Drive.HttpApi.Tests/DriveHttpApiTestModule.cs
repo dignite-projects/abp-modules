@@ -2,6 +2,8 @@ using System;
 using Dignite.Abp.BlobStoring.Drive;
 using Dignite.Drive.Blobs;
 using Dignite.Drive.EntityFrameworkCore;
+using Dignite.Drive.Tickets;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -61,6 +63,12 @@ public class DriveHttpApiTestModule : AbpModule
     /// <summary>The application's container, to <see cref="PublicContainer"/> over HTTP.</summary>
     public const string AppPublicContainer = "app-public";
 
+    /// <summary>System container that allows <see cref="AllowedClient"/>; the ticket tests change its allow-list.</summary>
+    public const string TicketsContainer = "tickets";
+
+    /// <summary>The application's container, to <see cref="TicketsContainer"/> over HTTP.</summary>
+    public const string AppTicketsContainer = "app-tickets";
+
     /// <summary>The application's container, to <see cref="OpenContainer"/> over HTTP.</summary>
     public const string AppContainer = "app-remote";
 
@@ -98,6 +106,10 @@ public class DriveHttpApiTestModule : AbpModule
             options.RemoteServices.Default = new RemoteServiceConfiguration("http://localhost/");
         });
         context.Services.Replace(ServiceDescriptor.Transient<IDriveBlobService, RemoteDriveBlobService>());
+        context.Services.Replace(ServiceDescriptor.Transient<IDriveTicketService, DriveTicketClientProxy>());
+
+        // What a host provides: the tickets are signed with it. Ephemeral keys, in memory.
+        context.Services.AddDataProtection();
     }
 
     public override void OnApplicationInitialization(ApplicationInitializationContext context)
@@ -168,6 +180,17 @@ public class DriveHttpApiTestModule : AbpModule
                     drive.PublicRead = true;
                 });
                 container.UseMemory();
+            });
+
+            options.Containers.Configure(TicketsContainer, container =>
+            {
+                container.UseDriveContainer(drive => drive.AllowedClientIds = new[] { AllowedClient });
+                container.UseMemory();
+            });
+
+            options.Containers.Configure(AppTicketsContainer, container =>
+            {
+                container.UseDrive(drive => drive.DriveContainer = TicketsContainer);
             });
 
             options.Containers.Configure(AppPublicContainer, container =>
