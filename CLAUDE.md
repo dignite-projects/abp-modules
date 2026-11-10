@@ -1,7 +1,8 @@
 # Dignite ABP Modules — monorepo guide
 
-Three independently installable **ABP Framework** module trees, developed together and released in
-lockstep, plus two domain-agnostic infrastructure trees: `aspnetcore-mcp/`, the shared MCP server that modules in
+Four **ABP Framework** module trees (`blob-storing/`, `notifications/`, `flex-fields/` and `drive/`),
+developed together and released in lockstep, plus two domain-agnostic infrastructure trees:
+`aspnetcore-mcp/`, the shared MCP server that modules in
 other repositories depend on, and `openiddict/`, additions to ABP's OpenIddict module for authorization servers.
 
 ## Repository-wide invariants
@@ -36,11 +37,16 @@ These are the things most likely to be broken by an otherwise reasonable-looking
    - **Removal on record, `10.0.0-rc.28`:** the `Dignite.Abp.FileStoring*` IDs are retired by the rename above, not
      reused for anything else.
 
-2. **The three modules never reference each other.** `blob-storing/`, `notifications/`, and
-   `flex-fields/` share this repository for development and release only. A `ProjectReference`
-   across those boundaries is a bug — nothing catches it: the aggregate `.slnx` contains all three,
-   so it compiles fine.
-   - There used to be a fourth, shared top-level tree (`aspnetcore-mvc-razor/`) for generic ASP.NET
+2. **Module trees reference each other only along declared edges, and the graph stays acyclic.**
+   `blob-storing/`, `notifications/`, `flex-fields/` and `drive/` share this repository for development and
+   release. A `ProjectReference` from one tree to another is allowed only when the referencing tree's `CLAUDE.md`
+   names what it depends on; any other one is a bug, and nothing catches it: the aggregate `.slnx` contains all of
+   them, so it compiles fine. `dotnet pack` turns an allowed reference into a same-version `PackageReference`
+   (lockstep release, as in ABP's own monorepo). The one declared edge is `drive/` to `blob-storing/` (the Drive
+   runs blob-storing's pipeline contributors); `blob-storing/`, `notifications/` and `flex-fields/` reference
+   none of the others, and `blob-storing/`'s "what stays out" is unchanged
+   ([`drive/dev-docs/drive-decision.md`](drive/dev-docs/drive-decision.md)).
+   - There used to be another shared top-level tree (`aspnetcore-mvc-razor/`) for generic ASP.NET
      Core MVC/Razor infrastructure with no domain model of its own. It was dissolved once it turned
      out to have exactly one consumer per file: each piece now lives directly in the one project
      that actually uses it (e.g. `Dignite.Abp.FlexFields.Web` owns its own
@@ -49,10 +55,11 @@ These are the things most likely to be broken by an otherwise reasonable-looking
      cross-module ASP.NET Core/Razor infrastructure — if a genuine second consumer shows up, judge
      fresh whether a shared tree is actually worth it rather than reflexively recreating one.
    - `aspnetcore-mcp/` (`Dignite.Abp.AspNetCore.Mcp`) is such a judged-fresh shared tree, and it is
-     not a fourth module: it hosts the one MCP server an application can have and carries no domain
+     not a module: it hosts the one MCP server an application can have and carries no domain
      model. It passed the test the Razor tree failed because every piece of it is needed by every
      MCP-contributing module — `Dignite.Site.Mcp` and `Dignite.Vault.Extract.Mcp` in their own
-     repositories (and `Dignite.FileExplorer.Mcp` here, until File Explorer left in rc.25) — and
+     repositories (and `Dignite.Drive.Mcp` here; `Dignite.FileExplorer.Mcp` was another until File
+     Explorer left in rc.25) — and
      duplicating it is exactly how two of them had already drifted apart (see its README). The direction is one-way: a module's `*.Mcp`
      project may reference `aspnetcore-mcp/`; `aspnetcore-mcp/` never references a module. Each
      contributing module claims its own MCP namespace (tool-name prefix + resource URI scheme) via
@@ -71,9 +78,9 @@ These are the things most likely to be broken by an otherwise reasonable-looking
      OpenIddict covers it natively.
 
 3. **Library package versions live in the root `Directory.Packages.props`**, never inline in a
-   library `.csproj`. The demo hosts (`notifications/host/`, `flex-fields/demo/`) are the deliberate
-   exception — each opts out of central package management and pins inline. `blob-storing/` has no
-   demo host: it is a library of pipeline contributors with no API or UI to demonstrate.
+   library `.csproj`. The demo hosts (`notifications/host/`, `flex-fields/demo/`, `drive/host/`) are the
+   deliberate exception — each opts out of central package management and pins inline. `blob-storing/`
+   has no demo host: it is a library of pipeline contributors with no API or UI to demonstrate.
 
 ## Documentation
 

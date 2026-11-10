@@ -21,6 +21,7 @@ updates:
       - "/"
       - "/notifications/host/Dignite.NotificationCenter.Web.Host"
       - "/flex-fields/demo/Dignite.Abp.FlexFields.Demo"
+      - "/drive/host/Dignite.Drive.Host"
     schedule:
       interval: monthly
     groups:
@@ -54,6 +55,46 @@ updates:
 
   - package-ecosystem: npm
     directory: "/notifications/angular"
+    schedule:
+      interval: monthly
+    groups:
+      angular:
+        patterns:
+          - "@angular/*"
+          - "@angular-eslint/*"
+          - "@angular-devkit/*"
+      abp-ng:
+        patterns:
+          - "@abp/ng.*"
+      others:
+        patterns:
+          - "*"
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "@abp/ng.*"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
+      - dependency-name: "@angular/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@angular-eslint/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@angular-devkit/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "ng-packagr"
+        update-types: ["version-update:semver-major"]
+      # eslint 9+ switched to flat config, a breaking change unrelated to Angular/ABP; needs a
+      # deliberate config migration, not an auto-bump.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      # @angular/compiler-cli's peer range is narrow (e.g. 22.0.8 wants >=6.0 <6.1) - a major
+      # jump breaks the Angular compiler outright.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: npm
+    directory: "/drive/angular"
     schedule:
       interval: monthly
     groups:

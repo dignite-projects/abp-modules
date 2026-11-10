@@ -1,12 +1,23 @@
 {
   "name": "@dignite/ng.drive",
-  "version": "0.0.1",
-  "dependencies": {
+  "version": "10.7.6",
+  "description": "Angular UI library for Dignite Drive, a per-tenant cloud drive for ABP applications.",
+  "author": "Dignite",
+  "license": "LGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dignite-projects/abp-modules.git"
+  },
+  "peerDependencies": {
     "@abp/ng.core": "~10.7.0",
-    "@abp/ng.oauth": "~10.7.0",
     "@abp/ng.theme.shared": "~10.7.0",
-    "@abp/ng.components":"~10.7.0",
-    "@volo/abp.commercial.ng.ui": "~10.7.0",
-    "tslib": "^2.1.0"
-  }
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0",
+    "@angular/router": "^22.0.0",
+    "rxjs": "~7.8.0"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "sideEffects": false
 }

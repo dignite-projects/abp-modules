@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
-  selector: 'abp-footer',
+  selector: 'app-footer',
   template: `
     <div class="lpx-footbar-container end-0">
       <div class="lpx-footbar">

@@ -37,6 +37,7 @@ jobs:
           cache-dependency-path: |
             notifications/angular/yarn.lock
             flex-fields/angular/yarn.lock
+            drive/angular/yarn.lock
 
       - name: Verify NuGet and npm version lockstep
         id: version
@@ -70,7 +71,7 @@ jobs:
             exit 1
           fi
 
-      # Includes both demo hosts (notifications/host/..., flex-fields/demo/...) - each opts out of
+      # Includes the three demo hosts (notifications/host/..., flex-fields/demo/..., drive/host/...) - each opts out of
       # central package management on its own (each host's own Directory.Build.props /
       # Directory.Packages.props) and pins its own inline package versions.
       - name: Build
@@ -129,6 +130,17 @@ jobs:
       - name: Run FlexFields (Web) tests
         run: dotnet test flex-fields/test/Dignite.Abp.FlexFields.Web.Tests/Dignite.Abp.FlexFields.Web.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/flex-fields
 
+      # --- drive tests ---
+      # Dignite.Drive.TestBase is IsTestProject=false, and the provider-agnostic scenarios live in
+      # Dignite.Drive.Domain.Tests / Application.Tests; both are exercised through the EF Core and MongoDB
+      # projects below, never run directly. The MongoDB project starts an embedded mongod via MongoSandbox.
+      # Coverage lands under coverage/drive, uploaded under its own "drive" flag below.
+      - name: Run Drive (EF Core) tests
+        run: dotnet test drive/test/Dignite.Drive.EntityFrameworkCore.Tests/Dignite.Drive.EntityFrameworkCore.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/drive
+
+      - name: Run Drive (MongoDB) tests
+        run: dotnet test drive/test/Dignite.Drive.MongoDB.Tests/Dignite.Drive.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/drive
+
       # Coverage is uploaded to Codecov from the separate upload-coverage job below, not here:
       # codecov-action's upload latency is dominated by Codecov's own service (observed anywhere from
       # 2s to 4.5min per call, most likely tokenless-upload rate limiting - see the comment on that
@@ -141,7 +153,7 @@ jobs:
           path: ./artifacts-ci/coverage
           if-no-files-found: error
 
-      # Projects with IsPackable=false (both demo hosts + test projects) are skipped automatically.
+      # Projects with IsPackable=false (the demo hosts + test projects) are skipped automatically.
       # Every packable project in the aggregate solution is produced - deliberately not counted here, a
       # number in this comment had already drifted (it said 33 while 38 were being packed).
       - name: Pack NuGet packages
@@ -158,6 +170,10 @@ jobs:
       - name: Smoke-test flex-fields NuGet packages
         shell: pwsh
         run: ./build/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}' -Module flex-fields
+
+      - name: Smoke-test drive NuGet packages
+        shell: pwsh
+        run: ./build/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}' -Module drive
 
       - name: Smoke-test aspnetcore-mcp NuGet packages
         shell: pwsh
@@ -289,6 +305,49 @@ jobs:
           }
           node ./flex-fields/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
 
+      # --- drive Angular (angular/projects/drive) ---
+      - name: Install drive Angular dependencies
+        working-directory: drive/angular
+        run: yarn install --frozen-lockfile
+
+      - name: Check drive Angular package duplicates
+        run: node ./build/check-angular-package-duplicates.mjs drive/angular/node_modules ng-zorro-antd @angular/cdk
+
+      - name: Lint drive Angular projects
+        working-directory: drive/angular
+        run: yarn lint --max-warnings=0
+
+      # There is no "Run drive Angular unit tests" step yet: Angular's unit-test builder fails on a project
+      # without a single *.spec.ts, and the library has none. Add `yarn test --watch=false` with the first spec.
+
+      - name: Build drive Angular library
+        working-directory: drive/angular
+        run: yarn build:lib
+
+      - name: Check drive Angular package dependencies
+        run: node ./build/check-angular-package-deps.mjs drive/angular/dist/drive
+
+      - name: Build drive Angular demo
+        working-directory: drive/angular
+        run: yarn build:prod
+
+      - name: Pack drive Angular library
+        shell: pwsh
+        working-directory: drive/angular
+        run: |
+          New-Item -ItemType Directory -Force ../../artifacts-ci/npm/drive | Out-Null
+          npm pack ./dist/drive --pack-destination ../../artifacts-ci/npm/drive
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Smoke-test drive Angular package
+        shell: pwsh
+        run: |
+          $tarballs = @(Get-ChildItem ./artifacts-ci/npm/drive/*.tgz)
+          if ($tarballs.Count -ne 1) {
+            throw "Expected one drive Angular package tarball, found $($tarballs.Count)."
+          }
+          node ./drive/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
+
   # Not a required check: Codecov's upload latency is Codecov's, not ours (observed anywhere from a
   # few seconds to 4+ minutes per module, most likely tokenless-upload rate limiting), and it must
   # never be what a PR is waiting on to merge. Runs after build-and-test succeeds, using the coverage
@@ -338,6 +397,15 @@ jobs:
         with:
           directory: ./artifacts-ci/coverage/flex-fields
           flags: flex-fields
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload drive coverage to Codecov
+        uses: codecov/codecov-action@v7
+        continue-on-error: true
+        with:
+          directory: ./artifacts-ci/coverage/drive
+          flags: drive
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 

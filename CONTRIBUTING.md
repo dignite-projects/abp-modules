@@ -13,14 +13,16 @@ dotnet test Dignite.Abp.Modules.slnx
 # One module in isolation (same projects, smaller graph)
 dotnet build blob-storing/Dignite.Abp.BlobStoring.slnx
 dotnet build notifications/Dignite.Abp.Notifications.slnx
+dotnet build drive/Dignite.Drive.slnx
 ```
 
-The Angular libraries live in two Angular CLI workspaces, installed with Yarn Classic (v1) and built
+The Angular libraries live in three Angular CLI workspaces, installed with Yarn Classic (v1) and built
 separately from MSBuild. (`blob-storing/` has none: it is a .NET library layer only.)
 
 ```bash
 cd notifications/angular && yarn install && yarn build:lib
 cd flex-fields/angular   && yarn install && yarn build:lib && yarn build:lib:ckeditor
+cd drive/angular         && yarn install && yarn build:lib
 ```
 
 ## Code conventions
@@ -36,7 +38,7 @@ contributors. They're split by how the content loads:
   These carry no module-specific content.
 - **`<module>/.claude/skills/`** — in `blob-storing/` and `notifications/`, two per module: a
   **`*-conventions`** skill ("how *this* module applies ABP") and a **`*-invariants`** skill ("what a
-  change must not break"). `flex-fields/` has none; its `CLAUDE.md` and design doc carry that content.
+  change must not break"). `flex-fields/` and `drive/` have none; their `CLAUDE.md` and design docs carry that content.
 
 `blob-storing/`, `notifications/`, and `flex-fields/` have genuinely different DDD shapes,
 persistence conventions, and hard invariants. Where they disagree — repository convention, object
@@ -64,8 +66,7 @@ All library package versions live in the root [`Directory.Packages.props`](./Dir
 
 The demo hosts are the deliberate exception: each opts out of central package management and
 pins its own versions inline, via its own `Directory.Build.props` + `Directory.Packages.props`
-inside the project folder (`notifications/host/.../`,
-`flex-fields/demo/.../`). They are never published, so their dependency graph is allowed to drift
+inside the project folder (`notifications/host/.../`, `flex-fields/demo/.../`, `drive/host/.../`). They are never published, so their dependency graph is allowed to drift
 from the libraries'.
 
 ## Versioning and releases
