@@ -1,15 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\common.props" />
-
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <RootNamespace>Dignite.Drive</RootNamespace>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net10.0</TargetFrameworks>
+    <RootNamespace />
+    <Description>C# HTTP client proxies for remote consumers of the Dignite Drive API.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.Http.Client" Version="10.7.0"/>
+    <PackageReference Include="Volo.Abp.Http.Client" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Dignite.Drive.Application.Contracts\Dignite.Drive.Application.Contracts.csproj" />
   </ItemGroup>
 

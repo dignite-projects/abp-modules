@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>MCP tools of Dignite Drive, contributed to the application's MCP server.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.Drive.Application.Contracts\Dignite.Drive.Application.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\aspnetcore-mcp\src\Dignite.Abp.AspNetCore.Mcp\Dignite.Abp.AspNetCore.Mcp.csproj" />
+  </ItemGroup>
+
+</Project>

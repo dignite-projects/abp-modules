@@ -13,6 +13,8 @@
         <Project Path="src/Dignite.Drive.HttpApi/Dignite.Drive.HttpApi.csproj" />
         <Project Path="src/Dignite.Drive.HttpApi.Client/Dignite.Drive.HttpApi.Client.csproj" />
         <Project Path="src/Dignite.Drive.Installer/Dignite.Drive.Installer.csproj" />
+        <Project Path="src/Dignite.Abp.BlobStoring.Drive/Dignite.Abp.BlobStoring.Drive.csproj" />
+        <Project Path="src/Dignite.Drive.Mcp/Dignite.Drive.Mcp.csproj" />
     </Folder>
     
     <Folder Name="/test/">

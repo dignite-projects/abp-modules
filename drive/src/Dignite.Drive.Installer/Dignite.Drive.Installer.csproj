@@ -1,26 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\common.props"/>
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
+    <RootNamespace />
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
-    <RootNamespace>Dignite.Drive</RootNamespace>
+    <Description>ABP Studio / ABP Suite module installer entry point for Dignite Drive.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.VirtualFileSystem" Version="10.7.0"/>
+    <PackageReference Include="Volo.Abp.VirtualFileSystem" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="..\..\Dignite.Drive.abpmdl"/>
+    <None Remove="..\..\Dignite.Drive.abpmdl" />
     <Content Include="..\..\Dignite.Drive.abpmdl">
-      <Pack>true</Pack>
-      <PackagePath>content\</PackagePath>
-    </Content>
-    <None Remove="..\..\**\*.abppkg*" />
-    <Content Include="..\..\**\*.abppkg*">
       <Pack>true</Pack>
       <PackagePath>content\</PackagePath>
     </Content>

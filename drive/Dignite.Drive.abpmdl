@@ -63,6 +63,14 @@
        "path": "src/Dignite.Drive.Installer/Dignite.Drive.Installer.abppkg",
        "folder": "src"
     },
+    "Dignite.Abp.BlobStoring.Drive": {
+      "path": "src/Dignite.Abp.BlobStoring.Drive/Dignite.Abp.BlobStoring.Drive.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Drive.Mcp": {
+      "path": "src/Dignite.Drive.Mcp/Dignite.Drive.Mcp.abppkg",
+      "folder": "src"
+    },
     "Dignite.Drive.Host": {
       "path": "host/Dignite.Drive.Host/Dignite.Drive.Host.abppkg",
       "folder": "host"

@@ -1,28 +1,24 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\common.props" />
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <RootNamespace>Dignite.Drive</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <!-- Shared test library, not a runnable test assembly: it holds the base classes but no test runner,
+         so keep `dotnet test` on the solution from trying to execute it. -->
+    <IsTestProject>false</IsTestProject>
+    <RootNamespace />
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-    <PackageReference Include="NSubstitute" Version="5.3.0" />
-    <PackageReference Include="NSubstitute.Analyzers.CSharp" Version="1.0.17">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Shouldly" Version="4.3.0" />
-    <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.extensibility.execution" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
-    <PackageReference Include="Volo.Abp.Autofac" Version="10.7.0" />
-    <PackageReference Include="Volo.Abp.Authorization" Version="10.7.0"/>
-    <PackageReference Include="Volo.Abp.Guids" Version="10.7.0"/>
-    <PackageReference Include="Volo.Abp.TestBase" Version="10.7.0"/>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Volo.Abp.Autofac" />
+    <PackageReference Include="Volo.Abp.Authorization" />
+    <PackageReference Include="Volo.Abp.Guids" />
+    <PackageReference Include="Volo.Abp.TestBase" />
   </ItemGroup>
 
 </Project>

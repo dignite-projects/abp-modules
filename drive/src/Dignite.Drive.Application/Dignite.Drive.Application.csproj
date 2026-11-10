@@ -1,16 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\common.props" />
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <RootNamespace>Dignite.Drive</RootNamespace>
+    <RootNamespace />
+    <Description>Application services of Dignite Drive.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.Mapperly" Version="10.7.0" />
-    <PackageReference Include="Volo.Abp.Ddd.Application" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.Mapperly" />
+    <PackageReference Include="Volo.Abp.Ddd.Application" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Dignite.Drive.Application.Contracts\Dignite.Drive.Application.Contracts.csproj" />
     <ProjectReference Include="..\Dignite.Drive.Domain\Dignite.Drive.Domain.csproj" />
   </ItemGroup>

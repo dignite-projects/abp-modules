@@ -1,16 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\common.props" />
-
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <RootNamespace>Dignite.Drive</RootNamespace>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net10.0</TargetFrameworks>
+    <RootNamespace />
+    <Description>Application service interfaces, DTOs and permission names of Dignite Drive.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.Ddd.Application.Contracts" Version="10.7.0" />
-    <PackageReference Include="Volo.Abp.Authorization" Version="10.7.0" />
+    <PackageReference Include="Volo.Abp.Ddd.Application.Contracts" />
+    <PackageReference Include="Volo.Abp.Authorization" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Dignite.Drive.Domain.Shared\Dignite.Drive.Domain.Shared.csproj" />
   </ItemGroup>
 

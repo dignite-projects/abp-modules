@@ -42,6 +42,7 @@
     <PackageVersion Include="Volo.Abp.Imaging.Abstractions" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Imaging.SkiaSharp" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Ddd.Domain" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.Ddd.Domain.Shared" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Ddd.Application" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Ddd.Application.Contracts" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Authorization" Version="10.7.0" />

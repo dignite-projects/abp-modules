@@ -1,15 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\common.props" />
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <RootNamespace>Dignite.Drive</RootNamespace>
+    <RootNamespace />
+    <Description>REST API controllers of Dignite Drive.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.AspNetCore.Mvc" Version="10.7.0"/>
+    <PackageReference Include="Volo.Abp.AspNetCore.Mvc" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Dignite.Drive.Application.Contracts\Dignite.Drive.Application.Contracts.csproj" />
   </ItemGroup>
 
