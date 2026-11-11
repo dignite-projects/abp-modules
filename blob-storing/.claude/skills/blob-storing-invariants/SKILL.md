@@ -100,7 +100,12 @@ always carries a signature, with content that has none, is rejected. Unknown con
   documentation; the dimension guard and the byte cap are the protections for providers that decode synchronously.
 - `Dignite.Abp.BlobStoring.Imaging` references **`Volo.Abp.Imaging.Abstractions` only**. The application picks a provider
   (SkiaSharp, ImageSharp or Magick.NET). Never reference a provider or an image library from the package; only the test
-  project does.
+  project does. What has to decode a picture itself goes in a provider-specific package, as
+  `Dignite.Abp.BlobStoring.Imaging.SkiaSharp` does (JPEG to WebP, upright resizing); it still derives from
+  `ImageContributorBase`, so the guard runs before it decodes, and it throws the Imaging package's codes only.
+- A contributor that **always** converts a type declares it with `SetStoredContentType` (as `StoreJpegAsWebp` does), so a
+  caller can name the blob and record the type before the save. One that converts only sometimes (only when smaller,
+  only above a size) must not declare it: the declaration is read as a promise.
 - Content that is not `image/*`, and an image the provider reports `Unsupported`, passes through unchanged. With known dimensions a
   resize never upscales and leaves an image that already fits byte for byte.
 - Defaults changes (the guard's numbers) are behaviour changes: record them in the CHANGELOG.
@@ -123,13 +128,15 @@ always carries a signature, with content that has none, is rejected. Unknown con
 Deliberately kept out; don't add them without a real, in-repo need and a new decision document:
 
 - **No upload entry point, no return object, no blob naming** — no `IFileStorer`, no `StoredFileInfo`, no
-  `IBlobNameGenerator`. Applications call `IBlobContainer`; one that wants the detected MIME type or a hash calls
+  `IBlobNameGenerator`. (`GetStoredContentType` is none of these: a static declaration on the container's configuration,
+  read before the save, that names nothing and reports nothing back.) Applications call `IBlobContainer`; one that wants the detected MIME type or a hash calls
   `IMimeTypeDetector` and hashes itself; it names the blob, saves with `overrideExisting: false`, and deletes the blob if
   its metadata write fails. Option B (a thin wrapper in front of the container) was weighed and rejected.
 - **No metadata, persistence, HTTP API, UI or permissions.** They belong to the application that owns the files.
 - **No distributed events, outbox, ETOs or audit events.** The pipeline is inline.
 - **No contributor that is not a one-to-one stream transform or check** (no thumbnails, dedup, hash sidecars).
-- **No dependency beyond ABP BlobStoring** (+ FileSignatures for detection, + ABP Imaging abstractions for `.Imaging`) —
-  no EF Core, no MongoDB, no ASP.NET Core, no image library.
+- **No dependency beyond ABP BlobStoring** (+ FileSignatures for detection, + ABP Imaging abstractions for `.Imaging`, +
+  ABP's SkiaSharp provider for `.Imaging.SkiaSharp` only) — no EF Core, no MongoDB, no ASP.NET Core, and no image
+  library outside the provider-specific package.
 - **No cross-module reference**: this module never references `notifications/`, `flex-fields/` or anything else in the
   repository (root `CLAUDE.md`, invariant 2).

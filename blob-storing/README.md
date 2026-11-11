@@ -12,7 +12,7 @@ Everyday `IBlobPipelineContributor` implementations for
 content pipeline — per-container contributors that transform or validate the content inside
 `IBlobContainer.SaveAsync` and `GetAsync` — but ships the mechanism without any contributors. This module ships the
 ones nearly every application ends up writing: a size cap, a content-type allow-list based on the real bytes, GZip,
-and image resize and compress.
+image metadata removal, resize and compress, and - on SkiaSharp - JPEGs stored as WebP and photos turned upright.
 
 There is no upload entry point, return object, blob naming or metadata here. You keep calling `IBlobContainer`; the
 contributors run inside it. Whatever your application records about a file — its name, MIME type, hash, owner — and
@@ -32,6 +32,7 @@ a complete upload example, writing your own contributors, and the error codes.
 |---|---|
 | `Dignite.Abp.BlobStoring.Pipeline` | `MaxSize`, `AllowedContentTypes` and `GZip` contributors; `IMimeTypeDetector`, the content-based MIME detector they share; `BlobStreamBuffering`, capped buffering for contributors |
 | `Dignite.Abp.BlobStoring.Imaging` | `ImageMetadataStrip`, `ImageResize` and `ImageCompress` contributors; the image decode guard and `ImageHeaderReader`. References no image library: add one of ABP's imaging providers yourself |
+| `Dignite.Abp.BlobStoring.Imaging.SkiaSharp` | `StoreJpegAsWebp`: every JPEG stored as WebP, turned upright by its EXIF orientation and fitted to the resize box in one encode; ABP's SkiaSharp resizer replaced by one that turns photos upright; `ImageOrientation`. Brings `Volo.Abp.Imaging.SkiaSharp` ([documentation](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/blob-storing/imaging-skiasharp.md)) |
 
 ## Quick start
 
@@ -74,13 +75,17 @@ public class MyAppModule : AbpModule
 Contributors run in the order they are added when saving, and in reverse when reading. GZip changes the stored
 format: do not add it to, or remove it from, a container that already has blobs.
 
+On SkiaSharp, `Dignite.Abp.BlobStoring.Imaging.SkiaSharp` (module `AbpBlobStoringImagingSkiaSharpModule`, which brings
+the provider) adds `container.StoreJpegAsWebp()` between the metadata and the resize contributors. On Linux, also
+reference `SkiaSharp.NativeAssets.Linux`.
+
 ## Roadmap
 
 Candidates for a second batch:
 
 - `Watermark`
 - `SvgSanitize`
-- `ImageFormatConvert`
+- `ImageFormatConvert` beyond JPEG to WebP
 - ClamAV scan (as its own package, so the core stays free of a scanner dependency)
 
 Not planned:

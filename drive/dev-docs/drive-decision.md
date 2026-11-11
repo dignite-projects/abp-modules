@@ -457,6 +457,45 @@ projects and with no new seam in it. The spike added a nullable Guid and a strin
   gains later cannot collide. Not tested: a database per tenant (indexes are created once per process, as the open
   Drive's own are), transactions on the raw collection, SQL Server and PostgreSQL.
 
+### Pictures stored as WebP, 2026-11-11
+
+A change Site needs before it can move onto the open Drive: Site stores every JPEG of its images container as WebP,
+turned upright by its EXIF orientation, and resizes photos upright; both are Site's code today.
+
+**Decided** by the owner, 2026-11-11:
+
+- **The conversion and the turning run on the Drive's containers, not in the caller.** Site does not run a pipeline of
+  its own, and passes no BLOB name: the Drive names the physical BLOB before the save, by the type the container stores.
+  Why: Site's files go through the Drive's file API (a user drive); the browser, CKEditor and MCP upload straight to the
+  Drive, and only the contributors on the Drive's container see every one of those paths.
+- **The Drive's images preset stores JPEGs as WebP, on by default.** SkiaSharp therefore becomes a hard dependency of the
+  Drive.
+
+**Proposed** with it and built the same day; the owner has not confirmed these:
+
+- **Where the code goes.** A new package in `blob-storing/`, `Dignite.Abp.BlobStoring.Imaging.SkiaSharp`, not the
+  existing `.Imaging`, which references no image library. It holds `JpegToWebpContributor` (`StoreJpegAsWebp(quality)`),
+  `ImageOrientation` (public, for Site's renderer of public reads), `UprightSkiaSharpImageResizerContributor`, and a
+  module that removes ABP's SkiaSharp resizer contributor and defaults `SkiaSharpResizerOptions` to linear + mipmap
+  sampling and quality 85 (a host's `Configure` still overrides). It throws the Imaging package's codes; no new namespace.
+  `Dignite.Drive.Domain` references it. Recorded in blob-storing's
+  [`pipeline-contributors-decision.md`](../../blob-storing/dev-docs/pipeline-contributors-decision.md), amendment
+  2026-11-11, which also notes that ABP fixed the orientation in its own resizer on `rel-10.7` after 10.7.1, so the
+  upright resizer is temporary.
+- **How the Drive knows the stored type.** The Pipeline package lets a container declare it:
+  `SetStoredContentType("image/jpeg", "image/webp")`, which `StoreJpegAsWebp` calls, and
+  `BlobContainerConfiguration.GetStoredContentType(mimeType)`. The Drive does not know about WebP. Checked against
+  blob-storing's "no blob naming" and "no return object" and kept, as a static declaration read before the save (the
+  amendment there gives the reasoning).
+- **How the Drive uses it.** `FileDescriptorManager` names the physical BLOB for the declared stored type (a JPEG gets
+  `.webp`). In a user drive the file's name takes the extension of the type its row records - the stored bytes' type
+  after a save, the shared row's type on a dedup hit - which is the declared type in practice and stays right if a
+  container's setting changed between two uploads of the same bytes. A system container keeps the application's name
+  (its address); only the physical BLOB is `.webp`. Dedup still hashes the upload; the row's type and size are still
+  detected from the stored bytes. The images preset gains `StoreJpegAsWebp` (default `true`) and `WebpQuality` (default
+  85), so appsettings' `PresetOptions` can turn it off; its order is size cap, types, metadata removal, WebP (turned and
+  fitted into the box in the same decode), resize.
+
 ### Proposed, to confirm before code moves
 
 These are a way to build what is decided above; the owner has not confirmed them.

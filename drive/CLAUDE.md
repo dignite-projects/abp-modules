@@ -12,8 +12,9 @@ split and which operation is on which side, are in [`dev-docs/drive-decision.md`
 library and Phase 3 (trash, share links) are Drive Pro's.
 - Storage tier: `FileDescriptor`, `FileDescriptorManager` (detect, hash, dedup, save, compensate) and
   `UseDriveContainer`, with EF Core and MongoDB; the tenant allocation (`DriveFeatures`, `DriveUsageManager`); the
-  container presets (`Use…Preset`), containers declared in the `Drive` configuration section (`DriveContainerSettings`,
-  presets by name from `DrivePresetOptions`) and the startup checks (`DriveContainerValidator`); `IDriveBlobService`
+  container presets (`Use…Preset`; the images preset stores a JPEG as WebP, upright), containers declared in the
+  `Drive` configuration section (`DriveContainerSettings`, presets by name from `DrivePresetOptions`) and the startup
+  checks (`DriveContainerValidator`); `IDriveBlobService`
   with its in-process implementation, and the provider (`DriveBlobProvider`, `UseDrive`); the BLOB API
   (`DriveBlobController`, `DriveBlobAppService`, `IDriveClientAuthorizer`) and its C# client proxies
   (`RemoteDriveBlobService`); public reads with sizing (`DrivePublicController`, `DrivePublicAppService`,
@@ -41,7 +42,7 @@ One `.slnx` — `Dignite.Drive.slnx`:
   |---|---|---|
   | `Dignite.Abp.BlobStoring.Drive` | The `IBlobProvider`: `DriveBlobProvider`, `UseDrive(...)`, `IDrivePublicUrlBuilder`, `IDriveTicketClient` | `Volo.Abp.BlobStoring`, `Application.Contracts` |
   | `Dignite.Drive.Domain.Shared` | Constants, error codes, the file type table, localization | ABP |
-  | `Dignite.Drive.Domain` | `FileDescriptor`, its manager and repository, container kinds and configuration, presets, features, usage | `Domain.Shared`, `blob-storing/` (`Dignite.Abp.BlobStoring.Pipeline`) |
+  | `Dignite.Drive.Domain` | `FileDescriptor`, its manager and repository, container kinds and configuration, presets, features, usage | `Domain.Shared`, `blob-storing/` (`Dignite.Abp.BlobStoring.Pipeline`, `.Imaging`, `.Imaging.SkiaSharp` - so SkiaSharp is a dependency of the Drive: the images preset stores a JPEG as WebP) |
   | `Dignite.Drive.Application.Contracts` | `IDriveBlobService` (what the provider calls), the file and container service interfaces (the seams Drive Pro replaces), extensible DTOs, permission names | `Domain.Shared` |
   | `Dignite.Drive.Application` | The in-process `IDriveBlobService`, application services with the open rule, tickets, public reads | `Domain`, `Application.Contracts` |
   | `Dignite.Drive.HttpApi` / `.HttpApi.Client` | Blob API, file API, tickets, public read / static proxies, incl. the remote `IDriveBlobService` | `Application.Contracts` |

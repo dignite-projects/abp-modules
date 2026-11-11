@@ -16,6 +16,29 @@ so it stays clear which part of the repository actually moved.
 
 ## [Unreleased]
 
+### Added
+
+#### blob-storing
+
+- **New package `Dignite.Abp.BlobStoring.Imaging.SkiaSharp`: JPEGs stored as WebP, and photos turned upright.**
+  `container.StoreJpegAsWebp(quality: 85)`, after `AddImageMetadataStripContributor` and before
+  `AddImageResizeContributor`, stores every JPEG as a lossy WebP: turned upright by its EXIF orientation and, when the
+  container's resize box fits pictures inside it (mode `Max`), shrunk into that box in the same decode, so a photo is
+  encoded once. PNG, GIF and WebP pass through. It runs behind the Imaging package's decode guard and fails with its
+  `ImageProcessingFailed`. The module, `AbpBlobStoringImagingSkiaSharpModule`, brings ABP's SkiaSharp provider and
+  changes it for the whole application: ABP 10.7.0's `SkiaSharpImageResizerContributor`, which ignores the EXIF
+  orientation and stores a shrunk portrait photo on its side, is replaced by `UprightSkiaSharpImageResizerContributor`
+  (ABP has fixed it on `rel-10.7` for a later release; the replacement goes then), and `SkiaSharpResizerOptions` default
+  to linear sampling between mipmap levels and quality 85 instead of nearest neighbour and 75 (your own `Configure`
+  still wins). `ImageOrientation` turns a decoded picture upright for code that renders stored pictures. On Linux, also
+  reference `SkiaSharp.NativeAssets.Linux`. `Dignite.Abp.BlobStoring.Imaging` itself still references no image library.
+  See [SkiaSharp Image Contributors](docs/en/blob-storing/imaging-skiasharp.md).
+- **A container can declare the type it stores content as.** `BlobContainerConfiguration.GetStoredContentType(mimeType)`
+  (Pipeline package) returns what a converting contributor declared with `SetStoredContentType` - `image/webp` for
+  `image/jpeg` once `StoreJpegAsWebp` is added - and the type itself otherwise, so an application that names its blobs
+  or records their type can do it before the save. A declaration from the configuration, not a result of the save. See
+  [Saving Uploaded Files](docs/en/blob-storing/saving-uploaded-files.md#when-the-container-converts-the-content).
+
 ## [10.7.6] - 2026-11-09
 
 ### Added

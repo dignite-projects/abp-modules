@@ -40,7 +40,7 @@ public class MyProjectModule : AbpModule
 
 The Imaging package references no image library, so the choice of provider, and its license, stays with your application. ABP has three providers:
 
-* **SkiaSharp** (`Volo.Abp.Imaging.SkiaSharp`, `AbpImagingSkiaSharpModule`): The package brings the native libraries for Windows and macOS only. On Linux, also reference `SkiaSharp.NativeAssets.Linux`. It resizes and compresses JPEG, PNG and WebP.
+* **SkiaSharp** (`Volo.Abp.Imaging.SkiaSharp`, `AbpImagingSkiaSharpModule`): The package brings the native libraries for Windows and macOS only. On Linux, also reference `SkiaSharp.NativeAssets.Linux`. It resizes and compresses JPEG, PNG and WebP. In ABP 10.7.0 it ignores a photo's EXIF orientation, so a portrait photo it shrinks is stored on its side; the [SkiaSharp image contributors](imaging-skiasharp.md#upright-resizing) package fixes that, and adds storing JPEGs as WebP.
 * **ImageSharp** (`Volo.Abp.Imaging.ImageSharp`, `AbpImagingImageSharpModule`): ABP's provider currently resolves SixLabors.ImageSharp 3.1.11, which has published security advisories. The fixed releases (3.2.0 and later, and 4.x) require a Six Labors license key at build time.
 * **Magick.NET** (`Volo.Abp.Imaging.MagickNet`, `AbpImagingMagickNetModule`).
 

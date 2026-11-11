@@ -4,8 +4,9 @@ Everyday `IBlobPipelineContributor` implementations for **ABP BlobStoring** (LGP
 BLOB content pipeline — `IBlobPipelineContributor`, per-container `BlobContainerConfiguration.PipelineContributors`,
 run inside `IBlobContainer.SaveAsync` / `GetAsync` — but no contributors. This module is those: a size cap, a
 content-type allow-list based on the real bytes, GZip, image metadata removal, resize and compress, and the MIME
-detector they share.
-Published: `src/Dignite.Abp.BlobStoring.Pipeline` and `src/Dignite.Abp.BlobStoring.Imaging`. Nothing else lives here.
+detector they share; and, on SkiaSharp, JPEGs stored as WebP and photos turned upright.
+Published: `src/Dignite.Abp.BlobStoring.Pipeline`, `src/Dignite.Abp.BlobStoring.Imaging` and
+`src/Dignite.Abp.BlobStoring.Imaging.SkiaSharp`. Nothing else lives here.
 
 It was `Dignite.Abp.FileStoring` (an `IFileHandler` pipeline run by `IFileStorer`) until `10.0.0-rc.27`. ABP's pipeline
 is the same idea, so the old pipeline and its runner were deleted and the packages renamed to follow ABP's naming
@@ -20,7 +21,10 @@ change that adds one is a design change, not a feature — re-read the decision 
 
 - **No upload entry point.** No `IFileStorer`-style service in front of `IBlobContainer`; callers use the container.
 - **No return object.** Nothing like `StoredFileInfo` — a contributor cannot report values back to the caller.
-- **No blob naming.** The caller names its blobs.
+- **No blob naming.** The caller names its blobs. A container may *declare* the type it stores content as
+  (`SetStoredContentType` / `GetStoredContentType`, set by `StoreJpegAsWebp`): a static fact of the configuration a
+  caller reads before the save, as it reads the `MaxSize` cap. It names nothing and reports nothing back; a caller that
+  must know what was stored detects the stored bytes (`pipeline-contributors-decision.md`, amendment 2026-11-11).
 - **No metadata, persistence, directories, dedup records.** A caller that wants the detected MIME type or a hash for
   its own row calls `IMimeTypeDetector` and hashes itself.
 - **No HTTP API, no UI, no permissions.** Who may read or write a container is the application's.
@@ -44,13 +48,25 @@ One solution, `Dignite.Abp.BlobStoring.slnx`, central package management (versio
   configurations, `ImageDecodeGuardConfiguration`, `ImageHeaderReader` (public since 10.7.5),
   `ImagingBlobContainerConfigurationExtensions`, `BlobStoringImagingErrorCodes`, localization. Depends on the Pipeline
   package and `Volo.Abp.Imaging.Abstractions` — **no image library**; the application picks one of ABP's providers.
-- **`test/Dignite.Abp.BlobStoring.Pipeline.Tests`** and **`test/Dignite.Abp.BlobStoring.Imaging.Tests`** — integration
-  tests on `Volo.Abp.BlobStoring.Memory`. The Imaging tests run on `Volo.Abp.Imaging.SkiaSharp` (plus
-  `SkiaSharp.NativeAssets.Linux` for Linux CI) and on scripted fakes of `IImageResizer` / `IImageCompressor`.
+- **`src/Dignite.Abp.BlobStoring.Imaging.SkiaSharp`** — the provider-specific package, so `.Imaging` can keep its rule:
+  `JpegToWebpContributor` (on `ImageContributorBase`) with `JpegToWebpContributorConfiguration`,
+  `SkiaSharpImagingBlobContainerConfigurationExtensions.StoreJpegAsWebp` (which also declares `image/jpeg` stored as
+  `image/webp`), `UprightSkiaSharpImageResizerContributor`, `ImageOrientation`, `BlobStoringImagingSkiaSharpConfigurationNames`
+  and `AbpBlobStoringImagingSkiaSharpModule`, which removes ABP's `SkiaSharpImageResizerContributor` and defaults
+  `SkiaSharpResizerOptions` to linear + mipmap sampling, quality 85. Types in the `Dignite.Abp.BlobStoring.Imaging`
+  namespace, as ABP keeps its SkiaSharp provider in `Volo.Abp.Imaging`. No error codes or resource of its own: a
+  failure is the Imaging package's `ImageProcessingFailed`. Depends on `.Imaging` and `Volo.Abp.Imaging.SkiaSharp`; the
+  upright resizer goes once the repository is on an ABP release with ABP's own fix (on `rel-10.7` after 10.7.1).
+- **`test/Dignite.Abp.BlobStoring.Pipeline.Tests`**, **`test/Dignite.Abp.BlobStoring.Imaging.Tests`** and
+  **`test/Dignite.Abp.BlobStoring.Imaging.SkiaSharp.Tests`** — integration tests on `Volo.Abp.BlobStoring.Memory`. The
+  Imaging tests run on ABP's stock `Volo.Abp.Imaging.SkiaSharp` (plus `SkiaSharp.NativeAssets.Linux` for Linux CI) and
+  on scripted fakes of `IImageResizer` / `IImageCompressor`; the SkiaSharp tests have a project of their own because
+  their module replaces the resizer the Imaging tests exercise.
 
 Files are namespace-mirrored: `<Project>/<namespace path>/File.cs`, `<RootNamespace/>` empty. PackageId follows
-AssemblyName. This folder's `README.md` is packed into both nupkgs as the package README, so it must stand alone for a
-NuGet visitor — no links that only make sense inside the repository beyond the header blockquote.
+AssemblyName. This folder's `README.md` is packed into every nupkg as the package README, so it must stand alone for a
+NuGet visitor — no links that only make sense inside the repository beyond the header blockquote. A new package also
+goes into both `.slnx` files, `.github/scripts/nuget-surface.psd1` and the CI and release test steps.
 
 ## The rules the contributors must honour
 

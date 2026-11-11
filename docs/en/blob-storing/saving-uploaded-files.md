@@ -81,6 +81,19 @@ In an [application service](https://abp.io/docs/latest/framework/architecture/do
 * **The type, hash and size above describe the upload.** If a resize, a compression or GZip changes the stored bytes, they no longer describe what is stored. A row that needs the stored size or hash reads the BLOB back with `GetAsync`; the image contributors store ordinary images, and GZip is undone on read.
 * **The BLOB name has no extension here**, so the allowed content types contributor cannot reconcile it with the content; calling `IMimeTypeDetector` with the original file name does that instead. Name the BLOB with its real extension if you want the contributors to check it themselves.
 
+## When the Container Converts the Content
+
+A container can store content in another format than it was uploaded in: [`StoreJpegAsWebp`](imaging-skiasharp.md#storing-jpegs-as-webp) stores every JPEG as WebP. A contributor that always converts declares it on the container, so your application can name the BLOB and record the type for what will be stored, before the save:
+
+````csharp
+// "image/webp" for a JPEG in a container that stores JPEGs as WebP; otherwise mimeType itself
+var storedType = _blobContainerConfigurationProvider
+    .Get(BlobContainerNameAttribute.GetContainerName<AttachmentContainer>())
+    .GetStoredContentType(mimeType);
+````
+
+`GetStoredContentType` comes from the Pipeline package (`Dignite.Abp.BlobStoring.Pipeline` namespace), and a contributor of your own that converts every piece of content of a type declares it with `SetStoredContentType(contentType, storedContentType)`. It is a declaration read from the configuration, not a result of the save: if the row must describe the stored bytes exactly, read the BLOB back and detect them, as described above. Deduplicating by the hash of the upload still works, since the same upload is converted the same way.
+
 ## What Stays in Your Application
 
 * Who may read or delete a BLOB, through your own [authorization](https://abp.io/docs/latest/framework/fundamentals/authorization).

@@ -139,3 +139,46 @@ Not planned:
 - This module's invariants shrink to the contributor ones: ABP's stream-ownership contract, validators that never pass an
   unvalidated stream through, every buffering path capped, content deciding the type, and the one-way versus stored-format
   distinction (`.claude/skills/blob-storing-invariants`).
+
+## Amendment, 2026-11-11: a SkiaSharp package, and a declared stored type
+
+**Why now.** Dignite Site stored every JPEG of its images container as WebP, turned upright by its EXIF orientation,
+with a contributor and a replacement for ABP's SkiaSharp resizer of its own. When Site's files move into the open Drive
+(`drive/dev-docs/drive-decision.md`, amendment of the same day), the browser, CKEditor and MCP upload straight to the
+Drive, so only a contributor on the Drive's container sees every upload. The owner decided that the conversion is the
+Drive container's and that the Drive's images preset does it by default; how it is built, below, was proposed with it
+and is not the owner's decision.
+
+**A third package, `Dignite.Abp.BlobStoring.Imaging.SkiaSharp`.** Storing a JPEG as WebP means decoding once, turning,
+fitting and encoding WebP; ABP's imaging abstractions have no operation for that, so it is provider-specific. It does not
+go into `.Imaging`, whose rule is that it references no image library (the reason is above: the choice of provider and
+its licence stays with the application). The new package mirrors ABP's `Volo.Abp.Imaging.SkiaSharp`: an addition named
+after the provider it is tied to, its types in the `Dignite.Abp.BlobStoring.Imaging` namespace as ABP's SkiaSharp
+types are in `Volo.Abp.Imaging`. It contains `JpegToWebpContributor` (on `ImageContributorBase`, so the cap, the
+detection and the decode guard apply; failures are the Imaging package's `ImageProcessingFailed`, so no third code
+namespace), `UprightSkiaSharpImageResizerContributor`, which replaces ABP's resizer in DI, `ImageOrientation` (public:
+an application rendering stored pictures needs it too), and better defaults for `SkiaSharpResizerOptions` (linear +
+mipmap sampling, quality 85). The last two change ABP's resizer for the whole application, not only the pipeline; the
+module documents it.
+
+**ABP's own fix.** ABP fixed the orientation defect in its SkiaSharp resizer and compressor on `rel-10.7` on
+2026-11-09 (commit `c869a858`, "Apply EXIF orientation in SkiaSharp resizer and compressor"), after 10.7.1, in no
+release yet. `UprightSkiaSharpImageResizerContributor` and its removal of ABP's contributor go once the repository is on
+a release with it. `JpegToWebpContributor` stays: converting is not something ABP's resizer does.
+
+**A declared stored type, weighed against "what stays out".** The caller that names its blobs has to name a converted
+JPEG `.webp` *before* the save. `BlobContainerConfiguration.SetStoredContentType(contentType, storedContentType)` /
+`GetStoredContentType(contentType)` in the Pipeline package let a contributor's extension declare it (`StoreJpegAsWebp`
+declares `image/jpeg` as `image/webp`), and the caller reads it. Re-read against this decision:
+
+- *No blob naming*: the caller still names the blob; the module tells it a fact of the container's configuration, as
+  `BlobStreamBuffering.GetMaxBufferedBytes` already tells it the container's cap before the save.
+- *No return object*: nothing flows back from a save. The declaration is read from the configuration, before anything
+  runs; a caller that must know what was stored still detects the stored bytes (the Drive does).
+- The cost: the declaration is a promise. Only a contributor that converts **every** such content may make it; one that
+  converts only when the result is smaller must not.
+
+So it is a static declaration and within this decision. Had it needed a value computed during the save, it would not be.
+
+**Second batch.** `ImageFormatConvert` is done for JPEG to WebP; a general one (any format to any, by rule) is still a
+candidate.

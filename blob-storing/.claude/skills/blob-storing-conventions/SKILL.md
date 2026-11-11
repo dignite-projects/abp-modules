@@ -11,8 +11,10 @@ description: How the Dignite.Abp.BlobStoring modules (Pipeline and Imaging) appl
 
 ## What is here
 
-Two packages, no DDD layers: `Dignite.Abp.BlobStoring.Pipeline` (depends on `Volo.Abp.BlobStoring` and FileSignatures)
-and `Dignite.Abp.BlobStoring.Imaging` (the Pipeline package + `Volo.Abp.Imaging.Abstractions`, no image library). No
+Three packages, no DDD layers: `Dignite.Abp.BlobStoring.Pipeline` (depends on `Volo.Abp.BlobStoring` and FileSignatures),
+`Dignite.Abp.BlobStoring.Imaging` (the Pipeline package + `Volo.Abp.Imaging.Abstractions`, no image library) and
+`Dignite.Abp.BlobStoring.Imaging.SkiaSharp` (the Imaging package + `Volo.Abp.Imaging.SkiaSharp`; its types are in the
+`Dignite.Abp.BlobStoring.Imaging` namespace, its extension class is `SkiaSharpImagingBlobContainerConfigurationExtensions`). No
 entities, repositories, application services, controllers, permissions, settings or features — and none should be added
 (invariants §8). The naming follows ABP: `Dignite.Abp.BlobStoring.<Addition>` mirrors `Volo.Abp.BlobStoring.<Provider>`.
 

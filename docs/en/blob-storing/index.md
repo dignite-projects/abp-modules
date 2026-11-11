@@ -13,6 +13,7 @@ ABP 10.7 added the [BLOB content pipeline](https://abp.io/docs/latest/framework/
 * [**Allowed content types**](allowed-content-types.md): Accepts only the content types you list, detected from the bytes rather than taken from the uploader.
 * [**GZip compression**](gzip.md): Stores the content compressed and decompresses it on read.
 * [**Image contributors**](imaging.md): Removes the metadata editing software piles into an image, shrinks images larger than a maximum size and re-encodes them smaller, with a guard that checks an image's dimensions before anything decodes it.
+* [**SkiaSharp image contributors**](imaging-skiasharp.md): Stores a JPEG as WebP, turned upright, and turns photos upright before they are resized.
 
 The contributors share a [MIME type detector](mime-type-detection.md) that your application can call too.
 
@@ -23,9 +24,10 @@ There is **no upload service, return object, BLOB naming or metadata** in this m
 | Package | Contents |
 |---|---|
 | [Dignite.Abp.BlobStoring.Pipeline](https://www.nuget.org/packages/Dignite.Abp.BlobStoring.Pipeline) | The size limit, allowed content types and GZip contributors, `IMimeTypeDetector`, and `BlobStreamBuffering` for your own contributors. Depends on `Volo.Abp.BlobStoring` and [FileSignatures](https://github.com/neilharvey/FileSignatures) (MIT). |
-| [Dignite.Abp.BlobStoring.Imaging](https://www.nuget.org/packages/Dignite.Abp.BlobStoring.Imaging) | The image resize and compress contributors and the image decode guard. Depends on `Dignite.Abp.BlobStoring.Pipeline` and `Volo.Abp.Imaging.Abstractions` only. |
+| [Dignite.Abp.BlobStoring.Imaging](https://www.nuget.org/packages/Dignite.Abp.BlobStoring.Imaging) | The image metadata, resize and compress contributors and the image decode guard. Depends on `Dignite.Abp.BlobStoring.Pipeline` and `Volo.Abp.Imaging.Abstractions` only. |
+| [Dignite.Abp.BlobStoring.Imaging.SkiaSharp](https://www.nuget.org/packages/Dignite.Abp.BlobStoring.Imaging.SkiaSharp) | Stores a JPEG as WebP, and turns photos upright before ABP's SkiaSharp resizer shrinks them. Depends on `Dignite.Abp.BlobStoring.Imaging` and `Volo.Abp.Imaging.SkiaSharp`. |
 
-> The Imaging package references **no image library**. Your application adds one of ABP's [image manipulation](https://abp.io/docs/latest/framework/infrastructure/image-manipulation) providers itself; see [Choosing an Imaging Provider](imaging.md#choosing-an-imaging-provider).
+> The Imaging package references **no image library**. Your application adds one of ABP's [image manipulation](https://abp.io/docs/latest/framework/infrastructure/image-manipulation) providers itself; see [Choosing an Imaging Provider](imaging.md#choosing-an-imaging-provider). The [SkiaSharp package](imaging-skiasharp.md) is the one that is tied to a provider.
 
 ## Installation
 
@@ -105,7 +107,7 @@ Configure<AbpBlobStoringOptions>(options =>
 Add the contributors of a container in this order:
 
 1. **Validation**: the [size limit](max-size.md) first, then the [allowed content types](allowed-content-types.md). They reject an upload early and cheaply, before any transformation. The size limit goes first because it caps what everything after it buffers, and hands them a seekable stream with a known length, so nothing after it copies the content again.
-2. **Images**: [metadata, then resize, then compress](imaging.md), so the resize sees the image without its metadata and the resized image is the one compressed. They come after the validation that proves the content is an image of an allowed type.
+2. **Images**: [metadata, then resize, then compress](imaging.md), so the resize sees the image without its metadata and the resized image is the one compressed. [Storing JPEGs as WebP](imaging-skiasharp.md#storing-jpegs-as-webp) goes between the metadata and the resize. They come after the validation that proves the content is an image of an allowed type.
 3. **GZip**: [last](gzip.md). Once the content is compressed, it is no longer an image and no longer something a detector can read, so anything that inspects the content comes before it.
 
 While reading, the contributors run in reverse, and only GZip does anything then.

@@ -29,6 +29,10 @@
           "path": "blob-storing/imaging.md"
         },
         {
+          "text": "SkiaSharp Image Contributors",
+          "path": "blob-storing/imaging-skiasharp.md"
+        },
+        {
           "text": "MIME Type Detection",
           "path": "blob-storing/mime-type-detection.md"
         },

@@ -57,7 +57,7 @@ Signed-in users only: a token without a user - an application acting for itself 
 | `GET api/drive/files/{id}/content` | Its bytes, always as an attachment - a user's file may be HTML, and is never rendered on the Drive's address. |
 | `DELETE api/drive/files/{id}` | Deletes it. Deleting a file that does not exist succeeds. |
 
-A file (`DriveFileDto`) has its `id`, `containerName`, `name`, `mimeType` (detected from the bytes), `size`, its creation and modification times and creator, and `url` in a public drive. Names may repeat: a file is addressed by its id only. As everywhere in the Drive, the type is detected from the bytes, the same bytes are stored once, and the tenant's [storage quota](drive-host.md#tenant-storage) applies.
+A file (`DriveFileDto`) has its `id`, `containerName`, `name`, `mimeType` (detected from the bytes), `size`, its creation and modification times and creator, and `url` in a public drive. Names may repeat: a file is addressed by its id only. As everywhere in the Drive, the type is detected from the bytes, the same bytes are stored once, and the tenant's [storage quota](drive-host.md#tenant-storage) applies. `mimeType` and `size` are those of what is stored: in a drive on the images preset a JPEG is [stored as WebP](drive-host.md#pictures-stored-as-webp), and its `name` then ends in `.webp` (`holiday.jpg` is returned as `holiday.webp`).
 
 `DriveFileDto` and `DriveContainerDto` are [extensible](https://abp.io/docs/latest/framework/fundamentals/object-extensions): a module that builds on the Drive and adds to its files or containers sends what it adds in `extraProperties`.
 

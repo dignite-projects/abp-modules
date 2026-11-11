@@ -39,7 +39,7 @@ protected override void OnModelCreating(ModelBuilder builder)
 }
 ````
 
-The Drive resizes pictures with ABP's [image manipulation](https://abp.io/docs/latest/framework/infrastructure/image-manipulation) - install one of its providers (`Volo.Abp.Imaging.SkiaSharp`, for example) in this host. Without one, pictures are stored and served as they are.
+The Drive processes pictures with SkiaSharp, which comes with it: the [images preset](#presets) stores a JPEG as WebP and resizes through ABP's [image manipulation](https://abp.io/docs/latest/framework/infrastructure/image-manipulation) SkiaSharp provider, and public reads resize on request with it. The Drive's domain module depends on the [SkiaSharp image contributors](../blob-storing/imaging-skiasharp.md) module, which also makes ABP's SkiaSharp resizer turn photos upright and changes its default sampling and quality for the whole host. SkiaSharp brings its native libraries for Windows and macOS only: **on Linux, reference `SkiaSharp.NativeAssets.Linux`** in this host, or every picture fails to process.
 
 ## Drive Containers
 
@@ -80,7 +80,7 @@ A preset adds the [BLOB Storing](../blob-storing/index.md) contributors a kind o
 
 | Preset | What it adds | Defaults |
 |---|---|---|
-| `UseImagesPreset` | [Size limit](../blob-storing/max-size.md), [allowed types](../blob-storing/allowed-content-types.md) (JPEG, PNG, GIF, WebP), [metadata removal](../blob-storing/imaging.md) and a [resize](../blob-storing/imaging.md) into `MaxWidth` × `MaxHeight` (both `0`: no resize) | 25 MB, 2560 × 4096 |
+| `UseImagesPreset` | [Size limit](../blob-storing/max-size.md), [allowed types](../blob-storing/allowed-content-types.md) (JPEG, PNG, GIF, WebP), [metadata removal](../blob-storing/imaging.md#image-metadata), [a JPEG stored as WebP](../blob-storing/imaging-skiasharp.md#storing-jpegs-as-webp) (`StoreJpegAsWebp`, at `WebpQuality`) and a [resize](../blob-storing/imaging.md#image-resize) into `MaxWidth` × `MaxHeight` (both `0`: no resize) | 25 MB, 2560 × 4096, WebP on at quality 85 |
 | `UseDocumentsPreset` | Size limit, allowed types: PDF, Office documents, plain text, CSV and ZIP | 20 MB |
 | `UseBinaryAssetsPreset` | Size limit, allowed types: icons and web fonts | 5 MB |
 | `UseAnyPreset` | Size limit only: every type is accepted | 20 MB |
@@ -92,6 +92,24 @@ container.UseDocumentsPreset(preset => preset.MaxSizeInMegabytes = 50);
 The allowed types leave out SVG, HTML and scripts, which a browser would run on the Drive's own address. `UseAnyPreset` does not: do not combine it with `PublicRead`. (A public read serves a type outside the Drive's list as a download, never inline, but the container should not hold such files to begin with.)
 
 A container can do without a preset, or add contributors after one; calling an `Add…Contributor` method again changes that contributor's configuration.
+
+#### Pictures Stored as WebP
+
+With `StoreJpegAsWebp` on (the default), the images preset stores every JPEG as a lossy WebP at `WebpQuality` (1-100, default 85): turned upright by its EXIF orientation, so a phone's portrait photo is not shown on its side, and fitted into `MaxWidth` × `MaxHeight` in the same decode. A PNG keeps its pixels, and a GIF and a WebP are stored as they are; a PNG or WebP larger than the box is resized, upright.
+
+The Drive names the stored file for what it stores. The physical BLOB of a converted JPEG is named `.webp`, and the file records `image/webp` with the size of the WebP. In a [user drive](attaching-files.md) the file's name takes the `.webp` extension too (`holiday.jpg` becomes `holiday.webp`), so a download is named for what it is. In a system container the name is the application's address and is kept: an application that stored `covers/holiday.jpg` reads it back by that name, and gets the WebP. Uploading the same JPEG again shares the stored WebP, and is named for it.
+
+Turn it off for a container that must keep JPEGs as they are, in code or in [configuration](#declaring-containers-in-configuration):
+
+````csharp
+container.UseImagesPreset(preset => preset.StoreJpegAsWebp = false);
+````
+
+````json
+"PresetOptions": { "StoreJpegAsWebp": false }
+````
+
+Changing it does not touch what is stored: JPEGs stored as WebP stay WebP, and with it off, new JPEGs are stored as JPEGs.
 
 ### Declaring Containers in Configuration
 
