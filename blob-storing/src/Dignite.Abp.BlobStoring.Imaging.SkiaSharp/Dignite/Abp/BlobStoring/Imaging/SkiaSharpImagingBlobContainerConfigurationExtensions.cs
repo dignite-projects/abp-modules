@@ -1,3 +1,4 @@
+using Dignite.Abp.BlobStoring.Pipeline;
 using Volo.Abp;
 using Volo.Abp.BlobStoring;
 
@@ -20,6 +21,10 @@ public static class SkiaSharpImagingBlobContainerConfigurationExtensions
     /// fitted to the container's resize box (<see cref="JpegToWebpContributor"/>). Add it after
     /// <c>AddAllowedContentTypesContributor</c> and <c>AddImageMetadataStripContributor</c>, and before
     /// <c>AddImageResizeContributor</c>, whose box it applies. Calling it again only changes the quality.
+    /// <para>
+    /// It also declares <c>image/jpeg</c> as stored as <c>image/webp</c> (<c>SetStoredContentType</c>), so a caller that
+    /// names its blobs or records their type before the save reads <c>GetStoredContentType</c> and gets it right.
+    /// </para>
     /// </summary>
     public static BlobContainerConfiguration StoreJpegAsWebp(
         this BlobContainerConfiguration containerConfiguration,
@@ -31,6 +36,8 @@ public static class SkiaSharpImagingBlobContainerConfigurationExtensions
         configuration.Quality = quality;
         configuration.Validate();
 
+        // Every JPEG is converted, so the container can say before the save what it stores one as.
+        containerConfiguration.SetStoredContentType("image/jpeg", "image/webp");
         containerConfiguration.PipelineContributors.TryAdd<JpegToWebpContributor>();
         return containerConfiguration;
     }

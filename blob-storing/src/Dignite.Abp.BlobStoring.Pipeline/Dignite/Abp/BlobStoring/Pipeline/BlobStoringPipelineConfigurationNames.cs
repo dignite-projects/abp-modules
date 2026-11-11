@@ -27,4 +27,11 @@ public static class BlobStoringPipelineConfigurationNames
     /// <see cref="GZipContributor"/>: the <see cref="System.IO.Compression.CompressionLevel"/>.
     /// </summary>
     public const string GZipCompressionLevel = Prefix + "GZip.CompressionLevel";
+
+    /// <summary>
+    /// The types a container stores content of another type as (<see cref="System.Collections.Generic.IReadOnlyDictionary{TKey,TValue}"/>
+    /// of <see cref="string"/> to <see cref="string"/>), declared by whoever adds a contributor that converts it. Read and
+    /// write it with <c>GetStoredContentType</c> / <c>SetStoredContentType</c>.
+    /// </summary>
+    public const string StoredContentTypes = Prefix + "StoredContentTypes";
 }

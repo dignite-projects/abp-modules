@@ -19,7 +19,9 @@ namespace Dignite.Abp.BlobStoring.Imaging;
 /// after it. Add it with <see cref="SkiaSharpImagingBlobContainerConfigurationExtensions.StoreJpegAsWebp"/>, after
 /// <c>AddImageMetadataStripContributor</c> (which keeps the EXIF orientation) and before <c>AddImageResizeContributor</c>.
 /// <para>
-/// Every JPEG is converted, whatever the size of the WebP, so what the container stores can be known before the save.
+/// Every JPEG is converted, whatever the size of the WebP, so what the container stores can be known before the save:
+/// <c>StoreJpegAsWebp</c> declares <c>image/jpeg</c> as stored as <c>image/webp</c> on the container
+/// (<c>GetStoredContentType</c>), which a caller that names its blobs or records their type reads first.
 /// </para>
 /// <para>
 /// It derives from <see cref="ImageContributorBase"/>, so the content is capped, its type detected from the bytes, and the

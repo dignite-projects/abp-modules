@@ -1,6 +1,7 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Dignite.Abp.BlobStoring.Pipeline;
 using Microsoft.Extensions.Options;
 using Shouldly;
 using SkiaSharp;
@@ -144,6 +145,20 @@ public class JpegToWebpContributor_Tests : AbpIntegratedTest<BlobStoringImagingS
 
         container.PipelineContributors.Count(type => type == typeof(JpegToWebpContributor)).ShouldBe(1);
         container.GetJpegToWebpContributorConfiguration().Quality.ShouldBe(60);
+    }
+
+    /// <summary>
+    /// What a caller that names its blobs before the save reads: a JPEG is stored as WebP, anything else as it is.
+    /// </summary>
+    [Fact]
+    public void Storing_Jpeg_As_Webp_Should_Declare_The_Stored_Type()
+    {
+        var container = GetContainerConfiguration(BlobStoringImagingSkiaSharpTestModule.WebpContainer);
+
+        container.GetStoredContentType("image/jpeg").ShouldBe("image/webp");
+        container.GetStoredContentType("image/png").ShouldBe("image/png");
+        GetContainerConfiguration(BlobStoringImagingSkiaSharpTestModule.ResizeContainer)
+            .GetStoredContentType("image/jpeg").ShouldBe("image/jpeg");
     }
 
     /// <summary>
