@@ -9,7 +9,7 @@ import { eDriveComponents } from '../../enums/components';
 import { DriveContainerService } from '../../proxy/containers';
 import { DriveFileDto, DriveFileService } from '../../proxy/files';
 
-@Component({ selector: 'test-library-picker', template: `<span class="library-picker">{{ data.inputs.containerName }}</span>` })
+@Component({ selector: 'drive-test-library-picker', template: `<span class="library-picker">{{ data.inputs.containerName }}</span>` })
 class LibraryPickerComponent {
   readonly data = inject<DriveFileInputReplaceableData>('REPLACEABLE_DATA' as never);
 }

@@ -329,8 +329,9 @@ jobs:
         working-directory: drive/angular
         run: yarn lint --max-warnings=0
 
-      # There is no "Run drive Angular unit tests" step yet: Angular's unit-test builder fails on a project
-      # without a single *.spec.ts, and the library has none. Add `yarn test --watch=false` with the first spec.
+      - name: Run drive Angular unit tests
+        working-directory: drive/angular
+        run: yarn test --watch=false
 
       - name: Build drive Angular library
         working-directory: drive/angular
