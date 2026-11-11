@@ -89,6 +89,44 @@
       ]
     },
     {
+      "text": "Drive Pro",
+      "items": [
+        {
+          "text": "Overview",
+          "path": "drive-pro/index.md",
+          "isIndex": true
+        },
+        {
+          "text": "Setting Up Drive Pro",
+          "path": "drive-pro/setting-up.md"
+        },
+        {
+          "text": "The File Library",
+          "path": "drive-pro/file-library.md"
+        },
+        {
+          "text": "Personal Drives",
+          "path": "drive-pro/personal-drives.md"
+        },
+        {
+          "text": "Permissions",
+          "path": "drive-pro/permissions.md"
+        },
+        {
+          "text": "Angular UI",
+          "path": "drive-pro/angular-ui.md"
+        },
+        {
+          "text": "MCP Tools",
+          "path": "drive-pro/mcp.md"
+        },
+        {
+          "text": "Importing a Directory Tree",
+          "path": "drive-pro/importing-directories.md"
+        }
+      ]
+    },
+    {
       "text": "FlexFields",
       "items": [
         {
