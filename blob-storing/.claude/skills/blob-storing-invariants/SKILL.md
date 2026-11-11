@@ -108,6 +108,11 @@ always carries a signature, with content that has none, is rejected. Unknown con
   only above a size) must not declare it: the declaration is read as a promise.
 - Content that is not `image/*`, and an image the provider reports `Unsupported`, passes through unchanged. With known dimensions a
   resize never upscales and leaves an image that already fits byte for byte.
+- The resize contributor measures the **displayed** size (sides swapped for a quarter-turn EXIF orientation,
+  `ImageHeaderReader.ReadExifOrientation`), so it has to agree with the decoder that turns the picture: the reader reads
+  the orientation exactly where SkiaSharp does (JPEG, WebP, TIFF - not PNG `eXIf`, which SkiaSharp 3.119 ignores), and
+  the agreement tests in `ImageHeaderReader_Tests` are the canary for a SkiaSharp upgrade. The decode guard keeps the
+  stored size: it bounds the decode.
 - Defaults changes (the guard's numbers) are behaviour changes: record them in the CHANGELOG.
 
 ## 7. Error codes, localization, cancellation

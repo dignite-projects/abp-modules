@@ -38,6 +38,23 @@ so it stays clear which part of the repository actually moved.
   `image/jpeg` once `StoreJpegAsWebp` is added - and the type itself otherwise, so an application that names its blobs
   or records their type can do it before the save. A declaration from the configuration, not a result of the save. See
   [Saving Uploaded Files](docs/en/blob-storing/saving-uploaded-files.md#when-the-container-converts-the-content).
+- **`ImageHeaderReader.ReadExifOrientation(stream)`** returns a JPEG's, WebP's or TIFF's EXIF orientation (1-8) from the
+  header, read where SkiaSharp reads it, and `ImageHeaderReader.SwapsSides(orientation)` says whether it is a quarter
+  turn.
+
+### Fixed
+
+#### blob-storing
+
+- **The image resize contributor measures a photo as it is displayed.** It compared the box and the minimum with the
+  stored size, so a photo stored sideways with a quarter-turn EXIF orientation was measured with its sides swapped: one
+  taller than the box once upright was kept at full size, and one that fitted once upright was handed to the resizer,
+  which turned it and could scale it up to the box. `MaxWidth`/`MaxHeight` and `MinWidth`/`MinHeight` now apply to the
+  displayed size (the `ImageTooSmall` data reports it too); the decode guard still checks the stored size. This matches a
+  provider that turns photos upright before resizing, such as `Dignite.Abp.BlobStoring.Imaging.SkiaSharp`'s; ABP 10.7's
+  ImageSharp and Magick.NET providers resize the stored pixels, so with them a sideways photo's box is applied to its
+  stored sides. A PNG's `eXIf` orientation is not read, since SkiaSharp does not apply it. See
+  [Image Resize](docs/en/blob-storing/imaging.md#image-resize).
 
 ## [10.7.6] - 2026-11-09
 

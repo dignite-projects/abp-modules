@@ -9,7 +9,8 @@ namespace Dignite.Abp.BlobStoring.Imaging;
 /// guard can reject an oversized image before an imaging provider allocates memory for it. Understands PNG (IHDR),
 /// JPEG (the SOF segment, walking past APP and other segments), GIF (logical screen), BMP (12-byte core and 40-byte
 /// and larger info headers), WebP (<c>VP8 </c>, <c>VP8L</c>, <c>VP8X</c>) and TIFF (the first IFD, either byte
-/// order). Anything else, or a header it cannot make sense of, yields <c>null</c>.
+/// order). Anything else, or a header it cannot make sense of, yields <c>null</c>. Also reads the EXIF orientation
+/// (<see cref="ReadExifOrientation"/>), which decides whether the image is displayed with its sides swapped.
 /// <para>
 /// Public so that code outside the pipeline can apply the same bound before it decodes an image, such as an endpoint
 /// that resizes a stored image on request.
@@ -21,6 +22,7 @@ public static class ImageHeaderReader
     // make the reader loop for long.
     private const int MaxJpegSegments = 1024;
     private const int MaxTiffEntries = 4096;
+    private const int MaxWebpChunks = 1024;
 
     /// <summary>
     /// The dimensions declared by the header of the image in <paramref name="stream"/>, which must be seekable; it is
@@ -291,6 +293,230 @@ public static class ImageHeaderReader
         }
 
         return width.HasValue && height.HasValue ? Create(width.Value, height.Value) : null;
+    }
+
+    /// <summary>
+    /// The EXIF orientation (1-8) of the image in <paramref name="stream"/>, which must be seekable; it is read from
+    /// position 0 and its position is restored afterwards. A camera stores a portrait photo sideways and records here how
+    /// to turn it for display: 5-8 are quarter turns, so the picture is displayed with its width and height swapped
+    /// (<see cref="SwapsSides"/>). <c>null</c> when the image carries none, the format is not one of those read, or the
+    /// EXIF data is truncated or invalid.
+    /// <para>
+    /// Read where SkiaSharp reads it, because what it decides has to match the decoder that turns the picture: a JPEG's
+    /// first <c>APP1</c> EXIF segment before the scan, a WebP's <c>EXIF</c> chunk (extended format), a TIFF's first
+    /// directory. Only the first directory of the EXIF data is searched, as the orientation tag lives there. A PNG's
+    /// <c>eXIf</c> chunk is not read: SkiaSharp 3.119 (ABP 10.7) does not apply it, so a PNG is resized as stored.
+    /// </para>
+    /// </summary>
+    public static int? ReadExifOrientation(Stream stream)
+    {
+        if (!stream.CanSeek)
+        {
+            throw new ArgumentException("The stream must be seekable so its header can be read.", nameof(stream));
+        }
+
+        var originalPosition = stream.Position;
+        try
+        {
+            stream.Position = 0;
+            Span<byte> header = stackalloc byte[32];
+            var length = stream.ReadAtLeast(header, header.Length, throwOnEndOfStream: false);
+            header = header[..length];
+
+            if (header.StartsWith((ReadOnlySpan<byte>)[0xFF, 0xD8]))
+            {
+                return ReadJpegOrientation(stream);
+            }
+
+            if (header.Length >= 21 && header.StartsWith("RIFF"u8) && header.Slice(8, 4).SequenceEqual("WEBP"u8))
+            {
+                return ReadWebpOrientation(stream, header);
+            }
+
+            if (header.StartsWith("II*\0"u8) || header.StartsWith("MM\0*"u8))
+            {
+                return ReadExifTiffOrientation(stream, 0, stream.Length);
+            }
+
+            return null;
+        }
+        catch (EndOfStreamException)
+        {
+            return null;
+        }
+        finally
+        {
+            stream.Position = originalPosition;
+        }
+    }
+
+    /// <summary>
+    /// Whether an image with the EXIF <paramref name="orientation"/> is displayed with its width and height swapped: the
+    /// quarter turns, 5-8.
+    /// </summary>
+    public static bool SwapsSides(int? orientation)
+    {
+        return orientation is >= 5 and <= 8;
+    }
+
+    private static int? ReadJpegOrientation(Stream stream)
+    {
+        Span<byte> buffer = stackalloc byte[6];
+        long position = 2; // after SOI
+
+        for (var segment = 0; segment < MaxJpegSegments; segment++)
+        {
+            stream.Position = position;
+            if (stream.ReadByte() != 0xFF)
+            {
+                return null;
+            }
+
+            int marker;
+            do
+            {
+                marker = stream.ReadByte();
+            }
+            while (marker == 0xFF);
+
+            if (marker < 0 || marker is 0xD9 or 0xDA)
+            {
+                // The end, or the scan data: no EXIF segment came before it.
+                return null;
+            }
+
+            if (marker is 0x01 or 0xD8 or >= 0xD0 and <= 0xD7)
+            {
+                position = stream.Position;
+                continue;
+            }
+
+            stream.ReadExactly(buffer[..2]);
+            var segmentLength = BinaryPrimitives.ReadUInt16BigEndian(buffer);
+            if (segmentLength < 2)
+            {
+                return null;
+            }
+
+            var dataStart = stream.Position;
+            if (marker == 0xE1 && segmentLength >= 2 + 6 + 8)
+            {
+                stream.ReadExactly(buffer);
+                if (buffer.SequenceEqual("Exif\0\0"u8))
+                {
+                    // The first EXIF segment is the one read, whatever it holds.
+                    return ReadExifTiffOrientation(stream, dataStart + 6, segmentLength - 2 - 6);
+                }
+            }
+
+            position = dataStart - 2 + segmentLength;
+        }
+
+        return null;
+    }
+
+    private static int? ReadWebpOrientation(Stream stream, ReadOnlySpan<byte> header)
+    {
+        // Only the extended format carries EXIF, flagged in the VP8X chunk's first byte.
+        if (!header.Slice(12, 4).SequenceEqual("VP8X"u8) || (header[20] & 0x08) == 0)
+        {
+            return null;
+        }
+
+        var end = Math.Min(stream.Length, 8L + BinaryPrimitives.ReadUInt32LittleEndian(header[4..]));
+        Span<byte> buffer = stackalloc byte[8];
+        long position = 12;
+
+        for (var chunk = 0; chunk < MaxWebpChunks && position + 8 <= end; chunk++)
+        {
+            stream.Position = position;
+            stream.ReadExactly(buffer);
+            var chunkLength = BinaryPrimitives.ReadUInt32LittleEndian(buffer[4..]);
+            var dataStart = position + 8;
+
+            if (buffer[..4].SequenceEqual("EXIF"u8))
+            {
+                return ReadExifTiffOrientation(stream, dataStart, Math.Min(chunkLength, end - dataStart), allowExifPrefix: true);
+            }
+
+            position = dataStart + chunkLength + (chunkLength & 1); // chunks are padded to an even length
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// The orientation tag (0x0112) of the first directory of the TIFF-structured EXIF data at <paramref name="start"/>,
+    /// <paramref name="length"/> bytes long. <paramref name="allowExifPrefix"/>: the data may begin with <c>Exif\0\0</c>,
+    /// as some writers of WebP EXIF chunks put there.
+    /// </summary>
+    private static int? ReadExifTiffOrientation(Stream stream, long start, long length, bool allowExifPrefix = false)
+    {
+        Span<byte> buffer = stackalloc byte[12];
+        if (length < 8)
+        {
+            return null;
+        }
+
+        stream.Position = start;
+        stream.ReadExactly(buffer[..8]);
+        if (allowExifPrefix && buffer[..6].SequenceEqual("Exif\0\0"u8))
+        {
+            start += 6;
+            length -= 6;
+            if (length < 8)
+            {
+                return null;
+            }
+
+            stream.Position = start;
+            stream.ReadExactly(buffer[..8]);
+        }
+
+        bool littleEndian;
+        if (buffer[..4].SequenceEqual("II*\0"u8))
+        {
+            littleEndian = true;
+        }
+        else if (buffer[..4].SequenceEqual("MM\0*"u8))
+        {
+            littleEndian = false;
+        }
+        else
+        {
+            return null;
+        }
+
+        var ifdOffset = ReadUInt32(buffer[4..], littleEndian);
+        if (ifdOffset < 8 || ifdOffset + 2 > length)
+        {
+            return null;
+        }
+
+        stream.Position = start + ifdOffset;
+        stream.ReadExactly(buffer[..2]);
+        var entryCount = Math.Min((int)ReadUInt16(buffer, littleEndian), MaxTiffEntries);
+        entryCount = (int)Math.Min(entryCount, (length - ifdOffset - 2) / 12);
+
+        for (var i = 0; i < entryCount; i++)
+        {
+            // Tag (2), type (2), count (4), value (4): a SHORT value is in the first 2 bytes of the field.
+            stream.ReadExactly(buffer);
+            if (ReadUInt16(buffer, littleEndian) != 0x0112)
+            {
+                continue;
+            }
+
+            if (ReadUInt16(buffer[2..], littleEndian) != 3)
+            {
+                return null;
+            }
+
+            var orientation = ReadUInt16(buffer[8..], littleEndian);
+            return orientation is >= 1 and <= 8 ? orientation : null;
+        }
+
+        return null;
     }
 
     private static (int Width, int Height)? Create(uint width, uint height)

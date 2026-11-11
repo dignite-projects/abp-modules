@@ -45,7 +45,8 @@ One solution, `Dignite.Abp.BlobStoring.slnx`, central package management (versio
 - **`src/Dignite.Abp.BlobStoring.Imaging`** — `ImageResizeContributor`, `ImageCompressContributor` (both on
   `ImageContributorBase`), `ImageMetadataStripContributor` (a plain contributor: it walks JPEG segments and PNG chunks in
   managed code through the internal `ImageMetadataStripper`, decodes nothing, so no decode guard), their
-  configurations, `ImageDecodeGuardConfiguration`, `ImageHeaderReader` (public since 10.7.5),
+  configurations, `ImageDecodeGuardConfiguration`, `ImageHeaderReader` (public since 10.7.5; also the EXIF orientation,
+  which the resize contributor uses to measure a picture as displayed),
   `ImagingBlobContainerConfigurationExtensions`, `BlobStoringImagingErrorCodes`, localization. Depends on the Pipeline
   package and `Volo.Abp.Imaging.Abstractions` — **no image library**; the application picks one of ABP's providers.
 - **`src/Dignite.Abp.BlobStoring.Imaging.SkiaSharp`** — the provider-specific package, so `.Imaging` can keep its rule:

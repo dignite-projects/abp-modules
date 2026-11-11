@@ -102,6 +102,8 @@ None of the values may be negative.
 
 An image is resized **only when it exceeds** a constrained dimension: an image that already fits is stored byte for byte, and an image is never upscaled. An image format the provider does not support is stored unchanged. If the header gives no dimensions, the resizer is called anyway, and what happens to an image that already fits is up to the provider.
 
+The maximum and the minimum apply to the image **as it is displayed**. A camera stores a portrait photo sideways and records a quarter turn in its EXIF orientation; such a photo stored 4000 × 3000 is measured 3000 × 4000. The orientation is read from a JPEG's EXIF segment and a WebP's EXIF chunk, where SkiaSharp reads it; a PNG's `eXIf` chunk is not read, because SkiaSharp does not apply it either. This matches a provider that turns the picture upright before it resizes, as the [SkiaSharp image contributors](imaging-skiasharp.md#upright-resizing) package does. ABP 10.7's SkiaSharp provider on its own stores such a photo on its side, and its ImageSharp and Magick.NET providers resize the stored pixels and keep the orientation, so with them the box is applied to the stored sides of a sideways photo.
+
 ## Image Compress
 
 Use the `AddImageCompressContributor` extension method, **after** the image resize contributor, so the resized image is the one compressed:
@@ -160,7 +162,7 @@ Every value must be greater than `0`, and the timeout can be at most `int.MaxVal
 * Processing that takes longer than `DecodeTimeout` fails with `Dignite.Abp.BlobStoring.Imaging:ImageDecodeTimeout`.
 * A provider that fails on the content (a corrupt image) fails with `Dignite.Abp.BlobStoring.Imaging:ImageProcessingFailed`.
 
-The dimensions are read from the image header, without decoding, for PNG, JPEG, GIF, BMP, WebP and TIFF. The reader is public as `ImageHeaderReader.Read(stream)`, for code outside the pipeline that decodes a stored image, such as an endpoint that resizes on request, and should apply the same bound first. For any other format, or a header the reader does not understand, the dimension, pixel and ratio checks are skipped; the decode timeout and the container's buffering cap still apply.
+The dimensions are read from the image header, without decoding, for PNG, JPEG, GIF, BMP, WebP and TIFF. The reader is public as `ImageHeaderReader.Read(stream)`, with `ImageHeaderReader.ReadExifOrientation(stream)` for the orientation, for code outside the pipeline that decodes a stored image, such as an endpoint that resizes on request, and should apply the same bound first. For any other format, or a header the reader does not understand, the dimension, pixel and ratio checks are skipped; the decode timeout and the container's buffering cap still apply.
 
 > **The decode timeout is cooperative.** It cancels the token passed to the imaging provider, so it only interrupts a provider that observes the token while decoding. ImageSharp does; SkiaSharp and Magick.NET decode synchronously. With those, the header-based dimension checks and the byte cap are the protections that apply.
 

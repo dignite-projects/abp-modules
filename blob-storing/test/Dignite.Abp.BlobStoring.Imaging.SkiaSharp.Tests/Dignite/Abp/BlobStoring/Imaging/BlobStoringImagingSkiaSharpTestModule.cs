@@ -24,9 +24,12 @@ public class BlobStoringImagingSkiaSharpTestModule : AbpModule
     public const string ComposedContainer = "composed";
     public const string StretchContainer = "webp-stretch";
     public const string ResizeContainer = "resize";
+    public const string WideResizeContainer = "resize-wide";
 
     public const int LowQuality = 30;
     public const int Box = 256;
+    public const int WideBoxWidth = 400;
+    public const int WideBoxHeight = 200;
 
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
@@ -69,6 +72,13 @@ public class BlobStoringImagingSkiaSharpTestModule : AbpModule
                     c.Mode = ImageResizeMode.Stretch;
                 });
             });
+
+            options.Containers.Configure(WideResizeContainer, container =>
+                container.AddImageResizeContributor(c =>
+                {
+                    c.MaxWidth = WideBoxWidth;
+                    c.MaxHeight = WideBoxHeight;
+                }));
 
             options.Containers.Configure(ResizeContainer, container =>
                 container.AddImageResizeContributor(c =>

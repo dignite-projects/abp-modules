@@ -179,6 +179,39 @@ public class JpegToWebpContributor_Tests : AbpIntegratedTest<BlobStoringImagingS
         ShouldBeBlue(TestPictures.AverageColor(stored, new SKRectI(32, 160, 96, 224)));
     }
 
+    /// <summary>
+    /// A photo stored 300 x 150 with a quarter-turn orientation is displayed 150 x 300, taller than the 400 x 200 box:
+    /// measured upright, it is shrunk, upright, to 100 x 200. Measured as stored, it would have fitted and been kept.
+    /// </summary>
+    [Fact]
+    public async Task A_Sideways_Jpeg_Taller_Than_The_Box_When_Upright_Should_Be_Shrunk_Upright()
+    {
+        const string containerName = BlobStoringImagingSkiaSharpTestModule.WideResizeContainer;
+        var upload = TestPictures.WithExifOrientation(TestPictures.RedLeftBlueRightJpeg(300, 150), 6);
+
+        await Container(containerName).SaveAsync("portrait.jpg", upload);
+
+        var stored = await GetStoredBytesAsync(containerName, "portrait.jpg");
+        TestPictures.Inspect(stored).ShouldBe((SKEncodedImageFormat.Jpeg, 100, 200, SKEncodedOrigin.TopLeft));
+        ShouldBeRed(TestPictures.AverageColor(stored, new SKRectI(20, 20, 80, 80)));
+        ShouldBeBlue(TestPictures.AverageColor(stored, new SKRectI(20, 120, 80, 180)));
+    }
+
+    /// <summary>
+    /// The other way round: stored 150 x 300, displayed 300 x 150, it fits the box upright and is stored as uploaded,
+    /// rather than turned and scaled up to the box.
+    /// </summary>
+    [Fact]
+    public async Task A_Sideways_Jpeg_That_Fits_When_Upright_Should_Be_Stored_As_Uploaded()
+    {
+        const string containerName = BlobStoringImagingSkiaSharpTestModule.WideResizeContainer;
+        var upload = TestPictures.WithExifOrientation(TestPictures.RedLeftBlueRightJpeg(150, 300), 6);
+
+        await Container(containerName).SaveAsync("landscape.jpg", upload);
+
+        (await GetStoredBytesAsync(containerName, "landscape.jpg")).ShouldBe(upload);
+    }
+
     [Fact]
     public void The_Module_Should_Replace_Abps_SkiaSharp_Resizer_And_Its_Defaults()
     {

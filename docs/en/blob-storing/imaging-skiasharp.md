@@ -86,7 +86,7 @@ var storedType = _blobContainerConfigurationProvider
 
 A camera stores a portrait photo sideways and records the turn in its EXIF orientation. ABP 10.7.0's SkiaSharp resizer ignores the orientation, and the picture it encodes has no EXIF, so a photo the [image resize](imaging.md#image-resize) contributor shrinks is stored on its side.
 
-`AbpBlobStoringImagingSkiaSharpModule` removes ABP's `SkiaSharpImageResizerContributor` and registers `UprightSkiaSharpImageResizerContributor` in its place. It decodes, resizes and encodes as ABP's does, with ABP's own resize code for every `ImageResizeMode`, but turns the picture upright first. **This applies to every caller of `IImageResizer` in the application**, not only to BLOB containers.
+`AbpBlobStoringImagingSkiaSharpModule` removes ABP's `SkiaSharpImageResizerContributor` and registers `UprightSkiaSharpImageResizerContributor` in its place. It decodes, resizes and encodes as ABP's does, with ABP's own resize code for every `ImageResizeMode`, but turns the picture upright first. **This applies to every caller of `IImageResizer` in the application**, not only to BLOB containers. The image resize contributor measures a picture as displayed too, so a photo taller than the box once upright is shrunk, and one that fits once upright is stored as uploaded.
 
 > ABP fixed the same defect on its `rel-10.7` branch after 10.7.1. Once this package is built on an ABP release that has the fix, the replacement is no longer needed and will be removed.
 

@@ -89,6 +89,36 @@ public class ImageResizeContributor_Tests : BlobStoringImagingTestBase
         (await GetStoredBytesAsync(containerName, "tiny.png")).ShouldBeNull();
     }
 
+    /// <summary>
+    /// The box is about the picture as displayed: a photo stored 400 x 200 with a quarter-turn EXIF orientation is
+    /// displayed 200 x 400, fits a 300-wide box, and is stored as uploaded - not shrunk, and not handed to a resizer
+    /// that would turn it and scale it up.
+    /// </summary>
+    [Fact]
+    public async Task Should_Store_A_Sideways_Image_That_Fits_When_Upright_Unchanged()
+    {
+        const string containerName = BlobStoringImagingTestModule.ResizeWidthContainer;
+        var content = TestExif.Jpeg(TestImages.Noise(400, 200, SKEncodedImageFormat.Jpeg, quality: 90), 6);
+
+        await Container(containerName).SaveAsync("portrait.jpg", content);
+
+        (await GetStoredBytesAsync(containerName, "portrait.jpg")).ShouldBe(content);
+    }
+
+    /// <summary>The minimum is checked against the displayed size too: 120 x 90 stored sideways is 90 wide.</summary>
+    [Fact]
+    public async Task Should_Check_The_Minimum_Size_Of_A_Sideways_Image_Upright()
+    {
+        const string containerName = BlobStoringImagingTestModule.MinimumSizeContainer;
+        var content = TestExif.Jpeg(TestImages.Noise(120, 90, SKEncodedImageFormat.Jpeg, quality: 90), 6);
+
+        var exception = await Should.ThrowAsync<BusinessException>(() => Container(containerName).SaveAsync("portrait.jpg", content));
+
+        exception.Code.ShouldBe(BlobStoringImagingErrorCodes.ImageTooSmall);
+        exception.Data["Width"].ShouldBe(90);
+        exception.Data["Height"].ShouldBe(120);
+    }
+
     [Fact]
     public async Task Should_Accept_An_Image_Of_Exactly_The_Minimum_Size()
     {

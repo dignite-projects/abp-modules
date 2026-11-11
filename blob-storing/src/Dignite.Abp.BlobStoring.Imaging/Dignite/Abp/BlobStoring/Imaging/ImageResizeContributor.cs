@@ -18,7 +18,11 @@ namespace Dignite.Abp.BlobStoring.Imaging;
 /// <see cref="ImagingBlobContainerConfigurationExtensions.AddImageResizeContributor"/>.
 /// <para>
 /// The image is only resized when the dimensions read from its header exceed a constrained dimension, so an image
-/// that already fits is stored byte for byte and never upscaled. When the header gives no dimensions, the resizer is
+/// that already fits is stored byte for byte and never upscaled. The dimensions are those the image is displayed at:
+/// a photo stored sideways with an EXIF orientation of a quarter turn is measured with its sides swapped, as a provider
+/// that turns the picture upright before resizing (the SkiaSharp one of <c>Dignite.Abp.BlobStoring.Imaging.SkiaSharp</c>)
+/// applies the box. ABP 10.7's ImageSharp and Magick.NET providers resize the stored pixels and keep the orientation,
+/// so for such a photo they apply the box to the stored sides. When the header gives no dimensions, the resizer is
 /// called anyway, and what happens to an image that already fits is up to the provider and the mode (SkiaSharp's
 /// <see cref="ImageResizeMode.Max"/>, for one, scales it up to the box). Every format ABP's providers resize (JPEG,
 /// PNG, GIF, BMP, TIFF, WebP) has a header this package reads, so that only happens with an unusual header.
@@ -55,15 +59,30 @@ public class ImageResizeContributor : ImageContributorBase, ITransientDependency
 
         if (dimensions != null)
         {
-            CheckMinimumSize(dimensions.Value, configuration);
+            // The box and the minimum are about the picture as it is displayed: a photo stored sideways is measured
+            // upright.
+            var displayed = GetDisplayedDimensions(stream, dimensions.Value);
+            CheckMinimumSize(displayed, configuration);
 
-            if (!ExceedsMaximumSize(dimensions.Value, configuration))
+            if (!ExceedsMaximumSize(displayed, configuration))
             {
                 return null;
             }
         }
 
         return await ImageResizer.ResizeAsync(stream, CreateResizeArgs(configuration), mimeType, cancellationToken);
+    }
+
+    /// <summary>
+    /// The size the image is displayed at: <paramref name="dimensions"/>, the stored size read from its header, with the
+    /// sides swapped when its EXIF orientation is a quarter turn (<see cref="ImageHeaderReader.ReadExifOrientation"/>).
+    /// <paramref name="stream"/> is seekable and its position is restored.
+    /// </summary>
+    protected virtual (int Width, int Height) GetDisplayedDimensions(Stream stream, (int Width, int Height) dimensions)
+    {
+        return ImageHeaderReader.SwapsSides(ImageHeaderReader.ReadExifOrientation(stream))
+            ? (dimensions.Height, dimensions.Width)
+            : dimensions;
     }
 
     /// <summary>
