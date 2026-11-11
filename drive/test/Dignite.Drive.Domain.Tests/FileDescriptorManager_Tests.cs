@@ -1,14 +1,17 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobStoring.Pipeline;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Volo.Abp;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.Data;
 using Volo.Abp.Modularity;
 using Volo.Abp.MultiTenancy;
+using Volo.Abp.Uow;
 using Xunit;
 
 namespace Dignite.Drive;
@@ -53,7 +56,6 @@ public abstract class FileDescriptorManager_Tests<TStartupModule> : DriveDomainT
             descriptor.Size.ShouldBe(bytes.Length);
             descriptor.Hash.Length.ShouldBe(64);
             descriptor.OwnsBlob().ShouldBeTrue();
-            descriptor.DirectoryId.ShouldBeNull();
 
             var found = await FindAsync(DriveTestContainers.Files, "2026/11/notes.pdf");
             found.ShouldNotBeNull();
@@ -117,6 +119,7 @@ public abstract class FileDescriptorManager_Tests<TStartupModule> : DriveDomainT
         (await FindAsync(DriveTestContainers.Files, name))!.Id.ShouldBe(second.Id);
         (await ReadAsync(second)).ShouldBe(secondBytes);
         (await BlobExistsAsync(DriveTestContainers.Files, first.BlobName)).ShouldBeFalse();
+        await ShouldBeTheOnlyLiveHolderOfTheNameAsync(second, first);
     }
 
     [Fact]
@@ -126,10 +129,117 @@ public abstract class FileDescriptorManager_Tests<TStartupModule> : DriveDomainT
         var bytes = DriveTestFiles.Pdf(name);
         var first = await CreateAsync(DriveTestContainers.Files, name, bytes);
 
+        // One unit of work takes the dedup lock for the upload and needs it again for the replaced descriptor's BLOB
+        // after commit: it reuses it rather than waiting for itself.
         var second = await CreateAsync(DriveTestContainers.Files, name, bytes, overrideExisting: true);
 
         second.BlobName.ShouldBe(first.BlobName);
         (await ReadAsync(second)).ShouldBe(bytes);
+        (await BlobExistsAsync(DriveTestContainers.Files, second.BlobName)).ShouldBeTrue();
+        await ShouldBeTheOnlyLiveHolderOfTheNameAsync(second, first);
+    }
+
+    /// <summary>
+    /// The lookup by name is check-then-act; the name key is the arbiter. A second live descriptor under the same name -
+    /// inserted past the manager's check, as the loser of two simultaneous saves would be - is refused by the database,
+    /// and the name is free again once its holder is deleted.
+    /// </summary>
+    [Fact]
+    public async Task A_Name_Should_Have_One_Live_Descriptor_In_A_System_Container()
+    {
+        var name = "unique-" + Guid.NewGuid().ToString("N") + ".pdf";
+        var first = await CreateAsync(DriveTestContainers.Files, name, DriveTestFiles.Pdf("first " + name));
+        first.NameKey.ShouldBe(FileDescriptor.CreateNameKey(null, DriveTestContainers.Files, name));
+
+        await Should.ThrowAsync<Exception>(() => WithUnitOfWorkAsync(() =>
+            _fileDescriptorRepository.InsertAsync(
+                new FileDescriptor(
+                    Guid.NewGuid(), DriveTestContainers.Files, name, Guid.NewGuid().ToString("N") + ".pdf",
+                    "application/pdf", 1, new string('0', 64), ownsBlob: false, nameIsAddress: true),
+                autoSave: true)));
+
+        await WithUnitOfWorkAsync(async () =>
+            await _fileDescriptorManager.DeleteAsync(await _fileDescriptorRepository.GetAsync(first.Id)));
+
+        var again = await CreateAsync(DriveTestContainers.Files, name, DriveTestFiles.Pdf("again " + name));
+        again.NameKey.ShouldBe(first.NameKey);
+        (await FindAsync(DriveTestContainers.Files, name))!.Id.ShouldBe(again.Id);
+    }
+
+    /// <summary>
+    /// A unit of work that stores the same bytes twice holds the dedup lock after the first upload and reuses it for
+    /// the second, which shares the first one's BLOB.
+    /// </summary>
+    [Fact]
+    public async Task The_Same_Bytes_Twice_In_One_Unit_Of_Work_Should_Share_One_Blob()
+    {
+        var bytes = DriveTestFiles.Pdf("one unit of work " + Guid.NewGuid());
+
+        var (first, second) = await WithUnitOfWorkAsync(async () =>
+        {
+            using var firstStream = new MemoryStream(bytes);
+            var a = await _fileDescriptorManager.CreateAsync(DriveTestContainers.Files, "a-" + Guid.NewGuid().ToString("N") + ".pdf", firstStream);
+            using var secondStream = new MemoryStream(bytes);
+            var b = await _fileDescriptorManager.CreateAsync(DriveTestContainers.Files, "b-" + Guid.NewGuid().ToString("N") + ".pdf", secondStream);
+            return (a, b);
+        });
+
+        second.BlobName.ShouldBe(first.BlobName);
+        first.OwnsBlob().ShouldBeTrue();
+        second.OwnsBlob().ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// The BLOB is deleted after commit: a unit of work that deletes the descriptor and then rolls back leaves the
+    /// bytes in place. (The test database runs without transactions, so the row itself stays deleted here; with
+    /// transactions the rollback restores it, and its bytes are still there.)
+    /// </summary>
+    [Fact]
+    public async Task A_Rolled_Back_Delete_Should_Keep_The_Blob()
+    {
+        var bytes = DriveTestFiles.Pdf("rolled back " + Guid.NewGuid());
+        var file = await CreateAsync(DriveTestContainers.Files, "rolled-back-" + Guid.NewGuid().ToString("N") + ".pdf", bytes);
+
+        using (var scope = ServiceProvider.CreateScope())
+        {
+            var unitOfWorkManager = scope.ServiceProvider.GetRequiredService<IUnitOfWorkManager>();
+            using (var unitOfWork = unitOfWorkManager.Begin(new AbpUnitOfWorkOptions()))
+            {
+                await _fileDescriptorManager.DeleteAsync(await _fileDescriptorRepository.GetAsync(file.Id));
+                await unitOfWork.RollbackAsync();
+            }
+        }
+
+        (await BlobExistsAsync(DriveTestContainers.Files, file.BlobName)).ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// When the dedup lock cannot be had, the upload neither fails nor dedups: the bytes are stored again under a new
+    /// BLOB name that no descriptor claims the dedup key for, and that BLOB goes with its descriptor.
+    /// </summary>
+    [Fact]
+    public async Task Without_The_Dedup_Lock_An_Upload_Should_Be_Stored_Without_Dedup()
+    {
+        var bytes = DriveTestFiles.Pdf("lockless " + Guid.NewGuid());
+        var first = await CreateAsync(DriveTestContainers.Files, "locked-" + Guid.NewGuid().ToString("N") + ".pdf", bytes);
+
+        var lockless = GetRequiredService<LocklessFileDescriptorManager>();
+        var second = await WithUnitOfWorkAsync(async () =>
+        {
+            using var stream = new MemoryStream(bytes);
+            return await lockless.CreateAsync(DriveTestContainers.Files, "lockless-" + Guid.NewGuid().ToString("N") + ".pdf", stream);
+        });
+
+        second.DedupKey.ShouldBeNull();
+        second.OwnsBlob().ShouldBeFalse();
+        second.BlobName.ShouldNotBe(first.BlobName);
+        second.NameKey.ShouldNotBeNull();
+        (await ReadAsync(second)).ShouldBe(bytes);
+
+        await WithUnitOfWorkAsync(async () =>
+            await _fileDescriptorManager.DeleteAsync(await _fileDescriptorRepository.GetAsync(second.Id)));
+        (await BlobExistsAsync(DriveTestContainers.Files, second.BlobName)).ShouldBeFalse();
+        (await BlobExistsAsync(DriveTestContainers.Files, first.BlobName)).ShouldBeTrue();
     }
 
     /// <summary>
@@ -308,5 +418,27 @@ public abstract class FileDescriptorManager_Tests<TStartupModule> : DriveDomainT
     private Task<bool> BlobExistsAsync(string containerName, string blobName)
     {
         return _blobContainerFactory.Create(containerName).ExistsAsync(blobName);
+    }
+
+    /// <summary>
+    /// <paramref name="holder"/> is the one live descriptor with its name, and holds the name key;
+    /// <paramref name="replaced"/>, deleted, holds neither key.
+    /// </summary>
+    private async Task ShouldBeTheOnlyLiveHolderOfTheNameAsync(FileDescriptor holder, FileDescriptor replaced)
+    {
+        var live = (await WithUnitOfWorkAsync(() => _fileDescriptorRepository.GetListAsync()))
+            .Where(f => f.ContainerName == holder.ContainerName && f.Name == holder.Name)
+            .ToList();
+        live.Count.ShouldBe(1);
+        live[0].Id.ShouldBe(holder.Id);
+        live[0].NameKey.ShouldBe(FileDescriptor.CreateNameKey(holder.TenantId, holder.ContainerName, holder.Name));
+
+        using (_dataFilter.Disable<ISoftDelete>())
+        {
+            var deleted = await WithUnitOfWorkAsync(() => _fileDescriptorRepository.GetAsync(replaced.Id));
+            deleted.IsDeleted.ShouldBeTrue();
+            deleted.NameKey.ShouldBeNull();
+            deleted.DedupKey.ShouldBeNull();
+        }
     }
 }

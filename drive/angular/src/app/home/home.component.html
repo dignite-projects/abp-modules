@@ -1,4 +1,14 @@
 <div class="getting-started-page">
+  @if (hasLoggedIn) {
+    <div class="card mb-3">
+      <div class="card-body">
+        <h4>Drive file input</h4>
+        <p class="text-muted mb-2">Files uploaded into the <code>shared</code> container and attached to a form control.</p>
+        <drive-file-input containerName="shared" [multiple]="true" [formControl]="attachments" />
+        <pre class="small mt-2 mb-0">{{ attachments.value | json }}</pre>
+      </div>
+    </div>
+  }
   <div class="row mb-3">
     <div class="col-xl-6 col-12 d-flex">
       <div class="card h-lg-100 w-100 overflow-hidden getting-started-hero-card">

@@ -65,6 +65,22 @@
         {
           "text": "Hosting Modes",
           "path": "drive/hosting.md"
+        },
+        {
+          "text": "Attaching Files",
+          "path": "drive/attaching-files.md"
+        },
+        {
+          "text": "Permissions",
+          "path": "drive/permissions.md"
+        },
+        {
+          "text": "Angular UI",
+          "path": "drive/angular-ui.md"
+        },
+        {
+          "text": "MCP Tools",
+          "path": "drive/mcp.md"
         }
       ]
     },

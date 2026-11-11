@@ -560,6 +560,582 @@
             }
           }
         },
+        "Dignite.Drive.Containers.DriveContainerController": {
+          "controllerName": "DriveContainer",
+          "controllerGroupName": "DriveContainer",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "Dignite.Drive.Containers.DriveContainerController",
+          "summary": null,
+          "remarks": null,
+          "description": null,
+          "displayName": null,
+          "interfaces": [
+            {
+              "type": "Dignite.Drive.Containers.IDriveContainerAppService",
+              "name": "IDriveContainerAppService",
+              "methods": [
+                {
+                  "name": "GetListAsync",
+                  "parametersOnMethod": [],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.Drive.Containers.DriveContainerDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.Drive.Containers.DriveContainerDto>",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "GetAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "name",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Dignite.Drive.Containers.DriveContainerDto",
+                    "typeSimple": "Dignite.Drive.Containers.DriveContainerDto",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "GetListAsync": {
+              "uniqueName": "GetListAsync",
+              "name": "GetListAsync",
+              "httpMethod": "GET",
+              "url": "api/drive/containers",
+              "supportedVersions": [],
+              "parametersOnMethod": [],
+              "parameters": [],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.Drive.Containers.DriveContainerDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.Drive.Containers.DriveContainerDto>",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Drive.Containers.IDriveContainerAppService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "GetAsyncByName": {
+              "uniqueName": "GetAsyncByName",
+              "name": "GetAsync",
+              "httpMethod": "GET",
+              "url": "api/drive/containers/{name}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "name",
+                  "typeAsString": "System.String, System.Private.CoreLib",
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "name",
+                  "name": "name",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "Dignite.Drive.Containers.DriveContainerDto",
+                "typeSimple": "Dignite.Drive.Containers.DriveContainerDto",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Drive.Containers.IDriveContainerAppService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            }
+          }
+        },
+        "Dignite.Drive.Files.DriveFileController": {
+          "controllerName": "DriveFile",
+          "controllerGroupName": "DriveFile",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "Dignite.Drive.Files.DriveFileController",
+          "summary": null,
+          "remarks": null,
+          "description": null,
+          "displayName": null,
+          "interfaces": [
+            {
+              "type": "Dignite.Drive.Files.IDriveFileAppService",
+              "name": "IDriveFileAppService",
+              "methods": [
+                {
+                  "name": "GetAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Dignite.Drive.Files.DriveFileDto",
+                    "typeSimple": "Dignite.Drive.Files.DriveFileDto",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "CreateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "Dignite.Drive.Files.CreateDriveFileInput, Dignite.Drive.Application.Contracts",
+                      "type": "Dignite.Drive.Files.CreateDriveFileInput",
+                      "typeSimple": "Dignite.Drive.Files.CreateDriveFileInput",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Dignite.Drive.Files.DriveFileDto",
+                    "typeSimple": "Dignite.Drive.Files.DriveFileDto",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "CreateUploadTicketAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "Dignite.Drive.Files.CreateDriveFileUploadTicketInput, Dignite.Drive.Application.Contracts",
+                      "type": "Dignite.Drive.Files.CreateDriveFileUploadTicketInput",
+                      "typeSimple": "Dignite.Drive.Files.CreateDriveFileUploadTicketInput",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Dignite.Drive.Tickets.DriveTicketDto",
+                    "typeSimple": "Dignite.Drive.Tickets.DriveTicketDto",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "DeleteAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "GetContentAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Content.IRemoteStreamContent",
+                    "typeSimple": "Volo.Abp.Content.IRemoteStreamContent",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": true
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "GetAsyncById": {
+              "uniqueName": "GetAsyncById",
+              "name": "GetAsync",
+              "httpMethod": "GET",
+              "url": "api/drive/files/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "Dignite.Drive.Files.DriveFileDto",
+                "typeSimple": "Dignite.Drive.Files.DriveFileDto",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Drive.Files.IDriveFileAppService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "CreateAsyncByInput": {
+              "uniqueName": "CreateAsyncByInput",
+              "name": "CreateAsync",
+              "httpMethod": "POST",
+              "url": "api/drive/files",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "Dignite.Drive.Files.CreateDriveFileInput, Dignite.Drive.Application.Contracts",
+                  "type": "Dignite.Drive.Files.CreateDriveFileInput",
+                  "typeSimple": "Dignite.Drive.Files.CreateDriveFileInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "ContainerName",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Form",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Name",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Form",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "File",
+                  "jsonName": null,
+                  "type": "Volo.Abp.Content.IRemoteStreamContent",
+                  "typeSimple": "Volo.Abp.Content.IRemoteStreamContent",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "FormFile",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "Dignite.Drive.Files.DriveFileDto",
+                "typeSimple": "Dignite.Drive.Files.DriveFileDto",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Drive.Files.IDriveFileAppService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "CreateUploadTicketAsyncByInput": {
+              "uniqueName": "CreateUploadTicketAsyncByInput",
+              "name": "CreateUploadTicketAsync",
+              "httpMethod": "POST",
+              "url": "api/drive/files/upload-tickets",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "Dignite.Drive.Files.CreateDriveFileUploadTicketInput, Dignite.Drive.Application.Contracts",
+                  "type": "Dignite.Drive.Files.CreateDriveFileUploadTicketInput",
+                  "typeSimple": "Dignite.Drive.Files.CreateDriveFileUploadTicketInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "Dignite.Drive.Files.CreateDriveFileUploadTicketInput",
+                  "typeSimple": "Dignite.Drive.Files.CreateDriveFileUploadTicketInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "Dignite.Drive.Tickets.DriveTicketDto",
+                "typeSimple": "Dignite.Drive.Tickets.DriveTicketDto",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Drive.Files.IDriveFileAppService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "DeleteAsyncById": {
+              "uniqueName": "DeleteAsyncById",
+              "name": "DeleteAsync",
+              "httpMethod": "DELETE",
+              "url": "api/drive/files/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void",
+                "summary": null,
+                "contentTypes": null,
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Drive.Files.IDriveFileAppService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "GetContentAsyncById": {
+              "uniqueName": "GetContentAsyncById",
+              "name": "GetContentAsync",
+              "httpMethod": "GET",
+              "url": "api/drive/files/{id}/content",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Content.IRemoteStreamContent",
+                "typeSimple": "Volo.Abp.Content.IRemoteStreamContent",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": true
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Drive.Files.IDriveFileAppService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            }
+          }
+        },
         "Dignite.Drive.Tickets.DriveTicketController": {
           "controllerName": "DriveTicket",
           "controllerGroupName": "DriveTicket",

@@ -7,13 +7,14 @@ public enum DriveContainerKind
 {
     /// <summary>
     /// Written through the BLOB storing provider (the integration entry): mapped from an application's container
-    /// by <c>UseDrive</c>, not in the directory tree, not shown in the UI. Callers are clients and tickets, never
-    /// users.
+    /// by <c>UseDrive</c>, addressed by the application's own names, not shown to users. Callers are clients and
+    /// tickets, never users.
     /// </summary>
     System = 0,
 
     /// <summary>
-    /// A user drive (the interaction entry): directories, the file picker and the Drive's own permissions.
+    /// A user drive (the interaction entry): signed-in users upload files to it and read or delete them by id, under the
+    /// Drive's own permissions.
     /// </summary>
     UserDrive = 1
 }

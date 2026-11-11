@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
 using Volo.Abp.Application.Services;
-using Volo.Abp.Content;
 
 namespace Dignite.Drive.Public;
 
@@ -10,9 +9,20 @@ namespace Dignite.Drive.Public;
 /// </summary>
 public interface IDrivePublicAppService : IApplicationService
 {
-    /// <summary>What is behind the address, without its bytes: enough to answer a conditional request.</summary>
-    Task<DrivePublicFileDto> GetInfoAsync(string containerName, string blobName);
-
-    /// <summary>The file, or the picture resized when <paramref name="input"/> asks for a size.</summary>
-    Task<IRemoteStreamContent> GetAsync(string containerName, string blobName, DrivePublicReadInput input);
+    /// <summary>
+    /// Reads the file at the address once: its information and entity tag, whether the client's copy is current, and -
+    /// unless it is, or <paramref name="request"/> wants headers only - its bytes, or the picture resized when
+    /// <paramref name="input"/> asks for a size. Everything in the result comes from the same lookup of the file, so a
+    /// file overwritten meanwhile never mixes the old one's tag or type with the new one's bytes.
+    /// <para>
+    /// A width or height must be one the Drive allows (<c>DrivePublicReadOptions.AllowedSizes</c>), otherwise
+    /// <see cref="Volo.Abp.Validation.AbpValidationException"/>, checked before the lookup. A missing file - or a file
+    /// whose bytes are missing from storage - is <see cref="Volo.Abp.Domain.Entities.EntityNotFoundException"/>.
+    /// </para>
+    /// </summary>
+    Task<DrivePublicReadResult> ReadAsync(
+        string containerName,
+        string blobName,
+        DrivePublicReadInput input,
+        DrivePublicReadRequest request);
 }

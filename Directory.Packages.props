@@ -89,6 +89,11 @@
     <PackageVersion Include="Volo.Abp.SettingManagement.Web" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Identity.Domain" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Identity.Domain.Shared" Version="10.7.0" />
+    <!-- drive/: the grant stores of its tests, which grant the Drive's permissions through ABP's permission manager.
+         The Drive's own packages do not reference Permission Management. -->
+    <PackageVersion Include="Volo.Abp.PermissionManagement.Domain" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.PermissionManagement.EntityFrameworkCore" Version="10.7.0" />
+    <PackageVersion Include="Volo.Abp.PermissionManagement.MongoDB" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Emailing" Version="10.7.0" />
   </ItemGroup>
 

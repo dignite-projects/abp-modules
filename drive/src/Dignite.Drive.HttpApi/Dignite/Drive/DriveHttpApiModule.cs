@@ -31,7 +31,7 @@ public class DriveHttpApiModule : AbpModule
                 .AddBaseTypes(typeof(AbpUiResource));
         });
 
-        // A business exception is 403 by default; these are a missing thing and a conflict.
+        // A business exception is 403 by default; these are a missing thing, a conflict or a bad request.
         Configure<AbpExceptionHttpStatusCodeOptions>(options =>
         {
             options.Map(DriveErrorCodes.ContainerNotFound, HttpStatusCode.NotFound);

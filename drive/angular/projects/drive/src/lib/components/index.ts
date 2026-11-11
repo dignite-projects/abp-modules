@@ -1,1 +1,1 @@
-export * from './drive.component'
+export * from './drive-file-input/drive-file-input.component';

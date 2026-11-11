@@ -1,43 +1,11 @@
 ﻿{
   "packages":[
     {
-      "appRoutingModuleConfiguration":{
-        "imports":[
-          {
-            "names":[
-              "DRIVE_ROUTES"
-            ],
-            "namespace": "@dignite/ng.drive"
-          } 
-        ],
-        "routes":[
-          "{ path: 'drive', children: DRIVE_ROUTES, canActivate: [authGuard] }"
-        ]
-      },
-      "appModuleConfiguration":{
-        "imports":[
-          {
-            "names":[
-              "provideDrive"
-            ],
-            "namespace": "@dignite/ng.drive/config"
-          }
-        ],
-        "providerNames":[
-          "provideDrive()"
-        ]
-      },
       "tsJsonPathRecordConfigurations":[
         {
           "name": "@dignite/ng.drive",
           "paths": [
             "angular/projects/drive/src/public-api.ts"
-          ]
-        },
-        {
-          "name": "@dignite/ng.drive/config",
-          "paths": [
-            "angular/projects/drive/config/src/public-api.ts"
           ]
         }
       ]

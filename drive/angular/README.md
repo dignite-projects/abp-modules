@@ -5,7 +5,7 @@ This workspace holds two things:
 | Path | What it is |
 |---|---|
 | `src/` | **Host** - the Angular application that runs against `Dignite.Drive.Host` (local development and demo only, never published). It consumes the library from source through the `paths` in `tsconfig.json`. |
-| `projects/drive/` | **`@dignite/ng.drive`** - the publishable Angular library (UI components, services and the ABP route provider). |
+| `projects/drive/` | **`@dignite/ng.drive`** - the publishable Angular library (the file input, services and the file API's proxies). |
 | `projects/dev-app/` | An environment stub (`environment.ts` only, never built) that the ABP schematics read when generating the **library's** proxies: it carries the `Dignite.Drive` root namespace, which `Host` (`Dignite.Drive.Host`) does not. See [Generate Proxy](#generate-proxy). |
 
 For more information about the framework, visit [abp.io](https://abp.io/).

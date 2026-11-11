@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Dignite.Drive.Files;
 using Dignite.Drive.Blobs;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Content;
@@ -18,4 +19,10 @@ public interface IDriveTicketRedemptionAppService : IApplicationService
 
     /// <summary>The file a download ticket names; reusable until it expires.</summary>
     Task<IRemoteStreamContent> DownloadAsync(string ticket);
+
+    /// <summary>
+    /// Adds the file to the user drive a file-upload ticket names, as the user who issued it: their permissions there
+    /// now, not when they issued it, decide. A ticket is good for one successful upload.
+    /// </summary>
+    Task<DriveFileDto> UploadFileAsync(string ticket, IRemoteStreamContent content);
 }

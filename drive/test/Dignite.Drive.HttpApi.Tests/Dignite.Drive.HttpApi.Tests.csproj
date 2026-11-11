@@ -18,6 +18,7 @@
     <PackageReference Include="Volo.Abp.Autofac" />
     <PackageReference Include="Volo.Abp.BlobStoring.Memory" />
     <PackageReference Include="Volo.Abp.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="Volo.Abp.PermissionManagement.EntityFrameworkCore" />
   </ItemGroup>
 
   <ItemGroup>

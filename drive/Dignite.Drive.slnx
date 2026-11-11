@@ -24,6 +24,7 @@
         <Project Path="test/Dignite.Drive.Domain.Tests/Dignite.Drive.Domain.Tests.csproj" />
         <Project Path="test/Dignite.Drive.Application.Tests/Dignite.Drive.Application.Tests.csproj" />
         <Project Path="test/Dignite.Drive.HttpApi.Tests/Dignite.Drive.HttpApi.Tests.csproj" />
+        <Project Path="test/Dignite.Drive.Mcp.Tests/Dignite.Drive.Mcp.Tests.csproj" />
     </Folder>
 
     <Folder Name="/host/">

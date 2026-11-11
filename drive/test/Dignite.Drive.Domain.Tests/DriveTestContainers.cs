@@ -16,6 +16,12 @@ public static class DriveTestContainers
 
     public const int ImagesMaxWidth = 64;
 
+    /// <summary>A user drive.</summary>
+    public const string UserDrive = "user-drive";
+
+    /// <summary>A user drive whose files anyone may read.</summary>
+    public const string PublicDrive = "public-drive";
+
     /// <summary>A BLOB container the Drive host did not declare a Drive container.</summary>
     public const string NotDrive = "not-drive";
 }

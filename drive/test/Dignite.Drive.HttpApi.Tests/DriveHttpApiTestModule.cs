@@ -1,7 +1,9 @@
 using System;
 using Dignite.Abp.BlobStoring.Drive;
 using Dignite.Drive.Blobs;
+using Dignite.Drive.Containers;
 using Dignite.Drive.EntityFrameworkCore;
+using Dignite.Drive.Files;
 using Dignite.Drive.Tickets;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication;
@@ -23,6 +25,8 @@ using Volo.Abp.Imaging;
 using Volo.Abp.Modularity;
 using Volo.Abp.MultiTenancy;
 using Volo.Abp.MultiTenancy.ConfigurationStore;
+using Volo.Abp.PermissionManagement;
+using Volo.Abp.PermissionManagement.EntityFrameworkCore;
 using Volo.Abp.Uow;
 
 namespace Dignite.Drive;
@@ -43,7 +47,8 @@ namespace Dignite.Drive;
     typeof(AbpBlobStoringMemoryModule),
     typeof(AbpImagingSkiaSharpModule),
     typeof(DriveHttpApiClientModule),
-    typeof(AbpBlobStoringDriveModule)
+    typeof(AbpBlobStoringDriveModule),
+    typeof(AbpPermissionManagementEntityFrameworkCoreModule)
 )]
 public class DriveHttpApiTestModule : AbpModule
 {
@@ -55,6 +60,7 @@ public class DriveHttpApiTestModule : AbpModule
     /// <summary>System container that allows no client.</summary>
     public const string ClosedContainer = "closed";
 
+    /// <summary>A user drive.</summary>
     public const string UserDriveContainer = "user-drive";
 
     /// <summary>System container that allows <see cref="AllowedClient"/> and is read publicly.</summary>
@@ -108,6 +114,18 @@ public class DriveHttpApiTestModule : AbpModule
         context.Services.Replace(ServiceDescriptor.Transient<IDriveBlobService, RemoteDriveBlobService>());
         context.Services.Replace(ServiceDescriptor.Transient<IDriveTicketService, DriveTicketClientProxy>());
 
+        // The file and container services' generated proxies replace its services wherever HttpApi.Client is installed. This host is
+        // the Drive too, so its controllers get the in-process services back; the tests call the proxies by their type.
+        context.Services.Replace(ServiceDescriptor.Transient<IDriveContainerAppService, DriveContainerAppService>());
+        context.Services.Replace(ServiceDescriptor.Transient<IDriveFileAppService, DriveFileAppService>());
+
+        // The Drive's permission grants, written by the tests straight into the store; the definitions stay in code.
+        Configure<PermissionManagementOptions>(options =>
+        {
+            options.SaveStaticPermissionsToDatabase = false;
+            options.IsDynamicPermissionStoreEnabled = false;
+        });
+
         // What a host provides: the tickets are signed with it. Ephemeral keys, in memory.
         context.Services.AddDataProtection();
     }
@@ -135,7 +153,9 @@ public class DriveHttpApiTestModule : AbpModule
 
         _database = new AbpUnitTestSqliteDatabase();
         _database.CreateTables(
-            new DriveDbContext(new DbContextOptionsBuilder<DriveDbContext>().UseSqlite(_database.ConnectionString).Options));
+            new DriveDbContext(new DbContextOptionsBuilder<DriveDbContext>().UseSqlite(_database.ConnectionString).Options),
+            new PermissionManagementDbContext(
+                new DbContextOptionsBuilder<PermissionManagementDbContext>().UseSqlite(_database.ConnectionString).Options));
 
         Configure<AbpDbConnectionOptions>(options =>
         {

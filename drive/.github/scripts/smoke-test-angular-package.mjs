@@ -79,15 +79,22 @@ try {
 
   writeFileSync(
     join(tempRoot, 'smoke.ts'),
-    `import { DRIVE_ROUTES, DriveComponent, DriveService } from '@dignite/ng.drive';
-import { eDriveRouteNames, provideDrive } from '@dignite/ng.drive/config';
+    `import {
+  DriveContainerService,
+  DriveFileInputComponent,
+  DriveFileService,
+  DriveFileUrlService,
+  eDriveComponents,
+  FormatFileSizePipe,
+} from '@dignite/ng.drive';
 
 export const packageSurface = {
-  DRIVE_ROUTES,
-  DriveComponent,
-  DriveService,
-  provideDrive,
-  driveRoute: eDriveRouteNames.Drive,
+  DriveContainerService,
+  DriveFileInputComponent,
+  DriveFileService,
+  DriveFileUrlService,
+  FormatFileSizePipe,
+  fileInputKey: eDriveComponents.FileInput,
 };
 `,
   );
@@ -116,7 +123,7 @@ export const packageSurface = {
 
   run(npxCommand, ['--no-install', 'tsc', '--project', 'tsconfig.json']);
   console.log(
-    `Successfully installed and compiled both Angular package entry points at version ${expectedVersion}.`,
+    `Successfully installed and compiled the Angular package at version ${expectedVersion}.`,
   );
 }
 finally {

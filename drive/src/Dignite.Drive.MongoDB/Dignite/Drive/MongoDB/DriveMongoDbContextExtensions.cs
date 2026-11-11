@@ -29,6 +29,16 @@ public static class DriveMongoDbContextExtensions
                         PartialFilterExpression = Builders<BsonDocument>.Filter.Type(nameof(FileDescriptor.DedupKey), BsonType.String)
                     }));
 
+                // A system container's address: one live descriptor per tenant, container and name (the same rule as
+                // the EF Core unique index). User-drive files and deleted rows carry no key and are not indexed.
+                indexes.CreateOne(new CreateIndexModel<BsonDocument>(
+                    keys.Ascending(nameof(FileDescriptor.NameKey)),
+                    new CreateIndexOptions<BsonDocument>
+                    {
+                        Unique = true,
+                        PartialFilterExpression = Builders<BsonDocument>.Filter.Type(nameof(FileDescriptor.NameKey), BsonType.String)
+                    }));
+
                 indexes.CreateOne(new CreateIndexModel<BsonDocument>(
                     keys.Ascending(nameof(FileDescriptor.TenantId))
                         .Ascending(nameof(FileDescriptor.ContainerName))
@@ -45,5 +55,6 @@ public static class DriveMongoDbContextExtensions
                         .Ascending(nameof(FileDescriptor.BlobName))));
             });
         });
+
     }
 }

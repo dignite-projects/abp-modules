@@ -146,6 +146,11 @@ jobs:
       - name: Run Drive (HttpApi) tests
         run: dotnet test drive/test/Dignite.Drive.HttpApi.Tests/Dignite.Drive.HttpApi.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/drive
 
+      # The drive_* MCP tools: their registration in the drive namespace, and what they add to the file API's
+      # services (upload links, inline uploads), against substituted services.
+      - name: Run Drive (Mcp) tests
+        run: dotnet test drive/test/Dignite.Drive.Mcp.Tests/Dignite.Drive.Mcp.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/drive
+
       # Coverage is uploaded to Codecov from the separate upload-coverage job below, not here:
       # codecov-action's upload latency is dominated by Codecov's own service (observed anywhere from
       # 2s to 4.5min per call, most likely tokenless-upload rate limiting - see the comment on that

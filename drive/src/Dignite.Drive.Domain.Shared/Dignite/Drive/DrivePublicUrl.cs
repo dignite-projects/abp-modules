@@ -23,7 +23,10 @@ public static class DrivePublicUrl
     /// <summary>
     /// The path and query of a public read, relative to the Drive's address. The BLOB name may be a path: each of its
     /// segments is escaped, its slashes are kept. With both <paramref name="width"/> and <paramref name="height"/> a
-    /// picture is cropped to fill the box; with one, the other follows its proportions.
+    /// picture is cropped to fill the box; with one, the other follows its proportions. A width or height must be one
+    /// the Drive host allows (by default 64, 128, 256, 384, 512, 768, 1024, 1536, 2048 or 4096, set with the host's
+    /// <c>DrivePublicReadOptions</c>); any other size is answered 400. Not checked here: the Drive may be a remote one
+    /// whose list this code cannot know.
     /// </summary>
     public static string Build(string containerName, string blobName, Guid? tenantId = null, int? width = null, int? height = null)
     {

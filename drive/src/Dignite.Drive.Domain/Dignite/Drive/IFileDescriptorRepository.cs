@@ -28,6 +28,15 @@ public interface IFileDescriptorRepository : IBasicRepository<FileDescriptor, Gu
     /// </summary>
     Task<long> GetUsedStorageSizeAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// The live descriptor of the container whose physical BLOB is <paramref name="blobName"/>, if any - a user-drive
+    /// file's public address. Descriptors that share the BLOB share its bytes, so any of them answers.
+    /// </summary>
+    Task<FileDescriptor?> FindByBlobNameAsync(
+        string containerName,
+        string blobName,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Whether a live descriptor names <paramref name="blobName"/> as its physical BLOB.</summary>
     Task<bool> IsBlobInUseAsync(
         string containerName,

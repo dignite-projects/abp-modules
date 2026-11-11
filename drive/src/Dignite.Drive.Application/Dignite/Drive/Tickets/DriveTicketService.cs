@@ -36,7 +36,7 @@ public class DriveTicketService : DriveAppService, IDriveTicketService
         if (drive.Kind != DriveContainerKind.System)
         {
             throw new AbpException(
-                $"Tickets are issued for system containers; '{input.ContainerName}' is a user drive, which the file library serves.");
+                $"Tickets are issued for system containers; '{input.ContainerName}' is a user drive, which the file API serves.");
         }
 
         var upload = input.Kind == DriveTicketKind.Upload;

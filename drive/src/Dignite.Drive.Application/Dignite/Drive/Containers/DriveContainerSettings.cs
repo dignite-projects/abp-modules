@@ -19,6 +19,10 @@ namespace Dignite.Drive.Containers;
 ///       "AllowedClientIds": [ "site-app" ],
 ///       "Preset": "Images",
 ///       "PresetOptions": { "MaxSizeInMegabytes": 10, "MaxWidth": 2048 }
+///     },
+///     "documents": {
+///       "Kind": "UserDrive",
+///       "Preset": "Documents"
 ///     }
 ///   }
 /// }

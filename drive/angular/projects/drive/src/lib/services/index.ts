@@ -1,1 +1,2 @@
-export * from './drive.service';
+export * from './drive-file-url.service';
+export * from './object-url.service';

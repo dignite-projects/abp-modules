@@ -2,11 +2,14 @@ using System.IO;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobStoring.Pipeline;
 using Dignite.Drive.Blobs;
+using Dignite.Drive.Files;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
 using Volo.Abp;
+using Volo.Abp.Authorization;
 using Volo.Abp.Content;
 using Volo.Abp.Domain.Entities;
+using Volo.Abp.Security.Claims;
 
 namespace Dignite.Drive.Tickets;
 
@@ -25,14 +28,18 @@ public class DriveTicketRedemptionAppService : DriveAppService, IDriveTicketRede
 
     protected IDriveClientAuthorizer ClientAuthorizer { get; }
 
+    protected DriveUsageManager DriveUsageManager { get; }
+
     public DriveTicketRedemptionAppService(
         FileDescriptorManager fileDescriptorManager,
         DriveTicketProtector ticketProtector,
-        IDriveClientAuthorizer clientAuthorizer)
+        IDriveClientAuthorizer clientAuthorizer,
+        DriveUsageManager driveUsageManager)
     {
         FileDescriptorManager = fileDescriptorManager;
         TicketProtector = ticketProtector;
         ClientAuthorizer = clientAuthorizer;
+        DriveUsageManager = driveUsageManager;
     }
 
     public virtual async Task<DriveBlobDto> UploadAsync(string ticket, IRemoteStreamContent content)
@@ -49,6 +56,40 @@ public class DriveTicketRedemptionAppService : DriveAppService, IDriveTicketRede
             }
 
             return result!;
+        }
+    }
+
+    public virtual async Task<DriveFileDto> UploadFileAsync(string ticket, IRemoteStreamContent content)
+    {
+        Check.NotNull(content, nameof(content));
+        var read = await ReadAsync(ticket, DriveTicketKind.FileUpload);
+        if (read.UserId == null || string.IsNullOrWhiteSpace(read.FileName))
+        {
+            throw Invalid("it names no user or file");
+        }
+
+        using (CurrentTenant.Change(read.TenantId))
+        using (LazyServiceProvider.LazyGetRequiredService<ICurrentPrincipalAccessor>().Change(DriveTicketPrincipal.Create(read)))
+        {
+            // Before the ticket is used up: the file service is behind the Drive feature, and its authorization error
+            // would be rewritten to InvalidTicket below, which tells the client the wrong thing. Disabled answers
+            // DriveDisabled and leaves the ticket good for when the Drive is on again.
+            await DriveUsageManager.CheckEnabledAsync();
+
+            try
+            {
+                var (used, result) = await TicketProtector.UseOnceAsync(read, () => StoreFileAsync(read, content));
+                if (!used)
+                {
+                    throw Invalid("it has been used, or is being used");
+                }
+
+                return result!;
+            }
+            catch (AbpAuthorizationException)
+            {
+                throw Invalid($"its issuer '{read.UserId}' may no longer add files there");
+            }
         }
     }
 
@@ -123,6 +164,24 @@ public class DriveTicketRedemptionAppService : DriveAppService, IDriveTicketRede
                 await capped.DisposeAsync();
             }
         }
+    }
+
+    /// <summary>
+    /// The upload through the file API's own service, as the ticket's user: the drive and the permission are
+    /// checked as for a user uploading with a token, and the name is the ticket's.
+    /// </summary>
+    protected virtual async Task<DriveFileDto> StoreFileAsync(DriveTicket ticket, IRemoteStreamContent content)
+    {
+        // Lent, not given: the content is the request's, so the file service must not close it.
+        var lent = new RemoteStreamContent(
+            content.GetStream(), ticket.FileName, content.ContentType, content.ContentLength, disposeStream: false);
+
+        return await LazyServiceProvider.LazyGetRequiredService<IDriveFileAppService>().CreateAsync(new CreateDriveFileInput
+        {
+            ContainerName = ticket.ContainerName,
+            Name = ticket.FileName,
+            File = lent
+        });
     }
 
     protected virtual BusinessException Invalid(string reason)
