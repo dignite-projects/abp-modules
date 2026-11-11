@@ -2,7 +2,8 @@
 @{
     PackageIds = @(
         'Dignite.Abp.BlobStoring.Pipeline',
-        'Dignite.Abp.BlobStoring.Imaging'
+        'Dignite.Abp.BlobStoring.Imaging',
+        'Dignite.Abp.BlobStoring.Imaging.SkiaSharp'
     )
     Types = @(
         'Dignite.Abp.BlobStoring.Pipeline.AbpBlobStoringPipelineModule',
@@ -15,6 +16,11 @@
         'Dignite.Abp.BlobStoring.Imaging.ImageResizeContributor',
         'Dignite.Abp.BlobStoring.Imaging.ImageCompressContributor',
         'Dignite.Abp.BlobStoring.Imaging.ImageDecodeGuardConfiguration',
-        'Dignite.Abp.BlobStoring.Imaging.ImagingBlobContainerConfigurationExtensions'
+        'Dignite.Abp.BlobStoring.Imaging.ImagingBlobContainerConfigurationExtensions',
+        'Dignite.Abp.BlobStoring.Imaging.AbpBlobStoringImagingSkiaSharpModule',
+        'Dignite.Abp.BlobStoring.Imaging.JpegToWebpContributor',
+        'Dignite.Abp.BlobStoring.Imaging.UprightSkiaSharpImageResizerContributor',
+        'Dignite.Abp.BlobStoring.Imaging.ImageOrientation',
+        'Dignite.Abp.BlobStoring.Imaging.SkiaSharpImagingBlobContainerConfigurationExtensions'
     )
 }

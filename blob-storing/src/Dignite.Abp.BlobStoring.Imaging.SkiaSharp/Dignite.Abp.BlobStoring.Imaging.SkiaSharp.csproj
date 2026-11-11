@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>SkiaSharp image contributors for ABP BlobStoring: store a JPEG as WebP, and turn a photo upright by its EXIF orientation before ABP's SkiaSharp resizer shrinks it.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.Abp.BlobStoring.Imaging\Dignite.Abp.BlobStoring.Imaging.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- ABP's SkiaSharp provider, which brings SkiaSharp itself. Unlike Dignite.Abp.BlobStoring.Imaging, this package is
+         provider-specific by design: what it does (decode once, turn, fit, encode WebP) has no operation in ABP's
+         imaging abstractions. -->
+    <PackageReference Include="Volo.Abp.Imaging.SkiaSharp" />
+  </ItemGroup>
+
+</Project>
