@@ -1,8 +1,10 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Shouldly;
 using Volo.Abp;
+using Volo.Abp.Data;
 using Volo.Abp.Modularity;
 using Xunit;
 
@@ -16,10 +18,12 @@ public abstract class UserDriveFiles_Tests<TStartupModule> : DriveDomainTestBase
     where TStartupModule : IAbpModule
 {
     private readonly FileDescriptorManager _fileDescriptorManager;
+    private readonly IFileDescriptorRepository _fileRepository;
 
     protected UserDriveFiles_Tests()
     {
         _fileDescriptorManager = GetRequiredService<FileDescriptorManager>();
+        _fileRepository = GetRequiredService<IFileDescriptorRepository>();
     }
 
     [Fact]
@@ -48,6 +52,36 @@ public abstract class UserDriveFiles_Tests<TStartupModule> : DriveDomainTestBase
     }
 
     [Fact]
+    public async Task A_Callback_Should_Set_Fields_Before_The_Row_Is_Inserted_When_Storing_And_When_Sharing()
+    {
+        var content = "configured " + Guid.NewGuid();
+
+        var stored = await UploadAsync(DriveTestContainers.UserDrive, "first.pdf", content, file => file.SetProperty("Test:Marker", "stored"));
+        var shared = await UploadAsync(DriveTestContainers.UserDrive, "second.pdf", content, file => file.SetProperty("Test:Marker", "shared"));
+
+        stored.OwnsBlob().ShouldBeTrue();
+        shared.OwnsBlob().ShouldBeFalse();
+        shared.BlobName.ShouldBe(stored.BlobName);
+
+        // Read back: the values were in the inserted rows, which nothing updated.
+        (await WithUnitOfWorkAsync(() => _fileRepository.GetAsync(stored.Id))).GetProperty<string>("Test:Marker").ShouldBe("stored");
+        (await WithUnitOfWorkAsync(() => _fileRepository.GetAsync(shared.Id))).GetProperty<string>("Test:Marker").ShouldBe("shared");
+        stored.LastModificationTime.ShouldBeNull();
+        shared.LastModificationTime.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task A_Failing_Callback_Should_Fail_The_Upload_And_Store_Nothing()
+    {
+        var name = Guid.NewGuid().ToString("N") + ".pdf";
+
+        await Should.ThrowAsync<InvalidOperationException>(() => UploadAsync(
+            DriveTestContainers.UserDrive, name, null, _ => throw new InvalidOperationException("refused")));
+
+        (await WithUnitOfWorkAsync(() => _fileRepository.GetListAsync())).ShouldNotContain(f => f.Name == name);
+    }
+
+    [Fact]
     public async Task The_Two_Kinds_Of_Container_Should_Not_See_Each_Other()
     {
         // The name-addressed operations do not reach a user drive...
@@ -63,12 +97,16 @@ public abstract class UserDriveFiles_Tests<TStartupModule> : DriveDomainTestBase
         await ShouldBeUnknownContainerAsync(() => UploadAsync(DriveTestContainers.Files, "a.pdf"));
     }
 
-    private Task<FileDescriptor> UploadAsync(string containerName, string name, string? content = null)
+    private Task<FileDescriptor> UploadAsync(
+        string containerName,
+        string name,
+        string? content = null,
+        Action<FileDescriptor>? configureFile = null)
     {
         return WithUnitOfWorkAsync(async () =>
         {
             using var stream = new MemoryStream(DriveTestFiles.Pdf(content ?? Guid.NewGuid().ToString()));
-            return await _fileDescriptorManager.UploadAsync(containerName, name, stream);
+            return await _fileDescriptorManager.UploadAsync(containerName, name, stream, configureFile);
         });
     }
 

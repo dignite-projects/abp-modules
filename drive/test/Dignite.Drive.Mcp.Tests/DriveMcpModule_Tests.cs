@@ -51,6 +51,19 @@ public class DriveMcpModule_Tests
         tools["drive_delete_file"].ProtocolTool.Annotations!.DestructiveHint.ShouldBe(true);
     }
 
+    [Fact]
+    public void The_Instructions_Should_Not_Say_What_No_Tool_Does()
+    {
+        // Another package may add tools to the drive module, and AddInstructions only appends: a sentence claiming that
+        // no tool does something would contradict the tools it adds.
+        using var provider = BuildProvider();
+        var instructions = string.Join(" ", provider.GetRequiredService<AbpMcpModuleRegistry>()
+            .Find(DriveMcpModule.McpModuleName)!.Instructions);
+
+        instructions.ShouldContain("drive_get_file");
+        instructions.ShouldNotContain("no tool", Case.Insensitive);
+    }
+
     private static ServiceProvider BuildProvider()
     {
         var services = new ServiceCollection();
