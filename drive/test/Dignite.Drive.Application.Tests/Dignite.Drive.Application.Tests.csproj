@@ -7,7 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Data Protection's in-memory key ring, which signs the Drive's tickets in these tests (a host has ASP.NET Core's) -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Volo.Abp.PermissionManagement.Domain" />
   </ItemGroup>
 
   <ItemGroup>

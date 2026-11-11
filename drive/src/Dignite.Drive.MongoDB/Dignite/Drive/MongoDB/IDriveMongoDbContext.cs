@@ -8,4 +8,5 @@ namespace Dignite.Drive.MongoDB;
 public interface IDriveMongoDbContext : IAbpMongoDbContext
 {
     IMongoCollection<FileDescriptor> FileDescriptors { get; }
+
 }

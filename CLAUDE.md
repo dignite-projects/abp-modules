@@ -46,6 +46,12 @@ These are the things most likely to be broken by an otherwise reasonable-looking
    runs blob-storing's pipeline contributors); `blob-storing/`, `notifications/` and `flex-fields/` reference
    none of the others, and `blob-storing/`'s "what stays out" is unchanged
    ([`drive/dev-docs/drive-decision.md`](drive/dev-docs/drive-decision.md)).
+   - `drive/` is the **open edition** of Dignite Drive: the storage tier and attaching a file (upload, read, delete).
+     Its file library - listing, directories, rename, move, per-item grants, the Drive page - is **Drive Pro**
+     (`Dignite.Drive.Pro.*`), a commercial product in a repository of its own that builds on `drive/`. The edge
+     points one way, out of this repository: nothing here references Drive Pro, and open modules (Site, flex-fields)
+     never depend on it: Site uses the open edition only. Drive Pro's code stays out of this repository and its
+     history, and what is on its side of the split does not come back into `drive/` (`drive/CLAUDE.md`, invariant 8).
    - There used to be another shared top-level tree (`aspnetcore-mvc-razor/`) for generic ASP.NET
      Core MVC/Razor infrastructure with no domain model of its own. It was dissolved once it turned
      out to have exactly one consumer per file: each piece now lives directly in the one project

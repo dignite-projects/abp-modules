@@ -1,14 +1,18 @@
 ﻿using Dignite.Abp.BlobStoring.Drive;
 using Dignite.Abp.BlobStoring.Pipeline;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.Modularity;
+using Volo.Abp.PermissionManagement;
 
 namespace Dignite.Drive;
 
 [DependsOn(
     typeof(DriveApplicationModule),
     typeof(AbpBlobStoringDriveModule),
-    typeof(DriveDomainTestModule)
+    typeof(DriveDomainTestModule),
+    typeof(AbpPermissionManagementDomainModule)
     )]
 public class DriveApplicationTestModule : AbpModule
 {
@@ -17,6 +21,18 @@ public class DriveApplicationTestModule : AbpModule
 
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
+        // The key ring a Drive host gets from ASP.NET Core: tickets are signed and read with it.
+        context.Services.AddSingleton<IDataProtectionProvider>(new EphemeralDataProtectionProvider());
+
+        // Grants for the authorization tests, written as users and roles; the definitions stay in code.
+        Configure<PermissionManagementOptions>(options =>
+        {
+            options.SaveStaticPermissionsToDatabase = false;
+            options.IsDynamicPermissionStoreEnabled = false;
+            options.ManagementProviders.Add<TestUserPermissionManagementProvider>();
+            options.ManagementProviders.Add<TestRolePermissionManagementProvider>();
+        });
+
         Configure<AbpBlobStoringOptions>(options =>
         {
             // Code runs after DriveApplicationModule bound the configuration, so it wins - as a host's own code does.

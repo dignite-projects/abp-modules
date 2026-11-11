@@ -48,6 +48,22 @@ public class DriveDomainTestModule : AbpModule
                 });
             });
 
+            options.Containers.Configure(DriveTestContainers.UserDrive, container =>
+            {
+                container.UseDriveContainer(drive => drive.Kind = DriveContainerKind.UserDrive);
+                container.UseMemory();
+            });
+
+            options.Containers.Configure(DriveTestContainers.PublicDrive, container =>
+            {
+                container.UseDriveContainer(drive =>
+                {
+                    drive.Kind = DriveContainerKind.UserDrive;
+                    drive.PublicRead = true;
+                });
+                container.UseMemory();
+            });
+
             // Not a Drive container: the manager refuses it.
             options.Containers.Configure(DriveTestContainers.NotDrive, container =>
             {

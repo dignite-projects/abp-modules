@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,6 +41,15 @@ public class EfCoreFileDescriptorRepository : EfCoreRepository<IDriveDbContext, 
             .Select(f => new { f.ContainerName, f.BlobName, f.Size })
             .Distinct()
             .SumAsync(b => b.Size, GetCancellationToken(cancellationToken));
+    }
+
+    public virtual async Task<FileDescriptor?> FindByBlobNameAsync(
+        string containerName,
+        string blobName,
+        CancellationToken cancellationToken = default)
+    {
+        return await (await GetDbSetAsync())
+            .FirstOrDefaultAsync(f => f.ContainerName == containerName && f.BlobName == blobName, GetCancellationToken(cancellationToken));
     }
 
     public virtual async Task<bool> IsBlobInUseAsync(

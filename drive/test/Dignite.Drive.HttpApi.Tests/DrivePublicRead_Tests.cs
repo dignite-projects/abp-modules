@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobStoring.Drive;
+using Dignite.Drive.Public;
 using Shouldly;
 using Volo.Abp.AspNetCore.TestBase;
 using Volo.Abp.BlobStoring;
@@ -56,18 +57,54 @@ public class DrivePublicRead_Tests : AbpWebApplicationFactoryIntegratedTest<Prog
     {
         await StoreAsync("wide.png", DriveTestFiles.Png(200, 100, seed: 2));
 
-        var oneSide = await GetBytesAsync(_urlBuilder.Build(DriveHttpApiTestModule.AppPublicContainer, "wide.png", width: 50));
-        DriveTestFiles.Measure(oneSide).ShouldBe((50, 25));
+        var oneSide = await GetBytesAsync(_urlBuilder.Build(DriveHttpApiTestModule.AppPublicContainer, "wide.png", width: 64));
+        DriveTestFiles.Measure(oneSide).ShouldBe((64, 32));
 
-        var box = await GetBytesAsync(_urlBuilder.Build(DriveHttpApiTestModule.AppPublicContainer, "wide.png", width: 30, height: 30));
-        DriveTestFiles.Measure(box).ShouldBe((30, 30));
+        var box = await GetBytesAsync(_urlBuilder.Build(DriveHttpApiTestModule.AppPublicContainer, "wide.png", width: 64, height: 64));
+        DriveTestFiles.Measure(box).ShouldBe((64, 64));
 
         (await Client.GetAsync(_urlBuilder.Build(DriveHttpApiTestModule.AppPublicContainer, "wide.png", width: DrivePublicUrl.MaxDimension + 1)))
             .StatusCode.ShouldBe(HttpStatusCode.BadRequest);
 
         // Never enlarged.
-        var larger = await GetBytesAsync(_urlBuilder.Build(DriveHttpApiTestModule.AppPublicContainer, "wide.png", width: 400));
+        var larger = await GetBytesAsync(_urlBuilder.Build(DriveHttpApiTestModule.AppPublicContainer, "wide.png", width: 512));
         DriveTestFiles.Measure(larger).ShouldBe((200, 100));
+    }
+
+    [Theory]
+    [InlineData(100, null)]
+    [InlineData(null, 100)]
+    [InlineData(64, 100)]
+    [InlineData(1, null)]
+    public async Task A_Size_Outside_The_Allowed_Sizes_Should_Be_400_For_GET_And_HEAD(int? width, int? height)
+    {
+        await StoreAsync("sizes.png", DriveTestFiles.Png(200, 100, seed: 7));
+        var url = _urlBuilder.Build(DriveHttpApiTestModule.AppPublicContainer, "sizes.png", width: width, height: height);
+
+        using (var get = await Client.GetAsync(url))
+        {
+            get.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        }
+
+        // A HEAD reads no bytes; it is refused the same way.
+        using var head = await Client.SendAsync(new HttpRequestMessage(HttpMethod.Head, url));
+        head.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Every_Size_Of_The_Default_Ladder_Should_Be_Served()
+    {
+        await StoreAsync("ladder.png", DriveTestFiles.Png(200, 100, seed: 8));
+
+        foreach (var size in new DrivePublicReadOptions().AllowedSizes)
+        {
+            var url = _urlBuilder.Build(DriveHttpApiTestModule.AppPublicContainer, "ladder.png", width: size);
+            using var get = await Client.GetAsync(url);
+            get.StatusCode.ShouldBe(HttpStatusCode.OK, "width " + size);
+
+            using var head = await Client.SendAsync(new HttpRequestMessage(HttpMethod.Head, url));
+            head.StatusCode.ShouldBe(HttpStatusCode.OK, "HEAD width " + size);
+        }
     }
 
     [Fact]
@@ -87,7 +124,7 @@ public class DrivePublicRead_Tests : AbpWebApplicationFactoryIntegratedTest<Prog
             again.StatusCode.ShouldBe(HttpStatusCode.NotModified);
         }
 
-        using (var sized = await Client.GetAsync(_urlBuilder.Build(DriveHttpApiTestModule.AppPublicContainer, "cached.png", width: 8)))
+        using (var sized = await Client.GetAsync(_urlBuilder.Build(DriveHttpApiTestModule.AppPublicContainer, "cached.png", width: 64)))
         {
             sized.Headers.ETag.ShouldNotBe(etag);
         }
@@ -97,6 +134,73 @@ public class DrivePublicRead_Tests : AbpWebApplicationFactoryIntegratedTest<Prog
         {
             changed.StatusCode.ShouldBe(HttpStatusCode.OK);
             changed.Headers.ETag.ShouldNotBe(etag);
+        }
+    }
+
+    [Fact]
+    public async Task One_Response_Should_Describe_One_File_When_The_Address_Is_Overwritten()
+    {
+        // No extension: the same address takes a picture first and a type outside the Drive's list after.
+        var name = "swap-" + Guid.NewGuid();
+        var url = _urlBuilder.Build(DriveHttpApiTestModule.AppPublicContainer, name);
+        var picture = DriveTestFiles.Png(12, 12, seed: 9);
+        await StoreAsync(name, picture);
+
+        EntityTagHeaderValue pictureTag;
+        using (var first = await Client.GetAsync(url))
+        {
+            first.StatusCode.ShouldBe(HttpStatusCode.OK);
+            pictureTag = first.Headers.ETag!;
+            first.Content.Headers.ContentType!.MediaType.ShouldBe("image/png");
+            first.Content.Headers.ContentDisposition!.DispositionType.ShouldBe("inline");
+            (await first.Content.ReadAsByteArrayAsync()).ShouldBe(picture);
+        }
+
+        var binary = new byte[] { 0x00, 0x01, 0x02, 0x7F, 0x80, 0xFE, 0xFF, 0x11 };
+        await StoreAsync(name, binary, overrideExisting: true);
+
+        // The overwrite cannot be made to land inside one request from here (the application tests race it at the
+        // lookup); this checks that every part of a response belongs to the same file. Before, the tag and the
+        // disposition came from one lookup and the bytes and type from a second, so a response could mix the two.
+        using var second = await GetAsync(url, pictureTag);
+        second.StatusCode.ShouldBe(HttpStatusCode.OK);
+        second.Headers.ETag.ShouldNotBeNull();
+        second.Headers.ETag.ShouldNotBe(pictureTag);
+        second.Content.Headers.ContentType!.MediaType.ShouldBe("application/octet-stream");
+        second.Content.Headers.ContentDisposition!.DispositionType.ShouldBe("attachment");
+        (await second.Content.ReadAsByteArrayAsync()).ShouldBe(binary);
+
+        // And the new tag is the one that now answers 304.
+        using var revalidated = await GetAsync(url, second.Headers.ETag!);
+        revalidated.StatusCode.ShouldBe(HttpStatusCode.NotModified);
+    }
+
+    [Fact]
+    public async Task A_Weak_Or_Wildcard_If_None_Match_Should_Be_304()
+    {
+        await StoreAsync("weak.png", DriveTestFiles.Png(8, 8, seed: 10));
+        var url = _urlBuilder.Build(DriveHttpApiTestModule.AppPublicContainer, "weak.png");
+
+        EntityTagHeaderValue etag;
+        using (var first = await Client.GetAsync(url))
+        {
+            etag = first.Headers.ETag!;
+        }
+
+        using (var weak = await GetAsync(url, new EntityTagHeaderValue(etag.Tag, isWeak: true)))
+        {
+            weak.StatusCode.ShouldBe(HttpStatusCode.NotModified);
+            weak.Headers.ETag.ShouldBe(etag);
+        }
+
+        using (var any = await GetAsync(url, EntityTagHeaderValue.Any))
+        {
+            any.StatusCode.ShouldBe(HttpStatusCode.NotModified);
+        }
+
+        using (var other = await GetAsync(url, new EntityTagHeaderValue("\"other\"")))
+        {
+            other.StatusCode.ShouldBe(HttpStatusCode.OK);
         }
     }
 

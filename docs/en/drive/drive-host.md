@@ -68,7 +68,7 @@ Configure<AbpBlobStoringOptions>(options =>
 
 `DriveContainerConfiguration` has:
 
-* `Kind`: `System` (the default) for a container applications store in through the provider, or `UserDrive` for the file library.
+* `Kind`: `System` (the default) for a container applications store in through the provider, or `UserDrive` for a user drive, which people [attach files](attaching-files.md) to.
 * `AllowedClientIds`: the OAuth clients - the applications - that may read, write and delete in a system container over HTTP. Empty, the default, allows no remote caller; an application in the same process is trusted and needs no entry. One list covers reading, writing and deleting.
 * `PublicRead`: whether anyone may read the container's files at their [public address](provider.md#public-addresses), without signing in. Default: `false`.
 
@@ -116,7 +116,7 @@ A host with no code of its own for the Drive - the Drive run as its own service 
 }
 ````
 
-Each container is applied with the same methods code uses. `Preset` is one of `Images`, `Documents`, `BinaryAssets` and `Any`, compared without case; `PresetOptions` holds that preset's parameters. The storage provider is not declared here: the containers take the default container's provider and its settings, configured in code as above.
+Each container is applied with the same methods code uses; a user drive takes `"Kind": "UserDrive"`. `Preset` is one of `Images`, `Documents`, `BinaryAssets` and `Any`, compared without case; `PresetOptions` holds that preset's parameters. The storage provider is not declared here: the containers take the default container's provider and its settings, configured in code as above.
 
 Every mistake stops the host when it starts - an unknown key, kind or preset, a value of the wrong type, a misspelt or invalid preset parameter - rather than on the first upload. Code runs after the section is applied, so a module's or the host's own `Configure<AbpBlobStoringOptions>` overrides it.
 
@@ -169,4 +169,5 @@ The Drive container's contributors add their own, such as `Dignite.Abp.BlobStori
 ## See Also
 
 * [Using the Drive From an Application](provider.md)
+* [Attaching Files](attaching-files.md)
 * [Hosting Modes](hosting.md)

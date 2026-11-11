@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <PackageReference Include="Volo.Abp.Ddd.Domain" />
+    <!-- The dedup lock (FileDescriptorManager): an upload and a delete of the same bytes take turns. -->
+    <PackageReference Include="Volo.Abp.DistributedLocking.Abstractions" />
   </ItemGroup>
 
   <ItemGroup>

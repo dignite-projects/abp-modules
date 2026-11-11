@@ -33,4 +33,10 @@ public static class FileDescriptorConsts
     /// colons.
     /// </summary>
     public static int MaxDedupKeyLength { get; set; } = 32 + 1 + 64 + 1 + 64;
+
+    /// <summary>
+    /// The name key: SHA-256 as upper-case hex, 64 characters. A hash of the address rather than the address itself,
+    /// so the unique index stays within every provider's key size whatever the length of the name.
+    /// </summary>
+    public static int MaxNameKeyLength { get; set; } = 64;
 }

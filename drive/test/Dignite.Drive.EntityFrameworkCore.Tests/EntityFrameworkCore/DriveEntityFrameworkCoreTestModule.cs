@@ -4,6 +4,7 @@ using Volo.Abp.Data;
 using Volo.Abp.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore.Sqlite;
 using Volo.Abp.Modularity;
+using Volo.Abp.PermissionManagement.EntityFrameworkCore;
 using Volo.Abp.Uow;
 
 namespace Dignite.Drive.EntityFrameworkCore;
@@ -11,6 +12,7 @@ namespace Dignite.Drive.EntityFrameworkCore;
 [DependsOn(
     typeof(DriveApplicationTestModule),
     typeof(DriveEntityFrameworkCoreModule),
+    typeof(AbpPermissionManagementEntityFrameworkCoreModule),
     typeof(AbpEntityFrameworkCoreSqliteModule)
 )]
 public class DriveEntityFrameworkCoreTestModule : AbpModule
@@ -28,7 +30,9 @@ public class DriveEntityFrameworkCoreTestModule : AbpModule
 
         _database = new AbpUnitTestSqliteDatabase();
         _database.CreateTables(
-            new DriveDbContext(new DbContextOptionsBuilder<DriveDbContext>().UseSqlite(_database.ConnectionString).Options));
+            new DriveDbContext(new DbContextOptionsBuilder<DriveDbContext>().UseSqlite(_database.ConnectionString).Options),
+            new PermissionManagementDbContext(
+                new DbContextOptionsBuilder<PermissionManagementDbContext>().UseSqlite(_database.ConnectionString).Options));
 
         Configure<AbpDbConnectionOptions>(options =>
         {

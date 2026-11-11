@@ -14,8 +14,7 @@
     "target": "ES2022",
     "lib": ["ES2022", "dom", "esnext.disposable"],
     "paths": {
-      "@dignite/ng.drive": ["./projects/drive/src/public-api.ts"],
-      "@dignite/ng.drive/config": ["./projects/drive/config/src/public-api.ts"]
+      "@dignite/ng.drive": ["./projects/drive/src/public-api.ts"]
     },
     "useDefineForClassFields": false
   },

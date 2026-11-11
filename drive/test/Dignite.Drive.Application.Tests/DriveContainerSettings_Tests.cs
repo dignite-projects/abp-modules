@@ -105,6 +105,7 @@ public abstract class DriveContainerSettings_Tests<TStartupModule> : DriveApplic
     [Theory]
     [InlineData("Drive:Containers:c:Kidn", "System", "unknown key 'Kidn'")]
     [InlineData("Drive:Containers:c:Kind", "Public", "is not a Kind")]
+    [InlineData("Drive:Containers:c:Scope", "Personal", "unknown key 'Scope'")]
     [InlineData("Drive:Containers:c:PublicRead", "yes", "PublicRead must be true or false")]
     [InlineData("Drive:Containers:c:Preset", "Videos", "unknown preset 'Videos'")]
     [InlineData("Drive:Containers:c:PresetOptions:MaxSizeInMegabytes", "2", "PresetOptions is given without a Preset")]

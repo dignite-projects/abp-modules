@@ -67,9 +67,6 @@ namespace Dignite.Drive.Host.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("DeletionTime");
 
-                    b.Property<Guid?>("DirectoryId")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("ExtraProperties")
                         .IsRequired()
                         .HasColumnType("TEXT")
@@ -86,6 +83,14 @@ namespace Dignite.Drive.Host.Migrations
                         .HasDefaultValue(false)
                         .HasColumnName("IsDeleted");
 
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("LastModifierId");
+
                     b.Property<string>("MimeType")
                         .IsRequired()
                         .HasMaxLength(128)
@@ -94,6 +99,10 @@ namespace Dignite.Drive.Host.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NameKey")
+                        .HasMaxLength(64)
                         .HasColumnType("TEXT");
 
                     b.Property<long>("Size")
@@ -106,6 +115,9 @@ namespace Dignite.Drive.Host.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DedupKey")
+                        .IsUnique();
+
+                    b.HasIndex("NameKey")
                         .IsUnique();
 
                     b.HasIndex("TenantId", "ContainerName", "BlobName");

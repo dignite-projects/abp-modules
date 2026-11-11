@@ -1,11 +1,9 @@
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
-using Volo.Abp.Content;
 using Volo.Abp.Domain.Entities;
 using Volo.Abp.Validation;
 
@@ -16,10 +14,14 @@ namespace Dignite.Drive.Public;
 /// <c>?__tenant=</c> to name the tenant of an anonymous request (see <see cref="DrivePublicUrl"/>). An address, not an
 /// API: it is left out of ABP's API definition, so no client proxy is generated for it.
 /// <para>
-/// <b>Caching.</b> The <c>ETag</c> is the file's <see cref="DrivePublicFileDto.ContentId"/> plus the size asked; it
-/// changes when the file is overwritten. A matching <c>If-None-Match</c> is answered <c>304</c> after the lookup,
-/// without reading the bytes. <c>Cache-Control</c> is public for a day rather than <c>immutable</c>: a file can be
-/// overwritten or deleted, and a day bounds how long a shared cache serves the old one.
+/// <b>Caching.</b> The <c>ETag</c> is the read's <see cref="DrivePublicFileDto.EntityTag"/> - the file's
+/// <see cref="DrivePublicFileDto.ContentId"/> plus the size asked; it changes when the file is overwritten. A matching
+/// <c>If-None-Match</c> is answered <c>304</c> after the lookup, without reading the bytes. A response is answered from
+/// one lookup of the file (<see cref="IDrivePublicAppService.ReadAsync"/>): in a system container a file can be
+/// overwritten between two lookups, and a response made from both would store the new bytes in a shared cache under
+/// the old file's <c>ETag</c>, and decide inline or attachment on a different file than the one served.
+/// <c>Cache-Control</c> is public for a day rather than <c>immutable</c>: a file can be overwritten or deleted, and a
+/// day bounds how long a shared cache serves the old one.
 /// </para>
 /// <para>
 /// <b>Safety.</b> <c>X-Content-Type-Options: nosniff</c> always; a type outside <see cref="DriveFileTypes"/> (the
@@ -46,10 +48,17 @@ public class DrivePublicController : DriveController
     [Route("{containerName}/{*blobName}")]
     public virtual async Task<IActionResult> GetAsync(string containerName, string blobName, [FromQuery] DrivePublicReadInput input)
     {
-        DrivePublicFileDto info;
+        var isHead = HttpMethods.IsHead(Request.Method);
+
+        DrivePublicReadResult result;
         try
         {
-            info = await DrivePublicAppService.GetInfoAsync(containerName, blobName);
+            result = await DrivePublicAppService.ReadAsync(containerName, blobName, input, CreateReadRequest(isHead));
+        }
+        catch (AbpValidationException)
+        {
+            // A size outside DrivePublicReadOptions.AllowedSizes, for GET and HEAD alike.
+            return BadRequest();
         }
         catch (EntityNotFoundException)
         {
@@ -57,17 +66,20 @@ public class DrivePublicController : DriveController
             return NotFound();
         }
 
-        var entityTag = CreateEntityTag(info, input);
-        SetCacheHeaders(entityTag);
-        if (IsNotModified(entityTag))
+        // Every header below comes from the one result: the same file's tag, type and bytes.
+        var info = result.File;
+        SetCacheHeaders(new EntityTagHeaderValue("\"" + info.EntityTag + "\""));
+        if (result.NotModified)
         {
+            result.Content?.Dispose();
             return StatusCode(StatusCodes.Status304NotModified);
         }
 
         SetContentDisposition(info.MimeType, FileName(info.Name));
-        if (HttpMethods.IsHead(Request.Method))
+        if (isHead)
         {
-            // The headers without the bytes: nothing is read from storage, nothing is rendered.
+            // The headers without the bytes: nothing was read from storage, nothing was rendered.
+            result.Content?.Dispose();
             Response.ContentType = info.MimeType;
             if ((input.Width ?? 0) <= 0 && (input.Height ?? 0) <= 0)
             {
@@ -77,46 +89,51 @@ public class DrivePublicController : DriveController
             return new EmptyResult();
         }
 
-        IRemoteStreamContent content;
-        try
+        if (result.Content == null)
         {
-            content = await DrivePublicAppService.GetAsync(containerName, blobName, input);
-        }
-        catch (AbpValidationException)
-        {
-            // A size beyond DrivePublicUrl.MaxDimension.
-            return BadRequest();
-        }
-        catch (EntityNotFoundException)
-        {
+            // Not what the service promises for a GET that is not 304; no body is better than a wrong one.
             return NotFound();
         }
 
-        return new FileStreamResult(content.GetStream(), content.ContentType ?? info.MimeType);
+        return new FileStreamResult(result.Content.GetStream(), info.MimeType);
+    }
+
+    /// <summary>
+    /// The client's entity tags from <c>If-None-Match</c>, as opaque values (no quotes, no <c>W/</c>: the comparison is
+    /// weak), and whether the bytes are wanted. The service compares them with the tag of the file it finds.
+    /// </summary>
+    protected virtual DrivePublicReadRequest CreateReadRequest(bool headersOnly)
+    {
+        var request = new DrivePublicReadRequest { HeadersOnly = headersOnly };
+
+        var ifNoneMatch = Request.GetTypedHeaders().IfNoneMatch;
+        if (ifNoneMatch != null)
+        {
+            foreach (var candidate in ifNoneMatch)
+            {
+                if (candidate.Equals(EntityTagHeaderValue.Any))
+                {
+                    request.IfNoneMatchAny = true;
+                    continue;
+                }
+
+                var tag = candidate.Tag.ToString();
+                if (tag.Length >= 2 && tag[0] == '"' && tag[^1] == '"')
+                {
+                    tag = tag.Substring(1, tag.Length - 2);
+                }
+
+                request.IfNoneMatch.Add(tag);
+            }
+        }
+
+        return request;
     }
 
     protected virtual string FileName(string name)
     {
         var slash = name.LastIndexOf('/');
         return slash < 0 ? name : name.Substring(slash + 1);
-    }
-
-    protected virtual EntityTagHeaderValue CreateEntityTag(DrivePublicFileDto info, DrivePublicReadInput input)
-    {
-        var size = (input.Width ?? 0) > 0 || (input.Height ?? 0) > 0
-            ? "-" + (input.Width ?? 0).ToString(CultureInfo.InvariantCulture) + "x" + (input.Height ?? 0).ToString(CultureInfo.InvariantCulture)
-            : string.Empty;
-
-        // Quoted-string content may not contain '"' or '\'; a content id is generated, but be strict anyway.
-        var opaque = (info.ContentId + size).Replace("\"", string.Empty).Replace("\\", string.Empty);
-        return new EntityTagHeaderValue("\"" + opaque + "\"");
-    }
-
-    protected virtual bool IsNotModified(EntityTagHeaderValue entityTag)
-    {
-        var ifNoneMatch = Request.GetTypedHeaders().IfNoneMatch;
-        return ifNoneMatch != null && ifNoneMatch.Any(candidate =>
-            candidate.Equals(EntityTagHeaderValue.Any) || candidate.Compare(entityTag, useStrongComparison: false));
     }
 
     protected virtual void SetCacheHeaders(EntityTagHeaderValue entityTag)

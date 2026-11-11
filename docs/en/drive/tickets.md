@@ -71,6 +71,8 @@ The bytes of a ticketed upload never reach the application, so **the application
 
 A ticket is signed with ASP.NET Core [Data Protection](https://learn.microsoft.com/aspnet/core/security/data-protection/introduction), and an upload's use is recorded in the [distributed cache](https://abp.io/docs/latest/framework/fundamentals/caching) under a [distributed lock](https://abp.io/docs/latest/framework/infrastructure/distributed-locking). With more than one instance of the Drive, all of them need the same Data Protection key ring, and a shared cache and lock provider (Redis, for example) - see [Hosting Modes](hosting.md#the-drive-as-its-own-service).
 
+Users who [attach files](attaching-files.md) have upload links of their own, issued and redeemed as a user: see [Upload Links for Users](attaching-files.md#upload-links-for-users).
+
 ## See Also
 
 * [Using the Drive From an Application](provider.md)

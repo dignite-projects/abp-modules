@@ -8,4 +8,5 @@ namespace Dignite.Drive.EntityFrameworkCore;
 public interface IDriveDbContext : IEfCoreDbContext
 {
     DbSet<FileDescriptor> FileDescriptors { get; }
+
 }

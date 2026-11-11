@@ -17,11 +17,6 @@ namespace Dignite.Drive;
 )]
 public class DriveTestBaseModule : AbpModule
 {
-    public override void ConfigureServices(ServiceConfigurationContext context)
-    {
-        context.Services.AddAlwaysAllowAuthorization();
-    }
-
     public override void OnApplicationInitialization(ApplicationInitializationContext context)
     {
         SeedTestData(context);

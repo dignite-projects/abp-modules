@@ -13,6 +13,17 @@
     "Feature:DriveEnable": "启用 Drive",
     "Feature:DriveEnableDescription": "租户是否可以在 Drive 中存储文件。",
     "Feature:DriveStorageSize": "Drive 存储空间（MB）",
-    "Feature:DriveStorageSizeDescription": "租户在 Drive 中最多可存储的容量，单位为 MB。0 表示不限制。"
+    "Feature:DriveStorageSizeDescription": "租户在 Drive 中最多可存储的容量，单位为 MB。0 表示不限制。",
+    "Permission:Drive": "Drive",
+    "Permission:Files": "文件",
+    "Permission:Files.Upload": "上传",
+    "Permission:Files.Delete": "删除",
+    "Upload": "上传",
+    "RemoveFile": "移除“{0}”",
+    "FileTooLarge": "“{0}”超过了 {1}，这是此云盘允许的最大大小。",
+    "FileTypeNotAllowed": "此云盘不接受“{0}”这种类型的文件。",
+    "UploadFailed": "{1} 个文件中有 {0} 个未能上传。",
+    "NoFileSelected": "未选择文件。",
+    "PublicReadSizeNotAllowed": "{0} 必须是以下之一：{1}。"
   }
 }
