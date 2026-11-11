@@ -12,6 +12,7 @@ namespace Dignite.Drive;
     typeof(AbpDistributedLockingAbstractionsModule),
     typeof(AbpBlobStoringPipelineModule),
     typeof(AbpBlobStoringImagingModule),
+    typeof(AbpBlobStoringImagingSkiaSharpModule),
     typeof(DriveDomainSharedModule)
 )]
 public class DriveDomainModule : AbpModule

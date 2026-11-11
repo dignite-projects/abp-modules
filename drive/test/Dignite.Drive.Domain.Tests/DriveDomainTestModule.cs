@@ -48,6 +48,31 @@ public class DriveDomainTestModule : AbpModule
                 });
             });
 
+            options.Containers.Configure(DriveTestContainers.ImagesAsUploaded, container =>
+            {
+                container.UseDriveContainer();
+                container.UseMemory();
+                container.UseImagesPreset(preset =>
+                {
+                    preset.MaxSizeInMegabytes = 1;
+                    preset.MaxWidth = DriveTestContainers.ImagesMaxWidth;
+                    preset.MaxHeight = DriveTestContainers.ImagesMaxWidth;
+                    preset.StoreJpegAsWebp = false;
+                });
+            });
+
+            options.Containers.Configure(DriveTestContainers.UserImages, container =>
+            {
+                container.UseDriveContainer(drive => drive.Kind = DriveContainerKind.UserDrive);
+                container.UseMemory();
+                container.UseImagesPreset(preset =>
+                {
+                    preset.MaxSizeInMegabytes = 1;
+                    preset.MaxWidth = DriveTestContainers.ImagesMaxWidth;
+                    preset.MaxHeight = DriveTestContainers.ImagesMaxWidth;
+                });
+            });
+
             options.Containers.Configure(DriveTestContainers.UserDrive, container =>
             {
                 container.UseDriveContainer(drive => drive.Kind = DriveContainerKind.UserDrive);

@@ -171,6 +171,38 @@ public abstract class DriveContainerSettings_Tests<TStartupModule> : DriveApplic
     }
 
     [Fact]
+    public void The_Images_Preset_Should_Store_Jpegs_As_Webp_Unless_Configuration_Turns_It_Off()
+    {
+        var settings = DriveContainerSettings.Read(Configuration(new Dictionary<string, string?>
+        {
+            ["Drive:Containers:photos:Preset"] = "Images",
+            ["Drive:Containers:photos:PresetOptions:WebpQuality"] = "70",
+            ["Drive:Containers:originals:Preset"] = "Images",
+            ["Drive:Containers:originals:PresetOptions:StoreJpegAsWebp"] = "false"
+        }), new DrivePresetOptions());
+
+        var photos = new BlobContainerConfiguration();
+        settings.Single(s => s.ContainerName == "photos").Apply(photos);
+        photos.GetStoredContentType("image/jpeg").ShouldBe("image/webp");
+        photos.GetJpegToWebpContributorConfiguration().Quality.ShouldBe(70);
+
+        var originals = new BlobContainerConfiguration();
+        settings.Single(s => s.ContainerName == "originals").Apply(originals);
+        originals.GetStoredContentType("image/jpeg").ShouldBe("image/jpeg");
+        originals.PipelineContributors.ShouldNotContain(typeof(JpegToWebpContributor));
+    }
+
+    [Fact]
+    public void A_Webp_Quality_Out_Of_Range_Should_Stop_The_Host()
+    {
+        Should.Throw<AbpException>(() => DriveContainerSettings.Read(Configuration(new Dictionary<string, string?>
+        {
+            ["Drive:Containers:photos:Preset"] = "Images",
+            ["Drive:Containers:photos:PresetOptions:WebpQuality"] = "0"
+        }), new DrivePresetOptions()));
+    }
+
+    [Fact]
     public void No_Section_Means_No_Containers()
     {
         DriveContainerSettings.Read(Configuration(new Dictionary<string, string?>()), new DrivePresetOptions()).ShouldBeEmpty();

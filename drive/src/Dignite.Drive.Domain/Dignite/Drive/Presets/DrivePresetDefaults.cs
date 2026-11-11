@@ -11,6 +11,8 @@ public static class DrivePresetDefaults
 
     public const int ImagesMaxHeight = 4096;
 
+    public const int ImagesWebpQuality = 85;
+
     public const long DocumentsMaxSizeInMegabytes = 20;
 
     public const long BinaryAssetsMaxSizeInMegabytes = 5;

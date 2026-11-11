@@ -129,6 +129,12 @@ public class FileDescriptorManager : DomainService
     /// take turns, so the second shares the first one's BLOB; the unique dedup key stays the last-resort arbiter - a
     /// loser's insert fails, its BLOB is deleted, and a retry finds the winner and shares its BLOB.
     /// </para>
+    /// <para>
+    /// A container may store content in another format than it was uploaded in - the images preset stores a JPEG as WebP.
+    /// The physical BLOB is named for the stored type, which the container declares (<see cref="GetStoredMimeType"/>), and
+    /// the descriptor records the type and size of the stored bytes; <paramref name="name"/>, the application's address,
+    /// is kept. Dedup still compares the upload's hash, so the same upload shares the stored result.
+    /// </para>
     /// </summary>
     /// <param name="name">The caller's name for the file: in a system container, the BLOB name it reads it back by.
     /// Its extension, if any, is checked against the content.</param>
@@ -192,7 +198,9 @@ public class FileDescriptorManager : DomainService
     /// Stores <paramref name="stream"/> as a new file named <paramref name="name"/> in the user drive
     /// <paramref name="containerName"/>. The name need not be unique: a user-drive file is addressed by its id, and holds
     /// no <see cref="FileDescriptor.NameKey"/>. Otherwise it is stored as <see cref="CreateAsync"/> stores - allocation,
-    /// buffering, detection, dedup under the dedup lock, compensation.
+    /// buffering, detection, dedup under the dedup lock, compensation. One difference: when the container stores the
+    /// upload in another format (a JPEG as WebP), the name takes that format's extension
+    /// (<see cref="GetNameForStoredType"/>), shared content included.
     /// </summary>
     public virtual async Task<FileDescriptor> UploadAsync(
         string containerName,
@@ -258,10 +266,12 @@ public class FileDescriptorManager : DomainService
             var source = await FindDedupSourceAsync(containerName, hash, cancellationToken);
             if (source != null)
             {
-                // The bytes already have a home: nothing is stored, the new row shares it.
+                // The bytes already have a home: nothing is stored, the new row shares it - and its type, which a
+                // user-drive name follows.
+                var sharedName = nameIsAddress ? name : GetNameForStoredType(name, mimeType, source.MimeType);
                 return await FileDescriptorRepository.InsertAsync(
                     new FileDescriptor(
-                        GuidGenerator.Create(), containerName, name, source.BlobName, source.MimeType, source.Size, hash,
+                        GuidGenerator.Create(), containerName, sharedName, source.BlobName, source.MimeType, source.Size, hash,
                         ownsBlob: false, clientId, CurrentTenant.Id, nameIsAddress),
                     autoSave: true,
                     cancellationToken);
@@ -413,7 +423,8 @@ public class FileDescriptorManager : DomainService
         var uploadLength = content.Length;
         await UsageManager.CheckCanStoreAsync(uploadLength, cancellationToken);
 
-        var blobName = CreateBlobName(mimeType);
+        // Named for what the container stores: a JPEG it stores as WebP gets a .webp BLOB.
+        var blobName = CreateBlobName(GetStoredMimeType(containerName, mimeType));
         var container = BlobContainerFactory.Create(containerName);
         try
         {
@@ -430,12 +441,14 @@ public class FileDescriptorManager : DomainService
 
         try
         {
-            var (size, storedType) = await GetStoredSizeAndTypeAsync(container, blobName, mimeType, uploadLength, cancellationToken);
+            var (size, storedType) = await GetStoredSizeAndTypeAsync(
+                container, blobName, GetStoredMimeType(containerName, mimeType), uploadLength, cancellationToken);
+            var storedName = nameIsAddress ? name : GetNameForStoredType(name, mimeType, storedType);
 
             // A unique-key violation (the dedup key or the name key) fails here too, and the BLOB goes with it.
             return await FileDescriptorRepository.InsertAsync(
                 new FileDescriptor(
-                    GuidGenerator.Create(), containerName, name, blobName, storedType, size, hash,
+                    GuidGenerator.Create(), containerName, storedName, blobName, storedType, size, hash,
                     ownsBlob, clientId, CurrentTenant.Id, nameIsAddress),
                 autoSave: true,
                 cancellationToken);
@@ -451,12 +464,51 @@ public class FileDescriptorManager : DomainService
     /// A new physical BLOB name: 32 hexadecimal digits of a random GUID plus the canonical extension of
     /// <paramref name="mimeType"/> from <see cref="DriveFileTypes"/> (none when the table has no row for it).
     /// <see cref="Guid.NewGuid"/> rather than the sequential <c>IGuidGenerator</c>: the name may become a public
-    /// address, so it stays fully random. The extension follows the <b>detected</b> type, so the contributors, which
-    /// reconcile the content with the BLOB name's extension inside <c>SaveAsync</c>, agree with the content.
+    /// address, so it stays fully random. <paramref name="mimeType"/> is the type the container <b>stores</b>
+    /// (<see cref="GetStoredMimeType"/>): the detected type, or the one a converting contributor declared. The
+    /// contributors, which reconcile the content with the BLOB name's extension inside <c>SaveAsync</c>, accept a JPEG
+    /// under a <c>.webp</c> name: within one kind the content decides.
     /// </summary>
     protected virtual string CreateBlobName(string mimeType)
     {
         return Guid.NewGuid().ToString("N") + (DriveFileTypes.GetExtension(mimeType) ?? string.Empty);
+    }
+
+    /// <summary>
+    /// The type the container <paramref name="containerName"/> stores an upload detected as <paramref name="mimeType"/>
+    /// as: what its contributors declared (<c>GetStoredContentType</c> - a JPEG is stored as WebP on the images preset),
+    /// else <paramref name="mimeType"/>. Known before the save, so the BLOB can be named after it; the descriptor still
+    /// records the type detected from the stored bytes (<see cref="GetStoredSizeAndTypeAsync"/>).
+    /// </summary>
+    protected virtual string GetStoredMimeType(string containerName, string mimeType)
+    {
+        return BlobContainerConfigurationProvider.Get(containerName).GetStoredContentType(mimeType);
+    }
+
+    /// <summary>
+    /// The name of a user-drive file whose upload, detected as <paramref name="uploadedMimeType"/>, is stored as
+    /// <paramref name="storedMimeType"/>: <paramref name="name"/> with the canonical extension of the stored type
+    /// (<c>photo.jpg</c> stored as WebP becomes <c>photo.webp</c>), so a download is named for what it is.
+    /// <paramref name="name"/> itself when the types are the same or the stored type has no extension in
+    /// <see cref="DriveFileTypes"/>. Not applied in a system container, whose names are the application's addresses.
+    /// </summary>
+    protected virtual string GetNameForStoredType(string name, string uploadedMimeType, string storedMimeType)
+    {
+        if (string.Equals(uploadedMimeType, storedMimeType, StringComparison.OrdinalIgnoreCase))
+        {
+            return name;
+        }
+
+        var extension = DriveFileTypes.GetExtension(storedMimeType);
+        if (extension == null)
+        {
+            return name;
+        }
+
+        var dot = name.LastIndexOf('.');
+        var stem = dot >= 0 ? name[..dot] : name;
+        var maxStem = FileDescriptorConsts.MaxNameLength - extension.Length;
+        return (stem.Length <= maxStem ? stem : stem[..maxStem]) + extension;
     }
 
     /// <summary>SHA-256 of the content as upper-case hex; the stream is rewound afterwards.</summary>

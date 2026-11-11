@@ -16,6 +16,12 @@ public static class DriveTestContainers
 
     public const int ImagesMaxWidth = 64;
 
+    /// <summary>A system Drive container on the images preset with JPEGs stored as uploaded.</summary>
+    public const string ImagesAsUploaded = "images-as-uploaded";
+
+    /// <summary>A user drive on the images preset, scaling pictures into <see cref="ImagesMaxWidth"/> square.</summary>
+    public const string UserImages = "user-images";
+
     /// <summary>A user drive.</summary>
     public const string UserDrive = "user-drive";
 

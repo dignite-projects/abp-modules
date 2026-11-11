@@ -42,6 +42,30 @@ public static class DriveTestFiles
         return data.ToArray();
     }
 
+    /// <summary>A JPEG of noise, for the same reason as <see cref="Png"/>.</summary>
+    public static byte[] Jpeg(int width, int height, int seed = 42)
+    {
+        var info = new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Opaque);
+        var pixels = new byte[info.BytesSize];
+        new Random(seed).NextBytes(pixels);
+        for (var alpha = 3; alpha < pixels.Length; alpha += 4)
+        {
+            pixels[alpha] = 0xFF;
+        }
+
+        using var image = SKImage.FromPixelCopy(info, pixels, info.RowBytes);
+        using var data = image.Encode(SKEncodedImageFormat.Jpeg, 90);
+        return data.ToArray();
+    }
+
+    /// <summary>The encoded format of a picture, read from its header.</summary>
+    public static SKEncodedImageFormat Format(byte[] bytes)
+    {
+        using var data = SKData.CreateCopy(bytes);
+        using var codec = SKCodec.Create(data) ?? throw new InvalidOperationException("Not a picture SkiaSharp can read.");
+        return codec.EncodedFormat;
+    }
+
     /// <summary>The pixel size of a picture, read from its header.</summary>
     public static (int Width, int Height) Measure(byte[] bytes)
     {

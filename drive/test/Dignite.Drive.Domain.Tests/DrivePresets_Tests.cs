@@ -73,8 +73,11 @@ public abstract class DrivePresets_Tests<TStartupModule> : DriveDomainTestBase<T
             typeof(MaxSizeContributor),
             typeof(AllowedContentTypesContributor),
             typeof(ImageMetadataStripContributor),
+            typeof(JpegToWebpContributor),
             typeof(ImageResizeContributor)
         });
+        container.GetJpegToWebpContributorConfiguration().Quality.ShouldBe(DrivePresetDefaults.ImagesWebpQuality);
+        container.GetStoredContentType("image/jpeg").ShouldBe("image/webp");
         container.GetMaxSizeContributorConfiguration().MaxSizeInBytes.ShouldBe(DrivePresetDefaults.ImagesMaxSizeInMegabytes * Megabyte);
         container.GetAllowedContentTypesContributorConfiguration().AllowedContentTypes
             .ShouldBe(DriveFileTypes.GetMimeTypes(DriveFileTypes.Images), ignoreOrder: true);
@@ -92,6 +95,133 @@ public abstract class DrivePresets_Tests<TStartupModule> : DriveDomainTestBase<T
         });
 
         container.PipelineContributors.ShouldNotContain(typeof(ImageResizeContributor));
+    }
+
+    [Fact]
+    public void The_Images_Preset_Can_Store_Jpegs_As_Uploaded_Or_At_Another_Quality()
+    {
+        var asUploaded = new BlobContainerConfiguration().UseImagesPreset(o => o.StoreJpegAsWebp = false);
+        asUploaded.PipelineContributors.ShouldNotContain(typeof(JpegToWebpContributor));
+        asUploaded.GetStoredContentType("image/jpeg").ShouldBe("image/jpeg");
+
+        var lower = new BlobContainerConfiguration().UseImagesPreset(o => o.WebpQuality = 60);
+        lower.GetJpegToWebpContributorConfiguration().Quality.ShouldBe(60);
+    }
+
+    [Theory]
+    [InlineData(true, 0)]
+    [InlineData(false, 101)]
+    public void The_Images_Preset_Should_Refuse_A_Webp_Quality_Out_Of_Range(bool storeJpegAsWebp, int quality)
+    {
+        Should.Throw<AbpException>(() => new BlobContainerConfiguration().UseImagesPreset(o =>
+        {
+            o.StoreJpegAsWebp = storeJpegAsWebp;
+            o.WebpQuality = quality;
+        }));
+    }
+
+    /// <summary>
+    /// A JPEG uploaded to a user drive is stored as WebP: the physical BLOB is named <c>.webp</c>, the descriptor records
+    /// the WebP, and the file's name takes the <c>.webp</c> extension, so a download is named for what it is.
+    /// </summary>
+    [Fact]
+    public async Task A_Jpeg_Uploaded_To_A_User_Drive_Should_Be_Stored_And_Named_As_Webp()
+    {
+        var descriptor = await UploadAsync(DriveTestContainers.UserImages, "holiday.jpg", DriveTestFiles.Jpeg(128, 96, seed: 5));
+
+        var stored = await ReadStoredAsync(descriptor);
+        DriveTestFiles.Format(stored).ShouldBe(SkiaSharp.SKEncodedImageFormat.Webp);
+        DriveTestFiles.Measure(stored).ShouldBe((DriveTestContainers.ImagesMaxWidth, 48));
+        descriptor.BlobName.ShouldEndWith(".webp");
+        descriptor.MimeType.ShouldBe("image/webp");
+        descriptor.Name.ShouldBe("holiday.webp");
+        descriptor.Size.ShouldBe(stored.Length);
+    }
+
+    /// <summary>
+    /// In a system container the name is the application's address, so it is kept; only the physical BLOB is <c>.webp</c>,
+    /// and the descriptor records what is served.
+    /// </summary>
+    [Fact]
+    public async Task A_Jpeg_Stored_In_A_System_Container_Should_Keep_Its_Name()
+    {
+        var descriptor = await WithUnitOfWorkAsync(async () =>
+        {
+            using var stream = new MemoryStream(DriveTestFiles.Jpeg(48, 32, seed: 6));
+            return await _fileDescriptorManager.CreateAsync(DriveTestContainers.Images, "covers/holiday.jpg", stream);
+        });
+
+        var stored = await ReadStoredAsync(descriptor);
+        DriveTestFiles.Format(stored).ShouldBe(SkiaSharp.SKEncodedImageFormat.Webp);
+        descriptor.Name.ShouldBe("covers/holiday.jpg");
+        descriptor.BlobName.ShouldEndWith(".webp");
+        descriptor.MimeType.ShouldBe("image/webp");
+        (await WithUnitOfWorkAsync(() => _fileDescriptorManager.FindAsync(DriveTestContainers.Images, "covers/holiday.jpg")))
+            .ShouldNotBeNull().Id.ShouldBe(descriptor.Id);
+    }
+
+    /// <summary>
+    /// Dedup compares the upload's hash, so the same JPEG uploaded again shares the WebP stored the first time - and its
+    /// name, too, takes the extension of what is shared.
+    /// </summary>
+    [Fact]
+    public async Task The_Same_Jpeg_Uploaded_Again_Should_Share_The_Webp_And_Be_Named_For_It()
+    {
+        var upload = DriveTestFiles.Jpeg(40, 40, seed: 7);
+
+        var first = await UploadAsync(DriveTestContainers.UserImages, "a.jpg", upload);
+        var second = await UploadAsync(DriveTestContainers.UserImages, "b.jpeg", upload);
+
+        second.OwnsBlob().ShouldBeFalse();
+        second.BlobName.ShouldBe(first.BlobName);
+        second.MimeType.ShouldBe("image/webp");
+        second.Name.ShouldBe("b.webp");
+    }
+
+    [Fact]
+    public async Task With_Webp_Turned_Off_A_Jpeg_Should_Be_Stored_As_Uploaded()
+    {
+        var upload = DriveTestFiles.Jpeg(48, 32, seed: 8);
+
+        var descriptor = await WithUnitOfWorkAsync(async () =>
+        {
+            using var stream = new MemoryStream(upload);
+            return await _fileDescriptorManager.CreateAsync(DriveTestContainers.ImagesAsUploaded, "holiday.jpg", stream);
+        });
+
+        (await ReadStoredAsync(descriptor)).ShouldBe(upload);
+        descriptor.BlobName.ShouldEndWith(".jpg");
+        descriptor.MimeType.ShouldBe("image/jpeg");
+        descriptor.Name.ShouldBe("holiday.jpg");
+    }
+
+    /// <summary>A PNG in a user drive keeps its type and its name.</summary>
+    [Fact]
+    public async Task A_Png_Uploaded_To_A_User_Drive_Should_Keep_Its_Name()
+    {
+        var descriptor = await UploadAsync(DriveTestContainers.UserImages, "drawing.png", DriveTestFiles.Png(32, 32, seed: 9));
+
+        descriptor.MimeType.ShouldBe("image/png");
+        descriptor.Name.ShouldBe("drawing.png");
+        descriptor.BlobName.ShouldEndWith(".png");
+    }
+
+    private Task<FileDescriptor> UploadAsync(string containerName, string name, byte[] content)
+    {
+        return WithUnitOfWorkAsync(async () =>
+        {
+            using var stream = new MemoryStream(content);
+            return await _fileDescriptorManager.UploadAsync(containerName, name, stream);
+        });
+    }
+
+    private Task<byte[]> ReadStoredAsync(FileDescriptor descriptor)
+    {
+        return WithUnitOfWorkAsync(async () =>
+        {
+            await using var stream = await _fileDescriptorManager.GetStreamOrNullAsync(descriptor);
+            return DriveTestFiles.ReadAll(stream!);
+        });
     }
 
     [Fact]

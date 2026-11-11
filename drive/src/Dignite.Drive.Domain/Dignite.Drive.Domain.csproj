@@ -19,6 +19,9 @@
          same-version PackageReferences. -->
     <ProjectReference Include="..\..\..\blob-storing\src\Dignite.Abp.BlobStoring.Pipeline\Dignite.Abp.BlobStoring.Pipeline.csproj" />
     <ProjectReference Include="..\..\..\blob-storing\src\Dignite.Abp.BlobStoring.Imaging\Dignite.Abp.BlobStoring.Imaging.csproj" />
+    <!-- The images preset stores a JPEG as WebP, turned upright (StoreJpegAsWebp), so SkiaSharp is a dependency of the
+         Drive; the module also makes ABP's SkiaSharp resizer turn photos upright. -->
+    <ProjectReference Include="..\..\..\blob-storing\src\Dignite.Abp.BlobStoring.Imaging.SkiaSharp\Dignite.Abp.BlobStoring.Imaging.SkiaSharp.csproj" />
   </ItemGroup>
 
 </Project>
