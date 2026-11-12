@@ -48,7 +48,7 @@ public class BlobStoringImagingSkiaSharpTestModule : AbpModule
 
             options.Containers.Configure(LowQualityWebpContainer, container => container.StoreJpegAsWebp(LowQuality));
 
-            // The order the images preset of a Drive uses.
+            // The order Blob Management's images preset uses.
             options.Containers.Configure(ComposedContainer, container =>
             {
                 container.AddMaxSizeContributor(c => c.MaxSizeInBytes = 4 * 1024 * 1024);

@@ -8,7 +8,7 @@ developed together in one repository and released in lockstep.
 | Module | What it is | Docs |
 |---|---|---|
 | [`blob-storing/`](blob-storing/) | Everyday **pipeline contributors** for ABP BlobStoring: the `IBlobPipelineContributor`s ABP 10.7 leaves out — a size cap, a content-type allow-list checked against the real bytes, GZip, image resize and compress — plus content-based MIME detection. No upload service, metadata, API or UI — the application that owns the files keeps those. | [Docs](docs/en/blob-storing/index.md) |
-| [`drive/`](drive/) | A per-tenant **cloud drive**: a BlobStoring provider applications use to keep their bytes in the Drive, plus a user-facing file library (directories, a file picker, its own permissions), hostable in the application's own process or once as its own service. In development, not yet released. | [Docs](docs/en/drive/index.md) |
+| [`blob-management/`](blob-management/) | **Blob Management**: the tenant's BLOB containers, managed. A BlobStoring provider applications keep their bytes with, and - for the people in front of them - directories, a file explorer and a file input, with permissions on a container and on a directory. An infrastructure module, hostable in the application's own process or once as its own service. In development, not yet released. | [Docs](docs/en/blob-management/index.md) |
 | [`notifications/`](notifications/) | An extensible, event-driven **notification framework** with pluggable channel notifiers (SignalR, email, device push), plus an optional **Notification Center** (persistent inbox, subscriptions, read/unread state, REST API) with MVC and Angular UI libraries. | [Docs](docs/en/notifications/index.md) |
 | [`flex-fields/`](flex-fields/) | Runtime-defined (**"flex"**) fields — a constraint kernel supplying field types, configuration, validation, a per-entity value bag and a derived query index, with EF Core and MongoDB providers, plus Angular and MVC UI. It owns no domain model: each consuming application defines its own fields. | [Docs](docs/en/flex-fields/index.md) |
 | [`aspnetcore-mcp/`](aspnetcore-mcp/) | Shared infrastructure, not a module: hosts the one **MCP (Model Context Protocol) server** an ABP application can have, and lets each module contribute AI-callable tools, resources and prompts to it inside its own namespace (`Dignite.Site` and `Dignite.Vault.Extract` do, from their own repositories). | [Docs](docs/en/aspnetcore-mcp/index.md) |
@@ -17,7 +17,7 @@ developed together in one repository and released in lockstep.
 The documentation of every module starts at [`docs/en/index.md`](docs/en/index.md).
 
 Each module is **independently installable**; the trees reference each other only along the edges their `CLAUDE.md`
-files declare (today: `drive/` builds on `blob-storing/`), and a module's optional `*.Mcp` package depends only on the
+files declare (today: `blob-management/` builds on `blob-storing/`), and a module's optional `*.Mcp` package depends only on the
 shared `aspnetcore-mcp/` tree. They share this
 repository for development and release, not at runtime. Every package keeps the PackageId it has
 always had; moving into a subdirectory changed nothing for consumers. (The exceptions are the pre-release
@@ -64,11 +64,11 @@ abp-modules/
 │   ├── src/  test/                       # the published class libraries and their tests (no demo host)
 │   ├── dev-docs/                         # decision records (why contributors, why no File Explorer here)
 │   └── .claude/skills/                   # module-specific conventions & invariants
-├── drive/
-│   ├── Dignite.Drive.slnx                # focused solution for this module alone (src/, test/ and host/)
+├── blob-management/
+│   ├── Dignite.Abp.BlobManagement.slnx   # focused solution for this module alone (src/, test/ and host/)
 │   ├── src/  test/                       # the published class libraries and their tests
-│   ├── host/  angular/                   # local-dev demo app + the Angular workspace holding @dignite/ng.drive
-│   └── dev-docs/drive-decision.md        # design decisions
+│   ├── host/  angular/                   # local-dev demo app + the Angular workspace holding @dignite/ng.blob-management
+│   └── dev-docs/                         # design decisions (blob-management-decision.md is the current one)
 ├── notifications/
 │   ├── Dignite.Abp.Notifications.slnx  # focused solution for this module alone
 │   ├── core/  notification-center/       # the published class libraries
@@ -102,7 +102,7 @@ To work on one module in isolation, use its own solution — same projects, smal
 
 ```bash
 dotnet build blob-storing/Dignite.Abp.BlobStoring.slnx
-dotnet build drive/Dignite.Drive.slnx
+dotnet build blob-management/Dignite.Abp.BlobManagement.slnx
 dotnet build notifications/Dignite.Abp.Notifications.slnx
 dotnet build flex-fields/Dignite.Abp.FlexFields.slnx
 dotnet build aspnetcore-mcp/Dignite.Abp.AspNetCore.Mcp.slnx
@@ -117,7 +117,7 @@ The Angular libraries are separate Node packages, outside MSBuild:
 ```bash
 cd notifications/angular && npx yarn && npx yarn build:lib
 cd flex-fields/angular   && npx yarn && npx yarn build:lib
-cd drive/angular         && npx yarn && npx yarn build:lib
+cd blob-management/angular && npx yarn && npx yarn build:lib
 ```
 
 ## Versioning
@@ -144,7 +144,7 @@ public issue for a vulnerability.
 `<module>/.claude/skills/` (written for AI-assisted contributions, but equally the reference for human
 contributors). Start with `<module>/CLAUDE.md` for the layer map, then the module's `*-invariants`
 skill — those encode the specific bugs each module was built or rewritten to fix, so they are the first
-thing to read before changing load-bearing code. `flex-fields/` and `drive/` have a `CLAUDE.md` and their design rationale in `dev-docs/`; `aspnetcore-mcp/` and `openiddict/` are documented by their READMEs and `docs/`
+thing to read before changing load-bearing code. `flex-fields/` and `blob-management/` have a `CLAUDE.md` and their design rationale in `dev-docs/`; `aspnetcore-mcp/` and `openiddict/` are documented by their READMEs and `docs/`
 ([MCP Server](docs/en/aspnetcore-mcp/index.md), [OpenIddict](docs/en/openiddict/index.md)).
 
 ## License

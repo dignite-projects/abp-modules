@@ -1,6 +1,6 @@
 # Dignite ABP Modules — monorepo guide
 
-Four **ABP Framework** module trees (`blob-storing/`, `notifications/`, `flex-fields/` and `drive/`),
+Four **ABP Framework** module trees (`blob-storing/`, `notifications/`, `flex-fields/` and `blob-management/`),
 developed together and released in lockstep, plus two domain-agnostic infrastructure trees:
 `aspnetcore-mcp/`, the shared MCP server that modules in
 other repositories depend on, and `openiddict/`, additions to ABP's OpenIddict module for authorization servers.
@@ -36,22 +36,27 @@ These are the things most likely to be broken by an otherwise reasonable-looking
      package is not renaming one: the remaining IDs are untouched, and a removed ID is never reused here.
    - **Removal on record, `10.0.0-rc.28`:** the `Dignite.Abp.FileStoring*` IDs are retired by the rename above, not
      reused for anything else.
+   - **Not a rename, 2026-11-12:** `drive/` (`Dignite.Drive.*`, `Dignite.Abp.BlobStoring.Drive`, `@dignite/ng.drive`)
+     became `blob-management/` (`Dignite.Abp.BlobManagement.*`, `Dignite.Abp.BlobStoring.BlobManagement`,
+     `@dignite/ng.blob-management`) before any release contained it: no package, page or tag ever carried the old
+     names, so no consumer has anything to migrate
+     ([`blob-management/dev-docs/blob-management-decision.md`](blob-management/dev-docs/blob-management-decision.md)).
 
 2. **Module trees reference each other only along declared edges, and the graph stays acyclic.**
-   `blob-storing/`, `notifications/`, `flex-fields/` and `drive/` share this repository for development and
+   `blob-storing/`, `notifications/`, `flex-fields/` and `blob-management/` share this repository for development and
    release. A `ProjectReference` from one tree to another is allowed only when the referencing tree's `CLAUDE.md`
    names what it depends on; any other one is a bug, and nothing catches it: the aggregate `.slnx` contains all of
    them, so it compiles fine. `dotnet pack` turns an allowed reference into a same-version `PackageReference`
-   (lockstep release, as in ABP's own monorepo). The one declared edge is `drive/` to `blob-storing/` (the Drive
-   runs blob-storing's pipeline contributors); `blob-storing/`, `notifications/` and `flex-fields/` reference
-   none of the others, and `blob-storing/`'s "what stays out" is unchanged
-   ([`drive/dev-docs/drive-decision.md`](drive/dev-docs/drive-decision.md)).
-   - `drive/` is the **open edition** of Dignite Drive: the storage tier and attaching a file (upload, read, delete).
-     Its file library - listing, directories, rename, move, per-item grants, the Drive page - is **Drive Pro**
-     (`Dignite.Drive.Pro.*`), a commercial product in a repository of its own that builds on `drive/`. The edge
-     points one way, out of this repository: nothing here references Drive Pro, and open modules (Site, flex-fields)
-     never depend on it: Site uses the open edition only. Drive Pro's code stays out of this repository and its
-     history, and what is on its side of the split does not come back into `drive/` (`drive/CLAUDE.md`, invariant 8).
+   (lockstep release, as in ABP's own monorepo). The one declared edge is `blob-management/` to `blob-storing/`
+   (a managed container runs blob-storing's pipeline contributors); `blob-storing/`, `notifications/` and
+   `flex-fields/` reference none of the others, and `blob-storing/`'s "what stays out" is unchanged
+   ([`blob-management/dev-docs/drive-decision.md`](blob-management/dev-docs/drive-decision.md)).
+   - `blob-management/` is **Blob Management**, an infrastructure module and not an application: the tenant's BLOB
+     containers, managed - the provider applications keep their bytes with, and directories, files and their
+     permissions for the people in front of them. It is one edition, all of it here: the commercial Drive Pro that was
+     split from it for a day was folded back on 2026-11-12, and with it went personal drives and sharing a file, which
+     the module does not do (ABP's File Management does; this module does not compete with it)
+     ([`blob-management/dev-docs/blob-management-decision.md`](blob-management/dev-docs/blob-management-decision.md)).
    - There used to be another shared top-level tree (`aspnetcore-mvc-razor/`) for generic ASP.NET
      Core MVC/Razor infrastructure with no domain model of its own. It was dissolved once it turned
      out to have exactly one consumer per file: each piece now lives directly in the one project
@@ -64,7 +69,7 @@ These are the things most likely to be broken by an otherwise reasonable-looking
      not a module: it hosts the one MCP server an application can have and carries no domain
      model. It passed the test the Razor tree failed because every piece of it is needed by every
      MCP-contributing module — `Dignite.Site.Mcp` and `Dignite.Vault.Extract.Mcp` in their own
-     repositories (and `Dignite.Drive.Mcp` here; `Dignite.FileExplorer.Mcp` was another until File
+     repositories (and `Dignite.Abp.BlobManagement.Mcp` here; `Dignite.FileExplorer.Mcp` was another until File
      Explorer left in rc.25) — and
      duplicating it is exactly how two of them had already drifted apart (see its README). The direction is one-way: a module's `*.Mcp`
      project may reference `aspnetcore-mcp/`; `aspnetcore-mcp/` never references a module. Each
@@ -84,7 +89,7 @@ These are the things most likely to be broken by an otherwise reasonable-looking
      OpenIddict covers it natively.
 
 3. **Library package versions live in the root `Directory.Packages.props`**, never inline in a
-   library `.csproj`. The demo hosts (`notifications/host/`, `flex-fields/demo/`, `drive/host/`) are the
+   library `.csproj`. The demo hosts (`notifications/host/`, `flex-fields/demo/`, `blob-management/host/`) are the
    deliberate exception — each opts out of central package management and pins inline. `blob-storing/`
    has no demo host: it is a library of pipeline contributors with no API or UI to demonstrate.
 
@@ -96,9 +101,10 @@ These are the things most likely to be broken by an otherwise reasonable-looking
   follow ABP's conventions — a `//[doc-seo]` block first, title-case headings, four-backtick code fences, relative
   links ending in `.md`. A site reads the tree from GitHub at each release tag, so every file under `docs/` is
   public and versioned; a page's file name is its address, so never rename a published page.
-- **`docs/en/<module>-pro/`** are the pages of a commercial module built on an open one here - `drive-pro/` for
-  Drive Pro, on `drive/` - kept beside the open pages as ABP keeps its Pro modules' (`docs/en/modules/cms-kit-pro/`).
-  The suffix is on the folder and the pages in it keep plain names (`docs/en/drive-pro/index.md`); a Pro page standing
+- **`docs/en/<module>-pro/`** are the pages of a commercial module built on an open one here, kept beside the open
+  pages as ABP keeps its Pro modules' (`docs/en/modules/cms-kit-pro/`). There is none today: `drive-pro/`, the one there
+  was, went when Drive Pro was folded into `blob-management/`.
+  The suffix is on the folder and the pages in it keep plain names (`docs/en/<module>-pro/index.md`); a Pro page standing
   alone in an open module's folder would be `<name>-pro.md`, as ABP's `identity-pro.md`. They follow the conventions
   above and have a heading of their own in `docs-nav.json`. They are the one place this repository speaks of a
   commercial module: they describe what a customer installs, and link to the open module's pages for what the open

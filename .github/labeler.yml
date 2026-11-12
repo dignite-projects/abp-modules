@@ -17,7 +17,6 @@
       - any-glob-to-any-file:
           - 'blob-management/**'
           - 'docs/en/blob-management/**'
-          - 'docs/en/drive-pro/**'
 
 "module: notifications":
   - changed-files:

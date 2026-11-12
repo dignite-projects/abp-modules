@@ -14,10 +14,10 @@ body:
     id: module
     attributes:
       label: Which module?
-      description: The module trees are independent, except where a tree's CLAUDE.md declares a dependency (drive on blob-storing).
+      description: The module trees are independent, except where a tree's CLAUDE.md declares a dependency (blob-management on blob-storing).
       options:
         - "blob-storing (Dignite.Abp.BlobStoring.*)"
-        - "drive (Dignite.Drive / Dignite.Abp.BlobStoring.Drive / @dignite/ng.drive)"
+        - "blob-management (Dignite.Abp.BlobManagement / Dignite.Abp.BlobStoring.BlobManagement / @dignite/ng.blob-management)"
         - "notifications (Dignite.Abp.Notifications / Dignite.NotificationCenter)"
         - "flex-fields (Dignite.Abp.FlexFields / @dignite/ng.flex-fields)"
         - "aspnetcore-mcp (Dignite.Abp.AspNetCore.Mcp)"
