@@ -19,6 +19,11 @@
   "Permission:Drive": "Drive",
   "Permission:Files": "Fichiers",
   "Permission:Files.Upload": "Téléverser",
-  "Permission:Files.Delete": "Supprimer"
+  "Permission:Files.Delete": "Supprimer",
+  "Feature:DriveGroup": "Drive",
+  "Feature:DriveEnable": "Activer Drive",
+  "Feature:DriveEnableDescription": "Indique si le locataire peut stocker des fichiers dans Drive.",
+  "Feature:DriveStorageSize": "Stockage Drive (Mo)",
+  "Feature:DriveStorageSizeDescription": "La quantité maximale que le locataire peut stocker dans Drive, en mégaoctets. 0 signifie aucune limite."
  }
 }

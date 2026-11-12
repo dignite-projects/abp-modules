@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "檔案",
     "Permission:Files.Upload": "上傳",
-    "Permission:Files.Delete": "刪除"
+    "Permission:Files.Delete": "刪除",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "啟用 Drive",
+    "Feature:DriveEnableDescription": "租戶是否可以在 Drive 中儲存檔案。",
+    "Feature:DriveStorageSize": "Drive 儲存空間（MB）",
+    "Feature:DriveStorageSizeDescription": "租戶在 Drive 中最多可儲存的容量，單位為 MB。0 表示不限制。"
   }
 }

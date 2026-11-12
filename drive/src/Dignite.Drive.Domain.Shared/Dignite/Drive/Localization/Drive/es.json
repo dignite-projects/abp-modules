@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "Archivos",
     "Permission:Files.Upload": "Subir",
-    "Permission:Files.Delete": "Eliminar"
+    "Permission:Files.Delete": "Eliminar",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Habilitar Drive",
+    "Feature:DriveEnableDescription": "Si el inquilino puede almacenar archivos en Drive.",
+    "Feature:DriveStorageSize": "Almacenamiento de Drive (MB)",
+    "Feature:DriveStorageSizeDescription": "Lo máximo que el inquilino puede almacenar en Drive, en megabytes. 0 significa sin límite."
   }
 }

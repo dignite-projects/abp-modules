@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "Tiedostot",
     "Permission:Files.Upload": "Lähettäminen",
-    "Permission:Files.Delete": "Poistaminen"
+    "Permission:Files.Delete": "Poistaminen",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Ota Drive käyttöön",
+    "Feature:DriveEnableDescription": "Saako vuokralainen tallentaa tiedostoja Driveen.",
+    "Feature:DriveStorageSize": "Drive-tallennustila (Mt)",
+    "Feature:DriveStorageSizeDescription": "Enimmäismäärä, jonka vuokralainen voi tallentaa Driveen, megatavuina. 0 tarkoittaa, ettei rajaa ole."
   }
 }

@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "파일",
     "Permission:Files.Upload": "업로드",
-    "Permission:Files.Delete": "삭제"
+    "Permission:Files.Delete": "삭제",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Drive 사용",
+    "Feature:DriveEnableDescription": "테넌트가 Drive에 파일을 저장할 수 있는지 여부입니다.",
+    "Feature:DriveStorageSize": "Drive 저장 공간(MB)",
+    "Feature:DriveStorageSizeDescription": "테넌트가 Drive에 저장할 수 있는 최대 용량(MB)입니다. 0은 제한이 없음을 뜻합니다."
   }
 }

@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "Datoteke",
     "Permission:Files.Upload": "Nalaganje",
-    "Permission:Files.Delete": "Brisanje"
+    "Permission:Files.Delete": "Brisanje",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Omogoči Drive",
+    "Feature:DriveEnableDescription": "Ali lahko najemnik shranjuje datoteke v Drive.",
+    "Feature:DriveStorageSize": "Prostor Drive (MB)",
+    "Feature:DriveStorageSizeDescription": "Največ, kar lahko najemnik shrani v Drive, v megabajtih. 0 pomeni brez omejitve."
   }
 }

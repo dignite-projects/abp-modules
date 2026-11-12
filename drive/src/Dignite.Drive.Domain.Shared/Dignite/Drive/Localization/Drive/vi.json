@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "Tệp",
     "Permission:Files.Upload": "Tải lên",
-    "Permission:Files.Delete": "Xóa"
+    "Permission:Files.Delete": "Xóa",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Bật Drive",
+    "Feature:DriveEnableDescription": "Đơn vị thuê có được lưu trữ tệp trong Drive hay không.",
+    "Feature:DriveStorageSize": "Dung lượng Drive (MB)",
+    "Feature:DriveStorageSizeDescription": "Dung lượng tối đa mà đơn vị thuê có thể lưu trữ trong Drive, tính bằng megabyte. 0 nghĩa là không giới hạn."
   }
 }

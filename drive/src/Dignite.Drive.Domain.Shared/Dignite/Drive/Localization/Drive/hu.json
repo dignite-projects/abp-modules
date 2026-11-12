@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "Fájlok",
     "Permission:Files.Upload": "Feltöltés",
-    "Permission:Files.Delete": "Törlés"
+    "Permission:Files.Delete": "Törlés",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Drive engedélyezése",
+    "Feature:DriveEnableDescription": "A bérlő tárolhat-e fájlokat a Drive-ban.",
+    "Feature:DriveStorageSize": "Drive-tárhely (MB)",
+    "Feature:DriveStorageSizeDescription": "A bérlő által a Drive-ban tárolható legnagyobb mennyiség megabájtban. A 0 korlátlan tárhelyet jelent."
   }
 }

@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "Dateien",
     "Permission:Files.Upload": "Hochladen",
-    "Permission:Files.Delete": "Löschen"
+    "Permission:Files.Delete": "Löschen",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Drive aktivieren",
+    "Feature:DriveEnableDescription": "Ob der Mandant Dateien in Drive speichern darf.",
+    "Feature:DriveStorageSize": "Drive-Speicher (MB)",
+    "Feature:DriveStorageSizeDescription": "Die maximale Datenmenge, die der Mandant in Drive speichern darf, in Megabyte. 0 bedeutet keine Begrenzung."
   }
 }

@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "الملفات",
     "Permission:Files.Upload": "رفع",
-    "Permission:Files.Delete": "حذف"
+    "Permission:Files.Delete": "حذف",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "تفعيل Drive",
+    "Feature:DriveEnableDescription": "ما إذا كان يمكن للمستأجر تخزين الملفات في Drive.",
+    "Feature:DriveStorageSize": "مساحة تخزين Drive (ميغابايت)",
+    "Feature:DriveStorageSizeDescription": "الحد الأقصى الذي يمكن للمستأجر تخزينه في Drive، بالميغابايت. تعني 0 عدم وجود حد."
   }
 }
