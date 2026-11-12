@@ -42,4 +42,32 @@ public static class BlobManagementErrorCodes
     /// allocation in megabytes), <c>UsedBytes</c>, <c>RequiredBytes</c>.
     /// </summary>
     public const string StorageQuotaExceeded = Namespace + ":StorageQuotaExceeded";
+
+    /// <summary>
+    /// The container does not allow directories (<c>AllowDirectories</c>, off by default). Data: <c>ContainerName</c>.
+    /// </summary>
+    public const string DirectoriesNotAllowed = Namespace + ":DirectoriesNotAllowed";
+
+    /// <summary>The directory does not exist, or is in another container.</summary>
+    public const string DirectoryNotFound = Namespace + ":DirectoryNotFound";
+
+    /// <summary>A live sibling already has the name, whatever its case. Data: <c>Name</c>.</summary>
+    public const string DirectoryNameAlreadyExists = Namespace + ":DirectoryNameAlreadyExists";
+
+    public const string DirectoryCannotMoveIntoItself = Namespace + ":DirectoryCannotMoveIntoItself";
+
+    /// <summary>Data: <c>MaxDepth</c>.</summary>
+    public const string DirectoryTooDeep = Namespace + ":DirectoryTooDeep";
+
+    /// <summary>The directory still has a live subdirectory or file.</summary>
+    public const string DirectoryNotEmpty = Namespace + ":DirectoryNotEmpty";
+
+    /// <summary>Data: <c>Sorting</c>.</summary>
+    public const string SortingNotSupported = Namespace + ":SortingNotSupported";
+
+    /// <summary>
+    /// The file was saved by an application under its name, which is how the application reads it back: it is not
+    /// renamed or moved. Data: <c>Name</c>.
+    /// </summary>
+    public const string FileAddressedByName = Namespace + ":FileAddressedByName";
 }

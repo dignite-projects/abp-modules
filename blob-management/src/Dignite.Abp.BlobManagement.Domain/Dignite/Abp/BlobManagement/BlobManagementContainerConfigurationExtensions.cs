@@ -14,20 +14,17 @@ public static class BlobManagementContainerConfigurationExtensions
 
     /// <summary>
     /// The Blob Management configuration of <paramref name="containerName"/>; fails with
-    /// <see cref="BlobManagementErrorCodes.ContainerNotFound"/> for a container the Blob Management host did not declare, or one of
-    /// another <paramref name="kind"/> than asked for - to the entry point asking, a container of the other kind does
-    /// not exist.
+    /// <see cref="BlobManagementErrorCodes.ContainerNotFound"/> for a container the Blob Management host did not declare.
     /// </summary>
     public static BlobManagementContainerConfiguration GetBlobManagementContainerConfiguration(
         this IBlobContainerConfigurationProvider configurationProvider,
-        string containerName,
-        BlobManagementContainerKind? kind = null)
+        string containerName)
     {
         Check.NotNull(configurationProvider, nameof(configurationProvider));
         Check.NotNullOrWhiteSpace(containerName, nameof(containerName));
 
         var configuration = configurationProvider.Get(containerName).GetBlobManagementContainerConfiguration();
-        if (!configuration.IsBlobManagementContainer || (kind.HasValue && configuration.Kind != kind.Value))
+        if (!configuration.IsManaged)
         {
             throw new BusinessException(BlobManagementErrorCodes.ContainerNotFound)
                 .WithData("ContainerName", containerName);
@@ -36,10 +33,20 @@ public static class BlobManagementContainerConfigurationExtensions
         return configuration;
     }
 
+    /// <summary>Whether <paramref name="containerName"/> is a container the Blob Management host declared.</summary>
+    public static bool IsManagedContainer(
+        this IBlobContainerConfigurationProvider configurationProvider,
+        string containerName)
+    {
+        Check.NotNull(configurationProvider, nameof(configurationProvider));
+        return !containerName.IsNullOrWhiteSpace() &&
+               configurationProvider.Get(containerName).GetBlobManagementContainerConfiguration().IsManaged;
+    }
+
     /// <summary>
-    /// Declares the container one of the BlobManagement's, on the Blob Management host. Every Blob Management container is multi-tenant, so this
-    /// sets <see cref="BlobContainerConfiguration.IsMultiTenant"/> as well. Declare named containers only: a default
-    /// configuration declared a Blob Management container would make every container name one.
+    /// Declares the container a managed one, on the Blob Management host. Every managed container is multi-tenant, so
+    /// this sets <see cref="BlobContainerConfiguration.IsMultiTenant"/> as well. Declare named containers only: a
+    /// default configuration declared managed would make every container name one.
     /// </summary>
     public static BlobContainerConfiguration UseBlobManagementContainer(
         this BlobContainerConfiguration containerConfiguration,
@@ -47,12 +54,7 @@ public static class BlobManagementContainerConfigurationExtensions
     {
         Check.NotNull(containerConfiguration, nameof(containerConfiguration));
 
-        var configuration = new BlobManagementContainerConfiguration(containerConfiguration);
-        if (!configuration.IsBlobManagementContainer)
-        {
-            configuration.Kind = BlobManagementContainerKind.System;
-        }
-
+        var configuration = new BlobManagementContainerConfiguration(containerConfiguration) { IsManaged = true };
         configureAction?.Invoke(configuration);
         configuration.Validate();
 

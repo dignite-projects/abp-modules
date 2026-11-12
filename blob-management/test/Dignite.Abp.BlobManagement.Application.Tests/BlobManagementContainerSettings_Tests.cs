@@ -32,14 +32,13 @@ public abstract class BlobManagementContainerSettings_Tests<TStartupModule> : Bl
 
         options.Services.ReplaceConfiguration(Configuration(new Dictionary<string, string?>
         {
-            ["BlobManagement:Containers:config-media:Kind"] = "System",
             ["BlobManagement:Containers:config-media:PublicRead"] = "true",
             ["BlobManagement:Containers:config-media:AllowedClientIds:0"] = "site-app",
             ["BlobManagement:Containers:config-media:AllowedClientIds:1"] = "ghost-app",
             ["BlobManagement:Containers:config-media:Preset"] = "images",
             ["BlobManagement:Containers:config-media:PresetOptions:MaxSizeInMegabytes"] = "2",
             ["BlobManagement:Containers:config-media:PresetOptions:MaxWidth"] = "100",
-            ["BlobManagement:Containers:config-docs:Kind"] = "UserBlobManagement",
+            ["BlobManagement:Containers:config-docs:AllowDirectories"] = "true",
             ["BlobManagement:Containers:config-docs:Preset"] = "Documents"
         }));
     }
@@ -57,8 +56,8 @@ public abstract class BlobManagementContainerSettings_Tests<TStartupModule> : Bl
 
         var media = provider.Get(BlobManagementApplicationTestModule.ConfiguredAndOverriddenContainer);
         var mediaBlobManagement = media.GetBlobManagementContainerConfiguration();
-        mediaBlobManagement.IsBlobManagementContainer.ShouldBeTrue();
-        mediaBlobManagement.Kind.ShouldBe(BlobManagementContainerKind.System);
+        mediaBlobManagement.IsManaged.ShouldBeTrue();
+        mediaBlobManagement.AllowDirectories.ShouldBeFalse();
         mediaBlobManagement.AllowedClientIds.ShouldBe(new[] { "site-app", "ghost-app" });
         media.IsMultiTenant.ShouldBeTrue();
         media.GetMaxSizeContributorConfiguration().MaxSizeInBytes.ShouldBe(2L * 1024 * 1024);
@@ -66,7 +65,7 @@ public abstract class BlobManagementContainerSettings_Tests<TStartupModule> : Bl
         media.GetImageResizeContributorConfiguration().MaxHeight.ShouldBe(BlobManagementPresetDefaults.ImagesMaxHeight);
 
         var docs = provider.Get(Docs);
-        docs.GetBlobManagementContainerConfiguration().Kind.ShouldBe(BlobManagementContainerKind.UserBlobManagement);
+        docs.GetBlobManagementContainerConfiguration().AllowDirectories.ShouldBeTrue();
         docs.GetAllowedContentTypesContributorConfiguration().AllowedContentTypes.ShouldContain("application/pdf");
     }
 
@@ -80,16 +79,14 @@ public abstract class BlobManagementContainerSettings_Tests<TStartupModule> : Bl
     }
 
     [Fact]
-    public async Task The_Validator_Should_Warn_About_Unknown_Clients_And_Containers_No_Client_Can_Use()
+    public async Task The_Validator_Should_Warn_About_Unknown_Clients()
     {
         var warnings = await GetRequiredService<BlobManagementContainerValidator>().ValidateAsync();
 
         warnings.ShouldContain(w => w.Contains("'ghost-app'"));
         warnings.ShouldNotContain(w => w.Contains("'site-app'"));
-        // The test module's system containers allow no client.
-        warnings.ShouldContain(w => w.Contains($"'{BlobManagementTestContainers.Files}'") && w.Contains("allows no client"));
-        // A user drive is not a system container.
-        warnings.ShouldNotContain(w => w.Contains($"'{Docs}'"));
+        // A container no client is allowed in is used in process, or by people: nothing to warn about.
+        warnings.ShouldNotContain(w => w.Contains($"'{BlobManagementTestContainers.Files}'"));
     }
 
     [Fact]
@@ -104,7 +101,6 @@ public abstract class BlobManagementContainerSettings_Tests<TStartupModule> : Bl
 
     [Theory]
     [InlineData("BlobManagement:Containers:c:Kidn", "System", "unknown key 'Kidn'")]
-    [InlineData("BlobManagement:Containers:c:Kind", "Public", "is not a Kind")]
     [InlineData("BlobManagement:Containers:c:Scope", "Personal", "unknown key 'Scope'")]
     [InlineData("BlobManagement:Containers:c:PublicRead", "yes", "PublicRead must be true or false")]
     [InlineData("BlobManagement:Containers:c:Preset", "Videos", "unknown preset 'Videos'")]
@@ -135,15 +131,18 @@ public abstract class BlobManagementContainerSettings_Tests<TStartupModule> : Bl
     }
 
     [Fact]
-    public void Reading_Should_Stop_At_Clients_On_A_User_BlobManagement()
+    public void Reading_Should_Stop_At_A_Value_That_Is_Not_A_Boolean_And_At_The_Removed_Kind()
     {
-        var exception = Should.Throw<AbpException>(() => BlobManagementContainerSettings.Read(Configuration(new Dictionary<string, string?>
+        Should.Throw<AbpException>(() => BlobManagementContainerSettings.Read(Configuration(new Dictionary<string, string?>
         {
-            ["BlobManagement:Containers:c:Kind"] = "UserBlobManagement",
-            ["BlobManagement:Containers:c:AllowedClientIds:0"] = "site-app"
-        }), new BlobManagementPresetOptions()));
+            ["BlobManagement:Containers:c:AllowDirectories"] = "yes"
+        }), new BlobManagementPresetOptions())).Message.ShouldContain("AllowDirectories");
 
-        exception.Message.ShouldContain("system containers only");
+        // There is one kind of container: the key is unknown now, and says so at startup.
+        Should.Throw<AbpException>(() => BlobManagementContainerSettings.Read(Configuration(new Dictionary<string, string?>
+        {
+            ["BlobManagement:Containers:c:Kind"] = "System"
+        }), new BlobManagementPresetOptions())).Message.ShouldContain("unknown key 'Kind'");
     }
 
     [Fact]
@@ -167,7 +166,7 @@ public abstract class BlobManagementContainerSettings_Tests<TStartupModule> : Bl
         settings.Apply(container);
         container.GetImageResizeContributorConfiguration().MaxWidth.ShouldBe(128);
         container.GetImageResizeContributorConfiguration().MaxHeight.ShouldBe(256);
-        container.GetBlobManagementContainerConfiguration().Kind.ShouldBe(BlobManagementContainerKind.System);
+        container.GetBlobManagementContainerConfiguration().IsManaged.ShouldBeTrue();
     }
 
     [Fact]

@@ -61,7 +61,7 @@ public class BlobManagementHttpApiTestModule : AbpModule
     public const string ClosedContainer = "closed";
 
     /// <summary>A user drive.</summary>
-    public const string UserBlobManagementContainer = "user-drive";
+    public const string DocumentsContainer = "documents";
 
     /// <summary>System container that allows <see cref="AllowedClient"/> and is read publicly.</summary>
     public const string PublicContainer = "public";
@@ -186,9 +186,9 @@ public class BlobManagementHttpApiTestModule : AbpModule
                 container.UseMemory();
             });
 
-            options.Containers.Configure(UserBlobManagementContainer, container =>
+            options.Containers.Configure(DocumentsContainer, container =>
             {
-                container.UseBlobManagementContainer(drive => drive.Kind = BlobManagementContainerKind.UserBlobManagement);
+                container.UseBlobManagementContainer(managed => managed.AllowDirectories = true);
                 container.UseMemory();
             });
 

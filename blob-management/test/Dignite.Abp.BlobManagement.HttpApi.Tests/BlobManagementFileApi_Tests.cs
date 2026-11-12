@@ -42,18 +42,21 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
     [Fact]
     public async Task A_User_Should_Manage_Files_Through_The_Proxies()
     {
-        await GrantAsync(BlobManagementPermissions.Files.Upload, _user);
+        await GrantAsync(BlobManagementPermissions.Containers.Default, _user);
+        await GrantAsync(BlobManagementPermissions.Containers.UploadFiles, _user);
         var bytes = BlobManagementTestFiles.Pdf("over http " + Guid.NewGuid());
 
         using (TestCaller.As(UiClient, _user))
         {
             var containers = (await _containers.GetListAsync()).Items.Select(c => c.Name).ToList();
-            containers.ShouldContain(BlobManagementHttpApiTestModule.UserBlobManagementContainer);
-            containers.ShouldNotContain(BlobManagementHttpApiTestModule.OpenContainer);
+            // The management permission sees every container the host declares, and no other.
+            containers.ShouldContain(BlobManagementHttpApiTestModule.DocumentsContainer);
+            containers.ShouldContain(BlobManagementHttpApiTestModule.OpenContainer);
+            containers.ShouldNotContain("undeclared");
 
             var file = await _files.CreateAsync(new CreateBlobManagementFileInput
             {
-                ContainerName = BlobManagementHttpApiTestModule.UserBlobManagementContainer,
+                ContainerName = BlobManagementHttpApiTestModule.DocumentsContainer,
                 File = new RemoteStreamContent(new MemoryStream(bytes), "report.pdf", "application/pdf")
             });
             file.Name.ShouldBe("report.pdf");
@@ -74,14 +77,15 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
     [Fact]
     public async Task Deleting_Someone_Elses_File_Should_Need_The_Delete_Permission()
     {
-        await GrantAsync(BlobManagementPermissions.Files.Upload, _user);
+        await GrantAsync(BlobManagementPermissions.Containers.Default, _user);
+        await GrantAsync(BlobManagementPermissions.Containers.UploadFiles, _user);
 
         BlobManagementFileDto file;
         using (TestCaller.As(UiClient, _user))
         {
             file = await _files.CreateAsync(new CreateBlobManagementFileInput
             {
-                ContainerName = BlobManagementHttpApiTestModule.UserBlobManagementContainer,
+                ContainerName = BlobManagementHttpApiTestModule.DocumentsContainer,
                 File = new RemoteStreamContent(new MemoryStream(BlobManagementTestFiles.Pdf(Guid.NewGuid().ToString())), "theirs.pdf", "application/pdf")
             });
         }
@@ -92,7 +96,8 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
             await ShouldFailAsync(HttpStatusCode.Forbidden, () => _files.DeleteAsync(file.Id));
         }
 
-        await GrantAsync(BlobManagementPermissions.Files.Delete, other);
+        await GrantAsync(BlobManagementPermissions.Containers.Default, other);
+        await GrantAsync(BlobManagementPermissions.Containers.DeleteFiles, other);
         using (TestCaller.As(UiClient, other))
         {
             await _files.DeleteAsync(file.Id);
@@ -103,14 +108,15 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
     [Fact]
     public async Task A_Files_Bytes_Should_Be_An_Attachment_For_Signed_In_Users_Only()
     {
-        await GrantAsync(BlobManagementPermissions.Files.Upload, _user);
+        await GrantAsync(BlobManagementPermissions.Containers.Default, _user);
+        await GrantAsync(BlobManagementPermissions.Containers.UploadFiles, _user);
 
         BlobManagementFileDto file;
         using (TestCaller.As(UiClient, _user))
         {
             file = await _files.CreateAsync(new CreateBlobManagementFileInput
             {
-                ContainerName = BlobManagementHttpApiTestModule.UserBlobManagementContainer,
+                ContainerName = BlobManagementHttpApiTestModule.DocumentsContainer,
                 File = new RemoteStreamContent(new MemoryStream(BlobManagementTestFiles.Pdf(Guid.NewGuid().ToString())), "page.pdf", "application/pdf")
             });
         }
@@ -142,14 +148,15 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
     [Fact]
     public async Task The_File_APIs_Errors_Should_Have_Their_Statuses()
     {
-        await GrantAsync(BlobManagementPermissions.Files.Upload, _user);
+        await GrantAsync(BlobManagementPermissions.Containers.Default, _user);
+        await GrantAsync(BlobManagementPermissions.Containers.UploadFiles, _user);
 
         // A client acting for itself is not a user.
         using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
         {
             await ShouldFailAsync(HttpStatusCode.Forbidden, () => _files.CreateUploadTicketAsync(new CreateBlobManagementFileUploadTicketInput
             {
-                ContainerName = BlobManagementHttpApiTestModule.UserBlobManagementContainer,
+                ContainerName = BlobManagementHttpApiTestModule.DocumentsContainer,
                 FileName = "a.pdf"
             }));
         }
@@ -158,7 +165,7 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
         {
             await ShouldFailAsync(HttpStatusCode.NotFound, () => _files.CreateUploadTicketAsync(new CreateBlobManagementFileUploadTicketInput
             {
-                ContainerName = BlobManagementHttpApiTestModule.OpenContainer,
+                ContainerName = "undeclared",
                 FileName = "a.pdf"
             }), BlobManagementErrorCodes.ContainerNotFound);
         }
@@ -167,14 +174,15 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
     [Fact]
     public async Task A_Browser_Should_Add_A_File_With_A_Users_Ticket_Once()
     {
-        await GrantAsync(BlobManagementPermissions.Files.Upload, _user);
+        await GrantAsync(BlobManagementPermissions.Containers.Default, _user);
+        await GrantAsync(BlobManagementPermissions.Containers.UploadFiles, _user);
 
         BlobManagementTicketDto ticket;
         using (TestCaller.As(UiClient, _user))
         {
             ticket = await _files.CreateUploadTicketAsync(new CreateBlobManagementFileUploadTicketInput
             {
-                ContainerName = BlobManagementHttpApiTestModule.UserBlobManagementContainer,
+                ContainerName = BlobManagementHttpApiTestModule.DocumentsContainer,
                 FileName = "from-a-shell.pdf"
             });
         }

@@ -32,12 +32,7 @@ public class BlobManagementTicketService : BlobManagementAppService, IBlobManage
         Check.NotNull(input, nameof(input));
         Check.NotNullOrWhiteSpace(input.BlobName, nameof(input.BlobName), FileDescriptorConsts.MaxNameLength);
 
-        var drive = FileDescriptorManager.GetBlobManagementContainerConfiguration(input.ContainerName);
-        if (drive.Kind != BlobManagementContainerKind.System)
-        {
-            throw new AbpException(
-                $"Tickets are issued for system containers; '{input.ContainerName}' is a user drive, which the file API serves.");
-        }
+        FileDescriptorManager.GetBlobManagementContainerConfiguration(input.ContainerName);
 
         var upload = input.Kind == BlobManagementTicketKind.Upload;
         var ticket = new BlobManagementTicket

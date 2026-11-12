@@ -29,10 +29,14 @@ public class BlobManagementMcpModule_Tests
 
         provider.GetServices<McpServerTool>().Select(tool => tool.ProtocolTool.Name).OrderBy(name => name).ShouldBe(new[]
         {
+            "blob_create_directory",
             "blob_create_upload_url",
             "blob_delete_file",
             "blob_get_file",
             "blob_list_containers",
+            "blob_list_directories",
+            "blob_list_files",
+            "blob_update_file",
             "blob_upload_file"
         });
     }

@@ -9,4 +9,6 @@ public interface IBlobManagementDbContext : IEfCoreDbContext
 {
     DbSet<FileDescriptor> FileDescriptors { get; }
 
+    DbSet<DirectoryDescriptor> DirectoryDescriptors { get; }
+
 }

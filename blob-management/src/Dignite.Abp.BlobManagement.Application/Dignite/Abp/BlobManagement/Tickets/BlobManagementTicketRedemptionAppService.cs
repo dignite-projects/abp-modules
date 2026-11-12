@@ -179,6 +179,7 @@ public class BlobManagementTicketRedemptionAppService : BlobManagementAppService
         return await LazyServiceProvider.LazyGetRequiredService<IBlobManagementFileAppService>().CreateAsync(new CreateBlobManagementFileInput
         {
             ContainerName = ticket.ContainerName,
+            DirectoryId = ticket.DirectoryId,
             Name = ticket.FileName,
             File = lent
         });

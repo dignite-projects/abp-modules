@@ -12,8 +12,8 @@ using Volo.Abp.EntityFrameworkCore;
 namespace Dignite.Abp.BlobManagement.Host.Migrations
 {
     [DbContext(typeof(HostDbContext))]
-    [Migration("20261111040227_Added_FileDescriptorNameKey")]
-    partial class Added_FileDescriptorNameKey
+    [Migration("20261112151643_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -22,6 +22,100 @@ namespace Dignite.Abp.BlobManagement.Host.Migrations
             modelBuilder
                 .HasAnnotation("_Abp_DatabaseProvider", EfCoreDatabaseProvider.Sqlite)
                 .HasAnnotation("ProductVersion", "10.0.11");
+
+            modelBuilder.Entity("Dignite.Abp.BlobManagement.DirectoryDescriptor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ConcurrencyStamp");
+
+                    b.Property<string>("ContainerName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("ExtraProperties")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ExtraProperties");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<bool>("IsRestricted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NameKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(527)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NameKey")
+                        .IsUnique();
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("Path");
+
+                    b.HasIndex("TenantId", "ContainerName", "ParentId");
+
+                    b.ToTable("BlobDirectoryDescriptors", (string)null);
+                });
 
             modelBuilder.Entity("Dignite.Abp.BlobManagement.FileDescriptor", b =>
                 {
@@ -69,6 +163,9 @@ namespace Dignite.Abp.BlobManagement.Host.Migrations
                     b.Property<DateTime?>("DeletionTime")
                         .HasColumnType("TEXT")
                         .HasColumnName("DeletionTime");
+
+                    b.Property<Guid?>("DirectoryId")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ExtraProperties")
                         .IsRequired()
@@ -120,16 +217,20 @@ namespace Dignite.Abp.BlobManagement.Host.Migrations
                     b.HasIndex("DedupKey")
                         .IsUnique();
 
+                    b.HasIndex("DirectoryId");
+
                     b.HasIndex("NameKey")
                         .IsUnique();
 
                     b.HasIndex("TenantId", "ContainerName", "BlobName");
 
+                    b.HasIndex("TenantId", "ContainerName", "DirectoryId");
+
                     b.HasIndex("TenantId", "ContainerName", "Hash");
 
                     b.HasIndex("TenantId", "ContainerName", "Name");
 
-                    b.ToTable("BlobManagementFileDescriptors", (string)null);
+                    b.ToTable("BlobFileDescriptors", (string)null);
                 });
 
             modelBuilder.Entity("Volo.Abp.AuditLogging.AuditLog", b =>

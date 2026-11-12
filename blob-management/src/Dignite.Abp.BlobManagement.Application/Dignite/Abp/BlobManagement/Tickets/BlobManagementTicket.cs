@@ -35,6 +35,12 @@ public class BlobManagementTicket
     public string? FileName { get; set; }
 
     /// <summary>
+    /// A <see cref="BlobManagementTicketKind.FileUpload"/> ticket: the directory the file is filed in, or <c>null</c>
+    /// for the top of the container.
+    /// </summary>
+    public Guid? DirectoryId { get; set; }
+
+    /// <summary>
     /// A <see cref="BlobManagementTicketKind.FileUpload"/> ticket: the user who issued it, as whom it is redeemed - their
     /// permissions are evaluated again then, with the roles they had when they issued it.
     /// </summary>

@@ -31,17 +31,44 @@ public static class BlobManagementDbContextModelCreatingExtensions
             b.HasIndex(f => f.DedupKey).IsUnique();
 
             b.Property(f => f.NameKey).HasMaxLength(FileDescriptorConsts.MaxNameKeyLength);
-            // A system container's address, as an arbiter (FileDescriptorManager.CreateAsync): one live descriptor per
-            // tenant, container and name. Plain unique on a nullable column for the same reason as the dedup key: only
-            // live descriptors of system containers carry one.
+            // The address of a file an application saved, as an arbiter (FileDescriptorManager.CreateAsync): one live
+            // descriptor per tenant, container and name. Plain unique on a nullable column for the same reason as the
+            // dedup key: only live descriptors addressed by their name carry one.
             b.HasIndex(f => f.NameKey).IsUnique();
 
-            // A system container's address: the provider reads, overwrites and deletes by name.
+            // The address of a file an application saved: the provider reads, overwrites and deletes by name.
             b.HasIndex(f => new { f.TenantId, f.ContainerName, f.Name });
             // The dedup lookup.
             b.HasIndex(f => new { f.TenantId, f.ContainerName, f.Hash });
             // "Does anything still use this BLOB" - asked on every delete.
             b.HasIndex(f => new { f.TenantId, f.ContainerName, f.BlobName });
+            // The listing of one place: a container's top, or a directory.
+            b.HasIndex(f => new { f.TenantId, f.ContainerName, f.DirectoryId });
+            // "Is anything filed here" - asked on every directory delete, by directory alone.
+            b.HasIndex(f => f.DirectoryId);
+        });
+
+        builder.Entity<DirectoryDescriptor>(b =>
+        {
+            b.ToTable(BlobManagementDbProperties.DbTablePrefix + "DirectoryDescriptors", BlobManagementDbProperties.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(d => d.ContainerName).IsRequired().HasMaxLength(FileDescriptorConsts.MaxContainerNameLength);
+            b.Property(d => d.Name).IsRequired().HasMaxLength(DirectoryDescriptorConsts.MaxNameLength);
+            b.Property(d => d.Path).IsRequired().HasMaxLength(DirectoryDescriptorConsts.MaxPathLength);
+            b.Property(d => d.NameKey).HasMaxLength(DirectoryDescriptorConsts.NameKeyLength);
+
+            // Sibling names, as an arbiter: one live directory per tenant, container, parent and name. A plain unique
+            // index on a nullable column, as the file table's keys: a deleted directory's key is cleared, and rows
+            // without one do not collide.
+            b.HasIndex(d => d.NameKey).IsUnique();
+
+            // One level of a container's tree.
+            b.HasIndex(d => new { d.TenantId, d.ContainerName, d.ParentId });
+            b.HasIndex(d => d.ParentId);
+
+            // A subtree is a prefix of Path (a move rewrites it).
+            b.HasIndex(d => d.Path);
         });
 
     }

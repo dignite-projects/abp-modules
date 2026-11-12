@@ -20,8 +20,9 @@ public class BlobManagementContainerTools : ITransientDependency
 
     [McpServerTool(Name = "blob_list_containers", Title = "List containers", ReadOnly = true)]
     [Description(
-        "Lists the containers files can be uploaded to. Each has its name (what the other drive_* tools take as " +
-        "containerName), the largest file it accepts (maxFileSize, bytes) and the file extensions it accepts (empty: any).")]
+        "Lists the containers you have something to do in. Each has its name (what the other blob_* tools take as " +
+        "containerName), the largest file it accepts (maxFileSize, bytes), the file extensions it accepts (empty: any), " +
+        "whether it has directories (allowDirectories) and what you may do at its top (access).")]
     [Authorize]
     public virtual async Task<IReadOnlyList<BlobManagementContainerDto>> ListContainersAsync()
     {

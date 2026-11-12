@@ -4,15 +4,26 @@ using Volo.Abp.Application.Dtos;
 namespace Dignite.Abp.BlobManagement.Files;
 
 /// <summary>
-/// A file of a user drive. Extensible: what a module building on Blob Management adds to a file travels in
-/// <c>ExtraProperties</c>.
+/// A file of a managed container. Extensible: what an application adds to a file travels in <c>ExtraProperties</c>.
 /// </summary>
 public class BlobManagementFileDto : ExtensibleCreationAuditedEntityDto<Guid>
 {
     public string ContainerName { get; set; } = default!;
 
-    /// <summary>Its display name; names may repeat.</summary>
+    /// <summary>The directory the file is filed in, or <c>null</c> at the top of its container.</summary>
+    public Guid? DirectoryId { get; set; }
+
+    /// <summary>
+    /// The name of an uploaded file is a display name and may repeat; that of a file an application saved is its
+    /// address (<see cref="IsAddressedByName"/>).
+    /// </summary>
     public string Name { get; set; } = default!;
+
+    /// <summary>
+    /// Whether an application saved the file under its name and reads it back by it. Such a file is not renamed or
+    /// moved.
+    /// </summary>
+    public bool IsAddressedByName { get; set; }
 
     /// <summary>Detected from the stored bytes.</summary>
     public string MimeType { get; set; } = default!;
@@ -23,9 +34,9 @@ public class BlobManagementFileDto : ExtensibleCreationAuditedEntityDto<Guid>
     public DateTime? LastModificationTime { get; set; }
 
     /// <summary>
-    /// In a <c>PublicRead</c> container, the address anyone can read it at, relative to the host that serves the Blob Management
-    /// (<c>/api/blob-management/public/{container}/{blob}</c>, with <c>?__tenant=</c> for a tenant's file); otherwise <c>null</c> -
-    /// the file is read through the file API.
+    /// In a <c>PublicRead</c> container, the address anyone can read it at, relative to the host that serves Blob
+    /// Management (<c>/api/blob-management/public/{container}/{blob}</c>, with <c>?__tenant=</c> for a tenant's file);
+    /// otherwise <c>null</c> - the file is read through the file API.
     /// </summary>
     public string? Url { get; set; }
 }

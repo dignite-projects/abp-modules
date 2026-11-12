@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobManagement.Containers;
+using Dignite.Abp.BlobManagement.Directories;
 using Dignite.Abp.BlobManagement.Features;
 using Dignite.Abp.BlobManagement.Files;
 using Dignite.Abp.BlobManagement.Permissions;
@@ -27,7 +28,7 @@ namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
 /// The file API's application services end to end - containers and files - as signed-in users, with grants
-/// written through ABP's permission manager, against the database provider of the concrete test class.
+/// written through ABP's permission managers, against the database provider of the concrete test class.
 /// </summary>
 public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagementApplicationTestBase<TStartupModule>
     where TStartupModule : IAbpModule
@@ -49,12 +50,12 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
     [Fact]
     public async Task A_User_Should_Upload_And_Read_Their_Own_Files()
     {
-        await GrantAsync(BlobManagementPermissions.Files.Upload, _alice);
+        await GrantAsync(_alice, BlobManagementPermissions.Containers.Default, BlobManagementPermissions.Containers.UploadFiles);
         var bytes = BlobManagementTestFiles.Pdf("alice " + Guid.NewGuid());
 
         using (As(_alice))
         {
-            var uploaded = await UploadAsync(BlobManagementTestContainers.UserBlobManagement, "report.pdf", bytes);
+            var uploaded = await UploadAsync(BlobManagementTestContainers.Documents, "report.pdf", bytes);
             uploaded.Name.ShouldBe("report.pdf");
             uploaded.MimeType.ShouldBe("application/pdf");
             uploaded.CreatorId.ShouldBe(_alice);
@@ -71,15 +72,15 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
     [Fact]
     public async Task Any_Signed_In_User_Should_Read_A_File_And_Only_Its_Uploader_Or_A_Deleter_Delete_It()
     {
-        await GrantAsync(BlobManagementPermissions.Files.Upload, _alice);
+        await GrantAsync(_alice, BlobManagementPermissions.Containers.Default, BlobManagementPermissions.Containers.UploadFiles);
         var bytes = BlobManagementTestFiles.Pdf("shared " + Guid.NewGuid());
 
         BlobManagementFileDto plan;
         BlobManagementFileDto draft;
         using (As(_alice))
         {
-            plan = await UploadAsync(BlobManagementTestContainers.UserBlobManagement, "plan.pdf", bytes);
-            draft = await UploadAsync(BlobManagementTestContainers.UserBlobManagement, "draft.pdf");
+            plan = await UploadAsync(BlobManagementTestContainers.Documents, "plan.pdf", bytes);
+            draft = await UploadAsync(BlobManagementTestContainers.Documents, "draft.pdf");
         }
 
         // A signed-in user with the id reads the file, and nothing finer is asked.
@@ -90,14 +91,14 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
             await Should.ThrowAsync<AbpAuthorizationException>(() => _files.DeleteAsync(plan.Id));
         }
 
-        // The uploader deletes their own file without BlobManagement.Files.Delete.
+        // The uploader deletes their own file without the permission to delete files.
         using (As(_alice))
         {
             await _files.DeleteAsync(draft.Id);
             await Should.ThrowAsync<EntityNotFoundException>(() => _files.GetAsync(draft.Id));
         }
 
-        await GrantAsync(BlobManagementPermissions.Files.Delete, _bob);
+        await GrantAsync(_bob, BlobManagementPermissions.Containers.Default, BlobManagementPermissions.Containers.DeleteFiles);
         using (As(_bob))
         {
             await _files.DeleteAsync(plan.Id);
@@ -106,35 +107,11 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
     }
 
     [Fact]
-    public async Task An_Implementation_Should_Set_Its_Fields_On_The_New_File_Through_The_Hook()
-    {
-        var service = GetRequiredService<ConfiguringBlobManagementFileAppService>();
-        service.ConfigureFile = file => file.SetProperty("Test:Marker", "set by the hook");
-
-        using (As(_alice))
-        {
-            // Asked only once the upload is authorized.
-            await Should.ThrowAsync<AbpAuthorizationException>(() => service.CreateAsync(NewUpload(BlobManagementTestContainers.UserBlobManagement, "a.pdf")));
-            service.Prepared.ShouldBe(0);
-        }
-
-        await GrantAsync(BlobManagementPermissions.Files.Upload, _alice);
-        using (As(_alice))
-        {
-            var uploaded = await service.CreateAsync(NewUpload(BlobManagementTestContainers.UserBlobManagement, "configured.pdf"));
-            service.Prepared.ShouldBe(1);
-
-            var stored = await WithUnitOfWorkAsync(() => GetRequiredService<IFileDescriptorRepository>().GetAsync(uploaded.Id));
-            stored.GetProperty<string>("Test:Marker").ShouldBe("set by the hook");
-        }
-    }
-
-    [Fact]
     public async Task Uploading_Should_Take_A_Permission()
     {
         using (As(_bob))
         {
-            await Should.ThrowAsync<AbpAuthorizationException>(() => UploadAsync(BlobManagementTestContainers.UserBlobManagement, "a.pdf"));
+            await Should.ThrowAsync<AbpAuthorizationException>(() => UploadAsync(BlobManagementTestContainers.Documents, "a.pdf"));
         }
     }
 
@@ -163,75 +140,186 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
         using (currentTenant.Change(Guid.NewGuid()))
         using (As(_alice))
         {
-            (await _containers.GetListAsync()).Items.ShouldNotBeEmpty();
+            (await _containers.GetAsync(BlobManagementTestContainers.Documents)).Name.ShouldBe(BlobManagementTestContainers.Documents);
         }
     }
 
     [Fact]
-    public async Task The_File_Api_Should_Serve_Users_And_User_Drives_Only()
+    public async Task The_File_Api_Should_Serve_Users_And_Managed_Containers_Only()
     {
         var client = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(AbpClaimTypes.ClientId, "site-app") }, "Test"));
         using (_principalAccessor.Change(client))
         {
-            await Should.ThrowAsync<AbpAuthorizationException>(() => UploadAsync(BlobManagementTestContainers.UserBlobManagement, "a.pdf"));
+            await Should.ThrowAsync<AbpAuthorizationException>(() => UploadAsync(BlobManagementTestContainers.Documents, "a.pdf"));
         }
 
-        var systemFile = await WithUnitOfWorkAsync(async () =>
-        {
-            using var stream = new MemoryStream(BlobManagementTestFiles.Pdf(Guid.NewGuid().ToString()));
-            return await GetRequiredService<FileDescriptorManager>()
-                .CreateAsync(BlobManagementTestContainers.Files, Guid.NewGuid() + ".pdf", stream);
-        });
-
+        await GrantAsync(_alice, BlobManagementPermissions.Containers.Default, BlobManagementPermissions.Containers.UploadFiles);
         using (As(_alice))
         {
-            var unknown = await Should.ThrowAsync<BusinessException>(() => UploadAsync(BlobManagementTestContainers.Files, "a.pdf"));
+            var unknown = await Should.ThrowAsync<BusinessException>(() => UploadAsync(BlobManagementTestContainers.NotManaged, "a.pdf"));
             unknown.Code.ShouldBe(BlobManagementErrorCodes.ContainerNotFound);
-            await Should.ThrowAsync<EntityNotFoundException>(() => _files.GetAsync(systemFile.Id));
 
-            var containers = await _containers.GetListAsync();
-            containers.Items.Select(c => c.Name).ShouldContain(BlobManagementTestContainers.UserBlobManagement);
-            containers.Items.Select(c => c.Name).ShouldNotContain(BlobManagementTestContainers.Files);
+            var containers = (await _containers.GetListAsync()).Items.Select(c => c.Name).ToList();
+            containers.ShouldContain(BlobManagementTestContainers.Documents);
+            containers.ShouldContain(BlobManagementTestContainers.Files);
+            containers.ShouldNotContain(BlobManagementTestContainers.NotManaged);
         }
     }
 
     [Fact]
-    public async Task A_Container_Should_Tell_What_It_Takes()
+    public async Task A_Container_Should_Tell_What_It_Takes_And_What_The_Caller_May_Do()
     {
-        await GrantAsync(BlobManagementPermissions.Files.Upload, _alice);
-
-        using (As(_alice))
+        // Open to every signed-in user: a file input needs the limits before it offers an upload.
+        using (As(_bob))
         {
-            var drive = await _containers.GetAsync(BlobManagementTestContainers.UserBlobManagement);
-            drive.MaxFileSize.ShouldBeGreaterThan(0);
+            var documents = await _containers.GetAsync(BlobManagementTestContainers.Documents);
+            documents.MaxFileSize.ShouldBeGreaterThan(0);
+            documents.AllowDirectories.ShouldBeTrue();
+            documents.Access.View.ShouldBeFalse();
+            documents.Access.UploadFiles.ShouldBeFalse();
 
-            var uploaded = await UploadAsync(BlobManagementTestContainers.UserBlobManagement, "granted.pdf");
-            uploaded.ContainerName.ShouldBe(BlobManagementTestContainers.UserBlobManagement);
+            (await _containers.GetAsync(BlobManagementTestContainers.Files)).AllowDirectories.ShouldBeFalse();
+            (await _containers.GetListAsync()).Items.ShouldBeEmpty();
+        }
+
+        await GrantOnContainerAsync(BlobManagementTestContainers.Documents, _bob,
+            BlobManagementPermissions.Container.View, BlobManagementPermissions.Container.UploadFiles);
+
+        using (As(_bob))
+        {
+            var listed = (await _containers.GetListAsync()).Items.Single();
+            listed.Name.ShouldBe(BlobManagementTestContainers.Documents);
+            listed.Access.View.ShouldBeTrue();
+            listed.Access.UploadFiles.ShouldBeTrue();
+            listed.Access.DeleteFiles.ShouldBeFalse();
+
+            (await UploadAsync(BlobManagementTestContainers.Documents, "granted.pdf")).ContainerName.ShouldBe(BlobManagementTestContainers.Documents);
+            // The grant is on that container only.
+            await Should.ThrowAsync<AbpAuthorizationException>(() => UploadAsync(BlobManagementTestContainers.Archive, "a.pdf"));
         }
     }
 
     [Fact]
-    public async Task A_Public_User_BlobManagement_Should_Be_Read_By_The_Physical_Blob_Name()
+    public async Task Files_Should_Be_Listed_Renamed_And_Moved_By_The_Containers_Permissions()
     {
-        await GrantAsync(BlobManagementPermissions.Files.Upload, _alice);
+        var admin = Guid.NewGuid();
+        await GrantAsync(admin, BlobManagementPermissions.Containers.Default, BlobManagementPermissions.Containers.CreateDirectories);
+        await GrantOnContainerAsync(BlobManagementTestContainers.Documents, _alice,
+            BlobManagementPermissions.Container.View, BlobManagementPermissions.Container.UploadFiles);
+
+        Guid folderId;
+        using (As(admin))
+        {
+            folderId = (await GetRequiredService<IBlobManagementDirectoryAppService>().CreateAsync(new CreateBlobManagementDirectoryInput
+            {
+                ContainerName = BlobManagementTestContainers.Documents,
+                Name = "Reports " + Guid.NewGuid()
+            })).Id;
+        }
 
         BlobManagementFileDto file;
         using (As(_alice))
         {
-            file = await UploadAsync(BlobManagementTestContainers.PublicBlobManagement, "poster.pdf");
+            file = await _files.CreateAsync(NewUpload(BlobManagementTestContainers.Documents, "draft.pdf", directoryId: folderId));
+            file.DirectoryId.ShouldBe(folderId);
+            file.IsAddressedByName.ShouldBeFalse();
+
+            var listed = await _files.GetListAsync(new GetBlobManagementFilesInput
+            {
+                ContainerName = BlobManagementTestContainers.Documents,
+                DirectoryId = folderId,
+                Filter = "DRAFT"
+            });
+            listed.TotalCount.ShouldBe(1);
+            listed.Items.Single().Id.ShouldBe(file.Id);
+
+            // Uploading is not renaming or moving.
+            await Should.ThrowAsync<AbpAuthorizationException>(() =>
+                _files.UpdateAsync(file.Id, new UpdateBlobManagementFileInput { Name = "final.pdf" }));
+            await Should.ThrowAsync<AbpAuthorizationException>(() =>
+                _files.MoveAsync(file.Id, new MoveBlobManagementFileInput { DirectoryId = null }));
+        }
+
+        // Nothing in the container without a grant on it: not even the listing.
+        using (As(_bob))
+        {
+            await Should.ThrowAsync<AbpAuthorizationException>(() => _files.GetListAsync(new GetBlobManagementFilesInput
+            {
+                ContainerName = BlobManagementTestContainers.Documents,
+                DirectoryId = folderId
+            }));
+        }
+
+        await GrantOnContainerAsync(BlobManagementTestContainers.Documents, _alice, BlobManagementPermissions.Container.UpdateFiles);
+
+        using (As(_alice))
+        {
+            (await _files.UpdateAsync(file.Id, new UpdateBlobManagementFileInput { Name = " final.pdf " })).Name.ShouldBe("final.pdf");
+            (await _files.MoveAsync(file.Id, new MoveBlobManagementFileInput { DirectoryId = null })).DirectoryId.ShouldBeNull();
+            (await _files.GetListAsync(new GetBlobManagementFilesInput { ContainerName = BlobManagementTestContainers.Documents }))
+                .Items.Select(f => f.Id).ShouldContain(file.Id);
+
+            // A directory of another container is not found: a file never changes containers.
+            await Should.ThrowAsync<EntityNotFoundException>(() =>
+                _files.MoveAsync(file.Id, new MoveBlobManagementFileInput { DirectoryId = Guid.NewGuid() }));
+        }
+    }
+
+    [Fact]
+    public async Task A_File_An_Application_Saved_Should_Be_Listed_And_Not_Renamed_Or_Moved()
+    {
+        await GrantAsync(_alice,
+            BlobManagementPermissions.Containers.Default,
+            BlobManagementPermissions.Containers.UpdateFiles,
+            BlobManagementPermissions.Containers.DeleteFiles);
+        var name = "themes/" + Guid.NewGuid().ToString("N") + ".pdf";
+        var saved = await StoreSystemFileAsync(name, BlobManagementTestFiles.Pdf(Guid.NewGuid().ToString()));
+
+        using (As(_alice))
+        {
+            var listed = (await _files.GetListAsync(new GetBlobManagementFilesInput
+            {
+                ContainerName = BlobManagementTestContainers.Files,
+                Filter = name
+            })).Items.Single();
+            listed.Id.ShouldBe(saved.Id);
+            listed.IsAddressedByName.ShouldBeTrue();
+            (await _files.GetAsync(saved.Id)).Name.ShouldBe(name);
+
+            // Its name is how its application reads it back.
+            var renamed = await Should.ThrowAsync<BusinessException>(() =>
+                _files.UpdateAsync(saved.Id, new UpdateBlobManagementFileInput { Name = "other.pdf" }));
+            renamed.Code.ShouldBe(BlobManagementErrorCodes.FileAddressedByName);
+
+            await _files.DeleteAsync(saved.Id);
+        }
+
+        (await WithUnitOfWorkAsync(() => GetRequiredService<FileDescriptorManager>().FindAsync(BlobManagementTestContainers.Files, name)))
+            .ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task An_Uploaded_Public_File_Should_Be_Read_By_The_Physical_Blob_Name()
+    {
+        await GrantAsync(_alice, BlobManagementPermissions.Containers.Default, BlobManagementPermissions.Containers.UploadFiles);
+
+        BlobManagementFileDto file;
+        using (As(_alice))
+        {
+            file = await UploadAsync(BlobManagementTestContainers.Public, "poster.pdf");
         }
 
         file.Url.ShouldNotBeNull();
         var blobName = file.Url!.Split('/').Last();
-        file.Url.ShouldBe(BlobManagementPublicUrl.Build(BlobManagementTestContainers.PublicBlobManagement, blobName));
+        file.Url.ShouldBe(BlobManagementPublicUrl.Build(BlobManagementTestContainers.Public, blobName));
 
         var publicFiles = GetRequiredService<IBlobManagementPublicAppService>();
-        (await publicFiles.ReadAsync(BlobManagementTestContainers.PublicBlobManagement, blobName, new BlobManagementPublicReadInput(), HeadersOnly()))
+        (await publicFiles.ReadAsync(BlobManagementTestContainers.Public, blobName, new BlobManagementPublicReadInput(), HeadersOnly()))
             .File.Name.ShouldBe("poster.pdf");
 
         // The display name is not an address there: names may repeat.
         await Should.ThrowAsync<EntityNotFoundException>(() =>
-            publicFiles.ReadAsync(BlobManagementTestContainers.PublicBlobManagement, "poster.pdf", new BlobManagementPublicReadInput(), HeadersOnly()));
+            publicFiles.ReadAsync(BlobManagementTestContainers.Public, "poster.pdf", new BlobManagementPublicReadInput(), HeadersOnly()));
     }
 
     [Fact]
@@ -352,11 +440,12 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
         return _files.CreateAsync(NewUpload(containerName, name, bytes));
     }
 
-    private static CreateBlobManagementFileInput NewUpload(string containerName, string name, byte[]? bytes = null)
+    private static CreateBlobManagementFileInput NewUpload(string containerName, string name, byte[]? bytes = null, Guid? directoryId = null)
     {
         return new CreateBlobManagementFileInput
         {
             ContainerName = containerName,
+            DirectoryId = directoryId,
             File = new RemoteStreamContent(
                 new MemoryStream(bytes ?? BlobManagementTestFiles.Pdf(Guid.NewGuid().ToString())), name, "application/pdf")
         };
@@ -374,13 +463,16 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
 
     private IDisposable As(Guid userId)
     {
-        return _principalAccessor.Change(new ClaimsPrincipal(new ClaimsIdentity(
-            new List<Claim> { new(AbpClaimTypes.UserId, userId.ToString()) }, "Test")));
+        return _principalAccessor.As(userId);
     }
 
-    private Task GrantAsync(string permission, Guid userId)
+    private Task GrantAsync(Guid userId, params string[] permissions)
     {
-        return WithUnitOfWorkAsync(() => GetRequiredService<IPermissionManager>()
-            .SetAsync(permission, UserPermissionValueProvider.ProviderName, userId.ToString(), true));
+        return WithUnitOfWorkAsync(() => GetRequiredService<IPermissionManager>().GrantAsync(userId, permissions));
+    }
+
+    private Task GrantOnContainerAsync(string containerName, Guid userId, params string[] permissions)
+    {
+        return WithUnitOfWorkAsync(() => GetRequiredService<IResourcePermissionManager>().GrantOnContainerAsync(containerName, userId, permissions));
     }
 }

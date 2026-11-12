@@ -63,7 +63,7 @@ public class BlobManagementDomainTestModule : AbpModule
 
             options.Containers.Configure(BlobManagementTestContainers.UserImages, container =>
             {
-                container.UseBlobManagementContainer(drive => drive.Kind = BlobManagementContainerKind.UserBlobManagement);
+                container.UseBlobManagementContainer(managed => managed.AllowDirectories = true);
                 container.UseMemory();
                 container.UseImagesPreset(preset =>
                 {
@@ -73,24 +73,26 @@ public class BlobManagementDomainTestModule : AbpModule
                 });
             });
 
-            options.Containers.Configure(BlobManagementTestContainers.UserBlobManagement, container =>
+            options.Containers.Configure(BlobManagementTestContainers.Documents, container =>
             {
-                container.UseBlobManagementContainer(drive => drive.Kind = BlobManagementContainerKind.UserBlobManagement);
+                container.UseBlobManagementContainer(managed => managed.AllowDirectories = true);
                 container.UseMemory();
             });
 
-            options.Containers.Configure(BlobManagementTestContainers.PublicBlobManagement, container =>
+            options.Containers.Configure(BlobManagementTestContainers.Archive, container =>
             {
-                container.UseBlobManagementContainer(drive =>
-                {
-                    drive.Kind = BlobManagementContainerKind.UserBlobManagement;
-                    drive.PublicRead = true;
-                });
+                container.UseBlobManagementContainer(managed => managed.AllowDirectories = true);
                 container.UseMemory();
             });
 
-            // Not a Blob Management container: the manager refuses it.
-            options.Containers.Configure(BlobManagementTestContainers.NotBlobManagement, container =>
+            options.Containers.Configure(BlobManagementTestContainers.Public, container =>
+            {
+                container.UseBlobManagementContainer(managed => managed.PublicRead = true);
+                container.UseMemory();
+            });
+
+            // Not a managed container: the manager refuses it.
+            options.Containers.Configure(BlobManagementTestContainers.NotManaged, container =>
             {
                 container.UseMemory();
             });

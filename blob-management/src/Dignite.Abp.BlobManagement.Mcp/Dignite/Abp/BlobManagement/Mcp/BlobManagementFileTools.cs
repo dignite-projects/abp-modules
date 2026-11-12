@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Server;
+using Volo.Abp.Application.Dtos;
 using Volo.Abp.Content;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Validation;
@@ -17,9 +18,9 @@ using Volo.Abp.Validation;
 namespace Dignite.Abp.BlobManagement.Mcp;
 
 /// <summary>
-/// Adding, reading and deleting files. Each tool is one call of the file application service, which holds the
-/// authorization and the container's upload rules (size, type detected from the bytes, image processing); none of it is
-/// repeated here.
+/// Listing, adding, reading, renaming, moving and deleting files. Each tool calls the file application service, which
+/// holds the authorization and the container's upload rules (size, type detected from the bytes, image processing);
+/// none of it is repeated here.
 /// </summary>
 [McpServerToolType]
 public class BlobManagementFileTools : ITransientDependency
@@ -45,6 +46,34 @@ public class BlobManagementFileTools : ITransientDependency
         HttpContextAccessor = httpContextAccessor;
     }
 
+    [McpServerTool(Name = "blob_list_files", Title = "List files", ReadOnly = true)]
+    [Description(
+        "Lists the files of a directory, or of the top of a container, by name. Each file has its id, size, type, url " +
+        "(set when the container is public), the directory it is in (directoryId) and isAddressedByName: true for a file " +
+        "an application saved under that name, which cannot be renamed or moved.")]
+    [Authorize]
+    public virtual Task<PagedResultDto<BlobManagementFileDto>> ListFilesAsync(
+        [Description("A container's name, from blob_list_containers.")]
+        string containerName,
+        [Description("The directory, by id from blob_list_directories. Omit for the top of the container.")]
+        Guid? directoryId = null,
+        [Description("A part of the file name.")]
+        string? filter = null,
+        [Description("How many to skip, for paging.")]
+        int skipCount = 0,
+        [Description("How many to return, at most 100. Keep this small unless you need more.")]
+        int maxResultCount = 20)
+    {
+        return FileAppService.GetListAsync(new GetBlobManagementFilesInput
+        {
+            ContainerName = containerName,
+            DirectoryId = directoryId,
+            Filter = filter,
+            SkipCount = Math.Max(skipCount, 0),
+            MaxResultCount = Math.Clamp(maxResultCount, 1, 100)
+        });
+    }
+
     [McpServerTool(Name = "blob_get_file", Title = "Get a file", ReadOnly = true)]
     [Description("Returns one file's details.")]
     [Authorize]
@@ -68,7 +97,9 @@ public class BlobManagementFileTools : ITransientDependency
         [Description("A container's name, from blob_list_containers.")]
         string containerName,
         [Description("The name the file is stored under, with its extension, e.g. 'minutes.pdf'.")]
-        string fileName)
+        string fileName,
+        [Description("The directory to file it in, by id from blob_list_directories. Omit for the top of the container.")]
+        Guid? directoryId = null)
     {
         if (string.IsNullOrWhiteSpace(fileName))
         {
@@ -78,6 +109,7 @@ public class BlobManagementFileTools : ITransientDependency
         var ticket = await FileAppService.CreateUploadTicketAsync(new CreateBlobManagementFileUploadTicketInput
         {
             ContainerName = containerName,
+            DirectoryId = directoryId,
             FileName = fileName
         });
 
@@ -105,7 +137,9 @@ public class BlobManagementFileTools : ITransientDependency
         [Description("The file name, with its extension, e.g. 'note.txt'.")]
         string fileName,
         [Description("The file's bytes, base64-encoded. A data: URL is also accepted.")]
-        string contentBase64)
+        string contentBase64,
+        [Description("The directory to file it in, by id from blob_list_directories. Omit for the top of the container.")]
+        Guid? directoryId = null)
     {
         if (string.IsNullOrWhiteSpace(fileName))
         {
@@ -118,10 +152,58 @@ public class BlobManagementFileTools : ITransientDependency
         return await FileAppService.CreateAsync(new CreateBlobManagementFileInput
         {
             ContainerName = containerName,
+            DirectoryId = directoryId,
             Name = fileName,
             // Never used: Blob Management detects the type from the bytes.
             File = new RemoteStreamContent(new MemoryStream(bytes, writable: false), fileName, "application/octet-stream", bytes.LongLength)
         });
+    }
+
+    [McpServerTool(Name = "blob_update_file", Title = "Rename or move a file", Idempotent = true)]
+    [Description(
+        "Renames a file, moves it to another directory of the same container, or both. Only what you pass changes. A " +
+        "file stays in its container. A file an application saved under its name (isAddressedByName) is neither renamed " +
+        "nor moved.")]
+    [Authorize]
+    public virtual async Task<BlobManagementFileDto> UpdateFileAsync(
+        [Description("The file's id.")]
+        Guid id,
+        [Description("The new file name. Omit to keep it.")]
+        string? name = null,
+        [Description("Move it into this directory, by id. Omit to leave it where it is.")]
+        Guid? directoryId = null,
+        [Description("True to move it to the top of its container. Cannot be combined with directoryId.")]
+        bool moveToTop = false)
+    {
+        if (moveToTop && directoryId.HasValue)
+        {
+            throw Invalid(nameof(directoryId), "Pass either directoryId or moveToTop, not both.");
+        }
+
+        if (name == null && !directoryId.HasValue && !moveToTop)
+        {
+            throw Invalid(nameof(name), "Pass a new name, a directory to move it to, or moveToTop.");
+        }
+
+        // Two calls cannot be one transaction, so make the half-done outcome unlikely: refuse a name the rename would
+        // refuse before anything changes, and move first - the step that also takes the right to add at the target.
+        if (name != null && (string.IsNullOrWhiteSpace(name) || name.Trim().Length > FileDescriptorConsts.MaxNameLength))
+        {
+            throw Invalid(nameof(name), $"The file name must not be empty or longer than {FileDescriptorConsts.MaxNameLength} characters.");
+        }
+
+        BlobManagementFileDto? file = null;
+        if (directoryId.HasValue || moveToTop)
+        {
+            file = await FileAppService.MoveAsync(id, new MoveBlobManagementFileInput { DirectoryId = directoryId });
+        }
+
+        if (name != null)
+        {
+            file = await FileAppService.UpdateAsync(id, new UpdateBlobManagementFileInput { Name = name });
+        }
+
+        return file!;
     }
 
     [McpServerTool(Name = "blob_delete_file", Title = "Delete a file", Destructive = true)]

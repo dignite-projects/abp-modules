@@ -2,7 +2,7 @@
 
 public static class BlobManagementDbProperties
 {
-    public static string DbTablePrefix { get; set; } = "BlobManagement";
+    public static string DbTablePrefix { get; set; } = "Blob";
 
     public static string? DbSchema { get; set; } = null;
 

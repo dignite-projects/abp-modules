@@ -47,14 +47,15 @@ public abstract class BlobManagementFileUploadTicket_Tests<TStartupModule> : Blo
     [Fact]
     public async Task A_Ticket_Should_Add_One_File_As_Its_Issuer()
     {
-        await GrantAsync(BlobManagementPermissions.Files.Upload, UserPermissionValueProvider.ProviderName, _alice.ToString());
+        await GrantAsync(BlobManagementPermissions.Containers.Default, UserPermissionValueProvider.ProviderName, _alice.ToString());
+        await GrantAsync(BlobManagementPermissions.Containers.UploadFiles, UserPermissionValueProvider.ProviderName, _alice.ToString());
 
         BlobManagementTicketDto ticket;
         using (As(_alice))
         {
             ticket = await _files.CreateUploadTicketAsync(new CreateBlobManagementFileUploadTicketInput
             {
-                ContainerName = BlobManagementTestContainers.UserBlobManagement,
+                ContainerName = BlobManagementTestContainers.Documents,
                 FileName = " notes.pdf "
             });
         }
@@ -79,7 +80,7 @@ public abstract class BlobManagementFileUploadTicket_Tests<TStartupModule> : Blo
         {
             await Should.ThrowAsync<AbpAuthorizationException>(() => _files.CreateUploadTicketAsync(new CreateBlobManagementFileUploadTicketInput
             {
-                ContainerName = BlobManagementTestContainers.UserBlobManagement,
+                ContainerName = BlobManagementTestContainers.Documents,
                 FileName = "nope.pdf"
             }));
         }
@@ -88,40 +89,43 @@ public abstract class BlobManagementFileUploadTicket_Tests<TStartupModule> : Blo
     [Fact]
     public async Task The_Issuers_Permissions_Should_Decide_When_It_Is_Used()
     {
-        await GrantAsync(BlobManagementPermissions.Files.Upload, UserPermissionValueProvider.ProviderName, _bob.ToString());
+        await GrantAsync(BlobManagementPermissions.Containers.Default, UserPermissionValueProvider.ProviderName, _bob.ToString());
+        await GrantAsync(BlobManagementPermissions.Containers.UploadFiles, UserPermissionValueProvider.ProviderName, _bob.ToString());
 
         BlobManagementTicketDto ticket;
         using (As(_bob))
         {
             ticket = await _files.CreateUploadTicketAsync(new CreateBlobManagementFileUploadTicketInput
             {
-                ContainerName = BlobManagementTestContainers.UserBlobManagement,
+                ContainerName = BlobManagementTestContainers.Documents,
                 FileName = "from-bob.pdf"
             });
         }
 
         // Revoked after the ticket was issued: refused, and not spent.
-        await GrantAsync(BlobManagementPermissions.Files.Upload, UserPermissionValueProvider.ProviderName, _bob.ToString(), false);
+        await GrantAsync(BlobManagementPermissions.Containers.UploadFiles, UserPermissionValueProvider.ProviderName, _bob.ToString(), false);
         var refused = await Should.ThrowAsync<BusinessException>(() => _redemption.UploadFileAsync(ticket.Ticket, Content()));
         refused.Code.ShouldBe(BlobManagementErrorCodes.InvalidTicket);
 
-        await GrantAsync(BlobManagementPermissions.Files.Upload, UserPermissionValueProvider.ProviderName, _bob.ToString());
+        await GrantAsync(BlobManagementPermissions.Containers.Default, UserPermissionValueProvider.ProviderName, _bob.ToString());
+        await GrantAsync(BlobManagementPermissions.Containers.UploadFiles, UserPermissionValueProvider.ProviderName, _bob.ToString());
         var file = await _redemption.UploadFileAsync(ticket.Ticket, Content());
-        file.ContainerName.ShouldBe(BlobManagementTestContainers.UserBlobManagement);
+        file.ContainerName.ShouldBe(BlobManagementTestContainers.Documents);
         file.CreatorId.ShouldBe(_bob);
     }
 
     [Fact]
     public async Task The_Issuers_Roles_Should_Travel_With_The_Ticket()
     {
-        await GrantAsync(BlobManagementPermissions.Files.Upload, RolePermissionValueProvider.ProviderName, _editors);
+        await GrantAsync(BlobManagementPermissions.Containers.Default, RolePermissionValueProvider.ProviderName, _editors);
+        await GrantAsync(BlobManagementPermissions.Containers.UploadFiles, RolePermissionValueProvider.ProviderName, _editors);
 
         BlobManagementTicketDto ticket;
         using (As(_bob, _editors))
         {
             ticket = await _files.CreateUploadTicketAsync(new CreateBlobManagementFileUploadTicketInput
             {
-                ContainerName = BlobManagementTestContainers.UserBlobManagement,
+                ContainerName = BlobManagementTestContainers.Documents,
                 FileName = "team.pdf"
             });
         }
@@ -132,13 +136,14 @@ public abstract class BlobManagementFileUploadTicket_Tests<TStartupModule> : Blo
     [Fact]
     public async Task A_File_Upload_Ticket_Should_Not_Be_Redeemed_As_Another_Kind()
     {
-        await GrantAsync(BlobManagementPermissions.Files.Upload, UserPermissionValueProvider.ProviderName, _alice.ToString());
+        await GrantAsync(BlobManagementPermissions.Containers.Default, UserPermissionValueProvider.ProviderName, _alice.ToString());
+        await GrantAsync(BlobManagementPermissions.Containers.UploadFiles, UserPermissionValueProvider.ProviderName, _alice.ToString());
         BlobManagementTicketDto ticket;
         using (As(_alice))
         {
             ticket = await _files.CreateUploadTicketAsync(new CreateBlobManagementFileUploadTicketInput
             {
-                ContainerName = BlobManagementTestContainers.UserBlobManagement,
+                ContainerName = BlobManagementTestContainers.Documents,
                 FileName = "kind.pdf"
             });
         }
@@ -160,7 +165,8 @@ public abstract class BlobManagementFileUploadTicket_Tests<TStartupModule> : Blo
 
         using (currentTenant.Change(tenant))
         {
-            await GrantAsync(BlobManagementPermissions.Files.Upload, UserPermissionValueProvider.ProviderName, _alice.ToString());
+            await GrantAsync(BlobManagementPermissions.Containers.Default, UserPermissionValueProvider.ProviderName, _alice.ToString());
+            await GrantAsync(BlobManagementPermissions.Containers.UploadFiles, UserPermissionValueProvider.ProviderName, _alice.ToString());
 
             // The ticket carries its tenant: issued while Blob Management is on (the feature's default).
             BlobManagementTicketDto ticket;
@@ -168,7 +174,7 @@ public abstract class BlobManagementFileUploadTicket_Tests<TStartupModule> : Blo
             {
                 ticket = await _files.CreateUploadTicketAsync(new CreateBlobManagementFileUploadTicketInput
                 {
-                    ContainerName = BlobManagementTestContainers.UserBlobManagement,
+                    ContainerName = BlobManagementTestContainers.Documents,
                     FileName = "late.pdf"
                 });
             }

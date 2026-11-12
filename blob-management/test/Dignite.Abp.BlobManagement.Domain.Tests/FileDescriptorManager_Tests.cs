@@ -86,11 +86,11 @@ public abstract class FileDescriptorManager_Tests<TStartupModule> : BlobManageme
     public async Task Should_Refuse_A_Container_The_BlobManagement_Did_Not_Declare()
     {
         var create = await Should.ThrowAsync<BusinessException>(() =>
-            CreateAsync(BlobManagementTestContainers.NotBlobManagement, "notes.pdf", BlobManagementTestFiles.Pdf()));
+            CreateAsync(BlobManagementTestContainers.NotManaged, "notes.pdf", BlobManagementTestFiles.Pdf()));
         create.Code.ShouldBe(BlobManagementErrorCodes.ContainerNotFound);
-        create.Data["ContainerName"].ShouldBe(BlobManagementTestContainers.NotBlobManagement);
+        create.Data["ContainerName"].ShouldBe(BlobManagementTestContainers.NotManaged);
 
-        var find = await Should.ThrowAsync<BusinessException>(() => FindAsync(BlobManagementTestContainers.NotBlobManagement, "notes.pdf"));
+        var find = await Should.ThrowAsync<BusinessException>(() => FindAsync(BlobManagementTestContainers.NotManaged, "notes.pdf"));
         find.Code.ShouldBe(BlobManagementErrorCodes.ContainerNotFound);
     }
 

@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using Dignite.Abp.BlobManagement.Tickets;
 using Volo.Abp.Validation;
@@ -8,6 +9,9 @@ public class CreateBlobManagementFileUploadTicketInput
 {
     [Required]
     public string ContainerName { get; set; } = default!;
+
+    /// <summary>The directory the file is filed in; <c>null</c> for the top of the container.</summary>
+    public Guid? DirectoryId { get; set; }
 
     /// <summary>The name the file gets; whatever the upload calls it is ignored.</summary>
     [Required]

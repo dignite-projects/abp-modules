@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Threading;
 using System.Threading.Tasks;
 using MongoDB.Driver.Linq;
@@ -22,7 +23,7 @@ public class MongoFileDescriptorRepository : MongoDbRepository<IBlobManagementMo
         CancellationToken cancellationToken = default)
     {
         return await FindAsync(
-            f => f.ContainerName == containerName && f.Name == name,
+            f => f.ContainerName == containerName && f.Name == name && f.NameKey != null,
             includeDetails: false,
             GetCancellationToken(cancellationToken));
     }
@@ -67,5 +68,65 @@ public class MongoFileDescriptorRepository : MongoDbRepository<IBlobManagementMo
         var token = GetCancellationToken(cancellationToken);
         return await (await GetQueryableAsync(token))
             .AnyAsync(f => f.ContainerName == containerName && f.BlobName == blobName, token);
+    }
+
+    public virtual async Task<List<FileDescriptor>> GetListAsync(
+        string containerName,
+        Guid? directoryId,
+        string? filter = null,
+        string? sorting = null,
+        int maxResultCount = int.MaxValue,
+        int skipCount = 0,
+        CancellationToken cancellationToken = default)
+    {
+        var token = GetCancellationToken(cancellationToken);
+        return await (await GetListQueryAsync(containerName, directoryId, filter, token))
+            .OrderBy(FileDescriptorSorting.Normalize(sorting))
+            .PageBy(skipCount, maxResultCount)
+            .ToListAsync(token);
+    }
+
+    public virtual async Task<long> GetCountAsync(
+        string containerName,
+        Guid? directoryId,
+        string? filter = null,
+        CancellationToken cancellationToken = default)
+    {
+        var token = GetCancellationToken(cancellationToken);
+        return await (await GetListQueryAsync(containerName, directoryId, filter, token)).LongCountAsync(token);
+    }
+
+    public virtual async Task<bool> AnyInDirectoryAsync(Guid directoryId, CancellationToken cancellationToken = default)
+    {
+        var token = GetCancellationToken(cancellationToken);
+        Guid? directory = directoryId;
+        return await (await GetQueryableAsync(token)).AnyAsync(f => f.DirectoryId == directory, token);
+    }
+
+    public virtual async Task<List<FileDescriptor>> GetUnfiledListAsync(
+        string containerName,
+        int skipCount,
+        int maxResultCount,
+        CancellationToken cancellationToken = default)
+    {
+        var token = GetCancellationToken(cancellationToken);
+        return await (await GetQueryableAsync(token))
+            .Where(f => f.ContainerName == containerName && f.DirectoryId == null && f.NameKey == null)
+            .OrderBy(f => f.Id)
+            .PageBy(skipCount, maxResultCount)
+            .ToListAsync(token);
+    }
+
+    protected virtual async Task<IQueryable<FileDescriptor>> GetListQueryAsync(
+        string containerName,
+        Guid? directoryId,
+        string? filter,
+        CancellationToken cancellationToken)
+    {
+        // Upper-cased on both sides, as on EF Core: a search finds a name whatever its case.
+        var term = filter.IsNullOrWhiteSpace() ? null : filter!.Trim().ToUpperInvariant();
+        return (await GetQueryableAsync(cancellationToken))
+            .Where(f => f.ContainerName == containerName && f.DirectoryId == directoryId)
+            .WhereIf(term != null, f => f.Name.ToUpper().Contains(term!));
     }
 }

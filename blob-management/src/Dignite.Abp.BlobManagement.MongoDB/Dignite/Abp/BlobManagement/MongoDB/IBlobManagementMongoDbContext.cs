@@ -9,4 +9,6 @@ public interface IBlobManagementMongoDbContext : IAbpMongoDbContext
 {
     IMongoCollection<FileDescriptor> FileDescriptors { get; }
 
+    IMongoCollection<DirectoryDescriptor> DirectoryDescriptors { get; }
+
 }

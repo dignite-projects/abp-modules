@@ -31,6 +31,8 @@ public class BlobManagementApplicationTestModule : AbpModule
             options.IsDynamicPermissionStoreEnabled = false;
             options.ManagementProviders.Add<TestUserPermissionManagementProvider>();
             options.ManagementProviders.Add<TestRolePermissionManagementProvider>();
+            options.ResourceManagementProviders.Add<TestUserResourcePermissionManagementProvider>();
+            options.ResourceManagementProviders.Add<TestRoleResourcePermissionManagementProvider>();
         });
 
         Configure<AbpBlobStoringOptions>(options =>

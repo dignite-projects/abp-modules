@@ -17,6 +17,7 @@ public class BlobManagementEntityFrameworkCoreModule : AbpModule
             options.AddDefaultRepositories<IBlobManagementDbContext>(includeAllEntities: true);
 
             options.AddRepository<FileDescriptor, EfCoreFileDescriptorRepository>();
+            options.AddRepository<DirectoryDescriptor, EfCoreDirectoryDescriptorRepository>();
         });
     }
 }

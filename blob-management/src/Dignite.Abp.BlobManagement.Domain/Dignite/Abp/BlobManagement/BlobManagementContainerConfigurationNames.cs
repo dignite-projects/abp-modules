@@ -5,9 +5,11 @@ namespace Dignite.Abp.BlobManagement;
 /// </summary>
 public static class BlobManagementContainerConfigurationNames
 {
-    public const string Kind = "Dignite.Abp.BlobManagement.Kind";
+    public const string Managed = "Dignite.Abp.BlobManagement.Managed";
 
     public const string PublicRead = "Dignite.Abp.BlobManagement.PublicRead";
 
     public const string AllowedClientIds = "Dignite.Abp.BlobManagement.AllowedClientIds";
+
+    public const string AllowDirectories = "Dignite.Abp.BlobManagement.AllowDirectories";
 }

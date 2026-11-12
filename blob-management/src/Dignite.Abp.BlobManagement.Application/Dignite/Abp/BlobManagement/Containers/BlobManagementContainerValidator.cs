@@ -42,7 +42,7 @@ public class BlobManagementContainerValidator : ITransientDependency
     public virtual async Task<List<string>> ValidateAsync()
     {
         var defaultContainerName = BlobContainerNameAttribute.GetContainerName<DefaultContainer>();
-        if (BlobStoringOptions.Containers.GetConfiguration<DefaultContainer>().GetBlobManagementContainerConfiguration().IsBlobManagementContainer)
+        if (BlobStoringOptions.Containers.GetConfiguration<DefaultContainer>().GetBlobManagementContainerConfiguration().IsManaged)
         {
             throw new AbpException(
                 "The default BLOB container is declared a BlobManagement container, which makes every container name one. Call UseBlobManagementContainer on named containers only.");
@@ -53,18 +53,13 @@ public class BlobManagementContainerValidator : ITransientDependency
 
         BlobStoringOptions.Containers.ConfigureAll((name, configuration) =>
         {
-            var drive = configuration.GetBlobManagementContainerConfiguration();
-            if (name == defaultContainerName || !drive.IsBlobManagementContainer || drive.Kind != BlobManagementContainerKind.System)
+            var container = configuration.GetBlobManagementContainerConfiguration();
+            if (name == defaultContainerName || !container.IsManaged)
             {
                 return;
             }
 
-            if (drive.AllowedClientIds.Length == 0)
-            {
-                warnings.Add($"The BlobManagement system container '{name}' allows no client, so no remote caller can use it; only callers in this process can.");
-            }
-
-            foreach (var clientId in drive.AllowedClientIds)
+            foreach (var clientId in container.AllowedClientIds)
             {
                 if (!clientIds.TryGetValue(clientId, out var containers))
                 {

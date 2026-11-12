@@ -24,9 +24,9 @@ namespace Dignite.Abp.BlobManagement;
 /// It authorizes nobody: whoever calls it has been authorized by an application service, or is trusted in-process.
 /// </para>
 /// <para>
-/// The two entry points meet here and stay apart: the name-addressed operations (<see cref="CreateAsync"/>,
-/// <see cref="FindAsync"/>) serve system containers only, and the user-drive operation (<see cref="UploadAsync"/>) user
-/// drives only; each treats a container of the other kind as one that does not exist.
+/// The two ways a file comes in meet here, in any managed container: an application saves a BLOB under a name and
+/// reads it back by it (<see cref="CreateAsync"/>, <see cref="FindAsync"/>), a person uploads a file and it is
+/// addressed by its id (<see cref="UploadAsync"/>, <see cref="MoveAsync"/>, <see cref="RenameAsync"/>).
 /// </para>
 /// <para>
 /// <b>Consistency.</b> A physical BLOB is deleted only after the unit of work that deleted its last descriptor has
@@ -71,6 +71,9 @@ public class FileDescriptorManager : DomainService
     protected BlobManagementUsageManager UsageManager { get; }
 
     // Resolved lazily, not injected, so the constructor - which subclasses repeat - stays as it was.
+    protected IDirectoryDescriptorRepository DirectoryRepository =>
+        LazyServiceProvider.LazyGetRequiredService<IDirectoryDescriptorRepository>();
+
     protected IAbpDistributedLock DistributedLock => LazyServiceProvider.LazyGetRequiredService<IAbpDistributedLock>();
 
     protected IUnitOfWorkManager UnitOfWorkManager => LazyServiceProvider.LazyGetRequiredService<IUnitOfWorkManager>();
@@ -90,8 +93,8 @@ public class FileDescriptorManager : DomainService
     }
 
     /// <summary>
-    /// Stores <paramref name="stream"/> in the system container <paramref name="containerName"/> under
-    /// <paramref name="name"/> and records it.
+    /// Stores <paramref name="stream"/> in the container <paramref name="containerName"/> under <paramref name="name"/>,
+    /// the address the caller reads it back by, and records it: how an application saves a BLOB.
     /// <para>
     /// When a live descriptor already has <paramref name="name"/>, the call fails with
     /// <see cref="BlobManagementErrorCodes.BlobAlreadyExists"/> unless <paramref name="overrideExisting"/> is set; then the new
@@ -136,8 +139,8 @@ public class FileDescriptorManager : DomainService
     /// is kept. Dedup still compares the upload's hash, so the same upload shares the stored result.
     /// </para>
     /// </summary>
-    /// <param name="name">The caller's name for the file: in a system container, the BLOB name it reads it back by.
-    /// Its extension, if any, is checked against the content.</param>
+    /// <param name="name">The caller's name for the file: the BLOB name it reads it back by. Its extension, if any, is
+    /// checked against the content.</param>
     /// <param name="clientId">The OAuth client writing through the BLOB API, recorded on the descriptor.</param>
     public virtual async Task<FileDescriptor> CreateAsync(
         string containerName,
@@ -147,7 +150,7 @@ public class FileDescriptorManager : DomainService
         string? clientId = null,
         CancellationToken cancellationToken = default)
     {
-        GetBlobManagementContainerConfiguration(containerName, BlobManagementContainerKind.System);
+        GetBlobManagementContainerConfiguration(containerName);
         Check.NotNullOrWhiteSpace(name, nameof(name), FileDescriptorConsts.MaxNameLength);
         Check.NotNull(stream, nameof(stream));
         await UsageManager.CheckEnabledAsync();
@@ -195,32 +198,45 @@ public class FileDescriptorManager : DomainService
     }
 
     /// <summary>
-    /// Stores <paramref name="stream"/> as a new file named <paramref name="name"/> in the user drive
-    /// <paramref name="containerName"/>. The name need not be unique: a user-drive file is addressed by its id, and holds
-    /// no <see cref="FileDescriptor.NameKey"/>. Otherwise it is stored as <see cref="CreateAsync"/> stores - allocation,
+    /// Stores <paramref name="stream"/> as a new file named <paramref name="name"/> in the container
+    /// <paramref name="containerName"/>, under <paramref name="directoryId"/> (<c>null</c>: its top): how a person
+    /// uploads a file. The name need not be unique: the file is addressed by its id, and holds no
+    /// <see cref="FileDescriptor.NameKey"/>. Otherwise it is stored as <see cref="CreateAsync"/> stores - allocation,
     /// buffering, detection, dedup under the dedup lock, compensation. One difference: when the container stores the
     /// upload in another format (a JPEG as WebP), the name takes that format's extension
     /// (<see cref="GetNameForStoredType"/>), shared content included.
+    /// <para>
+    /// The directory must be one of the container, which must allow directories
+    /// (<see cref="BlobManagementErrorCodes.DirectoryNotFound"/>, <see cref="BlobManagementErrorCodes.DirectoriesNotAllowed"/>).
+    /// The file is filed before it is inserted, so the row is written once.
+    /// </para>
     /// </summary>
     /// <param name="configureFile">Runs on the new descriptor before it is inserted, whether its bytes are stored or
-    /// shared with a descriptor that has them already: a module that keeps fields of its own on the file (ABP object
-    /// extensions) sets them here, so the row is written once - atomic on every database provider, with or without a
-    /// transaction. It runs while the dedup lock is held, so it does no I/O; when it throws, the upload fails and nothing
-    /// is stored.</param>
+    /// shared with a descriptor that has them already: a caller that keeps fields of its own on the file (extra
+    /// properties) sets them here, so the row is written once. It runs while the dedup lock is held, so it does no I/O;
+    /// when it throws, the upload fails and nothing is stored.</param>
     public virtual async Task<FileDescriptor> UploadAsync(
         string containerName,
         string name,
         Stream stream,
+        Guid? directoryId = null,
         Action<FileDescriptor>? configureFile = null,
         CancellationToken cancellationToken = default)
     {
-        GetBlobManagementContainerConfiguration(containerName, BlobManagementContainerKind.UserBlobManagement);
+        GetBlobManagementContainerConfiguration(containerName);
         Check.NotNullOrWhiteSpace(name, nameof(name), FileDescriptorConsts.MaxNameLength);
         Check.NotNull(stream, nameof(stream));
         await UsageManager.CheckEnabledAsync();
+        await CheckDirectoryAsync(containerName, directoryId, cancellationToken);
+
+        Action<FileDescriptor> place = file =>
+        {
+            file.SetDirectory(directoryId);
+            configureFile?.Invoke(file);
+        };
 
         return await StoreOrShareAsync(
-            containerName, name, stream, clientId: null, nameIsAddress: false, configureFile, cancellationToken);
+            containerName, name, stream, clientId: null, nameIsAddress: false, place, cancellationToken);
     }
 
     /// <summary>
@@ -239,7 +255,7 @@ public class FileDescriptorManager : DomainService
     /// nothing else references it, and it cannot collide with the key's live holder.
     /// </para>
     /// </summary>
-    /// <param name="nameIsAddress">Whether the container is a system container, whose descriptors hold the
+    /// <param name="nameIsAddress">Whether an application saves the file under its name, so that its descriptor holds the
     /// <see cref="FileDescriptor.NameKey"/>.</param>
     /// <param name="configureFile">Runs on the new descriptor before it is inserted (see <see cref="UploadAsync"/>).</param>
     protected virtual async Task<FileDescriptor> StoreOrShareAsync(
@@ -275,8 +291,8 @@ public class FileDescriptorManager : DomainService
             var source = await FindDedupSourceAsync(containerName, hash, cancellationToken);
             if (source != null)
             {
-                // The bytes already have a home: nothing is stored, the new row shares it - and its type, which a
-                // user-drive name follows.
+                // The bytes already have a home: nothing is stored, the new row shares it - and its type, which an
+                // uploaded file's name follows.
                 var sharedName = nameIsAddress ? name : GetNameForStoredType(name, mimeType, source.MimeType);
                 var shared = new FileDescriptor(
                     GuidGenerator.Create(), containerName, sharedName, source.BlobName, source.MimeType, source.Size, hash,
@@ -350,7 +366,54 @@ public class FileDescriptorManager : DomainService
     }
 
     /// <summary>
-    /// The live descriptor named <paramref name="name"/> in the system container <paramref name="containerName"/>, or
+    /// Files <paramref name="file"/> under <paramref name="directoryId"/> (<c>null</c>: the top of its container). The
+    /// directory must be one of the file's container (<see cref="BlobManagementErrorCodes.DirectoryNotFound"/>), so a
+    /// file never changes containers. A file addressed by its name is not moved
+    /// (<see cref="BlobManagementErrorCodes.FileAddressedByName"/>).
+    /// </summary>
+    public virtual async Task<FileDescriptor> MoveAsync(
+        FileDescriptor file,
+        Guid? directoryId,
+        CancellationToken cancellationToken = default)
+    {
+        Check.NotNull(file, nameof(file));
+        CheckNotAddressedByName(file);
+        await CheckDirectoryAsync(file.ContainerName, directoryId, cancellationToken);
+
+        if (file.DirectoryId == directoryId)
+        {
+            return file;
+        }
+
+        file.SetDirectory(directoryId);
+        return await FileDescriptorRepository.UpdateAsync(file, autoSave: true, cancellationToken: cancellationToken);
+    }
+
+    /// <summary>
+    /// Renames an uploaded file, whose name is a display name and need not be unique. A file addressed by its name is
+    /// not renamed: the name is how the application that saved it reads it back
+    /// (<see cref="BlobManagementErrorCodes.FileAddressedByName"/>).
+    /// </summary>
+    public virtual async Task<FileDescriptor> RenameAsync(
+        FileDescriptor file,
+        string name,
+        CancellationToken cancellationToken = default)
+    {
+        Check.NotNull(file, nameof(file));
+        Check.NotNullOrWhiteSpace(name, nameof(name), FileDescriptorConsts.MaxNameLength);
+        CheckNotAddressedByName(file);
+
+        if (file.Name == name)
+        {
+            return file;
+        }
+
+        file.Rename(name);
+        return await FileDescriptorRepository.UpdateAsync(file, autoSave: true, cancellationToken: cancellationToken);
+    }
+
+    /// <summary>
+    /// The live descriptor an application saved under <paramref name="name"/> in <paramref name="containerName"/>, or
     /// <c>null</c>.
     /// </summary>
     public virtual async Task<FileDescriptor?> FindAsync(
@@ -358,7 +421,7 @@ public class FileDescriptorManager : DomainService
         string name,
         CancellationToken cancellationToken = default)
     {
-        GetBlobManagementContainerConfiguration(containerName, BlobManagementContainerKind.System);
+        GetBlobManagementContainerConfiguration(containerName);
         if (name.IsNullOrWhiteSpace())
         {
             return null;
@@ -368,15 +431,15 @@ public class FileDescriptorManager : DomainService
     }
 
     /// <summary>
-    /// A live file of the user drive <paramref name="containerName"/> whose physical BLOB is <paramref name="blobName"/>,
-    /// or <c>null</c>: a user-drive file's public address names its BLOB, since its name need not be unique.
+    /// A live file of <paramref name="containerName"/> whose physical BLOB is <paramref name="blobName"/>, or
+    /// <c>null</c>: an uploaded file's public address names its BLOB, since its name need not be unique.
     /// </summary>
     public virtual async Task<FileDescriptor?> FindByBlobNameAsync(
         string containerName,
         string blobName,
         CancellationToken cancellationToken = default)
     {
-        GetBlobManagementContainerConfiguration(containerName, BlobManagementContainerKind.UserBlobManagement);
+        GetBlobManagementContainerConfiguration(containerName);
         if (blobName.IsNullOrWhiteSpace())
         {
             return null;
@@ -393,14 +456,46 @@ public class FileDescriptorManager : DomainService
 
     /// <summary>
     /// The Blob Management configuration of <paramref name="containerName"/>; fails with
-    /// <see cref="BlobManagementErrorCodes.ContainerNotFound"/> for a container the Blob Management host did not declare, or one of another
-    /// <paramref name="kind"/> than asked for.
+    /// <see cref="BlobManagementErrorCodes.ContainerNotFound"/> for a container the Blob Management host did not declare.
     /// </summary>
-    public virtual BlobManagementContainerConfiguration GetBlobManagementContainerConfiguration(
-        string containerName,
-        BlobManagementContainerKind? kind = null)
+    public virtual BlobManagementContainerConfiguration GetBlobManagementContainerConfiguration(string containerName)
     {
-        return BlobContainerConfigurationProvider.GetBlobManagementContainerConfiguration(containerName, kind);
+        return BlobContainerConfigurationProvider.GetBlobManagementContainerConfiguration(containerName);
+    }
+
+    /// <summary>
+    /// Whether <paramref name="directoryId"/> may hold a file of <paramref name="containerName"/>: it is a directory of
+    /// that container, which allows directories. <c>null</c>, the top of the container, always may.
+    /// </summary>
+    protected virtual async Task CheckDirectoryAsync(
+        string containerName,
+        Guid? directoryId,
+        CancellationToken cancellationToken)
+    {
+        if (!directoryId.HasValue)
+        {
+            return;
+        }
+
+        if (!GetBlobManagementContainerConfiguration(containerName).AllowDirectories)
+        {
+            throw new BusinessException(BlobManagementErrorCodes.DirectoriesNotAllowed)
+                .WithData("ContainerName", containerName);
+        }
+
+        var directory = await DirectoryRepository.FindAsync(directoryId.Value, false, cancellationToken);
+        if (directory == null || directory.ContainerName != containerName)
+        {
+            throw new BusinessException(BlobManagementErrorCodes.DirectoryNotFound);
+        }
+    }
+
+    protected virtual void CheckNotAddressedByName(FileDescriptor file)
+    {
+        if (file.IsAddressedByName)
+        {
+            throw new BusinessException(BlobManagementErrorCodes.FileAddressedByName).WithData("Name", file.Name);
+        }
     }
 
     /// <summary>A live descriptor whose bytes an upload hashing to <paramref name="hash"/> can share.</summary>
@@ -497,11 +592,11 @@ public class FileDescriptorManager : DomainService
     }
 
     /// <summary>
-    /// The name of a user-drive file whose upload, detected as <paramref name="uploadedMimeType"/>, is stored as
+    /// The name of an uploaded file whose upload, detected as <paramref name="uploadedMimeType"/>, is stored as
     /// <paramref name="storedMimeType"/>: <paramref name="name"/> with the canonical extension of the stored type
     /// (<c>photo.jpg</c> stored as WebP becomes <c>photo.webp</c>), so a download is named for what it is.
     /// <paramref name="name"/> itself when the types are the same or the stored type has no extension in
-    /// <see cref="BlobManagementFileTypes"/>. Not applied in a system container, whose names are the application's addresses.
+    /// <see cref="BlobManagementFileTypes"/>. Not applied to a file an application saved, whose name is its address.
     /// </summary>
     protected virtual string GetNameForStoredType(string name, string uploadedMimeType, string storedMimeType)
     {

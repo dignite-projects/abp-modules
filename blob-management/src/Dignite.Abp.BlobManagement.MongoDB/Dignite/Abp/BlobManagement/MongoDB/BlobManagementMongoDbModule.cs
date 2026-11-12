@@ -17,6 +17,7 @@ public class BlobManagementMongoDbModule : AbpModule
             options.AddDefaultRepositories<IBlobManagementMongoDbContext>();
 
             options.AddRepository<FileDescriptor, MongoFileDescriptorRepository>();
+            options.AddRepository<DirectoryDescriptor, MongoDirectoryDescriptorRepository>();
         });
     }
 }

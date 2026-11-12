@@ -9,6 +9,8 @@ public class BlobManagementMongoDbContext : AbpMongoDbContext, IBlobManagementMo
 {
     public IMongoCollection<FileDescriptor> FileDescriptors => Collection<FileDescriptor>();
 
+    public IMongoCollection<DirectoryDescriptor> DirectoryDescriptors => Collection<DirectoryDescriptor>();
+
     protected override void CreateModel(IMongoModelBuilder modelBuilder)
     {
         base.CreateModel(modelBuilder);

@@ -1,4 +1,5 @@
 using Volo.Abp.Authorization.Permissions;
+using Volo.Abp.Authorization.Permissions.Resources;
 using Volo.Abp.Guids;
 using Volo.Abp.MultiTenancy;
 using Volo.Abp.PermissionManagement;
@@ -32,4 +33,30 @@ public class TestRolePermissionManagementProvider : PermissionManagementProvider
     }
 
     public override string Name => RolePermissionValueProvider.ProviderName;
+}
+
+public class TestUserResourcePermissionManagementProvider : ResourcePermissionManagementProvider
+{
+    public TestUserResourcePermissionManagementProvider(
+        IResourcePermissionGrantRepository resourcePermissionGrantRepository,
+        IGuidGenerator guidGenerator,
+        ICurrentTenant currentTenant)
+        : base(resourcePermissionGrantRepository, guidGenerator, currentTenant)
+    {
+    }
+
+    public override string Name => UserResourcePermissionValueProvider.ProviderName;
+}
+
+public class TestRoleResourcePermissionManagementProvider : ResourcePermissionManagementProvider
+{
+    public TestRoleResourcePermissionManagementProvider(
+        IResourcePermissionGrantRepository resourcePermissionGrantRepository,
+        IGuidGenerator guidGenerator,
+        ICurrentTenant currentTenant)
+        : base(resourcePermissionGrantRepository, guidGenerator, currentTenant)
+    {
+    }
+
+    public override string Name => RoleResourcePermissionValueProvider.ProviderName;
 }

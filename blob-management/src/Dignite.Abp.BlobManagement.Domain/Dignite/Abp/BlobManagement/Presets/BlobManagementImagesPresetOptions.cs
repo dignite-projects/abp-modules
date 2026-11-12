@@ -20,7 +20,7 @@ public class BlobManagementImagesPresetOptions : BlobManagementSizePresetOptions
     /// <summary>
     /// Whether a JPEG is stored as lossy WebP at <see cref="WebpQuality"/>, turned upright by its EXIF orientation and
     /// fitted into <see cref="MaxWidth"/> × <see cref="MaxHeight"/> in one encode. Its physical BLOB is named <c>.webp</c>
-    /// and its type recorded as <c>image/webp</c>; in a user drive its name takes the <c>.webp</c> extension too. Default:
+    /// and its type recorded as <c>image/webp</c>; an uploaded file's name takes the <c>.webp</c> extension too. Default:
     /// <c>true</c>. Turning it off leaves JPEGs stored before as WebP; new JPEGs are stored as JPEGs.
     /// </summary>
     public bool StoreJpegAsWebp { get; set; } = true;

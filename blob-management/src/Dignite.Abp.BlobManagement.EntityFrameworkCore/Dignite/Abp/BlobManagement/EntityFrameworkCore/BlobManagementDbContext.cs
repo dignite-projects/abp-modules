@@ -9,6 +9,8 @@ public class BlobManagementDbContext : AbpDbContext<BlobManagementDbContext>, IB
 {
     public DbSet<FileDescriptor> FileDescriptors { get; set; } = default!;
 
+    public DbSet<DirectoryDescriptor> DirectoryDescriptors { get; set; } = default!;
+
     public BlobManagementDbContext(DbContextOptions<BlobManagementDbContext> options)
         : base(options)
     {

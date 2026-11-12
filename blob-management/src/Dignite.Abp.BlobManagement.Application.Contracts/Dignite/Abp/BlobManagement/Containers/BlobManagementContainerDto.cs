@@ -4,8 +4,8 @@ using Volo.Abp.ObjectExtending;
 namespace Dignite.Abp.BlobManagement.Containers;
 
 /// <summary>
-/// A user drive: its configuration as a client needs it to offer an upload. Extensible: what a module building on the
-/// Blob Management adds to a container travels in <c>ExtraProperties</c>.
+/// A managed container: its configuration as a client needs it to offer an upload, and what the caller may do at its
+/// top.
 /// </summary>
 public class BlobManagementContainerDto : ExtensibleObject
 {
@@ -13,6 +13,9 @@ public class BlobManagementContainerDto : ExtensibleObject
 
     /// <summary>Whether its files are read publicly; their <c>Url</c> is then set.</summary>
     public bool PublicRead { get; set; }
+
+    /// <summary>Whether the container has a directory tree. Without one its files are one flat list.</summary>
+    public bool AllowDirectories { get; set; }
 
     /// <summary>
     /// The largest upload the container accepts, in bytes: its <c>MaxSize</c> contributor, or the pipeline's buffering
@@ -31,4 +34,7 @@ public class BlobManagementContainerDto : ExtensibleObject
 
     /// <summary>The height a picture is scaled down to, when the container resizes images.</summary>
     public int? ImageMaxHeight { get; set; }
+
+    /// <summary>What the caller may do at the top of the container.</summary>
+    public BlobManagementAccessDto Access { get; set; } = new();
 }

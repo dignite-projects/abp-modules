@@ -27,6 +27,14 @@ public partial class BlobManagementFileClientProxy : ClientProxyBase<IBlobManage
         });
     }
 
+    public virtual async Task<PagedResultDto<BlobManagementFileDto>> GetListAsync(GetBlobManagementFilesInput input)
+    {
+        return await RequestAsync<PagedResultDto<BlobManagementFileDto>>(nameof(GetListAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(GetBlobManagementFilesInput), input }
+        });
+    }
+
     public virtual async Task<BlobManagementFileDto> CreateAsync(CreateBlobManagementFileInput input)
     {
         return await RequestAsync<BlobManagementFileDto>(nameof(CreateAsync), new ClientProxyRequestTypeValue
@@ -40,6 +48,24 @@ public partial class BlobManagementFileClientProxy : ClientProxyBase<IBlobManage
         return await RequestAsync<BlobManagementTicketDto>(nameof(CreateUploadTicketAsync), new ClientProxyRequestTypeValue
         {
             { typeof(CreateBlobManagementFileUploadTicketInput), input }
+        });
+    }
+
+    public virtual async Task<BlobManagementFileDto> UpdateAsync(Guid id, UpdateBlobManagementFileInput input)
+    {
+        return await RequestAsync<BlobManagementFileDto>(nameof(UpdateAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(Guid), id },
+            { typeof(UpdateBlobManagementFileInput), input }
+        });
+    }
+
+    public virtual async Task<BlobManagementFileDto> MoveAsync(Guid id, MoveBlobManagementFileInput input)
+    {
+        return await RequestAsync<BlobManagementFileDto>(nameof(MoveAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(Guid), id },
+            { typeof(MoveBlobManagementFileInput), input }
         });
     }
 

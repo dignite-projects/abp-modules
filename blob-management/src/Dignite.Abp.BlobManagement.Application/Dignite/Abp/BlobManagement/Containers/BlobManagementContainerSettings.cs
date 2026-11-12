@@ -14,14 +14,13 @@ namespace Dignite.Abp.BlobManagement.Containers;
 /// "BlobManagement": {
 ///   "Containers": {
 ///     "media": {
-///       "Kind": "System",
 ///       "PublicRead": true,
 ///       "AllowedClientIds": [ "site-app" ],
 ///       "Preset": "Images",
 ///       "PresetOptions": { "MaxSizeInMegabytes": 10, "MaxWidth": 2048 }
 ///     },
 ///     "documents": {
-///       "Kind": "UserBlobManagement",
+///       "AllowDirectories": true,
 ///       "Preset": "Documents"
 ///     }
 ///   }
@@ -32,8 +31,8 @@ namespace Dignite.Abp.BlobManagement.Containers;
 /// container's provider and its settings, which the host configures in code (<c>ConfigureDefault(c =&gt;
 /// c.UseFileSystem(…))</c>).
 /// <para>
-/// Everything is checked while reading, so a mistake stops the host at startup: an unknown key, an unknown
-/// <c>Kind</c> or preset, a value that is not a number or a boolean, a misspelt preset parameter.
+/// Everything is checked while reading, so a mistake stops the host at startup: an unknown key, an unknown preset, a
+/// value that is not a number or a boolean, a misspelt preset parameter.
 /// </para>
 /// </summary>
 public class BlobManagementContainerSettings
@@ -42,7 +41,7 @@ public class BlobManagementContainerSettings
 
     public const string ContainersSectionName = "Containers";
 
-    private static readonly string[] KnownKeys = { "Kind", "PublicRead", "AllowedClientIds", "Preset", "PresetOptions" };
+    private static readonly string[] KnownKeys = { "PublicRead", "AllowDirectories", "AllowedClientIds", "Preset", "PresetOptions" };
 
     protected BlobManagementContainerSettings(string containerName, Action<BlobContainerConfiguration> apply)
     {
@@ -84,19 +83,18 @@ public class BlobManagementContainerSettings
             throw new AbpException($"{where}: unknown key '{unknownKey}'. Known keys: {string.Join(", ", KnownKeys)}.");
         }
 
-        var kind = BlobManagementContainerKind.System;
-        var kindValue = section["Kind"];
-        if (!kindValue.IsNullOrWhiteSpace() &&
-            (!Enum.TryParse(kindValue, ignoreCase: true, out kind) || !Enum.IsDefined(typeof(BlobManagementContainerKind), kind)))
-        {
-            throw new AbpException($"{where}: '{kindValue}' is not a Kind. Use {string.Join(" or ", Enum.GetNames(typeof(BlobManagementContainerKind)))}.");
-        }
-
         var publicRead = false;
         var publicReadValue = section["PublicRead"];
         if (!publicReadValue.IsNullOrWhiteSpace() && !bool.TryParse(publicReadValue, out publicRead))
         {
             throw new AbpException($"{where}: PublicRead must be true or false, not '{publicReadValue}'.");
+        }
+
+        var allowDirectories = false;
+        var allowDirectoriesValue = section["AllowDirectories"];
+        if (!allowDirectoriesValue.IsNullOrWhiteSpace() && !bool.TryParse(allowDirectoriesValue, out allowDirectories))
+        {
+            throw new AbpException($"{where}: AllowDirectories must be true or false, not '{allowDirectoriesValue}'.");
         }
 
         var allowedClientIds = section.GetSection("AllowedClientIds").GetChildren()
@@ -123,18 +121,17 @@ public class BlobManagementContainerSettings
 
         Action<BlobContainerConfiguration> apply = container =>
         {
-            container.UseBlobManagementContainer(drive =>
+            container.UseBlobManagementContainer(managed =>
             {
-                drive.Kind = kind;
-                drive.PublicRead = publicRead;
-                drive.AllowedClientIds = allowedClientIds;
+                managed.PublicRead = publicRead;
+                managed.AllowDirectories = allowDirectories;
+                managed.AllowedClientIds = allowedClientIds;
             });
             applyPreset?.Invoke(container);
         };
 
-        // A dry run on a throwaway configuration, so that what only the extension methods check - a client id list on
-        // a user drive, a preset parameter that is misspelt or out of range - stops the host now, not on the first
-        // upload.
+        // A dry run on a throwaway configuration, so that what only the extension methods check - an empty client id, a
+        // preset parameter that is misspelt or out of range - stops the host now, not on the first upload.
         try
         {
             apply(new BlobContainerConfiguration());

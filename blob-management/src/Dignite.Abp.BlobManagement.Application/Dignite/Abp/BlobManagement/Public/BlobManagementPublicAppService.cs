@@ -196,21 +196,19 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
     }
 
     /// <summary>
-    /// The live file at the address, when its container is a Blob Management container that is read publicly. In a system
-    /// container the address names the file as the application named it; in a user drive, where names may repeat, it
-    /// names the physical BLOB.
+    /// The live file at the address, when its container is a managed container that is read publicly. The address of a
+    /// file an application saved names it as the application did; that of an uploaded file, whose name may repeat,
+    /// names its physical BLOB - generated, so it is never mistaken for an application's name.
     /// </summary>
     protected virtual async Task<FileDescriptor> GetPublicFileAsync(string containerName, string blobName)
     {
         FileDescriptor? file = null;
         try
         {
-            var drive = FileDescriptorManager.GetBlobManagementContainerConfiguration(containerName);
-            if (drive.PublicRead)
+            if (FileDescriptorManager.GetBlobManagementContainerConfiguration(containerName).PublicRead)
             {
-                file = drive.Kind == BlobManagementContainerKind.System
-                    ? await FileDescriptorManager.FindAsync(containerName, blobName)
-                    : await FileDescriptorManager.FindByBlobNameAsync(containerName, blobName);
+                file = await FileDescriptorManager.FindAsync(containerName, blobName)
+                       ?? await FileDescriptorManager.FindByBlobNameAsync(containerName, blobName);
             }
         }
         catch (BusinessException exception) when (exception.Code == BlobManagementErrorCodes.ContainerNotFound)
