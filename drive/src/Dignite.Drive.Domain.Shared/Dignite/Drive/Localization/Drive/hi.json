@@ -8,6 +8,17 @@
     "FileTooLarge": "“{0}” {1} से बड़ी है, जो अधिकतम अनुमत आकार है।",
     "FileTypeNotAllowed": "“{0}” का फ़ाइल प्रकार स्वीकार्य नहीं है।",
     "UploadFailed": "{1} में से {0} फ़ाइलें अपलोड नहीं हो सकीं।",
-    "NoFileSelected": "कोई फ़ाइल नहीं चुनी गई।"
+    "NoFileSelected": "कोई फ़ाइल नहीं चुनी गई।",
+    "Drive:ContainerNotFound": "“{ContainerName}” नाम का कोई Drive कंटेनर नहीं है।",
+    "Drive:BlobAlreadyExists": "Drive कंटेनर “{ContainerName}” में “{BlobName}” नाम की फ़ाइल पहले से है।",
+    "Drive:BlobNotFound": "Drive कंटेनर “{ContainerName}” में “{BlobName}” नाम की कोई फ़ाइल नहीं है।",
+    "Drive:InvalidTicket": "लिंक मान्य नहीं है। हो सकता है इसकी अवधि समाप्त हो गई हो या इसका उपयोग हो चुका हो।",
+    "Drive:DriveDisabled": "इस टेनेंट के लिए Drive सक्षम नहीं है।",
+    "Drive:StorageQuotaExceeded": "इस फ़ाइल को सहेजने से {StorageSize} MB का Drive संग्रहण पार हो जाएगा।",
+    "PublicReadSizeNotAllowed": "{0} इनमें से एक होना चाहिए: {1}।",
+    "Permission:Drive": "Drive",
+    "Permission:Files": "फ़ाइलें",
+    "Permission:Files.Upload": "अपलोड",
+    "Permission:Files.Delete": "हटाना"
   }
 }

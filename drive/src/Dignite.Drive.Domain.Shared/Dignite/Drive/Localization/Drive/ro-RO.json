@@ -8,6 +8,17 @@
     "FileTooLarge": "„{0}” depășește {1}, dimensiunea maximă permisă.",
     "FileTypeNotAllowed": "Tipul de fișier al „{0}” nu este permis.",
     "UploadFailed": "{0} din {1} fișiere nu au putut fi încărcate.",
-    "NoFileSelected": "Niciun fișier ales."
+    "NoFileSelected": "Niciun fișier ales.",
+    "Drive:ContainerNotFound": "Nu există niciun container Drive numit „{ContainerName}”.",
+    "Drive:BlobAlreadyExists": "Containerul Drive „{ContainerName}” conține deja un fișier numit „{BlobName}”.",
+    "Drive:BlobNotFound": "Containerul Drive „{ContainerName}” nu conține niciun fișier numit „{BlobName}”.",
+    "Drive:InvalidTicket": "Linkul nu este valid. Este posibil să fi expirat sau să fi fost deja folosit.",
+    "Drive:DriveDisabled": "Drive nu este activat pentru acest chiriaș.",
+    "Drive:StorageQuotaExceeded": "Salvarea acestui fișier ar depăși spațiul Drive de {StorageSize} MB.",
+    "PublicReadSizeNotAllowed": "{0} trebuie să fie una dintre valorile: {1}.",
+    "Permission:Drive": "Drive",
+    "Permission:Files": "Fișiere",
+    "Permission:Files.Upload": "Încărcare",
+    "Permission:Files.Delete": "Ștergere"
   }
 }

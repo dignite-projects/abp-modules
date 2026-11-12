@@ -8,6 +8,17 @@
     "FileTooLarge": "„{0}” je veće od {1}, najveće dopuštene veličine.",
     "FileTypeNotAllowed": "Vrsta datoteke „{0}” nije dopuštena.",
     "UploadFailed": "{0} od {1} datoteka nije moguće prenijeti.",
-    "NoFileSelected": "Nije odabrana nijedna datoteka."
+    "NoFileSelected": "Nije odabrana nijedna datoteka.",
+    "Drive:ContainerNotFound": "Ne postoji spremnik Drive s nazivom „{ContainerName}”.",
+    "Drive:BlobAlreadyExists": "Spremnik Drive „{ContainerName}” već sadrži datoteku s nazivom „{BlobName}”.",
+    "Drive:BlobNotFound": "Spremnik Drive „{ContainerName}” ne sadrži datoteku s nazivom „{BlobName}”.",
+    "Drive:InvalidTicket": "Poveznica nije valjana. Možda je istekla ili je već iskorištena.",
+    "Drive:DriveDisabled": "Drive nije omogućen za ovog zakupca.",
+    "Drive:StorageQuotaExceeded": "Spremanjem ove datoteke premašio bi se prostor za Drive od {StorageSize} MB.",
+    "PublicReadSizeNotAllowed": "{0} mora biti jedna od vrijednosti: {1}.",
+    "Permission:Drive": "Drive",
+    "Permission:Files": "Datoteke",
+    "Permission:Files.Upload": "Prijenos",
+    "Permission:Files.Delete": "Brisanje"
   }
 }

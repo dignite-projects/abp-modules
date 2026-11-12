@@ -8,6 +8,17 @@
     "FileTooLarge": "«{0}» supera {1}, el tamaño máximo permitido.",
     "FileTypeNotAllowed": "El tipo de archivo de «{0}» no está permitido.",
     "UploadFailed": "No se pudieron subir {0} de {1} archivos.",
-    "NoFileSelected": "No se ha elegido ningún archivo."
+    "NoFileSelected": "No se ha elegido ningún archivo.",
+    "Drive:ContainerNotFound": "No hay ningún contenedor de Drive llamado «{ContainerName}».",
+    "Drive:BlobAlreadyExists": "El contenedor de Drive «{ContainerName}» ya tiene un archivo llamado «{BlobName}».",
+    "Drive:BlobNotFound": "El contenedor de Drive «{ContainerName}» no tiene ningún archivo llamado «{BlobName}».",
+    "Drive:InvalidTicket": "El enlace no es válido. Puede que haya caducado o que ya se haya usado.",
+    "Drive:DriveDisabled": "Drive no está habilitado para este inquilino.",
+    "Drive:StorageQuotaExceeded": "Guardar este archivo superaría el almacenamiento de Drive de {StorageSize} MB.",
+    "PublicReadSizeNotAllowed": "{0} debe ser uno de los siguientes valores: {1}.",
+    "Permission:Drive": "Drive",
+    "Permission:Files": "Archivos",
+    "Permission:Files.Upload": "Subir",
+    "Permission:Files.Delete": "Eliminar"
   }
 }

@@ -8,6 +8,17 @@
     "FileTooLarge": "”{0}” on suurempi kuin {1}, joka on suurin sallittu koko.",
     "FileTypeNotAllowed": "Tiedostotyyppiä ”{0}” ei sallita.",
     "UploadFailed": "{0}/{1} tiedostoa ei voitu lähettää.",
-    "NoFileSelected": "Tiedostoa ei ole valittu."
+    "NoFileSelected": "Tiedostoa ei ole valittu.",
+    "Drive:ContainerNotFound": "Drive-säilöä nimeltä ”{ContainerName}” ei ole.",
+    "Drive:BlobAlreadyExists": "Drive-säilössä ”{ContainerName}” on jo tiedosto nimeltä ”{BlobName}”.",
+    "Drive:BlobNotFound": "Drive-säilössä ”{ContainerName}” ei ole tiedostoa nimeltä ”{BlobName}”.",
+    "Drive:InvalidTicket": "Linkki ei ole kelvollinen. Se on ehkä vanhentunut tai jo käytetty.",
+    "Drive:DriveDisabled": "Drive ei ole käytössä tälle vuokralaiselle.",
+    "Drive:StorageQuotaExceeded": "Tämän tiedoston tallentaminen ylittäisi {StorageSize} Mt:n Drive-tallennustilan.",
+    "PublicReadSizeNotAllowed": "Arvon {0} on oltava jokin seuraavista: {1}.",
+    "Permission:Drive": "Drive",
+    "Permission:Files": "Tiedostot",
+    "Permission:Files.Upload": "Lähettäminen",
+    "Permission:Files.Delete": "Poistaminen"
   }
 }
