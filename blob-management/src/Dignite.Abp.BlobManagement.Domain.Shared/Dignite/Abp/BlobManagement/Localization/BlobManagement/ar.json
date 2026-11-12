@@ -1,0 +1,29 @@
+{
+  "culture": "ar",
+  "texts": {
+    "MyAccount": "إدارة ملفى",
+    "SamplePageMessage": "صفحة نموذجية للوحدة النمطية BlobManagement",
+    "Upload": "رفع",
+    "RemoveFile": "إزالة «{0}»",
+    "FileTooLarge": "«{0}» أكبر من {1}، وهو الحد الأقصى المسموح به.",
+    "FileTypeNotAllowed": "نوع الملف «{0}» غير مقبول.",
+    "UploadFailed": "تعذر رفع {0} من أصل {1} ملفات.",
+    "NoFileSelected": "لم يتم اختيار أي ملف.",
+    "BlobManagement:ContainerNotFound": "لا توجد حاوية BlobManagement باسم «{ContainerName}».",
+    "BlobManagement:BlobAlreadyExists": "تحتوي حاوية BlobManagement «{ContainerName}» بالفعل على ملف باسم «{BlobName}».",
+    "BlobManagement:BlobNotFound": "لا تحتوي حاوية BlobManagement «{ContainerName}» على ملف باسم «{BlobName}».",
+    "BlobManagement:InvalidTicket": "الرابط غير صالح. ربما انتهت صلاحيته أو استُخدم من قبل.",
+    "BlobManagement:BlobManagementDisabled": "BlobManagement غير مفعّل لهذا المستأجر.",
+    "BlobManagement:StorageQuotaExceeded": "سيؤدي حفظ هذا الملف إلى تجاوز مساحة تخزين BlobManagement البالغة {StorageSize} ميغابايت.",
+    "PublicReadSizeNotAllowed": "يجب أن تكون {0} إحدى القيم التالية: {1}.",
+    "Permission:BlobManagement": "BlobManagement",
+    "Permission:Files": "الملفات",
+    "Permission:Files.Upload": "رفع",
+    "Permission:Files.Delete": "حذف",
+    "Feature:BlobManagementGroup": "BlobManagement",
+    "Feature:BlobManagementEnable": "تفعيل BlobManagement",
+    "Feature:BlobManagementEnableDescription": "ما إذا كان يمكن للمستأجر تخزين الملفات في BlobManagement.",
+    "Feature:BlobManagementStorageSize": "مساحة تخزين BlobManagement (ميغابايت)",
+    "Feature:BlobManagementStorageSizeDescription": "الحد الأقصى الذي يمكن للمستأجر تخزينه في BlobManagement، بالميغابايت. تعني 0 عدم وجود حد."
+  }
+}

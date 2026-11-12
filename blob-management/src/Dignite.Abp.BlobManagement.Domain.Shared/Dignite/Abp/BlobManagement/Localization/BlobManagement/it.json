@@ -1,0 +1,29 @@
+{
+  "culture": "it",
+  "texts": {
+    "MyAccount": "Il mio conto",
+    "SamplePageMessage": "Una pagina di esempio per il modulo BlobManagement",
+    "Upload": "Carica",
+    "RemoveFile": "Rimuovi «{0}»",
+    "FileTooLarge": "«{0}» supera {1}, la dimensione massima consentita.",
+    "FileTypeNotAllowed": "Il tipo di file di «{0}» non è consentito.",
+    "UploadFailed": "Impossibile caricare {0} file su {1}.",
+    "NoFileSelected": "Nessun file scelto.",
+    "BlobManagement:ContainerNotFound": "Non esiste un contenitore BlobManagement denominato «{ContainerName}».",
+    "BlobManagement:BlobAlreadyExists": "Il contenitore BlobManagement «{ContainerName}» contiene già un file denominato «{BlobName}».",
+    "BlobManagement:BlobNotFound": "Il contenitore BlobManagement «{ContainerName}» non contiene alcun file denominato «{BlobName}».",
+    "BlobManagement:InvalidTicket": "Il link non è valido. Potrebbe essere scaduto o essere già stato usato.",
+    "BlobManagement:BlobManagementDisabled": "BlobManagement non è abilitato per questo tenant.",
+    "BlobManagement:StorageQuotaExceeded": "Il salvataggio di questo file supererebbe lo spazio BlobManagement di {StorageSize} MB.",
+    "PublicReadSizeNotAllowed": "{0} deve essere uno dei seguenti valori: {1}.",
+    "Permission:BlobManagement": "BlobManagement",
+    "Permission:Files": "File",
+    "Permission:Files.Upload": "Carica",
+    "Permission:Files.Delete": "Elimina",
+    "Feature:BlobManagementGroup": "BlobManagement",
+    "Feature:BlobManagementEnable": "Abilita BlobManagement",
+    "Feature:BlobManagementEnableDescription": "Indica se il tenant può archiviare file in BlobManagement.",
+    "Feature:BlobManagementStorageSize": "Spazio BlobManagement (MB)",
+    "Feature:BlobManagementStorageSizeDescription": "La quantità massima che il tenant può archiviare in BlobManagement, in megabyte. 0 significa nessun limite."
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "folders": {
+    "items": {
+      "src": {},
+      "test": {},
+      "host": {}
+    }
+  },
+  "packages": {
+    "Dignite.Abp.BlobManagement.Domain": {
+      "path": "src/Dignite.Abp.BlobManagement.Domain/Dignite.Abp.BlobManagement.Domain.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Abp.BlobManagement.Application.Contracts": {
+      "path": "src/Dignite.Abp.BlobManagement.Application.Contracts/Dignite.Abp.BlobManagement.Application.Contracts.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Abp.BlobManagement.Application": {
+      "path": "src/Dignite.Abp.BlobManagement.Application/Dignite.Abp.BlobManagement.Application.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Abp.BlobManagement.EntityFrameworkCore": {
+      "path": "src/Dignite.Abp.BlobManagement.EntityFrameworkCore/Dignite.Abp.BlobManagement.EntityFrameworkCore.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Abp.BlobManagement.MongoDB": {
+      "path": "src/Dignite.Abp.BlobManagement.MongoDB/Dignite.Abp.BlobManagement.MongoDB.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Abp.BlobManagement.HttpApi": {
+      "path": "src/Dignite.Abp.BlobManagement.HttpApi/Dignite.Abp.BlobManagement.HttpApi.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Abp.BlobManagement.HttpApi.Client": {
+      "path": "src/Dignite.Abp.BlobManagement.HttpApi.Client/Dignite.Abp.BlobManagement.HttpApi.Client.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Abp.BlobManagement.TestBase": {
+      "path": "test/Dignite.Abp.BlobManagement.TestBase/Dignite.Abp.BlobManagement.TestBase.abppkg",
+      "folder": "test"
+    },
+    "Dignite.Abp.BlobManagement.EntityFrameworkCore.Tests": {
+      "path": "test/Dignite.Abp.BlobManagement.EntityFrameworkCore.Tests/Dignite.Abp.BlobManagement.EntityFrameworkCore.Tests.abppkg",
+      "folder": "test"
+    },
+    "Dignite.Abp.BlobManagement.MongoDB.Tests": {
+      "path": "test/Dignite.Abp.BlobManagement.MongoDB.Tests/Dignite.Abp.BlobManagement.MongoDB.Tests.abppkg",
+      "folder": "test"
+    },
+    "Dignite.Abp.BlobManagement.Domain.Tests": {
+      "path": "test/Dignite.Abp.BlobManagement.Domain.Tests/Dignite.Abp.BlobManagement.Domain.Tests.abppkg",
+      "folder": "test"
+    },
+    "Dignite.Abp.BlobManagement.Application.Tests": {
+      "path": "test/Dignite.Abp.BlobManagement.Application.Tests/Dignite.Abp.BlobManagement.Application.Tests.abppkg",
+      "folder": "test"
+    },
+    "Dignite.Abp.BlobManagement.Domain.Shared": {
+      "path": "src/Dignite.Abp.BlobManagement.Domain.Shared/Dignite.Abp.BlobManagement.Domain.Shared.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Abp.BlobManagement.Installer": {
+       "path": "src/Dignite.Abp.BlobManagement.Installer/Dignite.Abp.BlobManagement.Installer.abppkg",
+       "folder": "src"
+    },
+    "Dignite.Abp.BlobStoring.BlobManagement": {
+      "path": "src/Dignite.Abp.BlobStoring.BlobManagement/Dignite.Abp.BlobStoring.BlobManagement.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Abp.BlobManagement.Mcp": {
+      "path": "src/Dignite.Abp.BlobManagement.Mcp/Dignite.Abp.BlobManagement.Mcp.abppkg",
+      "folder": "src"
+    },
+    "Dignite.Abp.BlobManagement.Host": {
+      "path": "host/Dignite.Abp.BlobManagement.Host/Dignite.Abp.BlobManagement.Host.abppkg",
+      "folder": "host"
+    }
+  }
+}

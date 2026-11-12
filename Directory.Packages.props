@@ -49,12 +49,12 @@
     <PackageVersion Include="Volo.Abp.Authorization.Abstractions" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore.TestBase" Version="10.7.0" />
-    <!-- drive/test/Dignite.Drive.HttpApi.Tests: resolves the tenant the remote BLOB provider sends (__tenant) -->
+    <!-- blob-management/test/Dignite.Abp.BlobManagement.HttpApi.Tests: resolves the tenant the remote BLOB provider sends (__tenant) -->
     <PackageVersion Include="Volo.Abp.AspNetCore.MultiTenancy" Version="10.7.0" />
     <!-- openiddict/ (and the EF Core store of its tests) -->
     <PackageVersion Include="Volo.Abp.OpenIddict.AspNetCore" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.OpenIddict.EntityFrameworkCore" Version="10.7.0" />
-    <!-- drive/: IApplicationFinder, to check the clients a Drive container allows where the host can look them up -->
+    <!-- blob-management/: IApplicationFinder, to check the clients a Blob Management container allows where the host can look them up -->
     <PackageVersion Include="Volo.Abp.OpenIddict.Domain.Shared" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore.Mvc" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI" Version="10.7.0" />
@@ -79,7 +79,7 @@
     <PackageVersion Include="Volo.Abp.BackgroundJobs.Abstractions" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.BackgroundWorkers" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.DistributedLocking.Abstractions" Version="10.7.0" />
-    <!-- drive/: IDataProtectionProvider, which signs the Drive's tickets. Only the abstractions: the host's ASP.NET Core
+    <!-- blob-management/: IDataProtectionProvider, which signs the BlobManagement's tickets. Only the abstractions: the host's ASP.NET Core
          provides the key ring. Same version as Microsoft.Extensions.FileProviders.Embedded below. -->
     <PackageVersion Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="10.0.12" />
     <PackageVersion Include="Volo.Abp.AspNetCore.SignalR" Version="10.7.0" />
@@ -89,8 +89,8 @@
     <PackageVersion Include="Volo.Abp.SettingManagement.Web" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Identity.Domain" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Identity.Domain.Shared" Version="10.7.0" />
-    <!-- drive/: the grant stores of its tests, which grant the Drive's permissions through ABP's permission manager.
-         The Drive's own packages do not reference Permission Management. -->
+    <!-- blob-management/: the grant stores of its tests, which grant the BlobManagement's permissions through ABP's permission manager.
+         The BlobManagement's own packages do not reference Permission Management. -->
     <PackageVersion Include="Volo.Abp.PermissionManagement.Domain" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.PermissionManagement.EntityFrameworkCore" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.PermissionManagement.MongoDB" Version="10.7.0" />
@@ -118,7 +118,7 @@
     SkiaSharp native assets for Linux: Volo.Abp.Imaging.SkiaSharp 10.7.0 depends only on SkiaSharp 3.119.0, which
     brings SkiaSharp.NativeAssets.Win32 and .macOS but not .Linux (ABP's own csproj adds it only when built on Linux,
     so the published nuspec does not list it). The test projects that run SkiaSharp (blob-storing's Imaging and
-    Imaging.SkiaSharp tests, the Drive's domain tests) reference it so they run on Linux CI runners. Same version as
+    Imaging.SkiaSharp tests, the BlobManagement's domain tests) reference it so they run on Linux CI runners. Same version as
     ABP 10.7.0's Directory.Packages.props. Test-only: Dignite.Abp.BlobStoring.Imaging references no image library, and
     Dignite.Abp.BlobStoring.Imaging.SkiaSharp follows ABP in leaving the Linux native assets to the host (its page
     under docs/en/blob-storing says so), since a host that does not run on Linux would carry them for nothing.

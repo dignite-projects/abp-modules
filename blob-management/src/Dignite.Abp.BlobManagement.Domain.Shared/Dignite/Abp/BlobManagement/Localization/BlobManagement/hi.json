@@ -1,0 +1,29 @@
+{
+  "culture": "hi",
+  "texts": {
+    "MyAccount": "मेरा खाता",
+    "SamplePageMessage": "BlobManagement मॉड्यूल के लिए एक नमूना पृष्ठ",
+    "Upload": "अपलोड करें",
+    "RemoveFile": "“{0}” हटाएँ",
+    "FileTooLarge": "“{0}” {1} से बड़ी है, जो अधिकतम अनुमत आकार है।",
+    "FileTypeNotAllowed": "“{0}” का फ़ाइल प्रकार स्वीकार्य नहीं है।",
+    "UploadFailed": "{1} में से {0} फ़ाइलें अपलोड नहीं हो सकीं।",
+    "NoFileSelected": "कोई फ़ाइल नहीं चुनी गई।",
+    "BlobManagement:ContainerNotFound": "“{ContainerName}” नाम का कोई BlobManagement कंटेनर नहीं है।",
+    "BlobManagement:BlobAlreadyExists": "BlobManagement कंटेनर “{ContainerName}” में “{BlobName}” नाम की फ़ाइल पहले से है।",
+    "BlobManagement:BlobNotFound": "BlobManagement कंटेनर “{ContainerName}” में “{BlobName}” नाम की कोई फ़ाइल नहीं है।",
+    "BlobManagement:InvalidTicket": "लिंक मान्य नहीं है। हो सकता है इसकी अवधि समाप्त हो गई हो या इसका उपयोग हो चुका हो।",
+    "BlobManagement:BlobManagementDisabled": "इस टेनेंट के लिए BlobManagement सक्षम नहीं है।",
+    "BlobManagement:StorageQuotaExceeded": "इस फ़ाइल को सहेजने से {StorageSize} MB का BlobManagement संग्रहण पार हो जाएगा।",
+    "PublicReadSizeNotAllowed": "{0} इनमें से एक होना चाहिए: {1}।",
+    "Permission:BlobManagement": "BlobManagement",
+    "Permission:Files": "फ़ाइलें",
+    "Permission:Files.Upload": "अपलोड",
+    "Permission:Files.Delete": "हटाना",
+    "Feature:BlobManagementGroup": "BlobManagement",
+    "Feature:BlobManagementEnable": "BlobManagement सक्षम करें",
+    "Feature:BlobManagementEnableDescription": "क्या टेनेंट BlobManagement में फ़ाइलें संग्रहीत कर सकता है।",
+    "Feature:BlobManagementStorageSize": "BlobManagement संग्रहण (MB)",
+    "Feature:BlobManagementStorageSizeDescription": "टेनेंट BlobManagement में अधिकतम कितना संग्रहीत कर सकता है, मेगाबाइट में। 0 का अर्थ है कोई सीमा नहीं।"
+  }
+}

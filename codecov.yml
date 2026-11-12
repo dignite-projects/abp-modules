@@ -6,7 +6,7 @@
 #     dotnet test Dignite.Abp.Modules.slnx --collect:"XPlat Code Coverage"
 #
 # .github/workflows/ci.yml uploads coverage six times per run, once per tree, under the
-# "blob-storing", "drive", "notifications", "flex-fields", "aspnetcore-mcp" and "openiddict" flags declared below - the
+# "blob-management", "blob-storing", "notifications", "flex-fields", "aspnetcore-mcp" and "openiddict" flags declared below - the
 # trees are otherwise-unrelated (see CLAUDE.md), so a single blended number would hide which one
 # actually regressed. Until the repo is
 # connected to Codecov (and a CODECOV_TOKEN secret is set) this whole file is inert and harmless.
@@ -26,9 +26,9 @@ flag_management:
     - name: blob-storing
       paths:
         - blob-storing/
-    - name: drive
+    - name: blob-management
       paths:
-        - drive/
+        - blob-management/
     - name: notifications
       paths:
         - notifications/

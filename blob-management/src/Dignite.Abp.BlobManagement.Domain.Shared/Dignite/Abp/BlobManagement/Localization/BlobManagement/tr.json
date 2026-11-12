@@ -1,0 +1,29 @@
+{
+  "culture": "tr",
+  "texts": {
+    "MyAccount": "Hesabım",
+    "SamplePageMessage": "BlobManagement modulünden örnek bir sayfa",
+    "Upload": "Yükle",
+    "RemoveFile": "“{0}” öğesini kaldır",
+    "FileTooLarge": "“{0}”, izin verilen en büyük boyut olan {1} değerinden büyük.",
+    "FileTypeNotAllowed": "“{0}” dosya türüne izin verilmiyor.",
+    "UploadFailed": "{1} dosyadan {0} tanesi yüklenemedi.",
+    "NoFileSelected": "Dosya seçilmedi.",
+    "BlobManagement:ContainerNotFound": "“{ContainerName}” adlı bir BlobManagement kapsayıcısı yok.",
+    "BlobManagement:BlobAlreadyExists": "“{ContainerName}” BlobManagement kapsayıcısında zaten “{BlobName}” adlı bir dosya var.",
+    "BlobManagement:BlobNotFound": "“{ContainerName}” BlobManagement kapsayıcısında “{BlobName}” adlı bir dosya yok.",
+    "BlobManagement:InvalidTicket": "Bağlantı geçerli değil. Süresi dolmuş veya zaten kullanılmış olabilir.",
+    "BlobManagement:BlobManagementDisabled": "BlobManagement bu kiracı için etkin değil.",
+    "BlobManagement:StorageQuotaExceeded": "Bu dosyayı kaydetmek {StorageSize} MB BlobManagement depolama alanını aşar.",
+    "PublicReadSizeNotAllowed": "{0} şunlardan biri olmalıdır: {1}.",
+    "Permission:BlobManagement": "BlobManagement",
+    "Permission:Files": "Dosyalar",
+    "Permission:Files.Upload": "Yükleme",
+    "Permission:Files.Delete": "Silme",
+    "Feature:BlobManagementGroup": "BlobManagement",
+    "Feature:BlobManagementEnable": "BlobManagement'ı etkinleştir",
+    "Feature:BlobManagementEnableDescription": "Kiracının BlobManagement'da dosya depolayıp depolayamayacağı.",
+    "Feature:BlobManagementStorageSize": "BlobManagement depolama alanı (MB)",
+    "Feature:BlobManagementStorageSizeDescription": "Kiracının BlobManagement'da depolayabileceği en fazla miktar, megabayt cinsinden. 0 sınır olmadığı anlamına gelir."
+  }
+}

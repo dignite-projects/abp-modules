@@ -1,0 +1,29 @@
+{
+  "culture": "en-GB",
+  "texts": {
+    "MyAccount": "My account",
+    "SamplePageMessage": "A sample page for the BlobManagement module",
+    "Upload": "Upload",
+    "RemoveFile": "Remove '{0}'",
+    "FileTooLarge": "'{0}' is larger than {1}, the most this drive takes.",
+    "FileTypeNotAllowed": "'{0}' is not a file type this drive accepts.",
+    "UploadFailed": "{0} of {1} files could not be uploaded.",
+    "NoFileSelected": "No file chosen.",
+    "BlobManagement:ContainerNotFound": "There is no BlobManagement container named '{ContainerName}'.",
+    "BlobManagement:BlobAlreadyExists": "The BlobManagement container '{ContainerName}' already has a file named '{BlobName}'.",
+    "BlobManagement:BlobNotFound": "The BlobManagement container '{ContainerName}' has no file named '{BlobName}'.",
+    "BlobManagement:InvalidTicket": "The link is not valid. It may have expired or been used already.",
+    "BlobManagement:BlobManagementDisabled": "The BlobManagement is not enabled for this tenant.",
+    "BlobManagement:StorageQuotaExceeded": "Storing this file would exceed the BlobManagement storage of {StorageSize} MB.",
+    "PublicReadSizeNotAllowed": "{0} must be one of: {1}.",
+    "Permission:BlobManagement": "BlobManagement",
+    "Permission:Files": "Files",
+    "Permission:Files.Upload": "Upload",
+    "Permission:Files.Delete": "Delete",
+    "Feature:BlobManagementGroup": "BlobManagement",
+    "Feature:BlobManagementEnable": "Enable the BlobManagement",
+    "Feature:BlobManagementEnableDescription": "Whether the tenant may store files in the BlobManagement.",
+    "Feature:BlobManagementStorageSize": "BlobManagement storage (MB)",
+    "Feature:BlobManagementStorageSizeDescription": "The most the tenant may store in the BlobManagement, in megabytes. 0 means no limit."
+  }
+}

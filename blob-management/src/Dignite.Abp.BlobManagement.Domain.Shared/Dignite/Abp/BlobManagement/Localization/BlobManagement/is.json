@@ -1,0 +1,29 @@
+{
+  "culture": "is",
+  "texts": {
+    "MyAccount": "Minn aðgangur",
+    "SamplePageMessage": "Dæmi um síðu fyrir BlobManagement eininguna",
+    "Upload": "Hlaða upp",
+    "RemoveFile": "Fjarlægja „{0}“",
+    "FileTooLarge": "„{0}“ er stærri en {1}, sem er hámarksstærð.",
+    "FileTypeNotAllowed": "Skráargerð „{0}“ er ekki leyfð.",
+    "UploadFailed": "Ekki tókst að hlaða upp {0} af {1} skrám.",
+    "NoFileSelected": "Engin skrá valin.",
+    "BlobManagement:ContainerNotFound": "Það er enginn BlobManagement-gámur sem heitir „{ContainerName}“.",
+    "BlobManagement:BlobAlreadyExists": "BlobManagement-gámurinn „{ContainerName}“ er þegar með skrá sem heitir „{BlobName}“.",
+    "BlobManagement:BlobNotFound": "BlobManagement-gámurinn „{ContainerName}“ er ekki með skrá sem heitir „{BlobName}“.",
+    "BlobManagement:InvalidTicket": "Tengillinn er ekki gildur. Hann gæti verið útrunninn eða þegar notaður.",
+    "BlobManagement:BlobManagementDisabled": "BlobManagement er ekki virkt fyrir þennan leigjanda.",
+    "BlobManagement:StorageQuotaExceeded": "Ef þessi skrá er vistuð færi hún yfir {StorageSize} MB BlobManagement-geymslupláss.",
+    "PublicReadSizeNotAllowed": "{0} verður að vera eitt af eftirfarandi: {1}.",
+    "Permission:BlobManagement": "BlobManagement",
+    "Permission:Files": "Skrár",
+    "Permission:Files.Upload": "Hlaða upp",
+    "Permission:Files.Delete": "Eyða",
+    "Feature:BlobManagementGroup": "BlobManagement",
+    "Feature:BlobManagementEnable": "Virkja BlobManagement",
+    "Feature:BlobManagementEnableDescription": "Hvort leigjandinn megi vista skrár í BlobManagement.",
+    "Feature:BlobManagementStorageSize": "BlobManagement-geymslupláss (MB)",
+    "Feature:BlobManagementStorageSizeDescription": "Hámarksmagn sem leigjandinn má vista í BlobManagement, í megabætum. 0 þýðir ekkert hámark."
+  }
+}

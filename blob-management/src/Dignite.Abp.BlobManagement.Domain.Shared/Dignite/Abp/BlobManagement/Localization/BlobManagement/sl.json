@@ -1,0 +1,29 @@
+{
+  "culture": "sl",
+  "texts": {
+    "MyAccount": "Moj račun",
+    "SamplePageMessage": "Vzorčna stran za modul BlobManagement",
+    "Upload": "Naloži",
+    "RemoveFile": "Odstrani »{0}«",
+    "FileTooLarge": "»{0}« je večja od {1}, kar je največja dovoljena velikost.",
+    "FileTypeNotAllowed": "Vrsta datoteke »{0}« ni dovoljena.",
+    "UploadFailed": "{0} od {1} datotek ni bilo mogoče naložiti.",
+    "NoFileSelected": "Nobena datoteka ni izbrana.",
+    "BlobManagement:ContainerNotFound": "Vsebnik BlobManagement z imenom »{ContainerName}« ne obstaja.",
+    "BlobManagement:BlobAlreadyExists": "Vsebnik BlobManagement »{ContainerName}« že vsebuje datoteko z imenom »{BlobName}«.",
+    "BlobManagement:BlobNotFound": "Vsebnik BlobManagement »{ContainerName}« ne vsebuje datoteke z imenom »{BlobName}«.",
+    "BlobManagement:InvalidTicket": "Povezava ni veljavna. Morda je potekla ali je bila že uporabljena.",
+    "BlobManagement:BlobManagementDisabled": "BlobManagement za tega najemnika ni omogočen.",
+    "BlobManagement:StorageQuotaExceeded": "Shranjevanje te datoteke bi preseglo prostor BlobManagement v velikosti {StorageSize} MB.",
+    "PublicReadSizeNotAllowed": "{0} mora biti ena od vrednosti: {1}.",
+    "Permission:BlobManagement": "BlobManagement",
+    "Permission:Files": "Datoteke",
+    "Permission:Files.Upload": "Nalaganje",
+    "Permission:Files.Delete": "Brisanje",
+    "Feature:BlobManagementGroup": "BlobManagement",
+    "Feature:BlobManagementEnable": "Omogoči BlobManagement",
+    "Feature:BlobManagementEnableDescription": "Ali lahko najemnik shranjuje datoteke v BlobManagement.",
+    "Feature:BlobManagementStorageSize": "Prostor BlobManagement (MB)",
+    "Feature:BlobManagementStorageSizeDescription": "Največ, kar lahko najemnik shrani v BlobManagement, v megabajtih. 0 pomeni brez omejitve."
+  }
+}

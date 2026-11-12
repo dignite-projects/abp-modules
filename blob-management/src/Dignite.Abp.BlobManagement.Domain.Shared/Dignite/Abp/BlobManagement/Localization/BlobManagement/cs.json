@@ -1,0 +1,29 @@
+{
+  "culture": "cs",
+  "texts": {
+    "MyAccount": "Spravovat profil",
+    "SamplePageMessage": "Ukázková stránka pro modul BlobManagement",
+    "Upload": "Nahrát",
+    "RemoveFile": "Odebrat „{0}“",
+    "FileTooLarge": "„{0}“ je větší než {1}, což je maximální povolená velikost.",
+    "FileTypeNotAllowed": "Typ souboru „{0}“ není povolen.",
+    "UploadFailed": "{0} z {1} souborů se nepodařilo nahrát.",
+    "NoFileSelected": "Není vybrán žádný soubor.",
+    "BlobManagement:ContainerNotFound": "Neexistuje žádný kontejner BlobManagement s názvem „{ContainerName}“.",
+    "BlobManagement:BlobAlreadyExists": "Kontejner BlobManagement „{ContainerName}“ už obsahuje soubor s názvem „{BlobName}“.",
+    "BlobManagement:BlobNotFound": "Kontejner BlobManagement „{ContainerName}“ neobsahuje soubor s názvem „{BlobName}“.",
+    "BlobManagement:InvalidTicket": "Odkaz není platný. Možná vypršel nebo už byl použit.",
+    "BlobManagement:BlobManagementDisabled": "BlobManagement není pro tohoto tenanta povolen.",
+    "BlobManagement:StorageQuotaExceeded": "Uložením tohoto souboru by se překročilo úložiště BlobManagement o velikosti {StorageSize} MB.",
+    "PublicReadSizeNotAllowed": "{0} musí být jedna z hodnot: {1}.",
+    "Permission:BlobManagement": "BlobManagement",
+    "Permission:Files": "Soubory",
+    "Permission:Files.Upload": "Nahrávání",
+    "Permission:Files.Delete": "Mazání",
+    "Feature:BlobManagementGroup": "BlobManagement",
+    "Feature:BlobManagementEnable": "Povolit BlobManagement",
+    "Feature:BlobManagementEnableDescription": "Zda tenant může ukládat soubory do BlobManagement.",
+    "Feature:BlobManagementStorageSize": "Úložiště BlobManagement (MB)",
+    "Feature:BlobManagementStorageSizeDescription": "Nejvíce, kolik může tenant uložit do BlobManagement, v megabajtech. 0 znamená bez omezení."
+  }
+}

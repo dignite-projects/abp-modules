@@ -1,0 +1,118 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Shouldly;
+using Volo.Abp;
+using Volo.Abp.Data;
+using Volo.Abp.Modularity;
+using Xunit;
+
+namespace Dignite.Abp.BlobManagement;
+
+/// <summary>
+/// Files in user drives through <see cref="FileDescriptorManager"/>, and the line between the two kinds of container:
+/// the name-addressed operations serve system containers, the user-drive operation user drives.
+/// </summary>
+public abstract class UserBlobManagementFiles_Tests<TStartupModule> : BlobManagementDomainTestBase<TStartupModule>
+    where TStartupModule : IAbpModule
+{
+    private readonly FileDescriptorManager _fileDescriptorManager;
+    private readonly IFileDescriptorRepository _fileRepository;
+
+    protected UserBlobManagementFiles_Tests()
+    {
+        _fileDescriptorManager = GetRequiredService<FileDescriptorManager>();
+        _fileRepository = GetRequiredService<IFileDescriptorRepository>();
+    }
+
+    [Fact]
+    public async Task Names_Should_Repeat_In_A_User_BlobManagement()
+    {
+        var first = await UploadAsync(BlobManagementTestContainers.UserBlobManagement, "minutes.pdf", "first");
+        var second = await UploadAsync(BlobManagementTestContainers.UserBlobManagement, "minutes.pdf", "second");
+
+        second.Id.ShouldNotBe(first.Id);
+        // A user-drive name is not an address: no name key, so the unique index does not keep them apart.
+        first.NameKey.ShouldBeNull();
+        second.NameKey.ShouldBeNull();
+        first.MimeType.ShouldBe("application/pdf");
+    }
+
+    [Fact]
+    public async Task Same_Content_Should_Share_One_Blob_In_A_User_BlobManagement()
+    {
+        var content = "shared content " + Guid.NewGuid();
+
+        var first = await UploadAsync(BlobManagementTestContainers.UserBlobManagement, "a.pdf", content);
+        var second = await UploadAsync(BlobManagementTestContainers.UserBlobManagement, "b.pdf", content);
+
+        second.BlobName.ShouldBe(first.BlobName);
+        second.OwnsBlob().ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task A_Callback_Should_Set_Fields_Before_The_Row_Is_Inserted_When_Storing_And_When_Sharing()
+    {
+        var content = "configured " + Guid.NewGuid();
+
+        var stored = await UploadAsync(BlobManagementTestContainers.UserBlobManagement, "first.pdf", content, file => file.SetProperty("Test:Marker", "stored"));
+        var shared = await UploadAsync(BlobManagementTestContainers.UserBlobManagement, "second.pdf", content, file => file.SetProperty("Test:Marker", "shared"));
+
+        stored.OwnsBlob().ShouldBeTrue();
+        shared.OwnsBlob().ShouldBeFalse();
+        shared.BlobName.ShouldBe(stored.BlobName);
+
+        // Read back: the values were in the inserted rows, which nothing updated.
+        (await WithUnitOfWorkAsync(() => _fileRepository.GetAsync(stored.Id))).GetProperty<string>("Test:Marker").ShouldBe("stored");
+        (await WithUnitOfWorkAsync(() => _fileRepository.GetAsync(shared.Id))).GetProperty<string>("Test:Marker").ShouldBe("shared");
+        stored.LastModificationTime.ShouldBeNull();
+        shared.LastModificationTime.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task A_Failing_Callback_Should_Fail_The_Upload_And_Store_Nothing()
+    {
+        var name = Guid.NewGuid().ToString("N") + ".pdf";
+
+        await Should.ThrowAsync<InvalidOperationException>(() => UploadAsync(
+            BlobManagementTestContainers.UserBlobManagement, name, null, _ => throw new InvalidOperationException("refused")));
+
+        (await WithUnitOfWorkAsync(() => _fileRepository.GetListAsync())).ShouldNotContain(f => f.Name == name);
+    }
+
+    [Fact]
+    public async Task The_Two_Kinds_Of_Container_Should_Not_See_Each_Other()
+    {
+        // The name-addressed operations do not reach a user drive...
+        await ShouldBeUnknownContainerAsync(() => WithUnitOfWorkAsync(async () =>
+        {
+            using var stream = new MemoryStream(BlobManagementTestFiles.Pdf());
+            return await _fileDescriptorManager.CreateAsync(BlobManagementTestContainers.UserBlobManagement, "a.pdf", stream);
+        }));
+        await ShouldBeUnknownContainerAsync(() =>
+            WithUnitOfWorkAsync(() => _fileDescriptorManager.FindAsync(BlobManagementTestContainers.UserBlobManagement, "a.pdf")));
+
+        // ...and the user-drive operation does not reach a system container.
+        await ShouldBeUnknownContainerAsync(() => UploadAsync(BlobManagementTestContainers.Files, "a.pdf"));
+    }
+
+    private Task<FileDescriptor> UploadAsync(
+        string containerName,
+        string name,
+        string? content = null,
+        Action<FileDescriptor>? configureFile = null)
+    {
+        return WithUnitOfWorkAsync(async () =>
+        {
+            using var stream = new MemoryStream(BlobManagementTestFiles.Pdf(content ?? Guid.NewGuid().ToString()));
+            return await _fileDescriptorManager.UploadAsync(containerName, name, stream, configureFile);
+        });
+    }
+
+    private static async Task ShouldBeUnknownContainerAsync(Func<Task> action)
+    {
+        var exception = await Should.ThrowAsync<BusinessException>(action);
+        exception.Code.ShouldBe(BlobManagementErrorCodes.ContainerNotFound);
+    }
+}

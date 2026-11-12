@@ -1,0 +1,29 @@
+{
+  "culture": "vi",
+  "texts": {
+    "MyAccount": "Tài khoản của tôi",
+    "SamplePageMessage": "Trang mẫu cho mô-đun BlobManagement",
+    "Upload": "Tải lên",
+    "RemoveFile": "Gỡ “{0}”",
+    "FileTooLarge": "“{0}” lớn hơn {1}, kích thước tối đa được phép.",
+    "FileTypeNotAllowed": "Loại tệp của “{0}” không được chấp nhận.",
+    "UploadFailed": "Không thể tải lên {0} trong số {1} tệp.",
+    "NoFileSelected": "Chưa chọn tệp nào.",
+    "BlobManagement:ContainerNotFound": "Không có vùng chứa BlobManagement nào tên “{ContainerName}”.",
+    "BlobManagement:BlobAlreadyExists": "Vùng chứa BlobManagement “{ContainerName}” đã có tệp tên “{BlobName}”.",
+    "BlobManagement:BlobNotFound": "Vùng chứa BlobManagement “{ContainerName}” không có tệp nào tên “{BlobName}”.",
+    "BlobManagement:InvalidTicket": "Liên kết không hợp lệ. Liên kết có thể đã hết hạn hoặc đã được sử dụng.",
+    "BlobManagement:BlobManagementDisabled": "BlobManagement chưa được bật cho đơn vị thuê này.",
+    "BlobManagement:StorageQuotaExceeded": "Lưu tệp này sẽ vượt quá dung lượng lưu trữ BlobManagement {StorageSize} MB.",
+    "PublicReadSizeNotAllowed": "{0} phải là một trong các giá trị: {1}.",
+    "Permission:BlobManagement": "BlobManagement",
+    "Permission:Files": "Tệp",
+    "Permission:Files.Upload": "Tải lên",
+    "Permission:Files.Delete": "Xóa",
+    "Feature:BlobManagementGroup": "BlobManagement",
+    "Feature:BlobManagementEnable": "Bật BlobManagement",
+    "Feature:BlobManagementEnableDescription": "Đơn vị thuê có được lưu trữ tệp trong BlobManagement hay không.",
+    "Feature:BlobManagementStorageSize": "Dung lượng BlobManagement (MB)",
+    "Feature:BlobManagementStorageSizeDescription": "Dung lượng tối đa mà đơn vị thuê có thể lưu trữ trong BlobManagement, tính bằng megabyte. 0 nghĩa là không giới hạn."
+  }
+}

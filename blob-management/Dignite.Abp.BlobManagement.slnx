@@ -1,0 +1,33 @@
+<Solution>
+    <Configurations>
+        <Platform Name="Any CPU" />
+    </Configurations>
+
+    <Folder Name="/src/">
+        <Project Path="src/Dignite.Abp.BlobManagement.Domain.Shared/Dignite.Abp.BlobManagement.Domain.Shared.csproj" />
+        <Project Path="src/Dignite.Abp.BlobManagement.Domain/Dignite.Abp.BlobManagement.Domain.csproj" />
+        <Project Path="src/Dignite.Abp.BlobManagement.Application.Contracts/Dignite.Abp.BlobManagement.Application.Contracts.csproj" />
+        <Project Path="src/Dignite.Abp.BlobManagement.Application/Dignite.Abp.BlobManagement.Application.csproj" />
+        <Project Path="src/Dignite.Abp.BlobManagement.EntityFrameworkCore/Dignite.Abp.BlobManagement.EntityFrameworkCore.csproj" />
+        <Project Path="src/Dignite.Abp.BlobManagement.MongoDB/Dignite.Abp.BlobManagement.MongoDB.csproj" />
+        <Project Path="src/Dignite.Abp.BlobManagement.HttpApi/Dignite.Abp.BlobManagement.HttpApi.csproj" />
+        <Project Path="src/Dignite.Abp.BlobManagement.HttpApi.Client/Dignite.Abp.BlobManagement.HttpApi.Client.csproj" />
+        <Project Path="src/Dignite.Abp.BlobManagement.Installer/Dignite.Abp.BlobManagement.Installer.csproj" />
+        <Project Path="src/Dignite.Abp.BlobStoring.BlobManagement/Dignite.Abp.BlobStoring.BlobManagement.csproj" />
+        <Project Path="src/Dignite.Abp.BlobManagement.Mcp/Dignite.Abp.BlobManagement.Mcp.csproj" />
+    </Folder>
+    
+    <Folder Name="/test/">
+        <Project Path="test/Dignite.Abp.BlobManagement.TestBase/Dignite.Abp.BlobManagement.TestBase.csproj" />
+        <Project Path="test/Dignite.Abp.BlobManagement.EntityFrameworkCore.Tests/Dignite.Abp.BlobManagement.EntityFrameworkCore.Tests.csproj" />
+        <Project Path="test/Dignite.Abp.BlobManagement.MongoDB.Tests/Dignite.Abp.BlobManagement.MongoDB.Tests.csproj" />
+        <Project Path="test/Dignite.Abp.BlobManagement.Domain.Tests/Dignite.Abp.BlobManagement.Domain.Tests.csproj" />
+        <Project Path="test/Dignite.Abp.BlobManagement.Application.Tests/Dignite.Abp.BlobManagement.Application.Tests.csproj" />
+        <Project Path="test/Dignite.Abp.BlobManagement.HttpApi.Tests/Dignite.Abp.BlobManagement.HttpApi.Tests.csproj" />
+        <Project Path="test/Dignite.Abp.BlobManagement.Mcp.Tests/Dignite.Abp.BlobManagement.Mcp.Tests.csproj" />
+    </Folder>
+
+    <Folder Name="/host/">
+        <Project Path="host/Dignite.Abp.BlobManagement.Host/Dignite.Abp.BlobManagement.Host.csproj" />
+    </Folder>
+</Solution>

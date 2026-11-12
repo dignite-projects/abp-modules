@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>ABP BLOB storing provider that keeps a container's bytes in a Dignite BlobManagement.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.BlobStoring" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.Abp.BlobManagement.Application.Contracts\Dignite.Abp.BlobManagement.Application.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

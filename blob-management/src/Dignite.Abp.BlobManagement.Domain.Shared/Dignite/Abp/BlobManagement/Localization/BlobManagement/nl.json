@@ -1,0 +1,29 @@
+{
+  "culture": "nl",
+  "texts": {
+    "MyAccount": "Mijn rekening",
+    "SamplePageMessage": "Een voorbeeldpagina voor de BlobManagement module",
+    "Upload": "Uploaden",
+    "RemoveFile": "'{0}' verwijderen",
+    "FileTooLarge": "'{0}' is groter dan {1}, de maximaal toegestane grootte.",
+    "FileTypeNotAllowed": "Het bestandstype van '{0}' is niet toegestaan.",
+    "UploadFailed": "{0} van de {1} bestanden konden niet worden geüpload.",
+    "NoFileSelected": "Geen bestand gekozen.",
+    "BlobManagement:ContainerNotFound": "Er is geen BlobManagement-container met de naam '{ContainerName}'.",
+    "BlobManagement:BlobAlreadyExists": "De BlobManagement-container '{ContainerName}' heeft al een bestand met de naam '{BlobName}'.",
+    "BlobManagement:BlobNotFound": "De BlobManagement-container '{ContainerName}' heeft geen bestand met de naam '{BlobName}'.",
+    "BlobManagement:InvalidTicket": "De link is niet geldig. Mogelijk is deze verlopen of al gebruikt.",
+    "BlobManagement:BlobManagementDisabled": "BlobManagement is niet ingeschakeld voor deze tenant.",
+    "BlobManagement:StorageQuotaExceeded": "Als u dit bestand opslaat, wordt de BlobManagement-opslag van {StorageSize} MB overschreden.",
+    "PublicReadSizeNotAllowed": "{0} moet een van de volgende waarden zijn: {1}.",
+    "Permission:BlobManagement": "BlobManagement",
+    "Permission:Files": "Bestanden",
+    "Permission:Files.Upload": "Uploaden",
+    "Permission:Files.Delete": "Verwijderen",
+    "Feature:BlobManagementGroup": "BlobManagement",
+    "Feature:BlobManagementEnable": "BlobManagement inschakelen",
+    "Feature:BlobManagementEnableDescription": "Of de tenant bestanden in BlobManagement mag opslaan.",
+    "Feature:BlobManagementStorageSize": "BlobManagement-opslag (MB)",
+    "Feature:BlobManagementStorageSizeDescription": "De maximale hoeveelheid die de tenant in BlobManagement mag opslaan, in megabytes. 0 betekent geen limiet."
+  }
+}

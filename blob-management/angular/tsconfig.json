@@ -1,0 +1,24 @@
+/* To learn more about this file see: https://angular.io/config/tsconfig. */
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "outDir": "./dist/out-tsc",
+    "sourceMap": true,
+    "declaration": false,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "bundler",
+    "module": "ES2022",
+    "importHelpers": true,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "lib": ["ES2022", "dom", "esnext.disposable"],
+    "paths": {
+      "@dignite/ng.blob-management": ["./projects/blob-management/src/public-api.ts"]
+    },
+    "useDefineForClassFields": false
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false
+  }
+}

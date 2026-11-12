@@ -1,0 +1,29 @@
+{
+  "culture": "fi",
+  "texts": {
+    "MyAccount": "Tilini",
+    "SamplePageMessage": "Esimerkkisivu BlobManagement-moduulille",
+    "Upload": "Lähetä",
+    "RemoveFile": "Poista ”{0}”",
+    "FileTooLarge": "”{0}” on suurempi kuin {1}, joka on suurin sallittu koko.",
+    "FileTypeNotAllowed": "Tiedostotyyppiä ”{0}” ei sallita.",
+    "UploadFailed": "{0}/{1} tiedostoa ei voitu lähettää.",
+    "NoFileSelected": "Tiedostoa ei ole valittu.",
+    "BlobManagement:ContainerNotFound": "BlobManagement-säilöä nimeltä ”{ContainerName}” ei ole.",
+    "BlobManagement:BlobAlreadyExists": "BlobManagement-säilössä ”{ContainerName}” on jo tiedosto nimeltä ”{BlobName}”.",
+    "BlobManagement:BlobNotFound": "BlobManagement-säilössä ”{ContainerName}” ei ole tiedostoa nimeltä ”{BlobName}”.",
+    "BlobManagement:InvalidTicket": "Linkki ei ole kelvollinen. Se on ehkä vanhentunut tai jo käytetty.",
+    "BlobManagement:BlobManagementDisabled": "BlobManagement ei ole käytössä tälle vuokralaiselle.",
+    "BlobManagement:StorageQuotaExceeded": "Tämän tiedoston tallentaminen ylittäisi {StorageSize} Mt:n BlobManagement-tallennustilan.",
+    "PublicReadSizeNotAllowed": "Arvon {0} on oltava jokin seuraavista: {1}.",
+    "Permission:BlobManagement": "BlobManagement",
+    "Permission:Files": "Tiedostot",
+    "Permission:Files.Upload": "Lähettäminen",
+    "Permission:Files.Delete": "Poistaminen",
+    "Feature:BlobManagementGroup": "BlobManagement",
+    "Feature:BlobManagementEnable": "Ota BlobManagement käyttöön",
+    "Feature:BlobManagementEnableDescription": "Saako vuokralainen tallentaa tiedostoja Driveen.",
+    "Feature:BlobManagementStorageSize": "BlobManagement-tallennustila (Mt)",
+    "Feature:BlobManagementStorageSizeDescription": "Enimmäismäärä, jonka vuokralainen voi tallentaa Driveen, megatavuina. 0 tarkoittaa, ettei rajaa ole."
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "culture": "sk",
+  "texts": {
+    "MyAccount": "Môj účet",
+    "SamplePageMessage": "Ukážka stránky pre modul BlobManagement",
+    "Upload": "Nahrať",
+    "RemoveFile": "Odobrať „{0}“",
+    "FileTooLarge": "„{0}“ je väčší ako {1}, čo je maximálna povolená veľkosť.",
+    "FileTypeNotAllowed": "Typ súboru „{0}“ nie je povolený.",
+    "UploadFailed": "{0} z {1} súborov sa nepodarilo nahrať.",
+    "NoFileSelected": "Nie je vybraný žiadny súbor.",
+    "BlobManagement:ContainerNotFound": "Neexistuje žiadny kontajner BlobManagement s názvom „{ContainerName}“.",
+    "BlobManagement:BlobAlreadyExists": "Kontajner BlobManagement „{ContainerName}“ už obsahuje súbor s názvom „{BlobName}“.",
+    "BlobManagement:BlobNotFound": "Kontajner BlobManagement „{ContainerName}“ neobsahuje súbor s názvom „{BlobName}“.",
+    "BlobManagement:InvalidTicket": "Odkaz nie je platný. Možno vypršal alebo už bol použitý.",
+    "BlobManagement:BlobManagementDisabled": "BlobManagement nie je pre tohto nájomníka povolený.",
+    "BlobManagement:StorageQuotaExceeded": "Uložením tohto súboru by sa prekročilo úložisko BlobManagement s veľkosťou {StorageSize} MB.",
+    "PublicReadSizeNotAllowed": "{0} musí byť jedna z hodnôt: {1}.",
+    "Permission:BlobManagement": "BlobManagement",
+    "Permission:Files": "Súbory",
+    "Permission:Files.Upload": "Nahrávanie",
+    "Permission:Files.Delete": "Odstraňovanie",
+    "Feature:BlobManagementGroup": "BlobManagement",
+    "Feature:BlobManagementEnable": "Povoliť BlobManagement",
+    "Feature:BlobManagementEnableDescription": "Či nájomník môže ukladať súbory do BlobManagement.",
+    "Feature:BlobManagementStorageSize": "Úložisko BlobManagement (MB)",
+    "Feature:BlobManagementStorageSizeDescription": "Najviac, koľko môže nájomník uložiť do BlobManagement, v megabajtoch. 0 znamená bez obmedzenia."
+  }
+}

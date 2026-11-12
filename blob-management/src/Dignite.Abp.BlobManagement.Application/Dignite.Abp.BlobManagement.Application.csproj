@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>Application services of Dignite BlobManagement.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.Mapperly" />
+    <PackageReference Include="Volo.Abp.Ddd.Application" />
+    <!-- Only for IApplicationFinder (BlobManagementContainerValidator); resolved optionally, no module dependency. -->
+    <PackageReference Include="Volo.Abp.OpenIddict.Domain.Shared" />
+    <!-- IDataProtectionProvider, which signs the tickets (BlobManagementTicketProtector); the host provides the key ring. -->
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.Abp.BlobManagement.Application.Contracts\Dignite.Abp.BlobManagement.Application.Contracts.csproj" />
+    <ProjectReference Include="..\Dignite.Abp.BlobManagement.Domain\Dignite.Abp.BlobManagement.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

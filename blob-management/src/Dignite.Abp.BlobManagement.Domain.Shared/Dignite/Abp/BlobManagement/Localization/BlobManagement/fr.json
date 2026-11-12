@@ -1,0 +1,29 @@
+{
+ "culture": "fr",
+ "texts": {
+  "MyAccount": "Mon compte",
+  "SamplePageMessage": "Exemple de page pour le module BlobManagement",
+  "Upload": "Téléverser",
+  "RemoveFile": "Retirer « {0} »",
+  "FileTooLarge": "« {0} » dépasse {1}, la taille maximale autorisée.",
+  "FileTypeNotAllowed": "Le type de fichier de « {0} » n’est pas accepté.",
+  "UploadFailed": "{0} fichier(s) sur {1} n’ont pas pu être téléversés.",
+  "NoFileSelected": "Aucun fichier choisi.",
+  "BlobManagement:ContainerNotFound": "Il n’existe aucun conteneur BlobManagement nommé « {ContainerName} ».",
+  "BlobManagement:BlobAlreadyExists": "Le conteneur BlobManagement « {ContainerName} » contient déjà un fichier nommé « {BlobName} ».",
+  "BlobManagement:BlobNotFound": "Le conteneur BlobManagement « {ContainerName} » ne contient aucun fichier nommé « {BlobName} ».",
+  "BlobManagement:InvalidTicket": "Le lien n’est pas valide. Il a peut-être expiré ou a déjà été utilisé.",
+  "BlobManagement:BlobManagementDisabled": "BlobManagement n’est pas activé pour ce locataire.",
+  "BlobManagement:StorageQuotaExceeded": "L’enregistrement de ce fichier dépasserait l’espace BlobManagement de {StorageSize} Mo.",
+  "PublicReadSizeNotAllowed": "{0} doit être l’une des valeurs suivantes : {1}.",
+  "Permission:BlobManagement": "BlobManagement",
+  "Permission:Files": "Fichiers",
+  "Permission:Files.Upload": "Téléverser",
+  "Permission:Files.Delete": "Supprimer",
+  "Feature:BlobManagementGroup": "BlobManagement",
+  "Feature:BlobManagementEnable": "Activer BlobManagement",
+  "Feature:BlobManagementEnableDescription": "Indique si le locataire peut stocker des fichiers dans BlobManagement.",
+  "Feature:BlobManagementStorageSize": "Stockage BlobManagement (Mo)",
+  "Feature:BlobManagementStorageSizeDescription": "La quantité maximale que le locataire peut stocker dans BlobManagement, en mégaoctets. 0 signifie aucune limite."
+ }
+}

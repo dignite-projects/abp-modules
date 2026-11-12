@@ -286,8 +286,8 @@ Logs/
 *.db-shm
 *.db-wal
 
-# Files the drive/host demo app stores with ABP's file-system BLOB provider (BasePath ./BlobStoring)
-drive/host/Dignite.Drive.Host/BlobStoring/
+# Files the blob-management/host demo app stores with ABP's file-system BLOB provider (BasePath ./BlobStoring)
+blob-management/host/Dignite.Abp.BlobManagement.Host/BlobStoring/
 
 # Use abp install-libs to restore.
 **/wwwroot/libs/*

@@ -1,0 +1,29 @@
+{
+  "culture": "ro-RO",
+  "texts": {
+    "MyAccount": "Contul meu",
+    "SamplePageMessage": "Un exemplu de pagină pentru modululul BlobManagement",
+    "Upload": "Încărcare",
+    "RemoveFile": "Elimină „{0}”",
+    "FileTooLarge": "„{0}” depășește {1}, dimensiunea maximă permisă.",
+    "FileTypeNotAllowed": "Tipul de fișier al „{0}” nu este permis.",
+    "UploadFailed": "{0} din {1} fișiere nu au putut fi încărcate.",
+    "NoFileSelected": "Niciun fișier ales.",
+    "BlobManagement:ContainerNotFound": "Nu există niciun container BlobManagement numit „{ContainerName}”.",
+    "BlobManagement:BlobAlreadyExists": "Containerul BlobManagement „{ContainerName}” conține deja un fișier numit „{BlobName}”.",
+    "BlobManagement:BlobNotFound": "Containerul BlobManagement „{ContainerName}” nu conține niciun fișier numit „{BlobName}”.",
+    "BlobManagement:InvalidTicket": "Linkul nu este valid. Este posibil să fi expirat sau să fi fost deja folosit.",
+    "BlobManagement:BlobManagementDisabled": "BlobManagement nu este activat pentru acest chiriaș.",
+    "BlobManagement:StorageQuotaExceeded": "Salvarea acestui fișier ar depăși spațiul BlobManagement de {StorageSize} MB.",
+    "PublicReadSizeNotAllowed": "{0} trebuie să fie una dintre valorile: {1}.",
+    "Permission:BlobManagement": "BlobManagement",
+    "Permission:Files": "Fișiere",
+    "Permission:Files.Upload": "Încărcare",
+    "Permission:Files.Delete": "Ștergere",
+    "Feature:BlobManagementGroup": "BlobManagement",
+    "Feature:BlobManagementEnable": "Activare BlobManagement",
+    "Feature:BlobManagementEnableDescription": "Dacă chiriașul poate stoca fișiere în BlobManagement.",
+    "Feature:BlobManagementStorageSize": "Spațiu BlobManagement (MB)",
+    "Feature:BlobManagementStorageSizeDescription": "Cantitatea maximă pe care chiriașul o poate stoca în BlobManagement, în megaocteți. 0 înseamnă fără limită."
+  }
+}

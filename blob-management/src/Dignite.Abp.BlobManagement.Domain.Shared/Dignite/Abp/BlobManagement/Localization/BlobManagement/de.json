@@ -1,0 +1,29 @@
+{
+  "culture": "de",
+  "texts": {
+    "MyAccount": "Mein Konto",
+    "SamplePageMessage": "Eine Beispielseite für das Modul BlobManagementModul",
+    "Upload": "Hochladen",
+    "RemoveFile": "„{0}“ entfernen",
+    "FileTooLarge": "„{0}“ ist größer als {1}, die maximal zulässige Größe.",
+    "FileTypeNotAllowed": "Der Dateityp von „{0}“ ist nicht zulässig.",
+    "UploadFailed": "{0} von {1} Dateien konnten nicht hochgeladen werden.",
+    "NoFileSelected": "Keine Datei ausgewählt.",
+    "BlobManagement:ContainerNotFound": "Es gibt keinen BlobManagement-Container namens „{ContainerName}“.",
+    "BlobManagement:BlobAlreadyExists": "Der BlobManagement-Container „{ContainerName}“ enthält bereits eine Datei namens „{BlobName}“.",
+    "BlobManagement:BlobNotFound": "Der BlobManagement-Container „{ContainerName}“ enthält keine Datei namens „{BlobName}“.",
+    "BlobManagement:InvalidTicket": "Der Link ist ungültig. Er ist möglicherweise abgelaufen oder wurde bereits verwendet.",
+    "BlobManagement:BlobManagementDisabled": "BlobManagement ist für diesen Mandanten nicht aktiviert.",
+    "BlobManagement:StorageQuotaExceeded": "Das Speichern dieser Datei würde den BlobManagement-Speicher von {StorageSize} MB überschreiten.",
+    "PublicReadSizeNotAllowed": "{0} muss einer der folgenden Werte sein: {1}.",
+    "Permission:BlobManagement": "BlobManagement",
+    "Permission:Files": "Dateien",
+    "Permission:Files.Upload": "Hochladen",
+    "Permission:Files.Delete": "Löschen",
+    "Feature:BlobManagementGroup": "BlobManagement",
+    "Feature:BlobManagementEnable": "BlobManagement aktivieren",
+    "Feature:BlobManagementEnableDescription": "Ob der Mandant Dateien in BlobManagement speichern darf.",
+    "Feature:BlobManagementStorageSize": "BlobManagement-Speicher (MB)",
+    "Feature:BlobManagementStorageSizeDescription": "Die maximale Datenmenge, die der Mandant in BlobManagement speichern darf, in Megabyte. 0 bedeutet keine Begrenzung."
+  }
+}
