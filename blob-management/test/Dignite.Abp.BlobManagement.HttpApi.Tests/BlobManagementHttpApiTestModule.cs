@@ -3,6 +3,7 @@ using Dignite.Abp.BlobStoring.BlobManagement;
 using Dignite.Abp.BlobManagement.Blobs;
 using Dignite.Abp.BlobManagement.Containers;
 using Dignite.Abp.BlobManagement.EntityFrameworkCore;
+using Dignite.Abp.BlobManagement.Directories;
 using Dignite.Abp.BlobManagement.Files;
 using Dignite.Abp.BlobManagement.Tickets;
 using Microsoft.AspNetCore.DataProtection;
@@ -118,6 +119,7 @@ public class BlobManagementHttpApiTestModule : AbpModule
         // the Blob Management too, so its controllers get the in-process services back; the tests call the proxies by their type.
         context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementContainerAppService, BlobManagementContainerAppService>());
         context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementFileAppService, BlobManagementFileAppService>());
+        context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementDirectoryAppService, BlobManagementDirectoryAppService>());
 
         // The BlobManagement's permission grants, written by the tests straight into the store; the definitions stay in code.
         Configure<PermissionManagementOptions>(options =>

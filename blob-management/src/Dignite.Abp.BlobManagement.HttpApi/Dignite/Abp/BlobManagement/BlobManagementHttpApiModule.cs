@@ -38,6 +38,14 @@ public class BlobManagementHttpApiModule : AbpModule
             options.Map(BlobManagementErrorCodes.BlobNotFound, HttpStatusCode.NotFound);
             options.Map(BlobManagementErrorCodes.BlobAlreadyExists, HttpStatusCode.Conflict);
             options.Map(BlobManagementErrorCodes.InvalidTicket, HttpStatusCode.Forbidden);
+            options.Map(BlobManagementErrorCodes.DirectoryNotFound, HttpStatusCode.NotFound);
+            options.Map(BlobManagementErrorCodes.DirectoryNameAlreadyExists, HttpStatusCode.Conflict);
+            options.Map(BlobManagementErrorCodes.DirectoryNotEmpty, HttpStatusCode.Conflict);
+            options.Map(BlobManagementErrorCodes.DirectoriesNotAllowed, HttpStatusCode.BadRequest);
+            options.Map(BlobManagementErrorCodes.DirectoryCannotMoveIntoItself, HttpStatusCode.BadRequest);
+            options.Map(BlobManagementErrorCodes.DirectoryTooDeep, HttpStatusCode.BadRequest);
+            options.Map(BlobManagementErrorCodes.SortingNotSupported, HttpStatusCode.BadRequest);
+            options.Map(BlobManagementErrorCodes.FileAddressedByName, HttpStatusCode.Conflict);
         });
     }
 }
