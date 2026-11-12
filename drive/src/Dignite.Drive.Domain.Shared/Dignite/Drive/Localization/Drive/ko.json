@@ -2,6 +2,12 @@
   "culture": "ko",
   "texts": {
     "MyAccount": "내 계정",
-    "SamplePageMessage": "Drive 모듈의 샘플 페이지입니다."
+    "SamplePageMessage": "Drive 모듈의 샘플 페이지입니다.",
+    "Upload": "업로드",
+    "RemoveFile": "'{0}' 제거",
+    "FileTooLarge": "'{0}'이(가) 허용되는 최대 크기 {1}보다 큽니다.",
+    "FileTypeNotAllowed": "'{0}'은(는) 허용되지 않는 파일 형식입니다.",
+    "UploadFailed": "파일 {1}개 중 {0}개를 업로드하지 못했습니다.",
+    "NoFileSelected": "선택한 파일이 없습니다."
   }
 }

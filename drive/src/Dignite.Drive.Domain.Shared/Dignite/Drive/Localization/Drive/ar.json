@@ -2,6 +2,12 @@
   "culture": "ar",
   "texts": {
     "MyAccount": "إدارة ملفى",
-    "SamplePageMessage": "صفحة نموذجية للوحدة النمطية Drive"
+    "SamplePageMessage": "صفحة نموذجية للوحدة النمطية Drive",
+    "Upload": "رفع",
+    "RemoveFile": "إزالة «{0}»",
+    "FileTooLarge": "«{0}» أكبر من {1}، وهو الحد الأقصى المسموح به.",
+    "FileTypeNotAllowed": "نوع الملف «{0}» غير مقبول.",
+    "UploadFailed": "تعذر رفع {0} من أصل {1} ملفات.",
+    "NoFileSelected": "لم يتم اختيار أي ملف."
   }
 }

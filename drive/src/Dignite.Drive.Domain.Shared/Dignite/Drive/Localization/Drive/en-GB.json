@@ -2,6 +2,12 @@
   "culture": "en-GB",
   "texts": {
     "MyAccount": "My account",
-    "SamplePageMessage": "A sample page for the Drive module"
+    "SamplePageMessage": "A sample page for the Drive module",
+    "Upload": "Upload",
+    "RemoveFile": "Remove '{0}'",
+    "FileTooLarge": "'{0}' is larger than {1}, the most this drive takes.",
+    "FileTypeNotAllowed": "'{0}' is not a file type this drive accepts.",
+    "UploadFailed": "{0} of {1} files could not be uploaded.",
+    "NoFileSelected": "No file chosen."
   }
 }

@@ -1,7 +1,13 @@
 {
   "culture": "tr",
   "texts": {
-    "MyAccount":  "Hesabım",
-    "SamplePageMessage": "Drive modulünden örnek bir sayfa"
+    "MyAccount": "Hesabım",
+    "SamplePageMessage": "Drive modulünden örnek bir sayfa",
+    "Upload": "Yükle",
+    "RemoveFile": "“{0}” öğesini kaldır",
+    "FileTooLarge": "“{0}”, izin verilen en büyük boyut olan {1} değerinden büyük.",
+    "FileTypeNotAllowed": "“{0}” dosya türüne izin verilmiyor.",
+    "UploadFailed": "{1} dosyadan {0} tanesi yüklenemedi.",
+    "NoFileSelected": "Dosya seçilmedi."
   }
 }

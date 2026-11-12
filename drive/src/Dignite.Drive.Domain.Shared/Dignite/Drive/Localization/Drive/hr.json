@@ -2,6 +2,12 @@
   "culture": "hr",
   "texts": {
     "MyAccount": "Moj račun",
-    "SamplePageMessage": "Ogledna stranica za modul Drive"
+    "SamplePageMessage": "Ogledna stranica za modul Drive",
+    "Upload": "Prenesi",
+    "RemoveFile": "Ukloni „{0}”",
+    "FileTooLarge": "„{0}” je veće od {1}, najveće dopuštene veličine.",
+    "FileTypeNotAllowed": "Vrsta datoteke „{0}” nije dopuštena.",
+    "UploadFailed": "{0} od {1} datoteka nije moguće prenijeti.",
+    "NoFileSelected": "Nije odabrana nijedna datoteka."
   }
 }

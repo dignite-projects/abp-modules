@@ -2,6 +2,12 @@
   "culture": "vi",
   "texts": {
     "MyAccount": "Tài khoản của tôi",
-    "SamplePageMessage": "Trang mẫu cho mô-đun Drive"
+    "SamplePageMessage": "Trang mẫu cho mô-đun Drive",
+    "Upload": "Tải lên",
+    "RemoveFile": "Gỡ “{0}”",
+    "FileTooLarge": "“{0}” lớn hơn {1}, kích thước tối đa được phép.",
+    "FileTypeNotAllowed": "Loại tệp của “{0}” không được chấp nhận.",
+    "UploadFailed": "Không thể tải lên {0} trong số {1} tệp.",
+    "NoFileSelected": "Chưa chọn tệp nào."
   }
 }

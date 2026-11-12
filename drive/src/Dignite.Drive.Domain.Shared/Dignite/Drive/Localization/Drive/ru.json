@@ -2,6 +2,12 @@
   "culture": "ru",
   "texts": {
     "MyAccount": "Мой аккаунт",
-    "SamplePageMessage": "Пример страницы для модуля Drive"
+    "SamplePageMessage": "Пример страницы для модуля Drive",
+    "Upload": "Загрузить",
+    "RemoveFile": "Убрать «{0}»",
+    "FileTooLarge": "«{0}» больше {1} — максимально допустимого размера.",
+    "FileTypeNotAllowed": "Тип файла «{0}» не разрешён.",
+    "UploadFailed": "Не удалось загрузить {0} из {1} файлов.",
+    "NoFileSelected": "Файл не выбран."
   }
 }

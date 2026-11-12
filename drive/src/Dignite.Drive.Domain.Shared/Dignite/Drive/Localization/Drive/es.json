@@ -2,6 +2,12 @@
   "culture": "es",
   "texts": {
     "MyAccount": "Mi cuenta",
-    "SamplePageMessage": "Una página de ejemplo para el módulo Drive "
+    "SamplePageMessage": "Una página de ejemplo para el módulo Drive ",
+    "Upload": "Subir",
+    "RemoveFile": "Quitar «{0}»",
+    "FileTooLarge": "«{0}» supera {1}, el tamaño máximo permitido.",
+    "FileTypeNotAllowed": "El tipo de archivo de «{0}» no está permitido.",
+    "UploadFailed": "No se pudieron subir {0} de {1} archivos.",
+    "NoFileSelected": "No se ha elegido ningún archivo."
   }
 }
