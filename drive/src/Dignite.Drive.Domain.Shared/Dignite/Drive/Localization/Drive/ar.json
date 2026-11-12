@@ -8,6 +8,17 @@
     "FileTooLarge": "«{0}» أكبر من {1}، وهو الحد الأقصى المسموح به.",
     "FileTypeNotAllowed": "نوع الملف «{0}» غير مقبول.",
     "UploadFailed": "تعذر رفع {0} من أصل {1} ملفات.",
-    "NoFileSelected": "لم يتم اختيار أي ملف."
+    "NoFileSelected": "لم يتم اختيار أي ملف.",
+    "Drive:ContainerNotFound": "لا توجد حاوية Drive باسم «{ContainerName}».",
+    "Drive:BlobAlreadyExists": "تحتوي حاوية Drive «{ContainerName}» بالفعل على ملف باسم «{BlobName}».",
+    "Drive:BlobNotFound": "لا تحتوي حاوية Drive «{ContainerName}» على ملف باسم «{BlobName}».",
+    "Drive:InvalidTicket": "الرابط غير صالح. ربما انتهت صلاحيته أو استُخدم من قبل.",
+    "Drive:DriveDisabled": "Drive غير مفعّل لهذا المستأجر.",
+    "Drive:StorageQuotaExceeded": "سيؤدي حفظ هذا الملف إلى تجاوز مساحة تخزين Drive البالغة {StorageSize} ميغابايت.",
+    "PublicReadSizeNotAllowed": "يجب أن تكون {0} إحدى القيم التالية: {1}.",
+    "Permission:Drive": "Drive",
+    "Permission:Files": "الملفات",
+    "Permission:Files.Upload": "رفع",
+    "Permission:Files.Delete": "حذف"
   }
 }

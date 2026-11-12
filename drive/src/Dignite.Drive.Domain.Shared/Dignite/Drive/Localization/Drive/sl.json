@@ -8,6 +8,17 @@
     "FileTooLarge": "»{0}« je večja od {1}, kar je največja dovoljena velikost.",
     "FileTypeNotAllowed": "Vrsta datoteke »{0}« ni dovoljena.",
     "UploadFailed": "{0} od {1} datotek ni bilo mogoče naložiti.",
-    "NoFileSelected": "Nobena datoteka ni izbrana."
+    "NoFileSelected": "Nobena datoteka ni izbrana.",
+    "Drive:ContainerNotFound": "Vsebnik Drive z imenom »{ContainerName}« ne obstaja.",
+    "Drive:BlobAlreadyExists": "Vsebnik Drive »{ContainerName}« že vsebuje datoteko z imenom »{BlobName}«.",
+    "Drive:BlobNotFound": "Vsebnik Drive »{ContainerName}« ne vsebuje datoteke z imenom »{BlobName}«.",
+    "Drive:InvalidTicket": "Povezava ni veljavna. Morda je potekla ali je bila že uporabljena.",
+    "Drive:DriveDisabled": "Drive za tega najemnika ni omogočen.",
+    "Drive:StorageQuotaExceeded": "Shranjevanje te datoteke bi preseglo prostor Drive v velikosti {StorageSize} MB.",
+    "PublicReadSizeNotAllowed": "{0} mora biti ena od vrednosti: {1}.",
+    "Permission:Drive": "Drive",
+    "Permission:Files": "Datoteke",
+    "Permission:Files.Upload": "Nalaganje",
+    "Permission:Files.Delete": "Brisanje"
   }
 }

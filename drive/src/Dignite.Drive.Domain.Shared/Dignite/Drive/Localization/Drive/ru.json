@@ -8,6 +8,17 @@
     "FileTooLarge": "«{0}» больше {1} — максимально допустимого размера.",
     "FileTypeNotAllowed": "Тип файла «{0}» не разрешён.",
     "UploadFailed": "Не удалось загрузить {0} из {1} файлов.",
-    "NoFileSelected": "Файл не выбран."
+    "NoFileSelected": "Файл не выбран.",
+    "Drive:ContainerNotFound": "Контейнера Drive с именем «{ContainerName}» нет.",
+    "Drive:BlobAlreadyExists": "В контейнере Drive «{ContainerName}» уже есть файл с именем «{BlobName}».",
+    "Drive:BlobNotFound": "В контейнере Drive «{ContainerName}» нет файла с именем «{BlobName}».",
+    "Drive:InvalidTicket": "Ссылка недействительна. Возможно, срок её действия истёк или она уже использована.",
+    "Drive:DriveDisabled": "Drive не включён для этого клиента.",
+    "Drive:StorageQuotaExceeded": "Сохранение этого файла превысит объём хранилища Drive в {StorageSize} МБ.",
+    "PublicReadSizeNotAllowed": "{0} должно быть одним из следующих значений: {1}.",
+    "Permission:Drive": "Drive",
+    "Permission:Files": "Файлы",
+    "Permission:Files.Upload": "Загрузка",
+    "Permission:Files.Delete": "Удаление"
   }
 }

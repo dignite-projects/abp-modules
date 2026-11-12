@@ -8,6 +8,17 @@
     "FileTooLarge": "「{0}」超過了 {1}，這是此雲端硬碟允許的最大大小。",
     "FileTypeNotAllowed": "此雲端硬碟不接受「{0}」這種類型的檔案。",
     "UploadFailed": "{1} 個檔案中有 {0} 個未能上傳。",
-    "NoFileSelected": "未選擇檔案。"
+    "NoFileSelected": "未選擇檔案。",
+    "Drive:ContainerNotFound": "Drive 中沒有名為「{ContainerName}」的容器。",
+    "Drive:BlobAlreadyExists": "Drive 容器「{ContainerName}」中已有名為「{BlobName}」的檔案。",
+    "Drive:BlobNotFound": "Drive 容器「{ContainerName}」中沒有名為「{BlobName}」的檔案。",
+    "Drive:InvalidTicket": "連結無效，可能已過期或已被使用。",
+    "Drive:DriveDisabled": "此租戶未啟用 Drive。",
+    "Drive:StorageQuotaExceeded": "儲存此檔案將超出 {StorageSize} MB 的 Drive 儲存空間。",
+    "PublicReadSizeNotAllowed": "{0} 必須是以下之一：{1}。",
+    "Permission:Drive": "Drive",
+    "Permission:Files": "檔案",
+    "Permission:Files.Upload": "上傳",
+    "Permission:Files.Delete": "刪除"
   }
 }

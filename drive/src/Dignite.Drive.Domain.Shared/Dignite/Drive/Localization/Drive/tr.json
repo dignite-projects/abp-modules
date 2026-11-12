@@ -8,6 +8,17 @@
     "FileTooLarge": "“{0}”, izin verilen en büyük boyut olan {1} değerinden büyük.",
     "FileTypeNotAllowed": "“{0}” dosya türüne izin verilmiyor.",
     "UploadFailed": "{1} dosyadan {0} tanesi yüklenemedi.",
-    "NoFileSelected": "Dosya seçilmedi."
+    "NoFileSelected": "Dosya seçilmedi.",
+    "Drive:ContainerNotFound": "“{ContainerName}” adlı bir Drive kapsayıcısı yok.",
+    "Drive:BlobAlreadyExists": "“{ContainerName}” Drive kapsayıcısında zaten “{BlobName}” adlı bir dosya var.",
+    "Drive:BlobNotFound": "“{ContainerName}” Drive kapsayıcısında “{BlobName}” adlı bir dosya yok.",
+    "Drive:InvalidTicket": "Bağlantı geçerli değil. Süresi dolmuş veya zaten kullanılmış olabilir.",
+    "Drive:DriveDisabled": "Drive bu kiracı için etkin değil.",
+    "Drive:StorageQuotaExceeded": "Bu dosyayı kaydetmek {StorageSize} MB Drive depolama alanını aşar.",
+    "PublicReadSizeNotAllowed": "{0} şunlardan biri olmalıdır: {1}.",
+    "Permission:Drive": "Drive",
+    "Permission:Files": "Dosyalar",
+    "Permission:Files.Upload": "Yükleme",
+    "Permission:Files.Delete": "Silme"
   }
 }
