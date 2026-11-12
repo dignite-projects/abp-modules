@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "Fișiere",
     "Permission:Files.Upload": "Încărcare",
-    "Permission:Files.Delete": "Ștergere"
+    "Permission:Files.Delete": "Ștergere",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Activare Drive",
+    "Feature:DriveEnableDescription": "Dacă chiriașul poate stoca fișiere în Drive.",
+    "Feature:DriveStorageSize": "Spațiu Drive (MB)",
+    "Feature:DriveStorageSizeDescription": "Cantitatea maximă pe care chiriașul o poate stoca în Drive, în megaocteți. 0 înseamnă fără limită."
   }
 }

@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "Bestanden",
     "Permission:Files.Upload": "Uploaden",
-    "Permission:Files.Delete": "Verwijderen"
+    "Permission:Files.Delete": "Verwijderen",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Drive inschakelen",
+    "Feature:DriveEnableDescription": "Of de tenant bestanden in Drive mag opslaan.",
+    "Feature:DriveStorageSize": "Drive-opslag (MB)",
+    "Feature:DriveStorageSizeDescription": "De maximale hoeveelheid die de tenant in Drive mag opslaan, in megabytes. 0 betekent geen limiet."
   }
 }

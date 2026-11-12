@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "फ़ाइलें",
     "Permission:Files.Upload": "अपलोड",
-    "Permission:Files.Delete": "हटाना"
+    "Permission:Files.Delete": "हटाना",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Drive सक्षम करें",
+    "Feature:DriveEnableDescription": "क्या टेनेंट Drive में फ़ाइलें संग्रहीत कर सकता है।",
+    "Feature:DriveStorageSize": "Drive संग्रहण (MB)",
+    "Feature:DriveStorageSizeDescription": "टेनेंट Drive में अधिकतम कितना संग्रहीत कर सकता है, मेगाबाइट में। 0 का अर्थ है कोई सीमा नहीं।"
   }
 }

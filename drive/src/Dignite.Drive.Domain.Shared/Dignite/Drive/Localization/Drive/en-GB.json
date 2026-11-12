@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "Files",
     "Permission:Files.Upload": "Upload",
-    "Permission:Files.Delete": "Delete"
+    "Permission:Files.Delete": "Delete",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Enable the Drive",
+    "Feature:DriveEnableDescription": "Whether the tenant may store files in the Drive.",
+    "Feature:DriveStorageSize": "Drive storage (MB)",
+    "Feature:DriveStorageSizeDescription": "The most the tenant may store in the Drive, in megabytes. 0 means no limit."
   }
 }

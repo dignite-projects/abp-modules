@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "Файлы",
     "Permission:Files.Upload": "Загрузка",
-    "Permission:Files.Delete": "Удаление"
+    "Permission:Files.Delete": "Удаление",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Включить Drive",
+    "Feature:DriveEnableDescription": "Может ли клиент хранить файлы в Drive.",
+    "Feature:DriveStorageSize": "Хранилище Drive (МБ)",
+    "Feature:DriveStorageSizeDescription": "Максимальный объём, который клиент может хранить в Drive, в мегабайтах. 0 — без ограничений."
   }
 }

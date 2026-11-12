@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "Dosyalar",
     "Permission:Files.Upload": "Yükleme",
-    "Permission:Files.Delete": "Silme"
+    "Permission:Files.Delete": "Silme",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Drive'ı etkinleştir",
+    "Feature:DriveEnableDescription": "Kiracının Drive'da dosya depolayıp depolayamayacağı.",
+    "Feature:DriveStorageSize": "Drive depolama alanı (MB)",
+    "Feature:DriveStorageSizeDescription": "Kiracının Drive'da depolayabileceği en fazla miktar, megabayt cinsinden. 0 sınır olmadığı anlamına gelir."
   }
 }

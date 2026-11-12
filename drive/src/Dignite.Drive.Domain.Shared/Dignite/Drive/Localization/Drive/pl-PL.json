@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "Pliki",
     "Permission:Files.Upload": "Przesyłanie",
-    "Permission:Files.Delete": "Usuwanie"
+    "Permission:Files.Delete": "Usuwanie",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Włącz Drive",
+    "Feature:DriveEnableDescription": "Czy dzierżawa może przechowywać pliki w Drive.",
+    "Feature:DriveStorageSize": "Miejsce w Drive (MB)",
+    "Feature:DriveStorageSizeDescription": "Maksymalna ilość danych, jaką dzierżawa może przechowywać w Drive, w megabajtach. 0 oznacza brak limitu."
   }
 }

@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "Súbory",
     "Permission:Files.Upload": "Nahrávanie",
-    "Permission:Files.Delete": "Odstraňovanie"
+    "Permission:Files.Delete": "Odstraňovanie",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Povoliť Drive",
+    "Feature:DriveEnableDescription": "Či nájomník môže ukladať súbory do Drive.",
+    "Feature:DriveStorageSize": "Úložisko Drive (MB)",
+    "Feature:DriveStorageSizeDescription": "Najviac, koľko môže nájomník uložiť do Drive, v megabajtoch. 0 znamená bez obmedzenia."
   }
 }

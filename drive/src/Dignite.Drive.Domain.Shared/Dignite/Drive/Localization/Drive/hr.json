@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "Datoteke",
     "Permission:Files.Upload": "Prijenos",
-    "Permission:Files.Delete": "Brisanje"
+    "Permission:Files.Delete": "Brisanje",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Omogući Drive",
+    "Feature:DriveEnableDescription": "Smije li zakupac pohranjivati datoteke u Drive.",
+    "Feature:DriveStorageSize": "Prostor za Drive (MB)",
+    "Feature:DriveStorageSizeDescription": "Najviše što zakupac smije pohraniti u Drive, u megabajtima. 0 znači bez ograničenja."
   }
 }

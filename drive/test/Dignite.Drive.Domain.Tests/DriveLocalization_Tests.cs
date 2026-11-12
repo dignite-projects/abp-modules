@@ -14,8 +14,8 @@ using Xunit;
 namespace Dignite.Drive;
 
 /// <summary>
-/// The texts people see - the file input's (<c>drive-file-input</c> in <c>@dignite/ng.drive</c>), the errors and the
-/// permission names - are in every culture of <c>DriveResource</c>, with the English text's placeholders, and ABP
+/// Every text of <c>DriveResource</c> - the file input's (<c>drive-file-input</c> in <c>@dignite/ng.drive</c>), the
+/// errors, the permission and feature names - is in every culture of it, with the English text's placeholders, and ABP
 /// resolves them.
 /// </summary>
 public abstract class DriveLocalization_Tests<TStartupModule> : DriveDomainTestBase<TStartupModule>
@@ -23,16 +23,8 @@ public abstract class DriveLocalization_Tests<TStartupModule> : DriveDomainTestB
 {
     private const string Folder = "/Dignite/Drive/Localization/Drive";
 
-    private static readonly string[] TranslatedTexts =
-    {
-        "Upload", "RemoveFile", "FileTooLarge", "FileTypeNotAllowed", "UploadFailed", "NoFileSelected",
-        "Drive:ContainerNotFound", "Drive:BlobAlreadyExists", "Drive:BlobNotFound", "Drive:InvalidTicket",
-        "Drive:DriveDisabled", "Drive:StorageQuotaExceeded", "PublicReadSizeNotAllowed",
-        "Permission:Drive", "Permission:Files", "Permission:Files.Upload", "Permission:Files.Delete"
-    };
-
     [Fact]
-    public void Every_culture_has_the_texts_people_see_with_the_English_placeholders()
+    public void Every_culture_has_every_English_text_with_its_placeholders()
     {
         var files = ReadTexts();
         files.Count.ShouldBeGreaterThan(1);
@@ -40,11 +32,11 @@ public abstract class DriveLocalization_Tests<TStartupModule> : DriveDomainTestB
         var english = files["en"];
         foreach (var (culture, texts) in files)
         {
-            foreach (var key in TranslatedTexts)
+            texts.Keys.ShouldBe(english.Keys, ignoreOrder: true, $"{culture} has other texts than English.");
+            foreach (var (key, text) in english)
             {
-                texts.ShouldContainKey(key, $"{culture} has no text for {key}.");
                 texts[key].ShouldNotBeNullOrWhiteSpace($"{culture}: {key}");
-                Placeholders(texts[key]).ShouldBe(Placeholders(english[key]), $"{culture}: {key}");
+                Placeholders(texts[key]).ShouldBe(Placeholders(text), $"{culture}: {key}");
             }
         }
     }
@@ -55,6 +47,7 @@ public abstract class DriveLocalization_Tests<TStartupModule> : DriveDomainTestB
     [InlineData("zh-Hans", "Upload", "上传")]
     [InlineData("fr", "Permission:Files", "Fichiers")]
     [InlineData("ko", "Drive:InvalidTicket", "링크가 유효하지 않습니다. 만료되었거나 이미 사용되었을 수 있습니다.")]
+    [InlineData("es", "Feature:DriveStorageSize", "Almacenamiento de Drive (MB)")]
     public void ABP_resolves_a_text_in_its_culture(string culture, string key, string expected)
     {
         using (CultureHelper.Use(culture))

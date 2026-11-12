@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "Arquivos",
     "Permission:Files.Upload": "Enviar",
-    "Permission:Files.Delete": "Excluir"
+    "Permission:Files.Delete": "Excluir",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Habilitar o Drive",
+    "Feature:DriveEnableDescription": "Se o locatário pode armazenar arquivos no Drive.",
+    "Feature:DriveStorageSize": "Armazenamento do Drive (MB)",
+    "Feature:DriveStorageSizeDescription": "O máximo que o locatário pode armazenar no Drive, em megabytes. 0 significa sem limite."
   }
 }

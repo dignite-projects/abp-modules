@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "Skrár",
     "Permission:Files.Upload": "Hlaða upp",
-    "Permission:Files.Delete": "Eyða"
+    "Permission:Files.Delete": "Eyða",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Virkja Drive",
+    "Feature:DriveEnableDescription": "Hvort leigjandinn megi vista skrár í Drive.",
+    "Feature:DriveStorageSize": "Drive-geymslupláss (MB)",
+    "Feature:DriveStorageSizeDescription": "Hámarksmagn sem leigjandinn má vista í Drive, í megabætum. 0 þýðir ekkert hámark."
   }
 }

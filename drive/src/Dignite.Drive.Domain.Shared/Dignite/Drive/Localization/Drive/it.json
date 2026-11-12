@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "File",
     "Permission:Files.Upload": "Carica",
-    "Permission:Files.Delete": "Elimina"
+    "Permission:Files.Delete": "Elimina",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Abilita Drive",
+    "Feature:DriveEnableDescription": "Indica se il tenant può archiviare file in Drive.",
+    "Feature:DriveStorageSize": "Spazio Drive (MB)",
+    "Feature:DriveStorageSizeDescription": "La quantità massima che il tenant può archiviare in Drive, in megabyte. 0 significa nessun limite."
   }
 }

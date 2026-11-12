@@ -19,6 +19,11 @@
     "Permission:Drive": "Drive",
     "Permission:Files": "Soubory",
     "Permission:Files.Upload": "Nahrávání",
-    "Permission:Files.Delete": "Mazání"
+    "Permission:Files.Delete": "Mazání",
+    "Feature:DriveGroup": "Drive",
+    "Feature:DriveEnable": "Povolit Drive",
+    "Feature:DriveEnableDescription": "Zda tenant může ukládat soubory do Drive.",
+    "Feature:DriveStorageSize": "Úložiště Drive (MB)",
+    "Feature:DriveStorageSizeDescription": "Nejvíce, kolik může tenant uložit do Drive, v megabajtech. 0 znamená bez omezení."
   }
 }
