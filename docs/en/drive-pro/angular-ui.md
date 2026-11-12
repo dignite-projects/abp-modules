@@ -54,10 +54,10 @@ The proxies call the API named `Drive`, as the open ones do: `apis.Drive` in the
 The page, at `/drive` for signed-in users, shows the user drives one at a time as tabs - a [personal drive](personal-drives.md) as the user's own. Each drive shows its **directory tree** beside the **files** of the directory chosen:
 
 * the tree loads a level when it is opened; directories are created, renamed and deleted from a node's menu, and moved by dragging;
-* the file list pages, searches and sorts the files, uploads into the directory shown, and downloads, renames and deletes a file; a picture of a public drive is shown as a thumbnail;
+* the file list pages, searches and sorts the files, uploads into the directory shown, and downloads, renames, moves and deletes a file - a move chooses the folder in a tree of the drive's folders, offering those the user may add files to; a picture of a public drive is shown as a thumbnail;
 * a holder of `Drive.ManagePermissions` opens the resource permission dialog for a drive, a directory or a file ([Permissions](permissions.md#per-item-grants)).
 
-Each action is offered only where the user may take it, from the permissions the API sends with each item. Moving a file is done through the API ([The File Library](file-library.md#renaming-and-moving-a-file)), not the page.
+Each action is offered only where the user may take it, from the permissions the API sends with each item.
 
 The page is a [replaceable component](https://abp.io/docs/latest/framework/ui/angular/component-replacement) under `eDriveProComponents.Drive` (`'Drive.DriveComponent'`). `provideDriveConfig()` adds the menu item (`eDriveRouteNames.Drive`); leave it out to place the page elsewhere.
 
@@ -81,7 +81,7 @@ The picker is a modal showing what the Drive page shows - browsing, uploading an
 
 ## Other Pieces
 
-The library also exports the proxies of the library's API (`DriveDirectoryService`, `DriveFileLibraryService` and their DTOs), the page's components (`drive-explorer`, `drive-browser`, `drive-directory-tree`, `drive-file-list`, `drive-file-preview`), and helpers for what Drive Pro adds to the open DTOs: `getFileDirectoryId`, `getFileOwnerId`, `getFileResourcePermissions`, `getContainerScope` and `getContainerResourcePermissions`, with `eDrivePermissions` naming the resource permissions. The open services, pipes and URL services come from `@dignite/ng.drive`.
+The library also exports the proxies of the library's API (`DriveDirectoryService`, `DriveFileLibraryService` and their DTOs), the page's components (`drive-explorer`, `drive-browser`, `drive-directory-tree`, `drive-file-list`, `drive-file-move-modal`, `drive-file-preview`), and helpers for what Drive Pro adds to the open DTOs: `getFileDirectoryId`, `getFileOwnerId`, `getFileResourcePermissions`, `getContainerScope` and `getContainerResourcePermissions`, with `eDrivePermissions` naming the resource permissions. The open services, pipes and URL services come from `@dignite/ng.drive`.
 
 ## See Also
 
