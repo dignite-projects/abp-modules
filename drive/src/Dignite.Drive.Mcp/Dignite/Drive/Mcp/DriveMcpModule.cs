@@ -28,6 +28,6 @@ public class DriveMcpModule : AbpModule
                 "drive_list_containers: it lists the containers you can upload to and what each accepts. To add a real " +
                 "file, call drive_create_upload_url and run the command it returns on the machine the file is on - the " +
                 "bytes never pass through you. drive_upload_file takes base64 and suits only a file of a few kilobytes. " +
-                "No tool lists a container's files: keep the id an upload returns to read or delete the file later."));
+                "Keep the id an upload returns: drive_get_file and drive_delete_file take it."));
     }
 }

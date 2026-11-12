@@ -174,7 +174,7 @@ public class FileDescriptorManager : DomainService
         try
         {
             descriptor = await StoreOrShareAsync(
-                containerName, name, stream, clientId, nameIsAddress: true, cancellationToken);
+                containerName, name, stream, clientId, nameIsAddress: true, configureFile: null, cancellationToken);
         }
         catch
         {
@@ -202,10 +202,16 @@ public class FileDescriptorManager : DomainService
     /// upload in another format (a JPEG as WebP), the name takes that format's extension
     /// (<see cref="GetNameForStoredType"/>), shared content included.
     /// </summary>
+    /// <param name="configureFile">Runs on the new descriptor before it is inserted, whether its bytes are stored or
+    /// shared with a descriptor that has them already: a module that keeps fields of its own on the file (ABP object
+    /// extensions) sets them here, so the row is written once - atomic on every database provider, with or without a
+    /// transaction. It runs while the dedup lock is held, so it does no I/O; when it throws, the upload fails and nothing
+    /// is stored.</param>
     public virtual async Task<FileDescriptor> UploadAsync(
         string containerName,
         string name,
         Stream stream,
+        Action<FileDescriptor>? configureFile = null,
         CancellationToken cancellationToken = default)
     {
         GetDriveContainerConfiguration(containerName, DriveContainerKind.UserDrive);
@@ -213,7 +219,8 @@ public class FileDescriptorManager : DomainService
         Check.NotNull(stream, nameof(stream));
         await UsageManager.CheckEnabledAsync();
 
-        return await StoreOrShareAsync(containerName, name, stream, clientId: null, nameIsAddress: false, cancellationToken);
+        return await StoreOrShareAsync(
+            containerName, name, stream, clientId: null, nameIsAddress: false, configureFile, cancellationToken);
     }
 
     /// <summary>
@@ -234,12 +241,14 @@ public class FileDescriptorManager : DomainService
     /// </summary>
     /// <param name="nameIsAddress">Whether the container is a system container, whose descriptors hold the
     /// <see cref="FileDescriptor.NameKey"/>.</param>
+    /// <param name="configureFile">Runs on the new descriptor before it is inserted (see <see cref="UploadAsync"/>).</param>
     protected virtual async Task<FileDescriptor> StoreOrShareAsync(
         string containerName,
         string name,
         Stream stream,
         string? clientId,
         bool nameIsAddress,
+        Action<FileDescriptor>? configureFile,
         CancellationToken cancellationToken)
     {
         var maxBytes = BlobStreamBuffering.GetMaxBufferedBytes(BlobContainerConfigurationProvider.Get(containerName));
@@ -260,7 +269,7 @@ public class FileDescriptorManager : DomainService
 
                 return await StoreAsync(
                     containerName, name, content, mimeType, hash, clientId, ownsBlob: false, nameIsAddress,
-                    cancellationToken);
+                    configureFile, cancellationToken);
             }
 
             var source = await FindDedupSourceAsync(containerName, hash, cancellationToken);
@@ -269,17 +278,16 @@ public class FileDescriptorManager : DomainService
                 // The bytes already have a home: nothing is stored, the new row shares it - and its type, which a
                 // user-drive name follows.
                 var sharedName = nameIsAddress ? name : GetNameForStoredType(name, mimeType, source.MimeType);
-                return await FileDescriptorRepository.InsertAsync(
-                    new FileDescriptor(
-                        GuidGenerator.Create(), containerName, sharedName, source.BlobName, source.MimeType, source.Size, hash,
-                        ownsBlob: false, clientId, CurrentTenant.Id, nameIsAddress),
-                    autoSave: true,
-                    cancellationToken);
+                var shared = new FileDescriptor(
+                    GuidGenerator.Create(), containerName, sharedName, source.BlobName, source.MimeType, source.Size, hash,
+                    ownsBlob: false, clientId, CurrentTenant.Id, nameIsAddress);
+                configureFile?.Invoke(shared);
+                return await FileDescriptorRepository.InsertAsync(shared, autoSave: true, cancellationToken);
             }
 
             return await StoreAsync(
                 containerName, name, content, mimeType, hash, clientId, ownsBlob: true, nameIsAddress,
-                cancellationToken);
+                configureFile, cancellationToken);
         }
         finally
         {
@@ -407,6 +415,7 @@ public class FileDescriptorManager : DomainService
     /// <summary>
     /// Saves the content under a new BLOB name and writes the descriptor for it - holding the dedup key when
     /// <paramref name="ownsBlob"/>, which is not the case when the dedup lock could not be taken.
+    /// <paramref name="configureFile"/> runs on the descriptor before it is inserted (see <see cref="UploadAsync"/>).
     /// </summary>
     protected virtual async Task<FileDescriptor> StoreAsync(
         string containerName,
@@ -417,6 +426,7 @@ public class FileDescriptorManager : DomainService
         string? clientId,
         bool ownsBlob,
         bool nameIsAddress,
+        Action<FileDescriptor>? configureFile,
         CancellationToken cancellationToken)
     {
         // Taken before the save: the content belongs to the pipeline while it runs.
@@ -445,13 +455,14 @@ public class FileDescriptorManager : DomainService
                 container, blobName, GetStoredMimeType(containerName, mimeType), uploadLength, cancellationToken);
             var storedName = nameIsAddress ? name : GetNameForStoredType(name, mimeType, storedType);
 
-            // A unique-key violation (the dedup key or the name key) fails here too, and the BLOB goes with it.
-            return await FileDescriptorRepository.InsertAsync(
-                new FileDescriptor(
-                    GuidGenerator.Create(), containerName, storedName, blobName, storedType, size, hash,
-                    ownsBlob, clientId, CurrentTenant.Id, nameIsAddress),
-                autoSave: true,
-                cancellationToken);
+            var descriptor = new FileDescriptor(
+                GuidGenerator.Create(), containerName, storedName, blobName, storedType, size, hash,
+                ownsBlob, clientId, CurrentTenant.Id, nameIsAddress);
+            configureFile?.Invoke(descriptor);
+
+            // A unique-key violation (the dedup key or the name key) fails here too, and the BLOB goes with it - as it
+            // does when configureFile throws.
+            return await FileDescriptorRepository.InsertAsync(descriptor, autoSave: true, cancellationToken);
         }
         catch
         {

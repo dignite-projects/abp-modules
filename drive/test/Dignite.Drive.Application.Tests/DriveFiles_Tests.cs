@@ -14,6 +14,7 @@ using Volo.Abp;
 using Volo.Abp.Authorization;
 using Volo.Abp.Authorization.Permissions;
 using Volo.Abp.Content;
+using Volo.Abp.Data;
 using Volo.Abp.Domain.Entities;
 using Volo.Abp.Features;
 using Volo.Abp.Modularity;
@@ -101,6 +102,30 @@ public abstract class DriveFiles_Tests<TStartupModule> : DriveApplicationTestBas
         {
             await _files.DeleteAsync(plan.Id);
             await Should.ThrowAsync<EntityNotFoundException>(() => _files.GetAsync(plan.Id));
+        }
+    }
+
+    [Fact]
+    public async Task An_Implementation_Should_Set_Its_Fields_On_The_New_File_Through_The_Hook()
+    {
+        var service = GetRequiredService<ConfiguringDriveFileAppService>();
+        service.ConfigureFile = file => file.SetProperty("Test:Marker", "set by the hook");
+
+        using (As(_alice))
+        {
+            // Asked only once the upload is authorized.
+            await Should.ThrowAsync<AbpAuthorizationException>(() => service.CreateAsync(NewUpload(DriveTestContainers.UserDrive, "a.pdf")));
+            service.Prepared.ShouldBe(0);
+        }
+
+        await GrantAsync(DrivePermissions.Files.Upload, _alice);
+        using (As(_alice))
+        {
+            var uploaded = await service.CreateAsync(NewUpload(DriveTestContainers.UserDrive, "configured.pdf"));
+            service.Prepared.ShouldBe(1);
+
+            var stored = await WithUnitOfWorkAsync(() => GetRequiredService<IFileDescriptorRepository>().GetAsync(uploaded.Id));
+            stored.GetProperty<string>("Test:Marker").ShouldBe("set by the hook");
         }
     }
 
@@ -324,12 +349,17 @@ public abstract class DriveFiles_Tests<TStartupModule> : DriveApplicationTestBas
 
     private Task<DriveFileDto> UploadAsync(string containerName, string name, byte[]? bytes = null)
     {
-        return _files.CreateAsync(new CreateDriveFileInput
+        return _files.CreateAsync(NewUpload(containerName, name, bytes));
+    }
+
+    private static CreateDriveFileInput NewUpload(string containerName, string name, byte[]? bytes = null)
+    {
+        return new CreateDriveFileInput
         {
             ContainerName = containerName,
             File = new RemoteStreamContent(
                 new MemoryStream(bytes ?? DriveTestFiles.Pdf(Guid.NewGuid().ToString())), name, "application/pdf")
-        });
+        };
     }
 
     private static async Task<byte[]> ReadAsync(IRemoteStreamContent content)

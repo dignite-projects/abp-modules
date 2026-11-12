@@ -34,7 +34,7 @@ The tools call the Drive's application services, in the same process or remote, 
 | `drive_get_file` | One file's details, by its id. |
 | `drive_delete_file` | Deletes a file by its id (marked destructive). |
 
-No tool lists a drive's files, since the Drive keeps no listing ([Attaching Files](attaching-files.md)): the assistant keeps the id an upload returns, to read or delete the file later. The server's instructions tell it so.
+The Drive keeps no listing of a user drive ([Attaching Files](attaching-files.md)), so none of these tools lists one: the assistant keeps the id an upload returns, to read or delete the file later, as the server's instructions tell it. The instructions say what the tools do and claim no absence, so a module that adds tools to the `drive` namespace - a listing, for one - is not contradicted by them.
 
 ## Sending a File
 

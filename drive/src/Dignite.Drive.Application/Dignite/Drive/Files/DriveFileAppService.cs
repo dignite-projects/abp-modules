@@ -51,7 +51,8 @@ public class DriveFileAppService : DriveAppService, IDriveFileAppService
             : !content.FileName.IsNullOrWhiteSpace() ? content.FileName!.Trim()
             : "file";
 
-        var file = await FileDescriptorManager.UploadAsync(input.ContainerName, name, content.GetStream());
+        var configureFile = await PrepareNewFileAsync(input);
+        var file = await FileDescriptorManager.UploadAsync(input.ContainerName, name, content.GetStream(), configureFile);
         return Map(file);
     }
 
@@ -120,6 +121,18 @@ public class DriveFileAppService : DriveAppService, IDriveFileAppService
     {
         GetUserDrive(containerName);
         await AuthorizationService.CheckAsync(DrivePermissions.Files.Upload);
+    }
+
+    /// <summary>
+    /// What to set on the new file before it is inserted, worked out once the upload is authorized: an implementation
+    /// that keeps fields of its own on the file (ABP object extensions) returns the action that sets them, and
+    /// <see cref="FileDescriptorManager.UploadAsync"/> runs it on the new descriptor - on the storing and the dedup path
+    /// alike - so the row is written once. Anything it has to read, it reads here; the action itself runs under the dedup
+    /// lock and does no I/O. Default: nothing.
+    /// </summary>
+    protected virtual Task<Action<FileDescriptor>?> PrepareNewFileAsync(CreateDriveFileInput input)
+    {
+        return Task.FromResult<Action<FileDescriptor>?>(null);
     }
 
     /// <summary>A file of a user drive; a system container's file is not found.</summary>
