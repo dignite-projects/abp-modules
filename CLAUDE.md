@@ -96,6 +96,14 @@ These are the things most likely to be broken by an otherwise reasonable-looking
   follow ABP's conventions — a `//[doc-seo]` block first, title-case headings, four-backtick code fences, relative
   links ending in `.md`. A site reads the tree from GitHub at each release tag, so every file under `docs/` is
   public and versioned; a page's file name is its address, so never rename a published page.
+- **`docs/en/<module>-pro/`** are the pages of a commercial module built on an open one here - `drive-pro/` for
+  Drive Pro, on `drive/` - kept beside the open pages as ABP keeps its Pro modules' (`docs/en/modules/cms-kit-pro/`).
+  The suffix is on the folder and the pages in it keep plain names (`docs/en/drive-pro/index.md`); a Pro page standing
+  alone in an open module's folder would be `<name>-pro.md`, as ABP's `identity-pro.md`. They follow the conventions
+  above and have a heading of their own in `docs-nav.json`. They are the one place this repository speaks of a
+  commercial module: they describe what a customer installs, and link to the open module's pages for what the open
+  edition does. The open pages do not depend on them, and the commercial module's code, design documents and decision
+  records stay in its own repository.
 - **`docs/en/articles/<yyyy-MM-dd>-<slug>/post.md`** are dated articles, kept in the tree as ABP keeps its
   community articles, and left out of the navigation. They are snapshots: fix a broken link, never rewrite one
   to match a later release — the module's own pages carry the current behaviour.

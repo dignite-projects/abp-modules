@@ -17,6 +17,7 @@
       - any-glob-to-any-file:
           - 'drive/**'
           - 'docs/en/drive/**'
+          - 'docs/en/drive-pro/**'
 
 "module: notifications":
   - changed-files:
