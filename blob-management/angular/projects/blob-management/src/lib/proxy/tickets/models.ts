@@ -1,4 +1,11 @@
-import type { BlobManagementTicketKind } from './blob-ticket-kind.enum';
+import type { BlobManagementTicketKind } from './blob-management-ticket-kind.enum';
+
+export interface BlobManagementTicketDto {
+  ticket?: string;
+  kind?: BlobManagementTicketKind;
+  expiresAt?: string;
+  url?: string;
+}
 
 export interface CreateBlobManagementTicketInput {
   containerName: string;
@@ -7,11 +14,4 @@ export interface CreateBlobManagementTicketInput {
   maxSizeInBytes?: number | null;
   overrideExisting?: boolean;
   lifetimeSeconds?: number | null;
-}
-
-export interface BlobManagementTicketDto {
-  ticket?: string;
-  kind?: BlobManagementTicketKind;
-  expiresAt?: string;
-  url?: string;
 }

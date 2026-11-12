@@ -19,6 +19,10 @@ export const APP_ROUTES: Routes = [
     loadChildren: () => import('@abp/ng.tenant-management').then(c => c.createRoutes()),
   },
   {
+    path: 'blob-management',
+    loadChildren: () => import('@dignite/ng.blob-management').then(c => c.createRoutes()),
+  },
+  {
     path: 'setting-management',
     loadChildren: () => import('@abp/ng.setting-management').then(c => c.createRoutes()),
   },

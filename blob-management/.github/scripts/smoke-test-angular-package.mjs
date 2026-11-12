@@ -81,20 +81,32 @@ try {
     join(tempRoot, 'smoke.ts'),
     `import {
   BlobManagementContainerService,
+  BlobManagementDirectoryService,
+  BlobManagementExplorerComponent,
   BlobManagementFileInputComponent,
+  BlobManagementFilePickerComponent,
   BlobManagementFileService,
   BlobManagementFileUrlService,
+  createRoutes,
   eBlobManagementComponents,
+  eBlobManagementPolicyNames,
   FormatFileSizePipe,
 } from '@dignite/ng.blob-management';
+import { provideBlobManagementConfig } from '@dignite/ng.blob-management/config';
 
 export const packageSurface = {
   BlobManagementContainerService,
+  BlobManagementDirectoryService,
+  BlobManagementExplorerComponent,
   BlobManagementFileInputComponent,
+  BlobManagementFilePickerComponent,
   BlobManagementFileService,
   BlobManagementFileUrlService,
   FormatFileSizePipe,
-  fileInputKey: eBlobManagementComponents.FileInput,
+  createRoutes,
+  provideBlobManagementConfig,
+  pageKey: eBlobManagementComponents.BlobManagement,
+  managementPolicy: eBlobManagementPolicyNames.Containers,
 };
 `,
   );

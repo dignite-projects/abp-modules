@@ -1,4 +1,4 @@
-import type { CreateBlobManagementTicketInput, BlobManagementTicketDto } from './models';
+import type { BlobManagementTicketDto, CreateBlobManagementTicketInput } from './models';
 import { RestService, Rest } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
 

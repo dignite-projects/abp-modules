@@ -1,2 +1,2 @@
-export * from './blob-file.service';
+export * from './blob-management-file.service';
 export * from './models';

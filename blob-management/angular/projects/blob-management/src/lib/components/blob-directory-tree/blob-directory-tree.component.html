@@ -1,0 +1,92 @@
+<abp-tree
+  [nodes]="nodes()"
+  [expandedKeys]="expandedKeys"
+  [draggable]="manage()"
+  [beforeDrop]="beforeDrop"
+  [isNodeSelected]="isNodeSelected"
+  (selectedNodeChange)="select($event)"
+  (nzExpandChange)="onExpandChange($event)"
+  (contextmenu)="$event.preventDefault()"
+>
+  @if (manage()) {
+    <ng-template #menu let-node>
+      @if (canCreateIn(node)) {
+        <button type="button" class="dropdown-item" (click)="openCreateForm(node)">
+          <i class="fa fa-folder-plus me-1" aria-hidden="true"></i>{{ 'BlobManagement::NewDirectory' | abpLocalization }}
+        </button>
+      }
+      @if (canRename(node)) {
+        <button type="button" class="dropdown-item" (click)="openRenameForm(node)">
+          <i class="fa fa-pen me-1" aria-hidden="true"></i>{{ 'BlobManagement::Rename' | abpLocalization }}
+        </button>
+      }
+      @if (canDelete(node)) {
+        <button type="button" class="dropdown-item" (click)="delete(node)">
+          <i class="fa fa-trash me-1" aria-hidden="true"></i>{{ 'AbpUi::Delete' | abpLocalization }}
+        </button>
+      }
+      @if (canManagePermissions() && node.origin.directory) {
+        <button type="button" class="dropdown-item" (click)="toggleRestricted(node)">
+          <i
+            class="fa me-1"
+            [class.fa-lock]="!node.origin.directory.isRestricted"
+            [class.fa-lock-open]="node.origin.directory.isRestricted"
+            aria-hidden="true"
+          ></i
+          >{{
+            (node.origin.directory.isRestricted ? 'BlobManagement::UnrestrictDirectory' : 'BlobManagement::RestrictDirectory')
+              | abpLocalization
+          }}
+        </button>
+        @if (node.origin.directory.isRestricted) {
+          <button type="button" class="dropdown-item" (click)="openPermissions(node)">
+            <i class="fa fa-user-lock me-1" aria-hidden="true"></i>{{ 'BlobManagement::Permissions' | abpLocalization }}
+          </button>
+        }
+      }
+    </ng-template>
+  }
+
+  <ng-template abpTreeNodeTemplate let-node>
+    <i
+      class="fa me-1"
+      [class.fa-hdd]="node.key === rootKey"
+      [class.fa-folder]="node.key !== rootKey && !node.origin.directory?.isRestricted"
+      [class.fa-lock]="node.origin.directory?.isRestricted"
+      aria-hidden="true"
+    ></i>
+    <span>{{ node.title }}</span>
+  </ng-template>
+</abp-tree>
+
+@if (permissionTarget(); as target) {
+  <abp-resource-permission-management
+    [resourceName]="target.resourceName"
+    [resourceKey]="target.resourceKey"
+    [resourceDisplayName]="target.displayName"
+    [visible]="true"
+    (visibleChange)="$event || permissionTarget.set(null)"
+  />
+}
+
+<abp-modal [(visible)]="formOpen" [busy]="formBusy">
+  <ng-template #abpHeader>
+    <h3>{{ (editing ? 'BlobManagement::Rename' : 'BlobManagement::NewDirectory') | abpLocalization }}</h3>
+  </ng-template>
+  <ng-template #abpBody>
+    @if (form) {
+      <form id="blob-directory-form" [formGroup]="form" (ngSubmit)="save()">
+        <div class="mb-3">
+          <label class="form-label" for="blob-directory-name">{{ 'BlobManagement::Name' | abpLocalization }}</label>
+          <input id="blob-directory-name" type="text" class="form-control" formControlName="name" autofocus />
+        </div>
+      </form>
+    }
+  </ng-template>
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+    <abp-button iconClass="fa fa-check" buttonType="submit" formName="blob-directory-form" [loading]="formBusy">
+      {{ 'AbpUi::Save' | abpLocalization }}
+    </abp-button>
+  </ng-template>
+</abp-modal>

@@ -1,7 +1,7 @@
 {
   "name": "@dignite/ng.blob-management",
   "version": "10.7.6",
-  "description": "Angular UI library for Dignite BlobManagement, a per-tenant cloud drive for ABP applications.",
+  "description": "Angular UI library for Dignite Blob Management: the management page for BLOB containers, the file explorer and picker a business system opens, and the file input.",
   "author": "Dignite",
   "license": "LGPL-3.0-only",
   "repository": {
@@ -9,11 +9,17 @@
     "url": "git+https://github.com/dignite-projects/abp-modules.git"
   },
   "peerDependencies": {
+    "@abp/ng.components": "~10.7.0",
     "@abp/ng.core": "~10.7.0",
+    "@abp/ng.permission-management": "~10.7.0",
     "@abp/ng.theme.shared": "~10.7.0",
     "@angular/common": "^22.0.0",
     "@angular/core": "^22.0.0",
     "@angular/forms": "^22.0.0",
+    "@angular/router": "^22.0.0",
+    "@ng-bootstrap/ng-bootstrap": "~20.0.0",
+    "@ngx-validate/core": "^0.2.0",
+    "@swimlane/ngx-datatable": "~22.0.0",
     "rxjs": "~7.8.0"
   },
   "dependencies": {

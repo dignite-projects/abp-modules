@@ -14,7 +14,8 @@
     "target": "ES2022",
     "lib": ["ES2022", "dom", "esnext.disposable"],
     "paths": {
-      "@dignite/ng.blob-management": ["./projects/blob-management/src/public-api.ts"]
+      "@dignite/ng.blob-management": ["./projects/blob-management/src/public-api.ts"],
+      "@dignite/ng.blob-management/config": ["./projects/blob-management/config/src/public-api.ts"]
     },
     "useDefineForClassFields": false
   },

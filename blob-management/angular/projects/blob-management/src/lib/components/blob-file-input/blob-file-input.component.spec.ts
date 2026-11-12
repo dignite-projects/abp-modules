@@ -1,118 +1,112 @@
-import { Component, inject } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
-import { ReplaceableComponentsService } from '@abp/ng.core';
 import { CoreTestingModule } from '@abp/ng.core/testing';
 import { ToasterService } from '@abp/ng.theme.shared';
-import { BlobManagementFileInputComponent, BlobManagementFileInputReplaceableData } from './blob-file-input.component';
-import { eBlobManagementComponents } from '../../enums/components';
+import { BlobManagementFileInputComponent } from './blob-file-input.component';
 import { BlobManagementContainerService } from '../../proxy/containers';
-import { BlobManagementFileDto, BlobManagementFileService } from '../../proxy/files';
-
-@Component({ selector: 'blob-test-library-picker', template: `<span class="library-picker">{{ data.inputs.containerName }}</span>` })
-class LibraryPickerComponent {
-  readonly data = inject<BlobManagementFileInputReplaceableData>('REPLACEABLE_DATA' as never);
-}
+import { BlobManagementFileService } from '../../proxy/files';
 
 describe('BlobManagementFileInputComponent', () => {
   let create: ReturnType<typeof vi.fn>;
-  let remove: ReturnType<typeof vi.fn>;
   let toasterError: ReturnType<typeof vi.fn>;
   let fixture: ComponentFixture<BlobManagementFileInputComponent>;
-  let changes: BlobManagementFileDto[][];
 
-  function chosen(...names: string[]): Event {
+  function picked(...names: string[]): Event {
     const input = document.createElement('input');
     Object.defineProperty(input, 'files', { value: names.map(name => new File(['x'], name)) });
     return { target: input } as unknown as Event;
   }
 
-  function render(multiple = false, container: Partial<{ maxFileSize: number; allowedFileExtensions: string[] }> = {}) {
-    let id = 0;
-    create = vi.fn((form: FormData) => of({ id: `f${++id}`, name: (form.get('file') as File).name, size: 1 }));
-    remove = vi.fn();
+  function render(container: object | null = { name: 'media', maxFileSize: 10, access: { view: false } }, multiple = false) {
+    let next = 0;
+    create = vi.fn((form: FormData) => of({ id: 'f' + ++next, name: (form.get('file') as File).name }));
     toasterError = vi.fn();
     TestBed.configureTestingModule({
       imports: [BlobManagementFileInputComponent, CoreTestingModule.withConfig()],
       providers: [
-        { provide: BlobManagementFileService, useValue: { create, delete: remove } },
-        { provide: BlobManagementContainerService, useValue: { get: vi.fn(() => of({ name: 'attachments', ...container })) } },
+        { provide: BlobManagementFileService, useValue: { create } },
+        {
+          provide: BlobManagementContainerService,
+          useValue: { get: () => (container ? of(container) : throwError(() => new Error('not found'))), getList: () => of({ items: [] }) },
+        },
         { provide: ToasterService, useValue: { error: toasterError } },
       ],
     });
     fixture = TestBed.createComponent(BlobManagementFileInputComponent);
-    fixture.componentRef.setInput('containerName', 'attachments');
+    fixture.componentRef.setInput('containerName', 'media');
     fixture.componentRef.setInput('multiple', multiple);
-    changes = [];
-    fixture.componentInstance.registerOnChange(value => changes.push(value));
     fixture.detectChanges();
     return fixture.componentInstance;
   }
 
-  it('uploads each file chosen into the container and attaches it', () => {
-    const input = render(true);
+  it('attaches the file uploaded, and reports it to the form', () => {
+    const input = render();
+    const changes: unknown[] = [];
+    input.registerOnChange(value => changes.push(value));
 
-    input.upload(chosen('a.pdf', 'b.pdf'));
+    input.upload(picked('a.png'));
 
-    expect(create.mock.calls.map(([form]) => (form as FormData).get('containerName'))).toEqual(['attachments', 'attachments']);
-    expect(input.value().map(file => file.name)).toEqual(['a.pdf', 'b.pdf']);
-    expect(changes.at(-1)?.map(file => file.id)).toEqual(['f1', 'f2']);
+    expect((create.mock.calls[0][0] as FormData).get('containerName')).toBe('media');
+    expect(input.value().map(file => file.name)).toEqual(['a.png']);
+    expect(changes).toEqual([[{ id: 'f1', name: 'a.png' }]]);
   });
 
-  it('replaces the file attached when it takes one file', () => {
-    const input = render(false);
-    input.writeValue([{ id: 'old', name: 'old.pdf' }]);
+  it('keeps one file unless several may be attached', () => {
+    const single = render();
+    single.upload(picked('a.png', 'b.png'));
+    expect(single.value().map(file => file.name)).toEqual(['b.png']);
 
-    input.upload(chosen('new.pdf'));
-
-    expect(input.value().map(file => file.id)).toEqual(['f1']);
+    TestBed.resetTestingModule();
+    const several = render(undefined, true);
+    several.upload(picked('a.png', 'b.png'));
+    expect(several.value().map(file => file.name)).toEqual(['a.png', 'b.png']);
   });
 
-  it('leaves out a file the container would refuse', () => {
-    const input = render(true, { maxFileSize: 0, allowedFileExtensions: ['.pdf'] });
+  it('leaves out what the container would refuse, by its size or its type', () => {
+    const input = render({ name: 'media', maxFileSize: 2, allowedFileExtensions: ['.png'], access: {} });
 
-    input.upload(chosen('a.PDF', 'b.exe'));
+    input.upload(picked('a.exe'));
+    expect(create).not.toHaveBeenCalled();
+    expect(toasterError).toHaveBeenCalledWith('BlobManagement::FileTypeNotAllowed', '', { messageLocalizationParams: ['a.exe'] });
 
-    expect(create).toHaveBeenCalledTimes(1);
-    expect(toasterError).toHaveBeenCalledWith('BlobManagement::FileTypeNotAllowed', '', { messageLocalizationParams: ['b.exe'] });
-    expect(input.accept()).toBe('.pdf');
+    const big = document.createElement('input');
+    Object.defineProperty(big, 'files', { value: [new File(['too big'], 'big.png')] });
+    input.upload({ target: big } as unknown as Event);
+    expect(create).not.toHaveBeenCalled();
+    expect(toasterError).toHaveBeenCalledTimes(2);
   });
 
-  it('goes on after a failed upload and counts the failures', () => {
-    const input = render(true);
-    create.mockImplementationOnce(() => throwError(() => new Error('refused')));
-
-    input.upload(chosen('a.pdf', 'b.pdf'));
-
-    expect(input.value().map(file => file.name)).toEqual(['b.pdf']);
-    expect(toasterError).toHaveBeenCalledWith('BlobManagement::UploadFailed', '', { messageLocalizationParams: ['1', '2'] });
-  });
-
-  it('removes a file from the value without deleting it from the BlobManagement', () => {
-    const input = render(true);
+  it('removes a file from the value only', () => {
+    const input = render(undefined, true);
     input.writeValue([{ id: 'a' }, { id: 'b' }]);
 
     input.remove({ id: 'a' });
 
-    expect(changes.at(-1)).toEqual([{ id: 'b' }]);
-    expect(remove).not.toHaveBeenCalled();
+    expect(input.value().map(file => file.id)).toEqual(['b']);
   });
 
-  it('lets a component registered under its key take its place and set the value', () => {
-    TestBed.configureTestingModule({});
-    render(true);
-    TestBed.inject(ReplaceableComponentsService).add({ key: eBlobManagementComponents.FileInput, component: LibraryPickerComponent });
+  it('offers picking from the container only to whoever may view it', () => {
+    render({ name: 'media', access: { view: false } });
+    expect(fixture.nativeElement.querySelector('.blob-file-input-pick')).toBeNull();
+
+    TestBed.resetTestingModule();
+    render({ name: 'media', access: { view: true } });
+    expect(fixture.nativeElement.querySelector('.blob-file-input-pick')).not.toBeNull();
+  });
+
+  it('still uploads when the container could not be read', () => {
+    const input = render(null);
+
+    input.upload(picked('a.png'));
+
+    expect(create).toHaveBeenCalledTimes(1);
+  });
+
+  it('is disabled with its form control', () => {
+    const input = render();
+    input.setDisabledState(true);
     fixture.detectChanges();
 
-    const element = fixture.nativeElement as HTMLElement;
-    expect(element.querySelector('.library-picker')?.textContent).toBe('attachments');
-    expect(element.querySelector('button')).toBeNull();
-
-    const picker = fixture.debugElement.query(debug => debug.componentInstance instanceof LibraryPickerComponent)
-      .componentInstance as LibraryPickerComponent;
-    picker.data.inputs.value = [{ id: 'from-library' }];
-
-    expect(fixture.componentInstance.value()).toEqual([{ id: 'from-library' }]);
-    expect(changes.at(-1)).toEqual([{ id: 'from-library' }]);
+    expect(fixture.nativeElement.querySelector('.blob-file-input-upload').disabled).toBe(true);
   });
 });

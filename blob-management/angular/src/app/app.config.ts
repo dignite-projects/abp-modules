@@ -6,6 +6,7 @@ import { provideAbpThemeShared,  } from '@abp/ng.theme.shared';
 import { provideIdentityConfig } from '@abp/ng.identity/config';
 import { provideAccountConfig } from '@abp/ng.account/config';
 import { provideTenantManagementConfig } from '@abp/ng.tenant-management/config';
+import { provideBlobManagementConfig } from '@dignite/ng.blob-management/config';
 import { registerLocaleForEsBuild } from '@abp/ng.core/locale';
 import { provideThemeLeptonX } from '@abp/ng.theme.lepton-x';
 import { provideSideMenuLayout } from '@abp/ng.theme.lepton-x/layouts';
@@ -32,6 +33,7 @@ export const appConfig: ApplicationConfig = {
     ),
     provideAbpOAuth(),
     provideIdentityConfig(),
+    provideBlobManagementConfig(),
     provideSettingManagementConfig(),
     provideFeatureManagementConfig(),
     provideAccountConfig(),
