@@ -2,6 +2,12 @@
  "culture": "fr",
  "texts": {
   "MyAccount": "Mon compte",
-  "SamplePageMessage": "Exemple de page pour le module Drive"
+  "SamplePageMessage": "Exemple de page pour le module Drive",
+  "Upload": "Téléverser",
+  "RemoveFile": "Retirer « {0} »",
+  "FileTooLarge": "« {0} » dépasse {1}, la taille maximale autorisée.",
+  "FileTypeNotAllowed": "Le type de fichier de « {0} » n’est pas accepté.",
+  "UploadFailed": "{0} fichier(s) sur {1} n’ont pas pu être téléversés.",
+  "NoFileSelected": "Aucun fichier choisi."
  }
 }

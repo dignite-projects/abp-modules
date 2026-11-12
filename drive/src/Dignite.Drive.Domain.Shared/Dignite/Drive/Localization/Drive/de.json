@@ -2,6 +2,12 @@
   "culture": "de",
   "texts": {
     "MyAccount": "Mein Konto",
-    "SamplePageMessage": "Eine Beispielseite für das Modul DriveModul"
+    "SamplePageMessage": "Eine Beispielseite für das Modul DriveModul",
+    "Upload": "Hochladen",
+    "RemoveFile": "„{0}“ entfernen",
+    "FileTooLarge": "„{0}“ ist größer als {1}, die maximal zulässige Größe.",
+    "FileTypeNotAllowed": "Der Dateityp von „{0}“ ist nicht zulässig.",
+    "UploadFailed": "{0} von {1} Dateien konnten nicht hochgeladen werden.",
+    "NoFileSelected": "Keine Datei ausgewählt."
   }
 }

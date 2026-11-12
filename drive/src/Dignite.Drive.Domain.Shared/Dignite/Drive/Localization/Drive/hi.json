@@ -2,6 +2,12 @@
   "culture": "hi",
   "texts": {
     "MyAccount": "मेरा खाता",
-    "SamplePageMessage": "Drive मॉड्यूल के लिए एक नमूना पृष्ठ"
+    "SamplePageMessage": "Drive मॉड्यूल के लिए एक नमूना पृष्ठ",
+    "Upload": "अपलोड करें",
+    "RemoveFile": "“{0}” हटाएँ",
+    "FileTooLarge": "“{0}” {1} से बड़ी है, जो अधिकतम अनुमत आकार है।",
+    "FileTypeNotAllowed": "“{0}” का फ़ाइल प्रकार स्वीकार्य नहीं है।",
+    "UploadFailed": "{1} में से {0} फ़ाइलें अपलोड नहीं हो सकीं।",
+    "NoFileSelected": "कोई फ़ाइल नहीं चुनी गई।"
   }
 }

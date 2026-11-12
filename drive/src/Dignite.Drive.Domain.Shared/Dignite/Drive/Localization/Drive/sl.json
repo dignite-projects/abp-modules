@@ -2,6 +2,12 @@
   "culture": "sl",
   "texts": {
     "MyAccount": "Moj račun",
-    "SamplePageMessage": "Vzorčna stran za modul Drive"
+    "SamplePageMessage": "Vzorčna stran za modul Drive",
+    "Upload": "Naloži",
+    "RemoveFile": "Odstrani »{0}«",
+    "FileTooLarge": "»{0}« je večja od {1}, kar je največja dovoljena velikost.",
+    "FileTypeNotAllowed": "Vrsta datoteke »{0}« ni dovoljena.",
+    "UploadFailed": "{0} od {1} datotek ni bilo mogoče naložiti.",
+    "NoFileSelected": "Nobena datoteka ni izbrana."
   }
 }

@@ -2,6 +2,12 @@
   "culture": "it",
   "texts": {
     "MyAccount": "Il mio conto",
-    "SamplePageMessage": "Una pagina di esempio per il modulo Drive"
+    "SamplePageMessage": "Una pagina di esempio per il modulo Drive",
+    "Upload": "Carica",
+    "RemoveFile": "Rimuovi «{0}»",
+    "FileTooLarge": "«{0}» supera {1}, la dimensione massima consentita.",
+    "FileTypeNotAllowed": "Il tipo di file di «{0}» non è consentito.",
+    "UploadFailed": "Impossibile caricare {0} file su {1}.",
+    "NoFileSelected": "Nessun file scelto."
   }
 }

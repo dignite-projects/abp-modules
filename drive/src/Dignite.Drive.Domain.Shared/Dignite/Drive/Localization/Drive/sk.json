@@ -2,6 +2,12 @@
   "culture": "sk",
   "texts": {
     "MyAccount": "Môj účet",
-    "SamplePageMessage": "Ukážka stránky pre modul Drive"
+    "SamplePageMessage": "Ukážka stránky pre modul Drive",
+    "Upload": "Nahrať",
+    "RemoveFile": "Odobrať „{0}“",
+    "FileTooLarge": "„{0}“ je väčší ako {1}, čo je maximálna povolená veľkosť.",
+    "FileTypeNotAllowed": "Typ súboru „{0}“ nie je povolený.",
+    "UploadFailed": "{0} z {1} súborov sa nepodarilo nahrať.",
+    "NoFileSelected": "Nie je vybraný žiadny súbor."
   }
 }

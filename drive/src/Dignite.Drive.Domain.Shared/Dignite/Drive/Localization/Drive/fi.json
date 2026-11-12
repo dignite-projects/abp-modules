@@ -2,6 +2,12 @@
   "culture": "fi",
   "texts": {
     "MyAccount": "Tilini",
-    "SamplePageMessage": "Esimerkkisivu Drive-moduulille"
+    "SamplePageMessage": "Esimerkkisivu Drive-moduulille",
+    "Upload": "Lähetä",
+    "RemoveFile": "Poista ”{0}”",
+    "FileTooLarge": "”{0}” on suurempi kuin {1}, joka on suurin sallittu koko.",
+    "FileTypeNotAllowed": "Tiedostotyyppiä ”{0}” ei sallita.",
+    "UploadFailed": "{0}/{1} tiedostoa ei voitu lähettää.",
+    "NoFileSelected": "Tiedostoa ei ole valittu."
   }
 }

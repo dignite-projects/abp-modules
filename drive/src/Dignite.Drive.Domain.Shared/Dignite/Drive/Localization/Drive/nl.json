@@ -2,6 +2,12 @@
   "culture": "nl",
   "texts": {
     "MyAccount": "Mijn rekening",
-    "SamplePageMessage": "Een voorbeeldpagina voor de Drive module"
+    "SamplePageMessage": "Een voorbeeldpagina voor de Drive module",
+    "Upload": "Uploaden",
+    "RemoveFile": "'{0}' verwijderen",
+    "FileTooLarge": "'{0}' is groter dan {1}, de maximaal toegestane grootte.",
+    "FileTypeNotAllowed": "Het bestandstype van '{0}' is niet toegestaan.",
+    "UploadFailed": "{0} van de {1} bestanden konden niet worden geüpload.",
+    "NoFileSelected": "Geen bestand gekozen."
   }
 }

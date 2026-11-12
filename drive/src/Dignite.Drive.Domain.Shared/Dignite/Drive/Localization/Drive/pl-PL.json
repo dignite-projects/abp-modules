@@ -2,6 +2,12 @@
   "culture": "pl-PL",
   "texts": {
     "MyAccount": "Moje konto",
-    "SamplePageMessage": "Przykładowa strona modułu Drive"
+    "SamplePageMessage": "Przykładowa strona modułu Drive",
+    "Upload": "Prześlij",
+    "RemoveFile": "Usuń „{0}”",
+    "FileTooLarge": "„{0}” jest większy niż {1}, maksymalny dozwolony rozmiar.",
+    "FileTypeNotAllowed": "Typ pliku „{0}” jest niedozwolony.",
+    "UploadFailed": "Nie udało się przesłać {0} z {1} plików.",
+    "NoFileSelected": "Nie wybrano pliku."
   }
 }

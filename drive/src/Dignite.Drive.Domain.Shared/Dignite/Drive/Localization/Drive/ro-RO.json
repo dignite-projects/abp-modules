@@ -1,7 +1,13 @@
 {
   "culture": "ro-RO",
   "texts": {
-    "MyAccount":  "Contul meu",
-    "SamplePageMessage": "Un exemplu de pagină pentru modululul Drive"
+    "MyAccount": "Contul meu",
+    "SamplePageMessage": "Un exemplu de pagină pentru modululul Drive",
+    "Upload": "Încărcare",
+    "RemoveFile": "Elimină „{0}”",
+    "FileTooLarge": "„{0}” depășește {1}, dimensiunea maximă permisă.",
+    "FileTypeNotAllowed": "Tipul de fișier al „{0}” nu este permis.",
+    "UploadFailed": "{0} din {1} fișiere nu au putut fi încărcate.",
+    "NoFileSelected": "Niciun fișier ales."
   }
 }
