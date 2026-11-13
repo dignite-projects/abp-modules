@@ -17,7 +17,7 @@ It serves business systems. It has no upload of its own and is not shown to ordi
 
 | Caller | Admitted by | Does |
 |---|---|---|
-| An application | In the same process: trusted. Over HTTP: an OAuth client the container allows (`AllowedClientIds`), with a token that carries no user. | Stores and reads BLOBs by name ([Using It From an Application](provider.md)) and files by id ([Keeping Files by Id](files.md)). |
+| An application | In the same process: trusted. Over HTTP: an OAuth client granted the container's files, with a token that carries no user. | Stores and reads BLOBs by name ([Using It From an Application](provider.md)) and files by id ([Keeping Files by Id](files.md)). |
 | Anyone | The address of a file in a `PublicRead` container. | Reads it, resized if it is a picture ([Public Addresses](provider.md#public-addresses)). |
 | A user | A directory permission granted on the container. | Creates, renames, moves and deletes directories ([Directories](directories.md)). |
 | An administrator | `BlobManagement.Containers`. | Reads the usage, the containers, their directories and files, and the files' bytes ([Usage](usage.md), [Angular UI](angular-ui.md)). |

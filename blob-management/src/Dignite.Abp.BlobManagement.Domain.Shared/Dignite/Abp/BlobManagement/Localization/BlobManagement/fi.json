@@ -25,6 +25,7 @@
     "Permission:CreateDirectories": "Kansioiden luominen",
     "Permission:UpdateDirectories": "Nimeä uudelleen ja siirrä kansioita",
     "Permission:DeleteDirectories": "Poista kansioita",
+    "Permission:Files": "Hallitse tiedostoja (vain sovellukset)",
     "Permission:ManagePermissions": "Hallitse säilöjen käyttöoikeuksia",
     "Menu:BlobManagement": "Blob-hallinta",
     "NoContainers": "Näytettäviä säilöjä ei ole.",

@@ -25,6 +25,7 @@
     "Permission:CreateDirectories": "Create directories",
     "Permission:UpdateDirectories": "Rename and move directories",
     "Permission:DeleteDirectories": "Delete directories",
+    "Permission:Files": "Keep files (applications only)",
     "Permission:ManagePermissions": "Manage permissions on containers",
     "Menu:BlobManagement": "Blob Management",
     "NoContainers": "There is no container to show.",

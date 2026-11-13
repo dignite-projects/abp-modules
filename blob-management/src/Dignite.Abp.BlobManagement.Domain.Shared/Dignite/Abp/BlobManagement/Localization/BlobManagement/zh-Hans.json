@@ -25,6 +25,7 @@
     "Permission:CreateDirectories": "创建目录",
     "Permission:UpdateDirectories": "重命名和移动目录",
     "Permission:DeleteDirectories": "删除目录",
+    "Permission:Files": "存取文件（仅限应用程序）",
     "Permission:ManagePermissions": "管理容器的权限",
     "Menu:BlobManagement": "Blob 管理",
     "NoContainers": "没有可显示的容器。",

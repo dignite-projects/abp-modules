@@ -33,7 +33,7 @@ for each, and from that table come the tenant's allocation, the usage figures an
 
 | Caller | Admitted by | Does |
 |---|---|---|
-| An application | In process: trusted. Over HTTP: an OAuth client the container allows (`AllowedClientIds`), with a token that carries no user | BLOBs by name (`IBlobManagementBlobService`), files by id (`IBlobManagementFileService`) |
+| An application | In process: trusted. Over HTTP: an OAuth client granted `BlobManagement.Container.Files` on the container, with a token that carries no user | BLOBs by name (`IBlobManagementBlobService`), files by id (`IBlobManagementFileService`) |
 | Anyone | The address of a file in a `PublicRead` container | Reads it, sized if it is a picture |
 | A user | A directory permission granted on the container | Creates, renames, moves and deletes directories |
 | An administrator | `BlobManagement.Containers` | Reads: usage, containers, directories, files and their bytes |
@@ -55,7 +55,7 @@ moved.
 
 `IBlobManagementFileService` follows `IBlobManagementBlobService`: the in-process implementation is trusted and never
 exposed over HTTP; `IBlobManagementFileAppService` is the same contract behind an authorization, at
-`api/blob-management/files`. That endpoint admits two callers: an allowed client, for everything; a user who holds the
+`api/blob-management/files`. That endpoint admits two callers: a granted client, for everything; a user who holds the
 management permission, for the reads - so the administrator's page needs no second file service.
 
 ### The uploader
@@ -64,6 +64,25 @@ management permission, for the reads - so the administrator's page needs no seco
 it is the application's current user, as ABP's auditing records it, unless the application names another. Over HTTP
 the token carries no user, so the application names one: `creatorId` on a save, which `Dignite.Abp.BlobManagement.HttpApi.Client`
 fills with the application's current user. The module believes it because it believes the client.
+
+### Which client
+
+Decided by the owner the same day: a client is admitted by ABP's own mechanism, a resource permission granted to it -
+`BlobManagement.Container.Files` on the container, defined for the client provider (`C`) only - and the container's
+allow-list (`AllowedClientIds`, `IBlobManagementClientAuthorizer`, the startup check of client ids) is removed, not
+kept beside it: two ways to the same answer would be two contracts.
+
+The allow-list was decided for the Drive on 2026-11-10 because ABP manages a client's resource grants only where the
+OpenIddict tables are (`Volo.Abp.PermissionManagement.Domain.OpenIddict`, open source), not in a standalone service.
+That limits where a grant is made, not whether it counts: ABP's client value provider is registered by default
+(`Volo.Abp.Authorization`), and reads the grants from Permission Management in any host. What the host needs for it
+is Permission Management, which a Blob Management with users needs anyway; only a standalone service used by
+applications alone did not. A grant to a client is the host's and holds in every tenant, as the allow-list did. A
+client is added at runtime, in the dialog or a data seed, where the allow-list took a configuration change and a
+restart.
+
+The check that a token carries no user stays: ABP's client provider reads only `client_id`, which a user's token
+carries too.
 
 ## Directories
 

@@ -25,6 +25,7 @@
     "Permission:CreateDirectories": "Vytváranie priečinkov",
     "Permission:UpdateDirectories": "Premenovať a presúvať priečinky",
     "Permission:DeleteDirectories": "Odstraňovať priečinky",
+    "Permission:Files": "Spravovať súbory (iba aplikácie)",
     "Permission:ManagePermissions": "Spravovať oprávnenia ku kontajnerom",
     "Menu:BlobManagement": "Správa objektov BLOB",
     "NoContainers": "Nie je k dispozícii žiadny kontajner.",

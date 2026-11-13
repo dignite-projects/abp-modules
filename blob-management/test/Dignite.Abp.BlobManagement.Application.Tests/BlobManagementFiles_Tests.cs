@@ -108,8 +108,9 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
     }
 
     [Fact]
-    public async Task The_File_Api_Should_Admit_An_Allowed_Client_For_Everything()
+    public async Task The_File_Api_Should_Admit_A_Client_Granted_The_Containers_Files_For_Everything()
     {
+        await GrantFilesToClientAsync(BlobManagementTestContainers.Documents, Client);
         var bytes = BlobManagementTestFiles.Pdf("client " + Guid.NewGuid());
         var folder = await CreateDirectoryAsync("Inbox " + Guid.NewGuid());
         var notTheClients = await StoreAsync(BlobManagementTestContainers.Files, "elsewhere.pdf");
@@ -132,8 +133,8 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
             (await _fileApi.UpdateAsync(stored.Id, new UpdateBlobManagementFileInput { Name = "signed.pdf" })).Name.ShouldBe("signed.pdf");
             (await _fileApi.MoveAsync(stored.Id, new MoveBlobManagementFileInput { DirectoryId = folder })).DirectoryId.ShouldBe(folder);
 
-            // A container that does not list the client: nothing is stored or listed there, and a file in it is not
-            // found - its id tells nothing.
+            // A container the client is not granted: nothing is stored or listed there, and a file in it is not found -
+            // its id tells nothing.
             await Should.ThrowAsync<AbpAuthorizationException>(() => _fileApi.CreateAsync(NewFile(BlobManagementTestContainers.Files, "a.pdf")));
             await Should.ThrowAsync<AbpAuthorizationException>(() =>
                 _fileApi.GetListAsync(new GetBlobManagementFilesInput { ContainerName = BlobManagementTestContainers.Files }));
@@ -146,7 +147,14 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
 
         (await _files.GetAsync(notTheClients.Id)).Name.ShouldBe("elsewhere.pdf");
 
-        // Another client is not on the container's list.
+        // A client's grant is the deployment's: it holds in every tenant.
+        using (GetRequiredService<ICurrentTenant>().Change(Guid.NewGuid()))
+        using (AsClient(Client))
+        {
+            (await _fileApi.CreateAsync(NewFile(BlobManagementTestContainers.Documents, "tenant.pdf"))).ClientId.ShouldBe(Client);
+        }
+
+        // Another client is not granted the container.
         using (AsClient("another-app"))
         {
             await Should.ThrowAsync<AbpAuthorizationException>(() => _fileApi.CreateAsync(NewFile(BlobManagementTestContainers.Documents, "a.pdf")));
@@ -562,6 +570,11 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
     private Task GrantAsync(Guid userId, params string[] permissions)
     {
         return WithUnitOfWorkAsync(() => GetRequiredService<IPermissionManager>().GrantAsync(userId, permissions));
+    }
+
+    private Task GrantFilesToClientAsync(string containerName, string clientId)
+    {
+        return WithUnitOfWorkAsync(() => GetRequiredService<IResourcePermissionManager>().GrantFilesToClientAsync(containerName, clientId));
     }
 
     private Task GrantOnContainerAsync(string containerName, Guid userId, params string[] permissions)

@@ -24,9 +24,9 @@ public class BlobManagementApplicationModule : AbpModule
         ConfigureContainersFromConfiguration(context);
     }
 
-    public override async Task OnApplicationInitializationAsync(ApplicationInitializationContext context)
+    public override void OnApplicationInitialization(ApplicationInitializationContext context)
     {
-        await context.ServiceProvider.GetRequiredService<BlobManagementContainerValidator>().ValidateAsync();
+        context.ServiceProvider.GetRequiredService<BlobManagementContainerValidator>().Validate();
     }
 
     /// <summary>

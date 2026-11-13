@@ -25,6 +25,7 @@
     "Permission:CreateDirectories": "Vytváření složek",
     "Permission:UpdateDirectories": "Přejmenovat a přesouvat složky",
     "Permission:DeleteDirectories": "Mazat složky",
+    "Permission:Files": "Spravovat soubory (pouze aplikace)",
     "Permission:ManagePermissions": "Spravovat oprávnění ke kontejnerům",
     "Menu:BlobManagement": "Správa objektů BLOB",
     "NoContainers": "Není k dispozici žádný kontejner.",

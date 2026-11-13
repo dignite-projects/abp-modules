@@ -28,7 +28,8 @@ namespace Dignite.Abp.BlobManagement.Authorization;
 /// </para>
 /// <para>
 /// Only users get access: a principal without a user id - a client-credentials token - is allowed nothing. A client
-/// keeps files, through the BLOB API and the file API, and those authorize it by the container's allow-list.
+/// keeps files, through the BLOB API and the file API, and those authorize it by its own grant on the container
+/// (<c>BlobManagementClientChecker</c>).
 /// </para>
 /// </summary>
 public class BlobManagementAccessService : ITransientDependency

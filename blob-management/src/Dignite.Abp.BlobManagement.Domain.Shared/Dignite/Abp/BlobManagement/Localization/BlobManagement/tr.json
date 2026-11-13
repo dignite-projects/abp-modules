@@ -25,6 +25,7 @@
     "Permission:CreateDirectories": "Klasör oluşturma",
     "Permission:UpdateDirectories": "Klasörleri yeniden adlandır ve taşı",
     "Permission:DeleteDirectories": "Klasörleri sil",
+    "Permission:Files": "Dosyaları yönet (yalnızca uygulamalar)",
     "Permission:ManagePermissions": "Kapsayıcı izinlerini yönet",
     "Menu:BlobManagement": "Blob Yönetimi",
     "NoContainers": "Gösterilecek kapsayıcı yok.",

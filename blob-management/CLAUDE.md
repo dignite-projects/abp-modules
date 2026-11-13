@@ -26,12 +26,12 @@ edition, one kind of container, the names). What they kept of the storage tier w
   presets by name from `BlobManagementPresetOptions`) and the startup checks (`BlobManagementContainerValidator`);
   `IBlobManagementBlobService` with its in-process implementation, and the provider (`BlobManagementBlobProvider`,
   `UseBlobManagement`); the BLOB API (`BlobManagementBlobController`, `BlobManagementBlobAppService`,
-  `IBlobManagementClientAuthorizer`, `BlobManagementClientChecker`) and its C# client proxies
+  `BlobManagementClientChecker`) and its C# client proxies
   (`RemoteBlobManagementBlobService`); public reads with sizing (`BlobManagementPublicController`,
   `BlobManagementPublicAppService`, `IBlobManagementPublicUrlBuilder`).
 - Files by id, for a business system: `IBlobManagementFileService` (list a place, one file, bytes, store, rename,
   move, delete) with its trusted in-process implementation (`BlobManagementFileService`), the file API behind it
-  (`IBlobManagementFileAppService`, `api/blob-management/files`: an allowed client for everything, a user with the
+  (`IBlobManagementFileAppService`, `api/blob-management/files`: a granted client for everything, a user with the
   management permission for the reads) and the remote implementation (`RemoteBlobManagementFileService`).
 - Directories, for users: `DirectoryDescriptor` and `DirectoryManager` (in a container that sets `AllowDirectories`),
   `IBlobManagementDirectoryAppService` (list a level, one, create, rename, move, delete) under
@@ -102,8 +102,9 @@ imports the root one, so the lockstep `<Version>` applies.
    does not come back.
 2. **A file is its business system's; the module has no upload of its own.** No user stores, renames, moves or deletes
    a file through the module, whatever permission they hold: an application's rules run in the application, before it
-   calls. The BLOB API and the file API authorize *clients* by the container's `AllowedClientIds` and reject any
-   token that carries a user id for a write; the file API's reads also admit a user who holds the management
+   calls. The BLOB API and the file API authorize *clients* by ABP's resource permission
+   `BlobManagement.Container.Files` granted to the client (provider `C`) on the container - ABP's own mechanism, not
+   a list of this module's - and reject any token that carries a user id for a write; the file API's reads also admit a user who holds the management
    permission - the management page - and nothing more. No bridging to business permission names, no tickets or
    upload links (a direct upload, if a remote deployment ever needs one, can only be built here - only the module can
    verify it), and no trusted way for an application to write directories past the permissions on them.

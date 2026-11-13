@@ -25,6 +25,7 @@
     "Permission:CreateDirectories": "Tạo thư mục",
     "Permission:UpdateDirectories": "Đổi tên và di chuyển thư mục",
     "Permission:DeleteDirectories": "Xóa thư mục",
+    "Permission:Files": "Quản lý tệp (chỉ ứng dụng)",
     "Permission:ManagePermissions": "Quản lý quyền trên bộ chứa",
     "Menu:BlobManagement": "Quản lý Blob",
     "NoContainers": "Không có bộ chứa nào để hiển thị.",

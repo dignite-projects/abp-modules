@@ -25,6 +25,7 @@
     "Permission:CreateDirectories": "Mappen maken",
     "Permission:UpdateDirectories": "Mappen hernoemen en verplaatsen",
     "Permission:DeleteDirectories": "Mappen verwijderen",
+    "Permission:Files": "Bestanden beheren (alleen applicaties)",
     "Permission:ManagePermissions": "Machtigingen voor containers beheren",
     "Menu:BlobManagement": "Blobbeheer",
     "NoContainers": "Er is geen container om weer te geven.",

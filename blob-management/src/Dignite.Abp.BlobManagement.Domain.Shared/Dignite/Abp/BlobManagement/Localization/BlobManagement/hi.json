@@ -25,6 +25,7 @@
     "Permission:CreateDirectories": "फ़ोल्डर बनाना",
     "Permission:UpdateDirectories": "फ़ोल्डरों का नाम बदलें और उन्हें स्थानांतरित करें",
     "Permission:DeleteDirectories": "फ़ोल्डर हटाएँ",
+    "Permission:Files": "फ़ाइलें प्रबंधित करें (केवल एप्लिकेशन)",
     "Permission:ManagePermissions": "कंटेनरों की अनुमतियाँ प्रबंधित करें",
     "Menu:BlobManagement": "ब्लॉब प्रबंधन",
     "NoContainers": "दिखाने के लिए कोई कंटेनर नहीं है।",

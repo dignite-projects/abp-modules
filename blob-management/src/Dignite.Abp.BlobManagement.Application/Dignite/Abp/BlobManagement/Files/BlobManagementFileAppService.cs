@@ -15,7 +15,7 @@ namespace Dignite.Abp.BlobManagement.Files;
 /// The file API's <see cref="IBlobManagementFileService"/>: the in-process implementation behind an authorization of
 /// the caller. It admits two:
 /// <list type="bullet">
-/// <item>an OAuth client the file's container allows, never a user (<see cref="BlobManagementClientChecker"/>) - for
+/// <item>an OAuth client granted the files of the file's container, never a user (<see cref="BlobManagementClientChecker"/>) - for
 /// everything; a file it stores records it as the writer. A file in a container the client may not use is not found,
 /// so its id tells nothing;</item>
 /// <item>a user who holds the management permission - for the reads. No user stores, renames, moves or deletes a file
@@ -97,7 +97,7 @@ public class BlobManagementFileAppService : BlobManagementFileService, IBlobMana
 
     /// <summary>
     /// The file, for a caller who may read it: a user who holds the management permission - checked before the file is
-    /// looked for - or a client its container allows.
+    /// looked for - or a client granted the files of its container.
     /// </summary>
     protected virtual async Task<FileDescriptor> GetFileForReaderAsync(Guid id)
     {
@@ -116,14 +116,14 @@ public class BlobManagementFileAppService : BlobManagementFileService, IBlobMana
     }
 
     /// <summary>
-    /// The file, for the calling client; <c>null</c> when there is none or its container does not allow the client. A
+    /// The file, for the calling client; <c>null</c> when there is none or the client is not granted its container. A
     /// caller that is no client is refused before anything is looked for.
     /// </summary>
     protected virtual async Task<FileDescriptor?> FindFileForClientAsync(Guid id)
     {
-        var clientId = ClientChecker.CheckIsClient();
+        ClientChecker.CheckIsClient();
         var file = await FindFileAsync(id);
-        return file != null && await ClientChecker.IsAllowedAsync(file.ContainerName, clientId) ? file : null;
+        return file != null && await ClientChecker.IsAllowedAsync(file.ContainerName) ? file : null;
     }
 
     protected virtual Task CheckManagementPermissionAsync()

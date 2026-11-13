@@ -15,7 +15,6 @@ namespace Dignite.Abp.BlobManagement.Containers;
 ///   "Containers": {
 ///     "media": {
 ///       "PublicRead": true,
-///       "AllowedClientIds": [ "site-app" ],
 ///       "Preset": "Images",
 ///       "PresetOptions": { "MaxSizeInMegabytes": 10, "MaxWidth": 2048 }
 ///     },
@@ -41,7 +40,7 @@ public class BlobManagementContainerSettings
 
     public const string ContainersSectionName = "Containers";
 
-    private static readonly string[] KnownKeys = { "PublicRead", "AllowDirectories", "AllowedClientIds", "Preset", "PresetOptions" };
+    private static readonly string[] KnownKeys = { "PublicRead", "AllowDirectories", "Preset", "PresetOptions" };
 
     protected BlobManagementContainerSettings(string containerName, Action<BlobContainerConfiguration> apply)
     {
@@ -97,10 +96,6 @@ public class BlobManagementContainerSettings
             throw new AbpException($"{where}: AllowDirectories must be true or false, not '{allowDirectoriesValue}'.");
         }
 
-        var allowedClientIds = section.GetSection("AllowedClientIds").GetChildren()
-            .Select(child => child.Value ?? string.Empty)
-            .ToArray();
-
         Action<BlobContainerConfiguration>? applyPreset = null;
         var presetName = section["Preset"];
         if (!presetName.IsNullOrWhiteSpace())
@@ -125,13 +120,12 @@ public class BlobManagementContainerSettings
             {
                 managed.PublicRead = publicRead;
                 managed.AllowDirectories = allowDirectories;
-                managed.AllowedClientIds = allowedClientIds;
             });
             applyPreset?.Invoke(container);
         };
 
-        // A dry run on a throwaway configuration, so that what only the extension methods check - an empty client id, a
-        // preset parameter that is misspelt or out of range - stops the host now, not on the first upload.
+        // A dry run on a throwaway configuration, so that what only the extension methods check - a preset parameter
+        // that is misspelt or out of range - stops the host now, not on the first upload.
         try
         {
             apply(new BlobContainerConfiguration());

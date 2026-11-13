@@ -25,6 +25,7 @@
     "Permission:CreateDirectories": "Crear carpetas",
     "Permission:UpdateDirectories": "Renombrar y mover carpetas",
     "Permission:DeleteDirectories": "Eliminar carpetas",
+    "Permission:Files": "Gestionar archivos (solo aplicaciones)",
     "Permission:ManagePermissions": "Administrar permisos de contenedores",
     "Menu:BlobManagement": "Gestión de blobs",
     "NoContainers": "No hay ningún contenedor que mostrar.",

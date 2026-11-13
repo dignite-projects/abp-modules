@@ -13,7 +13,7 @@ The modules that store through Blob Management reference only the provider packa
 
 ## In the Application's Process
 
-One host installs Blob Management ([Setting Up](setting-up.md)) and the modules that use it. The provider and the [file service](files.md) call it directly, as a trusted caller: no allow-list, no tokens.
+One host installs Blob Management ([Setting Up](setting-up.md)) and the modules that use it. The provider and the [file service](files.md) call it directly, as a trusted caller: no grant, no tokens.
 
 * Install `Dignite.Abp.BlobManagement.Application`, `Dignite.Abp.BlobManagement.HttpApi` (for public read and the APIs the management page calls) and the database provider; call `ConfigureBlobManagement()` in the migrations `DbContext`.
 * Leave `AbpBlobStoringBlobManagementOptions.PublicBaseUrl` empty: public addresses are relative to the host.
@@ -26,19 +26,17 @@ One service installs Blob Management; the applications install the provider and 
 
 What this mode needs:
 
-* **One authorization server.** The applications get client-credentials tokens from it, and Blob Management validates them (the service is an API resource of it). Each application is an OAuth client, listed in the `AllowedClientIds` of the containers it uses.
+* **One authorization server.** The applications get client-credentials tokens from it, and Blob Management validates them (the service is an API resource of it). Each application is an OAuth client, granted the files of the containers it uses ([Granting an Application](permissions.md#granting-an-application)).
 * **Tenants.** The proxies send the tenant with each call; the service must resolve it (ABP's header and query-string resolvers do, by default) and know the same tenants - in an ABP microservice solution, from the shared tenant management data. Behind a gateway, the gateway passes the tenant header on.
 * **Routes.** The gateway routes `/api/blob-management/*` to the service - the BLOB and file APIs, the container, directory and usage APIs, and public reads.
 * **The public address.** Set `AbpBlobStoringBlobManagementOptions.PublicBaseUrl` in the applications to the service's (or the gateway's) public address, so the addresses they build for browsers reach it.
 * **Bytes that are not public pass through the application.** A browser does not reach the service for them: the application receives an upload and stores it, and reads a file and hands it on.
 * **Several instances.** A shared distributed cache, as for any ABP service, and a shared [distributed lock](https://abp.io/docs/latest/framework/infrastructure/distributed-locking) provider. The lock serves content dedup: an upload and the deletion of the same bytes take turns on it, and ABP's default lock only covers one process.
-
-For the applications alone, it does **not** need permission data: Blob Management authorizes applications with the allow-list in its own container configuration, so it needs neither the authorization server's tables nor shared permission grants.
+* **Permission data.** An application's grant on a container, like every other of Blob Management's [permissions](permissions.md), is stored by ABP's Permission Management, in the tables the other services share: the service reads it, and it is granted where the clients are known ([Granting an Application](permissions.md#granting-an-application)).
 
 The management page, the [usage](usage.md) and the [directories](directories.md) add what any ABP service with users needs:
 
 * **User tokens** from the same authorization server.
-* **Permission data.** Blob Management's [permissions](permissions.md), the grants on containers included, are stored by ABP's Permission Management, in the tables the other services share, so the roles granted in the administration UI reach the service.
 * **User names**, if the usage by user should show them: ABP's `IExternalUserLookupServiceProvider`, such as the Identity module's HTTP client ([Usage](usage.md#the-api)).
 * **The UI's address.** An Angular application points `apis.BlobManagement` at the service or the gateway ([Angular UI](angular-ui.md#installation)).
 

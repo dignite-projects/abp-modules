@@ -70,7 +70,7 @@ The proxies use the `BlobManagement` [remote service](https://abp.io/docs/latest
 }
 ````
 
-The client - `site-app` here - must be in the managed container's `AllowedClientIds`; the scope is the one under which your authorization server knows the Blob Management service. The tenant travels with each call, as ABP's proxies send it. The same configuration serves the [file service](files.md), which calls the same remote service.
+The client - `site-app` here - must be granted the managed container's files ([Granting an Application](permissions.md#granting-an-application)); the scope is the one under which your authorization server knows the Blob Management service. The tenant travels with each call, as ABP's proxies send it. The same configuration serves the [file service](files.md), which calls the same remote service.
 
 A browser does not reach a remote Blob Management for a file that is not public: the application reads the bytes through the provider and hands them on, and receives an upload and stores it.
 

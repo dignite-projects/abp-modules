@@ -25,6 +25,7 @@
     "Permission:CreateDirectories": "Stofna möppur",
     "Permission:UpdateDirectories": "Endurnefna og færa möppur",
     "Permission:DeleteDirectories": "Eyða möppum",
+    "Permission:Files": "Sýsla með skrár (aðeins forrit)",
     "Permission:ManagePermissions": "Stjórna heimildum á gámum",
     "Menu:BlobManagement": "Blob-umsýsla",
     "NoContainers": "Enginn gámur til að sýna.",

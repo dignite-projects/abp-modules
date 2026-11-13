@@ -25,6 +25,7 @@
     "Permission:CreateDirectories": "Mappák létrehozása",
     "Permission:UpdateDirectories": "Mappák átnevezése és áthelyezése",
     "Permission:DeleteDirectories": "Mappák törlése",
+    "Permission:Files": "Fájlok kezelése (csak alkalmazások)",
     "Permission:ManagePermissions": "Tárolók engedélyeinek kezelése",
     "Menu:BlobManagement": "Blobkezelés",
     "NoContainers": "Nincs megjeleníthető tároló.",

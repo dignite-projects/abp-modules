@@ -1,10 +1,12 @@
 using System;
+using System.Threading.Tasks;
 using Dignite.Abp.BlobStoring.BlobManagement;
 using Dignite.Abp.BlobManagement.Blobs;
 using Dignite.Abp.BlobManagement.Containers;
 using Dignite.Abp.BlobManagement.EntityFrameworkCore;
 using Dignite.Abp.BlobManagement.Directories;
 using Dignite.Abp.BlobManagement.Files;
+using Dignite.Abp.BlobManagement.Permissions;
 using Dignite.Abp.BlobManagement.Usage;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
@@ -17,9 +19,11 @@ using Volo.Abp.AspNetCore.TestBase;
 using Volo.Abp.Autofac;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.BlobStoring.Memory;
+using Volo.Abp.Authorization.Permissions.Resources;
 using Volo.Abp.Data;
 using Volo.Abp.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore.Sqlite;
+using Volo.Abp.Guids;
 using Volo.Abp.Http.Client;
 using Volo.Abp.Imaging;
 using Volo.Abp.Modularity;
@@ -54,16 +58,16 @@ public class BlobManagementHttpApiTestModule : AbpModule
 {
     public const string AllowedClient = "site-app";
 
-    /// <summary>Container that allows <see cref="AllowedClient"/>.</summary>
+    /// <summary>Container whose files <see cref="AllowedClient"/> is granted.</summary>
     public const string OpenContainer = "files";
 
     /// <summary>Container that allows no client.</summary>
     public const string ClosedContainer = "closed";
 
-    /// <summary>Container with directories, which allows <see cref="AllowedClient"/>.</summary>
+    /// <summary>Container with directories, whose files <see cref="AllowedClient"/> is granted.</summary>
     public const string DocumentsContainer = "documents";
 
-    /// <summary>Container that allows <see cref="AllowedClient"/> and is read publicly.</summary>
+    /// <summary>Container whose files <see cref="AllowedClient"/> is granted, and which is read publicly.</summary>
     public const string PublicContainer = "public";
 
     /// <summary>The application's container, to <see cref="PublicContainer"/> over HTTP.</summary>
@@ -135,6 +139,28 @@ public class BlobManagementHttpApiTestModule : AbpModule
         app.UseConfiguredEndpoints();
     }
 
+    /// <summary>
+    /// Grants <see cref="AllowedClient"/> the files of the containers that name it, as ABP's resource permission dialog
+    /// grants a client: on the host side, for the client provider (<c>C</c>).
+    /// </summary>
+    public override async Task OnPostApplicationInitializationAsync(ApplicationInitializationContext context)
+    {
+        var services = context.ServiceProvider;
+        using var uow = services.GetRequiredService<IUnitOfWorkManager>().Begin();
+        foreach (var container in new[] { OpenContainer, DocumentsContainer, PublicContainer })
+        {
+            await services.GetRequiredService<IResourcePermissionGrantRepository>().InsertAsync(new ResourcePermissionGrant(
+                services.GetRequiredService<IGuidGenerator>().Create(),
+                BlobManagementPermissions.Container.Files,
+                BlobManagementResourceNames.Container,
+                container,
+                ClientResourcePermissionValueProvider.ProviderName,
+                AllowedClient));
+        }
+
+        await uow.CompleteAsync();
+    }
+
     public override void OnApplicationShutdown(ApplicationShutdownContext context)
     {
         _database?.Dispose();
@@ -169,7 +195,7 @@ public class BlobManagementHttpApiTestModule : AbpModule
         {
             options.Containers.Configure(OpenContainer, container =>
             {
-                container.UseBlobManagementContainer(managed => managed.AllowedClientIds = new[] { AllowedClient });
+                container.UseBlobManagementContainer();
                 container.UseMemory();
             });
 
@@ -181,21 +207,13 @@ public class BlobManagementHttpApiTestModule : AbpModule
 
             options.Containers.Configure(DocumentsContainer, container =>
             {
-                container.UseBlobManagementContainer(managed =>
-                {
-                    managed.AllowDirectories = true;
-                    managed.AllowedClientIds = new[] { AllowedClient };
-                });
+                container.UseBlobManagementContainer(managed => managed.AllowDirectories = true);
                 container.UseMemory();
             });
 
             options.Containers.Configure(PublicContainer, container =>
             {
-                container.UseBlobManagementContainer(managed =>
-                {
-                    managed.AllowedClientIds = new[] { AllowedClient };
-                    managed.PublicRead = true;
-                });
+                container.UseBlobManagementContainer(managed => managed.PublicRead = true);
                 container.UseMemory();
             });
 

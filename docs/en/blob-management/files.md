@@ -41,7 +41,7 @@ A file that no business record refers to has no value: delete a file when the re
 The host decides which implementation answers, as for the [provider](provider.md):
 
 * **In the same process**: the host installs `Dignite.Abp.BlobManagement.Application`. The service is a trusted caller and checks no permission.
-* **Remote**: the host installs `Dignite.Abp.BlobManagement.HttpApi.Client` and its [client-credentials configuration](provider.md#a-remote-blob-management). The service calls the file API as the OAuth client, which must be in the container's `AllowedClientIds`.
+* **Remote**: the host installs `Dignite.Abp.BlobManagement.HttpApi.Client` and its [client-credentials configuration](provider.md#a-remote-blob-management). The service calls the file API as the OAuth client, which must be granted the container's files ([Granting an Application](permissions.md#granting-an-application)).
 
 ````csharp
 public class AttachmentManager : ITransientDependency
@@ -86,7 +86,7 @@ A file stored over HTTP also records the client that stored it (`clientId`).
 
 The file service over HTTP is `IBlobManagementFileAppService`, at `api/blob-management/files`. It admits two callers:
 
-* **an OAuth client the file's container allows**, with a token that carries no user - for everything. A file in a container the client may not use is not found;
+* **an OAuth client granted the files of the file's container**, with a token that carries no user - for everything. A file in a container the client is not granted is not found;
 * **a user who holds `BlobManagement.Containers`** - for the reads only: the listing, one file and its bytes. This is what the [management page](angular-ui.md#the-management-page) reads with.
 
 No user stores, renames, moves or deletes a file here.

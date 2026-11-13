@@ -4,7 +4,7 @@ namespace Dignite.Abp.BlobManagement.Files;
 /// <see cref="IBlobManagementFileService"/> for remote callers: what <c>api/blob-management/files</c> runs. It
 /// authorizes the caller first, and admits two:
 /// <list type="bullet">
-/// <item>an OAuth client the container allows, with a token that carries no user - for everything;</item>
+/// <item>an OAuth client granted the container's files, with a token that carries no user - for everything;</item>
 /// <item>a user who holds the management permission - for the reads, which is how the management page shows a
 /// container's files.</item>
 /// </list>

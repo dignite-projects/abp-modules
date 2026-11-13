@@ -25,6 +25,7 @@
     "Permission:CreateDirectories": "Создание папок",
     "Permission:UpdateDirectories": "Переименование и перемещение папок",
     "Permission:DeleteDirectories": "Удаление папок",
+    "Permission:Files": "Работа с файлами (только приложения)",
     "Permission:ManagePermissions": "Управление разрешениями для контейнеров",
     "Menu:BlobManagement": "Управление BLOB-объектами",
     "NoContainers": "Нет контейнеров для отображения.",

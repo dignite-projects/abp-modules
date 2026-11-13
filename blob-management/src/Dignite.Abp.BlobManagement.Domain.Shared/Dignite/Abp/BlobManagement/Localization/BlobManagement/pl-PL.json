@@ -25,6 +25,7 @@
     "Permission:CreateDirectories": "Tworzenie folderów",
     "Permission:UpdateDirectories": "Zmiana nazw i przenoszenie folderów",
     "Permission:DeleteDirectories": "Usuwanie folderów",
+    "Permission:Files": "Zarządzanie plikami (tylko aplikacje)",
     "Permission:ManagePermissions": "Zarządzanie uprawnieniami do kontenerów",
     "Menu:BlobManagement": "Zarządzanie obiektami BLOB",
     "NoContainers": "Brak kontenerów do wyświetlenia.",

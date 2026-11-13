@@ -1,13 +1,13 @@
 namespace Dignite.Abp.BlobManagement.Permissions;
 
 /// <summary>
-/// Blob Management's permissions. They authorize users, for the two things a user does here: read what the tenant
-/// stores - the management page - and keep the directories of a container. Files are an application's: the BLOB API
-/// and the file API authorize clients by each container's allow-list, and use none of these.
+/// Blob Management's permissions. Users hold them for the two things a user does here: read what the tenant stores -
+/// the management page - and keep the directories of a container. Applications hold one: an OAuth client keeps the
+/// files of a container through the BLOB API and the file API with <see cref="Container.Files"/> granted on it.
 /// <para>
-/// Reading is module-wide (<see cref="Containers"/>), granted to roles or users in ABP's permission dialog. Keeping
-/// directories is granted on a container (<see cref="Container"/>) and nowhere else: there is no permission that
-/// creates, renames or deletes directories in every container.
+/// Reading is module-wide (<see cref="Containers"/>), granted to roles or users in ABP's permission dialog. Everything
+/// else is granted on a container (<see cref="Container"/>) and nowhere else: there is no permission that keeps the
+/// directories or the files of every container.
 /// </para>
 /// </summary>
 public static class BlobManagementPermissions
@@ -28,13 +28,20 @@ public static class BlobManagementPermissions
 
     /// <summary>
     /// Resource permissions on one container (<see cref="BlobManagementResourceNames.Container"/>, keyed by its name):
-    /// what a user may do with the directories of this one.
+    /// what a user may do with the directories of this one, and whether an application may keep its files.
     /// </summary>
     public static class Container
     {
         public const string Default = GroupName + ".Container";
 
-        /// <summary>See the container's directory tree. The other three count only with it, or with the management permission.</summary>
+        /// <summary>
+        /// For an OAuth client, and counted for nothing else (ABP's client provider, <c>C</c>): read, store, rename,
+        /// move and delete the container's files through the BLOB API and the file API. Granted to a client, it is
+        /// the deployment's, not a tenant's - a client is - so it holds in every tenant.
+        /// </summary>
+        public const string Files = Default + ".Files";
+
+        /// <summary>See the container's directory tree. The three directory permissions count only with it, or with the management permission.</summary>
         public const string View = Default + ".View";
 
         public const string CreateDirectories = Default + ".CreateDirectories";

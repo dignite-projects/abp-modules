@@ -25,6 +25,7 @@
     "Permission:CreateDirectories": "إنشاء المجلدات",
     "Permission:UpdateDirectories": "إعادة تسمية المجلدات ونقلها",
     "Permission:DeleteDirectories": "حذف المجلدات",
+    "Permission:Files": "إدارة الملفات (للتطبيقات فقط)",
     "Permission:ManagePermissions": "إدارة الأذونات على الحاويات",
     "Menu:BlobManagement": "إدارة كائنات Blob",
     "NoContainers": "لا توجد حاوية لعرضها.",

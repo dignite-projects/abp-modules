@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Volo.Abp;
 using Volo.Abp.BlobStoring;
 
@@ -39,16 +38,6 @@ public class BlobManagementContainerConfiguration
     }
 
     /// <summary>
-    /// The OAuth clients that may read, write and delete in the container through the BLOB API and the file API. Empty:
-    /// no remote client may (in-process callers are trusted).
-    /// </summary>
-    public string[] AllowedClientIds
-    {
-        get => _containerConfiguration.GetConfigurationOrDefault<string[]>(BlobManagementContainerConfigurationNames.AllowedClientIds) ?? Array.Empty<string>();
-        set => _containerConfiguration.SetConfiguration(BlobManagementContainerConfigurationNames.AllowedClientIds, value ?? Array.Empty<string>());
-    }
-
-    /// <summary>
     /// Whether the container has a directory tree for the files kept in it by id. Default: <c>false</c> - the files of the
     /// container are one flat list, and every directory operation is refused
     /// (<see cref="BlobManagementErrorCodes.DirectoriesNotAllowed"/>).
@@ -57,16 +46,5 @@ public class BlobManagementContainerConfiguration
     {
         get => _containerConfiguration.GetConfigurationOrDefault(BlobManagementContainerConfigurationNames.AllowDirectories, false);
         set => _containerConfiguration.SetConfiguration(BlobManagementContainerConfigurationNames.AllowDirectories, value);
-    }
-
-    /// <summary>
-    /// Throws <see cref="AbpException"/> when the configuration cannot be applied.
-    /// </summary>
-    public virtual void Validate()
-    {
-        if (AllowedClientIds.Any(string.IsNullOrWhiteSpace))
-        {
-            throw new AbpException($"{nameof(AllowedClientIds)} cannot contain an empty client id.");
-        }
     }
 }

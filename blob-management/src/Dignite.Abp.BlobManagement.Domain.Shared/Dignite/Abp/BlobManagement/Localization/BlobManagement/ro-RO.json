@@ -25,6 +25,7 @@
     "Permission:CreateDirectories": "Creare foldere",
     "Permission:UpdateDirectories": "Redenumirea și mutarea folderelor",
     "Permission:DeleteDirectories": "Ștergerea folderelor",
+    "Permission:Files": "Gestionarea fișierelor (doar aplicații)",
     "Permission:ManagePermissions": "Gestionarea permisiunilor pentru containere",
     "Menu:BlobManagement": "Gestionare bloburi",
     "NoContainers": "Nu există niciun container de afișat.",

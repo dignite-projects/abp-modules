@@ -25,6 +25,7 @@
     "Permission:CreateDirectories": "Stvaranje mapa",
     "Permission:UpdateDirectories": "Preimenovanje i premještanje mapa",
     "Permission:DeleteDirectories": "Brisanje mapa",
+    "Permission:Files": "Upravljanje datotekama (samo aplikacije)",
     "Permission:ManagePermissions": "Upravljanje dozvolama za spremnike",
     "Menu:BlobManagement": "Upravljanje BLOB-ovima",
     "NoContainers": "Nema spremnika za prikaz.",

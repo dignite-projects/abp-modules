@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Dignite.Abp.BlobManagement.Permissions;
 using Volo.Abp.Authorization.Permissions;
 using Volo.Abp.Authorization.Permissions.Resources;
 using Volo.Abp.PermissionManagement;
@@ -44,6 +45,21 @@ public static class BlobManagementTestGrants
         params string[] permissions)
     {
         return manager.GrantOnAsync(BlobManagementResourceNames.Container, containerName, userId, permissions);
+    }
+
+    /// <summary>
+    /// Grants the files of one container to an OAuth client: ABP's resource permission for the client provider
+    /// (<c>C</c>), as ABP's resource permission dialog grants it to a client.
+    /// </summary>
+    public static Task GrantFilesToClientAsync(this IResourcePermissionManager manager, string containerName, string clientId)
+    {
+        return manager.SetAsync(
+            BlobManagementPermissions.Container.Files,
+            BlobManagementResourceNames.Container,
+            containerName,
+            ClientResourcePermissionValueProvider.ProviderName,
+            clientId,
+            true);
     }
 
     private static async Task GrantOnAsync(

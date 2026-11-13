@@ -25,6 +25,7 @@
     "Permission:CreateDirectories": "폴더 만들기",
     "Permission:UpdateDirectories": "폴더 이름 바꾸기 및 이동",
     "Permission:DeleteDirectories": "폴더 삭제",
+    "Permission:Files": "파일 관리(애플리케이션 전용)",
     "Permission:ManagePermissions": "컨테이너의 권한 관리",
     "Menu:BlobManagement": "Blob 관리",
     "NoContainers": "표시할 컨테이너가 없습니다.",

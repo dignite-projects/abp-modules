@@ -1,7 +1,7 @@
 ```json
 //[doc-seo]
 {
-    "Description": "Install Dignite Blob Management in an ABP host: its modules and database, managed containers declared in code or in appsettings.json, directories, upload presets, allowed clients, public read and the tenant storage allocation."
+    "Description": "Install Dignite Blob Management in an ABP host: its modules and database, managed containers declared in code or in appsettings.json, directories, upload presets, public read and the tenant storage allocation."
 }
 ```
 
@@ -58,11 +58,7 @@ Configure<AbpBlobStoringOptions>(options =>
 
     options.Containers.Configure("media", container =>
     {
-        container.UseBlobManagementContainer(managed =>
-        {
-            managed.AllowedClientIds = new[] { "site-app", "cloud-app" };
-            managed.PublicRead = true;
-        });
+        container.UseBlobManagementContainer(managed => managed.PublicRead = true);
         container.UseImagesPreset(preset => preset.MaxWidth = 2048);
     });
 
@@ -76,9 +72,10 @@ Configure<AbpBlobStoringOptions>(options =>
 
 There is one kind of managed container: applications store in it by name through the [provider](provider.md) and by id through the [file service](files.md), and the management page shows both. `BlobManagementContainerConfiguration` has:
 
-* `AllowedClientIds`: the OAuth clients - the applications - that may read, write and delete in the container through the BLOB API and the file API. Empty, the default, allows no remote caller; an application in the same process is trusted and needs no entry. One list covers reading, writing and deleting.
 * `PublicRead`: whether anyone may read the container's files at their [public address](provider.md#public-addresses), without signing in. Default: `false`.
 * `AllowDirectories`: whether the container has a directory tree for its files addressed by id ([Directories](directories.md)). Default: `false` - the container's files are one flat list, and every directory operation is refused (`BlobManagement:DirectoriesNotAllowed`).
+
+Which applications may use a container over HTTP is not configured here: an OAuth client is granted the container's files in ABP's permission management ([Granting an Application](permissions.md#granting-an-application)). An application in the same process is trusted and needs no grant.
 
 `UseBlobManagementContainer` also makes the container multi-tenant: every managed container keeps each tenant's files apart. Declare named containers only; a default container declared managed would make every container name one, and the host refuses to start.
 
@@ -129,7 +126,6 @@ A host with no code of its own for Blob Management - the module run as its own s
     "Containers": {
       "media": {
         "PublicRead": true,
-        "AllowedClientIds": [ "site-app", "cloud-app" ],
         "Preset": "Images",
         "PresetOptions": { "MaxSizeInMegabytes": 10, "MaxWidth": 2048 }
       },
@@ -142,7 +138,7 @@ A host with no code of its own for Blob Management - the module run as its own s
 }
 ````
 
-Each container is applied with the same methods code uses. The keys are `PublicRead`, `AllowDirectories`, `AllowedClientIds`, `Preset` and `PresetOptions`. `Preset` is one of `Images`, `Documents`, `BinaryAssets` and `Any`, compared without case; `PresetOptions` holds that preset's parameters. The storage provider is not declared here: the containers take the default container's provider and its settings, configured in code as above.
+Each container is applied with the same methods code uses. The keys are `PublicRead`, `AllowDirectories`, `Preset` and `PresetOptions`. `Preset` is one of `Images`, `Documents`, `BinaryAssets` and `Any`, compared without case; `PresetOptions` holds that preset's parameters. The storage provider is not declared here: the containers take the default container's provider and its settings, configured in code as above.
 
 Every mistake stops the host when it starts - an unknown key or preset, a value of the wrong type, `PresetOptions` without a `Preset`, a misspelt or invalid preset parameter - rather than on the first upload. Code runs after the section is applied, so a module's or the host's own `Configure<AbpBlobStoringOptions>` overrides it.
 
@@ -162,10 +158,7 @@ PreConfigure<BlobManagementPresetOptions>(options =>
 
 ### Startup Checks
 
-When the host starts, Blob Management checks its containers once more:
-
-* A default container declared managed stops the host.
-* An allowed client id the authorization server does not know is logged as a warning - where the host can look clients up, that is where ABP's `IApplicationFinder` is registered (a host with `Volo.Abp.OpenIddict.Domain`, Blob Management installed next to its authorization server). A Blob Management service of its own cannot, and skips the check.
+When the host starts, Blob Management checks its containers once more: a default container declared managed stops the host.
 
 ## Tenant Storage
 
