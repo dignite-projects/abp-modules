@@ -7,13 +7,12 @@
 
 # Dignite ABP Modules
 
-Dignite ABP Modules is a set of **reusable modules for the [ABP Framework](https://abp.io)**. They are developed together in [one repository](https://github.com/dignite-projects/abp-modules), released together under one version, and **installed independently**: no module depends on another, so an application takes only the ones it needs.
+Dignite ABP Modules is a set of **reusable modules for the [ABP Framework](https://abp.io)**. They are developed together in [one repository](https://github.com/dignite-projects/abp-modules), released together under one version, and **installed independently**: an application takes only the ones it needs (Blob Management brings the BLOB Storing packages it builds on).
 
 ## The Module List
 
 * [**BLOB Storing**](blob-storing/index.md): Everyday pipeline contributors for [ABP BLOB Storing](https://abp.io/docs/latest/framework/infrastructure/blob-storing): a size cap, a content-type allow-list checked against the real bytes, GZip, and image resize and compress.
-* [**Drive**](drive/index.md): A per-tenant cloud drive: a BLOB storing provider that keeps an application's bytes in the Drive, plus attaching files for people. In development, not yet released.
-* [**Drive Pro**](drive-pro/index.md): The file library on Drive - directories, listing, rename and move, per-item grants, personal drives, the Drive page and a file picker. A commercial module, not in this repository; in development, not yet released.
+* [**Blob Management**](blob-management/index.md): An infrastructure module that manages a tenant's BLOB containers: a BLOB storing provider for applications, a file API with directories and permissions by container and directory, a back office, a file input and MCP tools. In development, not yet released.
 * [**FlexFields**](flex-fields/index.md): Runtime-defined fields for any entity: field types, configuration, validation, a per-entity value bag and a query index, with EF Core and MongoDB providers and Angular and MVC UI.
 * [**Notifications**](notifications/index.md): An event-driven notification framework with pluggable channels (SignalR, email, device push), plus an optional **Notification Center** with a persistent inbox, subscriptions, a REST API and Angular and MVC UI.
 * [**MCP Server**](aspnetcore-mcp/index.md): Hosts one [Model Context Protocol](https://modelcontextprotocol.io) server in an ABP application and lets each module contribute AI-callable tools, resources and prompts to it.

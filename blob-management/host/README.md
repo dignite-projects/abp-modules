@@ -19,7 +19,7 @@ The solution comes with a default configuration that works out of the box. Howev
 
 This is a single-layer application that consists of the following projects:
 
-* `../angular`: Angular SPA application (it also holds the `drive` library under `projects/blob-management`).
+* `../angular`: Angular SPA application (it also holds the `@dignite/ng.blob-management` library under `projects/blob-management`).
 * `Dignite.Abp.BlobManagement.Host`: ASP.NET Core API host application.
 
 ## Before running the application

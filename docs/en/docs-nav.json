@@ -47,82 +47,52 @@
       ]
     },
     {
-      "text": "Drive",
+      "text": "Blob Management",
       "items": [
         {
           "text": "Overview",
-          "path": "drive/index.md",
+          "path": "blob-management/index.md",
           "isIndex": true
         },
         {
-          "text": "Setting Up the Drive",
-          "path": "drive/drive-host.md"
+          "text": "Setting Up",
+          "path": "blob-management/setting-up.md"
         },
         {
-          "text": "Using the Drive From an Application",
-          "path": "drive/provider.md"
+          "text": "Using It From an Application",
+          "path": "blob-management/provider.md"
         },
         {
           "text": "Tickets",
-          "path": "drive/tickets.md"
+          "path": "blob-management/tickets.md"
         },
         {
           "text": "Hosting Modes",
-          "path": "drive/hosting.md"
+          "path": "blob-management/hosting.md"
         },
         {
           "text": "Attaching Files",
-          "path": "drive/attaching-files.md"
+          "path": "blob-management/attaching-files.md"
+        },
+        {
+          "text": "Directories",
+          "path": "blob-management/directories.md"
         },
         {
           "text": "Permissions",
-          "path": "drive/permissions.md"
+          "path": "blob-management/permissions.md"
         },
         {
           "text": "Angular UI",
-          "path": "drive/angular-ui.md"
+          "path": "blob-management/angular-ui.md"
         },
         {
           "text": "MCP Tools",
-          "path": "drive/mcp.md"
-        }
-      ]
-    },
-    {
-      "text": "Drive Pro",
-      "items": [
-        {
-          "text": "Overview",
-          "path": "drive-pro/index.md",
-          "isIndex": true
-        },
-        {
-          "text": "Setting Up Drive Pro",
-          "path": "drive-pro/setting-up.md"
-        },
-        {
-          "text": "The File Library",
-          "path": "drive-pro/file-library.md"
-        },
-        {
-          "text": "Personal Drives",
-          "path": "drive-pro/personal-drives.md"
-        },
-        {
-          "text": "Permissions",
-          "path": "drive-pro/permissions.md"
-        },
-        {
-          "text": "Angular UI",
-          "path": "drive-pro/angular-ui.md"
-        },
-        {
-          "text": "MCP Tools",
-          "path": "drive-pro/mcp.md"
+          "path": "blob-management/mcp.md"
         },
         {
           "text": "Importing a Directory Tree",
-          "path": "drive-pro/importing-directories.md"
+          "path": "blob-management/importing-directories.md"
         }
       ]
     },

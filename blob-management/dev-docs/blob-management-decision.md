@@ -66,9 +66,10 @@ BLOB store with people in front of it:
 
 Both are rows of the one table, in any managed container, and the back office lists both. The difference is a
 property of the file, not of the container: `FileDescriptor.IsAddressedByName`. Such a file is not renamed or moved -
-its name is how its application finds it (`BlobManagement:FileAddressedByName`) - and lists at the top of its
-container; it is read, downloaded and deleted like any other. The public address of a file is its name when it is
-addressed by name, else its physical BLOB name, so renaming or moving a file never breaks a published link.
+its name is how its application finds it (`BlobManagement:FileAddressedByName`) - and sits at the top of its
+container, outside any directory; it is read, downloaded and deleted like any other. The public address of a file is
+its name when it is addressed by name, else its physical BLOB name, so renaming or moving a file never breaks a
+published link.
 
 Not chosen: one namespace in which a directory path plus a name is the address of every file. It would make every
 BLOB read of an application resolve a directory chain, and forbid the repeating names people upload.

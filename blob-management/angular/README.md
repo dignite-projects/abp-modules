@@ -5,7 +5,7 @@ This workspace holds two things:
 | Path | What it is |
 |---|---|
 | `src/` | **Host** - the Angular application that runs against `Dignite.Abp.BlobManagement.Host` (local development and demo only, never published). It consumes the library from source through the `paths` in `tsconfig.json`. |
-| `projects/blob-management/` | **`@dignite/ng.blob-management`** - the publishable Angular library (the file input, services and the file API's proxies). |
+| `projects/blob-management/` | **`@dignite/ng.blob-management`** - the publishable Angular library: the management page, the explorer and the file picker, the file input, services and the proxies, with the route and menu configuration in its secondary entry point `@dignite/ng.blob-management/config`. |
 | `projects/dev-app/` | An environment stub (`environment.ts` only, never built) that the ABP schematics read when generating the **library's** proxies: it carries the `Dignite.Abp.BlobManagement` root namespace, which `Host` (`Dignite.Abp.BlobManagement.Host`) does not. See [Generate Proxy](#generate-proxy). |
 
 For more information about the framework, visit [abp.io](https://abp.io/).
@@ -51,7 +51,7 @@ abp generate-proxy -t ng
 
 This command generates service proxies that allow you to call your backend APIs in a type-safe manner. Without `--source` it reads the root namespace and API URL from the first application in `angular.json`, which is `Host`.
 
-To generate the **library's** proxies, name `dev-app` as the source and `drive` as the target, so that types in the `Dignite.Abp.BlobManagement.*` namespace are laid out as `proxy/<sub-namespace>/...` instead of `proxy/dignite/blob-management/<sub-namespace>/...` (the root namespace is only stripped from a namespace that starts with it, and `Host`'s `Dignite.Abp.BlobManagement.Host` does not):
+To generate the **library's** proxies, name `dev-app` as the source and `blob-management` as the target, so that types in the `Dignite.Abp.BlobManagement.*` namespace are laid out as `proxy/<sub-namespace>/...` instead of `proxy/dignite/blob-management/<sub-namespace>/...` (the root namespace is only stripped from a namespace that starts with it, and `Host`'s `Dignite.Abp.BlobManagement.Host` does not):
 
 ```bash
 abp generate-proxy -t ng -m blobManagement --source dev-app --target blob-management
