@@ -52,8 +52,11 @@ These are the things most likely to be broken by an otherwise reasonable-looking
    `flex-fields/` reference none of the others, and `blob-storing/`'s "what stays out" is unchanged
    ([`blob-management/dev-docs/drive-decision.md`](blob-management/dev-docs/drive-decision.md)).
    - `blob-management/` is **Blob Management**, an infrastructure module and not an application: the tenant's BLOB
-     containers, managed - the provider applications keep their bytes with, and directories, files and their
-     permissions for the people in front of them. It is one edition, all of it here: the commercial Drive Pro that was
+     containers, managed - the provider business systems keep their bytes with, a ledger of what they keep (the
+     allocation, the usage by container, user and client) and the directories of a container, which users keep by
+     permissions on it; it has no upload of its own
+     ([`blob-management/dev-docs/positioning-decision.md`](blob-management/dev-docs/positioning-decision.md)). It is
+     one edition, all of it here: the commercial Drive Pro that was
      split from it for a day was folded back on 2026-11-12, and with it went personal drives and sharing a file, which
      the module does not do (ABP's File Management does; this module does not compete with it)
      ([`blob-management/dev-docs/blob-management-decision.md`](blob-management/dev-docs/blob-management-decision.md)).

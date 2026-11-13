@@ -12,7 +12,7 @@ Dignite ABP Modules is a set of **reusable modules for the [ABP Framework](https
 ## The Module List
 
 * [**BLOB Storing**](blob-storing/index.md): Everyday pipeline contributors for [ABP BLOB Storing](https://abp.io/docs/latest/framework/infrastructure/blob-storing): a size cap, a content-type allow-list checked against the real bytes, GZip, and image resize and compress.
-* [**Blob Management**](blob-management/index.md): An infrastructure module that manages a tenant's BLOB containers: a BLOB storing provider for applications, a file API with directories and permissions by container and directory, a back office, a file input and MCP tools. In development, not yet released.
+* [**Blob Management**](blob-management/index.md): An infrastructure module that manages a tenant's BLOB containers: a BLOB storing provider business systems keep their BLOBs and files with, directories kept by permissions on the container, usage by container, user and client, a management page and MCP tools that read. In development, not yet released.
 * [**FlexFields**](flex-fields/index.md): Runtime-defined fields for any entity: field types, configuration, validation, a per-entity value bag and a query index, with EF Core and MongoDB providers and Angular and MVC UI.
 * [**Notifications**](notifications/index.md): An event-driven notification framework with pluggable channels (SignalR, email, device push), plus an optional **Notification Center** with a persistent inbox, subscriptions, a REST API and Angular and MVC UI.
 * [**MCP Server**](aspnetcore-mcp/index.md): Hosts one [Model Context Protocol](https://modelcontextprotocol.io) server in an ABP application and lets each module contribute AI-callable tools, resources and prompts to it.

@@ -1,7 +1,7 @@
 ```json
 //[doc-seo]
 {
-    "Description": "Install Dignite Blob Management in an ABP host: its modules and database, managed containers declared in code or in appsettings.json, directories, upload presets, allowed clients, public read and the tenant storage quota."
+    "Description": "Install Dignite Blob Management in an ABP host: its modules and database, managed containers declared in code or in appsettings.json, directories, upload presets, allowed clients, public read and the tenant storage allocation."
 }
 ```
 
@@ -26,7 +26,7 @@ public class MyHostModule : AbpModule
 }
 ````
 
-`Dignite.Abp.BlobManagement.HttpApi` is needed for remote applications, public read, tickets and the file API; a host whose only caller is an application in the same process can leave it out.
+`Dignite.Abp.BlobManagement.HttpApi` is needed for remote applications, public read, the directory and usage APIs and the management page; a host whose only caller is an application in the same process can leave it out.
 
 The database objects have the `Blob` prefix (`BlobFileDescriptors`, `BlobDirectoryDescriptors`) and use the `BlobManagement` [connection string](https://abp.io/docs/latest/framework/fundamentals/connection-strings), falling back to `Default`. With EF Core, call `ConfigureBlobManagement()` in your migrations `DbContext` and add a migration:
 
@@ -74,11 +74,11 @@ Configure<AbpBlobStoringOptions>(options =>
 });
 ````
 
-There is one kind of managed container: applications store in it through the [provider](provider.md), people upload to it through the [file API](attaching-files.md), and the back office shows both. `BlobManagementContainerConfiguration` has:
+There is one kind of managed container: applications store in it by name through the [provider](provider.md) and by id through the [file service](files.md), and the management page shows both. `BlobManagementContainerConfiguration` has:
 
-* `AllowedClientIds`: the OAuth clients - the applications - that may read, write and delete in the container through the BLOB API. Empty, the default, allows no remote caller; an application in the same process is trusted and needs no entry. One list covers reading, writing and deleting.
+* `AllowedClientIds`: the OAuth clients - the applications - that may read, write and delete in the container through the BLOB API and the file API. Empty, the default, allows no remote caller; an application in the same process is trusted and needs no entry. One list covers reading, writing and deleting.
 * `PublicRead`: whether anyone may read the container's files at their [public address](provider.md#public-addresses), without signing in. Default: `false`.
-* `AllowDirectories`: whether the container has a directory tree for the files people upload ([Directories](directories.md)). Default: `false` - the container's files are one flat list, and every directory operation is refused (`BlobManagement:DirectoriesNotAllowed`).
+* `AllowDirectories`: whether the container has a directory tree for its files addressed by id ([Directories](directories.md)). Default: `false` - the container's files are one flat list, and every directory operation is refused (`BlobManagement:DirectoriesNotAllowed`).
 
 `UseBlobManagementContainer` also makes the container multi-tenant: every managed container keeps each tenant's files apart. Declare named containers only; a default container declared managed would make every container name one, and the host refuses to start.
 
@@ -105,7 +105,7 @@ A container can do without a preset, or add contributors after one; calling an `
 
 With `StoreJpegAsWebp` on (the default), the images preset stores every JPEG as a lossy WebP at `WebpQuality` (1-100, default 85): turned upright by its EXIF orientation, so a phone's portrait photo is not shown on its side, and fitted into `MaxWidth` × `MaxHeight` in the same decode. A PNG keeps its pixels, and a GIF and a WebP are stored as they are; a PNG or WebP larger than the box is resized, upright.
 
-The physical BLOB of a converted JPEG is named `.webp`, and the file records `image/webp` with the size of the WebP. A file a person uploads takes the `.webp` extension in its name too (`holiday.jpg` becomes `holiday.webp`), so a download is named for what it is. A file an application saves keeps its name, which is its address: an application that stored `covers/holiday.jpg` reads it back by that name, and gets the WebP. Uploading the same JPEG again shares the stored WebP.
+The physical BLOB of a converted JPEG is named `.webp`, and the file records `image/webp` with the size of the WebP. A file stored by id takes the `.webp` extension in its name too (`holiday.jpg` becomes `holiday.webp`), so a download is named for what it is. A file an application saves keeps its name, which is its address: an application that stored `covers/holiday.jpg` reads it back by that name, and gets the WebP. Uploading the same JPEG again shares the stored WebP.
 
 Turn it off for a container that must keep JPEGs as they are, in code or in [configuration](#declaring-containers-in-configuration):
 
@@ -173,10 +173,10 @@ How much a tenant may store is an ABP [feature](https://abp.io/docs/latest/frame
 
 | Feature | Default | |
 |---|---|---|
-| `BlobManagement.Enable` | `true` | Whether the tenant may store files. Turning it off stops storing, and closes the file, directory and container services; it does not close reading what is already public. |
+| `BlobManagement.Enable` | `true` | Whether the tenant may store files. Turning it off stops storing, and closes the file, directory, container and usage services; it does not close reading what is already public. |
 | `BlobManagement.StorageSize` | `0` | The most the tenant may store, in megabytes. `0` is no limit. |
 
-Usage is counted from the file descriptors: each stored BLOB once, however many files share it, across every managed container; deleted files do not count. New bytes beyond the allocation are refused with `BlobManagement:StorageQuotaExceeded`; the same bytes stored again add nothing and are not refused. The check reads the usage and then stores, so two uploads at the same moment can both pass it: it is a soft limit, exceeded by at most an upload each.
+Usage is counted from the file descriptors: each stored BLOB once, however many files share it, across every managed container; deleted files do not count. New bytes beyond the allocation are refused with `BlobManagement:StorageQuotaExceeded`; the same bytes stored again add nothing and are not refused. The check reads the usage and then stores, so two uploads at the same moment can both pass it: it is a soft limit, exceeded by at most an upload each. The allocation is the tenant's only: there is none for a container or a user. What is used is shown on the [Usage](usage.md) page.
 
 ## Errors
 
@@ -187,7 +187,6 @@ Usage is counted from the file descriptors: each stored BLOB once, however many 
 | `BlobManagement:BlobNotFound` | No file of that name (HTTP 404). |
 | `BlobManagement:BlobManagementDisabled` | The tenant's `BlobManagement.Enable` is off. |
 | `BlobManagement:StorageQuotaExceeded` | The tenant's `BlobManagement.StorageSize` would be exceeded. |
-| `BlobManagement:InvalidTicket` | See [Tickets](tickets.md) (HTTP 403). |
 | `BlobManagement:FileAddressedByName` | The file was saved by an application under its name, and is not renamed or moved (HTTP 409). |
 | `BlobManagement:DirectoriesNotAllowed` and the other directory errors | See [Directories](directories.md#errors). |
 
@@ -196,6 +195,7 @@ The container's contributors add their own, such as `Dignite.Abp.BlobStoring:Con
 ## See Also
 
 * [Using It From an Application](provider.md)
-* [Attaching Files](attaching-files.md)
+* [Keeping Files by Id](files.md)
 * [Directories](directories.md)
+* [Usage](usage.md)
 * [Hosting Modes](hosting.md)

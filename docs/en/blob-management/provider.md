@@ -48,7 +48,7 @@ A host that has installed neither fails at the first use of such a container, wi
 
 ## A Remote Blob Management
 
-The proxies use the `BlobManagement` [remote service](https://abp.io/docs/latest/framework/api-development/static-csharp-clients). The BLOB API accepts **client credentials only**: a token that carries a user is refused, whatever its client - an application calls with its own identity, and browsers use [tickets](tickets.md). Configure the address, and a client-credentials identity client with ABP's `Volo.Abp.Http.Client.IdentityModel` (depend on `AbpHttpClientIdentityModelModule`):
+The proxies use the `BlobManagement` [remote service](https://abp.io/docs/latest/framework/api-development/static-csharp-clients). The BLOB API accepts **client credentials only**: a token that carries a user is refused, whatever its client - an application calls with its own identity, for its user, after applying its own rules. Configure the address, and a client-credentials identity client with ABP's `Volo.Abp.Http.Client.IdentityModel` (depend on `AbpHttpClientIdentityModelModule`):
 
 ````json
 {
@@ -70,7 +70,9 @@ The proxies use the `BlobManagement` [remote service](https://abp.io/docs/latest
 }
 ````
 
-The client - `site-app` here - must be in the managed container's `AllowedClientIds`; the scope is the one under which your authorization server knows the Blob Management service. The tenant travels with each call, as ABP's proxies send it.
+The client - `site-app` here - must be in the managed container's `AllowedClientIds`; the scope is the one under which your authorization server knows the Blob Management service. The tenant travels with each call, as ABP's proxies send it. The same configuration serves the [file service](files.md), which calls the same remote service.
+
+A browser does not reach a remote Blob Management for a file that is not public: the application reads the bytes through the provider and hands them on, and receives an upload and stores it.
 
 ## What Blob Management Does With a File
 
@@ -78,9 +80,25 @@ The client - `site-app` here - must be in the managed container's `AllowedClient
 * **Rules.** The application container's contributors run in the application; the managed container's run in Blob Management, on what the application sent. An image the managed container resizes is stored resized.
 * **Type.** The type is detected from the bytes, and a name whose extension the content contradicts is refused (`Dignite.Abp.BlobStoring:ContentTypeMismatch`).
 * **De-duplication.** Bytes already stored in the same managed container, for the same tenant, are not stored again: the new file shares them. Deleting a file deletes its bytes only when no other file shares them.
-* **Tenants.** A multi-tenant application container stores in the current tenant, one that is not multi-tenant stores for the host - as with any provider - and the tenant's [storage quota](setting-up.md#tenant-storage) applies.
+* **Tenants.** A multi-tenant application container stores in the current tenant, one that is not multi-tenant stores for the host - as with any provider - and the tenant's [storage allocation](setting-up.md#tenant-storage) applies.
+* **The user it is counted for.** Each file records the user it is counted for in the [usage figures](usage.md), and nothing else comes with it. In the same process it is the application's current user, as ABP's auditing records it. Remotely the client's token carries no user, so `Dignite.Abp.BlobManagement.HttpApi.Client` sends the application's current user with the save; a file stored over HTTP also records the OAuth client that stored it.
 
-The files an application saves are listed in the back office beside the files people upload, and a user with the permission to delete files there may delete them.
+The files an application saves are listed, read-only, on the [management page](angular-ui.md#the-management-page) beside the files it keeps by id.
+
+## Calling the BLOB Service Directly
+
+The provider calls `IBlobManagementBlobService`, which an application may call itself - to name the user a BLOB is counted for, for instance, when it stores for someone other than its current user:
+
+````csharp
+await _blobService.SaveAsync(
+    "media",                    // the managed container
+    "2026/11/photo.png",
+    new RemoteStreamContent(stream, "photo.png"),
+    overrideExisting: false,
+    creatorId: userId);         // null: the application's current user
+````
+
+It also has `GetOrNullAsync`, `ExistsAsync` and `DeleteAsync`, by container and name. Over HTTP it is `api/blob-management/blobs/{containerName}`, with the name in `blobName`.
 
 ## Public Addresses
 
@@ -106,7 +124,7 @@ Configure<AbpBlobStoringBlobManagementOptions>(options =>
 });
 ````
 
-A file a person uploaded has a public address too, given as the `url` of the file ([Public Reads](attaching-files.md#public-reads)): it names the file's physical BLOB rather than its name, so renaming or moving the file never breaks a published link.
+A file kept by id has a public address too, given as the `url` of the file ([Public Reads](files.md#public-reads)): it names the file's physical BLOB rather than its name, so renaming or moving the file never breaks a published link.
 
 The response is cacheable by anyone for a day, with an `ETag` that changes when the file is overwritten (a matching `If-None-Match` is answered `304`). It never sets a cookie, is marked `nosniff`, and serves a type outside the module's list of known types as a download. `HEAD` is answered without reading the file. A file whose container is not read publicly is not found.
 
@@ -124,5 +142,5 @@ There is no server-side cache of renditions: a size is rendered again on each re
 
 ## See Also
 
-* [Tickets](tickets.md)
+* [Keeping Files by Id](files.md)
 * [Hosting Modes](hosting.md)
