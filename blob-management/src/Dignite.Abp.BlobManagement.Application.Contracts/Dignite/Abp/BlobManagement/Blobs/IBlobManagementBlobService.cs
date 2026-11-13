@@ -6,7 +6,7 @@ namespace Dignite.Abp.BlobManagement.Blobs;
 
 /// <summary>
 /// What the BLOB storing provider (<c>Dignite.Abp.BlobStoring.BlobManagement</c>) calls: the bytes of an application's
-/// container, kept in a Blob Management system container. The host decides which implementation answers: the in-process one when
+/// container, kept in a managed container. The host decides which implementation answers: the in-process one when
 /// it installs <c>Dignite.Abp.BlobManagement.Application</c> (a trusted caller), the HTTP client proxy when it installs
 /// <c>Dignite.Abp.BlobManagement.HttpApi.Client</c> (a client authenticated by its credentials).
 /// <para>

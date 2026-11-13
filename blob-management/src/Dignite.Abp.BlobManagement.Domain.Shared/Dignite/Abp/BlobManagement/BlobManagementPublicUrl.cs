@@ -21,7 +21,7 @@ public static class BlobManagementPublicUrl
     public const int MaxDimension = 4096;
 
     /// <summary>
-    /// The path and query of a public read, relative to the BlobManagement's address. The BLOB name may be a path: each of its
+    /// The path and query of a public read, relative to Blob Management's address. The BLOB name may be a path: each of its
     /// segments is escaped, its slashes are kept. With both <paramref name="width"/> and <paramref name="height"/> a
     /// picture is cropped to fill the box; with one, the other follows its proportions. A width or height must be one
     /// the Blob Management host allows (by default 64, 128, 256, 384, 512, 768, 1024, 1536, 2048 or 4096, set with the host's

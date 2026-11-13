@@ -23,7 +23,7 @@ using Xunit;
 namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
-/// A user's ticket for adding a file to a user drive: issued as the upload would be authorized, redeemed by anyone who
+/// A user's ticket for adding a file to a container: issued as the upload would be authorized, redeemed by anyone who
 /// holds it, as the user who issued it - whose permissions decide again at that moment.
 /// </summary>
 public abstract class BlobManagementFileUploadTicket_Tests<TStartupModule> : BlobManagementApplicationTestBase<TStartupModule>

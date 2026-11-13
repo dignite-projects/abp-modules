@@ -5,7 +5,7 @@ using Volo.Abp.Content;
 namespace Dignite.Abp.BlobManagement.Blobs;
 
 /// <summary>
-/// The in-process <see cref="IBlobManagementBlobService"/>: the provider inside the BlobManagement's own host calls it, a trusted caller,
+/// The in-process <see cref="IBlobManagementBlobService"/>: the provider inside Blob Management's own host calls it, a trusted caller,
 /// so it checks no permission and no client - it goes straight to <see cref="FileDescriptorManager"/>. Never exposed
 /// over HTTP (<c>RemoteService(IsEnabled = false)</c>, so conventional controllers skip it); the BLOB API authorizes its
 /// remote callers before it reaches the storage.

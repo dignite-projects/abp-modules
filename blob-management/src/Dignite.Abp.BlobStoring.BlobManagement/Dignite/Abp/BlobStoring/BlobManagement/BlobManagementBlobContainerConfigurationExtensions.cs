@@ -13,9 +13,9 @@ public static class BlobManagementBlobContainerConfigurationExtensions
     }
 
     /// <summary>
-    /// Keeps the container's bytes in Blob Management, in the system container
+    /// Keeps the container's bytes in Blob Management, in the managed container
     /// <see cref="BlobManagementBlobProviderConfiguration.BlobManagementContainer"/>. The container's own pipeline contributors run first,
-    /// in the application; the Blob Management container's run on the BlobManagement. Whether Blob Management is in this process or a remote
+    /// in the application; the managed container's run in Blob Management. Whether Blob Management is in this process or a remote
     /// service is the host's choice (<c>Dignite.Abp.BlobManagement.Application</c> or <c>Dignite.Abp.BlobManagement.HttpApi.Client</c>), not the
     /// container's.
     /// </summary>

@@ -4,7 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace />
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
-    <Description>ABP Studio / ABP Suite module installer entry point for Dignite BlobManagement.</Description>
+    <Description>ABP Studio / ABP Suite module installer entry point for Dignite Blob Management.</Description>
   </PropertyGroup>
 
   <ItemGroup>

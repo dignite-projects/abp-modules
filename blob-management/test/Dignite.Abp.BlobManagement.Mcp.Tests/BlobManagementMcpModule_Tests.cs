@@ -10,7 +10,7 @@ using Xunit;
 namespace Dignite.Abp.BlobManagement.Mcp;
 
 /// <summary>
-/// The tools as <see cref="BlobManagementMcpModule"/> registers them: inside the <c>drive</c> namespace, which the server checks at
+/// The tools as <see cref="BlobManagementMcpModule"/> registers them: inside the <c>blob</c> namespace, which the server checks at
 /// startup and refuses to start without, and annotated for the client.
 /// </summary>
 public class BlobManagementMcpModule_Tests
@@ -58,7 +58,7 @@ public class BlobManagementMcpModule_Tests
     [Fact]
     public void The_Instructions_Should_Not_Say_What_No_Tool_Does()
     {
-        // Another package may add tools to the drive module, and AddInstructions only appends: a sentence claiming that
+        // Another package may add tools to the blob module, and AddInstructions only appends: a sentence claiming that
         // no tool does something would contradict the tools it adds.
         using var provider = BuildProvider();
         var instructions = string.Join(" ", provider.GetRequiredService<AbpMcpModuleRegistry>()

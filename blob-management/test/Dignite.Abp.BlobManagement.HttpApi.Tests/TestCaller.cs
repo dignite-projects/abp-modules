@@ -16,7 +16,7 @@ namespace Dignite.Abp.BlobManagement;
 /// <summary>
 /// Who calls the Blob Management over HTTP, standing in for a bearer token: an OAuth client, optionally with a user. The remote
 /// provider sends it through <see cref="TestCallerAuthenticator"/>, a raw request through <see cref="ClientHeader"/> and
-/// <see cref="UserHeader"/>, and <see cref="TestCallerAuthenticationHandler"/> turns it into claims on the BlobManagement's side.
+/// <see cref="UserHeader"/>, and <see cref="TestCallerAuthenticationHandler"/> turns it into claims on Blob Management's side.
 /// </summary>
 public static class TestCaller
 {

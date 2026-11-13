@@ -1,7 +1,7 @@
 namespace Dignite.Abp.BlobManagement.Presets;
 
 /// <summary>
-/// The presets' default parameters - the limits Site's own containers used before they moved to the BlobManagement.
+/// The presets' default parameters - the limits Site's own containers used before they moved to Blob Management.
 /// </summary>
 public static class BlobManagementPresetDefaults
 {

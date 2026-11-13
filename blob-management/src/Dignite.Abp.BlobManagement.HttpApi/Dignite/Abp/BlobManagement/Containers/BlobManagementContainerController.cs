@@ -5,7 +5,7 @@ using Volo.Abp.Application.Dtos;
 
 namespace Dignite.Abp.BlobManagement.Containers;
 
-/// <summary>The user drives: <c>/api/blob-management/containers</c>.</summary>
+/// <summary>The managed containers: <c>/api/blob-management/containers</c>.</summary>
 [Area(BlobManagementRemoteServiceConsts.ModuleName)]
 [RemoteService(Name = BlobManagementRemoteServiceConsts.RemoteServiceName)]
 [Route("api/blob-management/containers")]

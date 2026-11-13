@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace />
-    <Description>Entity Framework Core integration for Dignite BlobManagement.</Description>
+    <Description>Entity Framework Core integration for Dignite Blob Management.</Description>
   </PropertyGroup>
 
   <ItemGroup>

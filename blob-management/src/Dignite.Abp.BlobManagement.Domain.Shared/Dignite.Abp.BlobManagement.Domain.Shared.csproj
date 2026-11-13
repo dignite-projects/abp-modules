@@ -4,7 +4,7 @@
     <TargetFrameworks>netstandard2.0;netstandard2.1;net10.0</TargetFrameworks>
     <RootNamespace />
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
-    <Description>Constants, error codes and localization resources shared by every layer of Dignite BlobManagement.</Description>
+    <Description>Constants, error codes and localization resources shared by every layer of Dignite Blob Management.</Description>
   </PropertyGroup>
 
   <ItemGroup>

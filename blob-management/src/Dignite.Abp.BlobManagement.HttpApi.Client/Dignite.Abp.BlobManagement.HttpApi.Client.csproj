@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1;net10.0</TargetFrameworks>
     <RootNamespace />
-    <Description>C# HTTP client proxies for remote consumers of the Dignite BlobManagement API.</Description>
+    <Description>C# HTTP client proxies for remote consumers of the Dignite Blob Management API.</Description>
   </PropertyGroup>
 
   <ItemGroup>

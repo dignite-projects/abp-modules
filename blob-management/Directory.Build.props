@@ -8,15 +8,15 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
   <PropertyGroup>
-    <Product>Dignite BlobManagement</Product>
-    <PackageTags>abp;drive;cloud-drive;file-library;blob-storing;multi-tenant;aspnetcore</PackageTags>
+    <Product>Dignite Blob Management</Product>
+    <PackageTags>abp;blob;blob-management;blob-storing;file-library;multi-tenant;aspnetcore</PackageTags>
   </PropertyGroup>
 
   <!-- Blob Management is not published until it is complete (owner decision, 2026-11-10): its packages are not packable by
        default, so `dotnet pack` of the aggregate solution - what the release pushes to NuGet.org and GitHub Packages -
        produces none of them. CI opts in with -p:PackBlobManagement=true to keep verifying how they pack (the packed README and
        icon, the lockstep version, the smoke test). To publish: delete this group, the opt-in in ci.yml, and add back
-       the drive smoke test in release.yml (see blob-management/dev-docs/blob-decision.md). -->
+       the blob-management smoke test in release.yml (see blob-management/dev-docs/drive-decision.md). -->
   <PropertyGroup Condition="'$(PackBlobManagement)' != 'true'">
     <IsPackable>false</IsPackable>
   </PropertyGroup>

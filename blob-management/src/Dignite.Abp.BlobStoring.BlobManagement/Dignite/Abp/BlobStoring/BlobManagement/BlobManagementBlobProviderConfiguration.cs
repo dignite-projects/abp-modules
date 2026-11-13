@@ -16,7 +16,7 @@ public class BlobManagementBlobProviderConfiguration
     }
 
     /// <summary>
-    /// The Blob Management system container the bytes go to, declared on the Blob Management host. It need not have the application
+    /// The managed container the bytes go to, declared on the Blob Management host. It need not have the application
     /// container's name. Application containers that share one share its names too: a name saved through one is the
     /// same file through the other.
     /// </summary>
@@ -31,7 +31,7 @@ public class BlobManagementBlobProviderConfiguration
     {
         if (string.IsNullOrWhiteSpace(BlobManagementContainer))
         {
-            throw new AbpException($"UseBlobManagement requires a {nameof(BlobManagementContainer)}: the BlobManagement container the bytes go to.");
+            throw new AbpException($"UseBlobManagement requires a {nameof(BlobManagementContainer)}: the managed container the bytes go to.");
         }
     }
 }

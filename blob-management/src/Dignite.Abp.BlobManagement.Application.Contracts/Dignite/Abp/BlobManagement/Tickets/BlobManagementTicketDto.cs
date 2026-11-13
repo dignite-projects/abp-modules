@@ -12,7 +12,7 @@ public class BlobManagementTicketDto
     public DateTime ExpiresAt { get; set; }
 
     /// <summary>
-    /// Where the browser redeems it, relative to the BlobManagement's address: a form <c>POST</c> of the file (field
+    /// Where the browser redeems it, relative to Blob Management's address: a form <c>POST</c> of the file (field
     /// <c>content</c>) for an upload, a <c>GET</c> for a download (<see cref="BlobManagementTicketUrl"/>).
     /// </summary>
     public string Url { get; set; } = default!;

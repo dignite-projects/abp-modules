@@ -16,7 +16,7 @@ namespace Dignite.Abp.BlobManagement;
 /// </para>
 /// <para>
 /// SVG, HTML and script types are deliberately absent: a container may be read publicly, and a file a browser
-/// renders and executes would be stored XSS on the BlobManagement's own origin. The exact raster types are listed rather than
+/// renders and executes would be stored XSS on Blob Management's own origin. The exact raster types are listed rather than
 /// <c>image/*</c>, which would admit <c>image/svg+xml</c>.
 /// </para>
 /// </summary>

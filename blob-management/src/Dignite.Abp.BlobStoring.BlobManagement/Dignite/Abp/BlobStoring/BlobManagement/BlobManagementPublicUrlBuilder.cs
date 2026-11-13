@@ -27,13 +27,13 @@ public class BlobManagementPublicUrlBuilder : IBlobManagementPublicUrlBuilder, I
     public virtual string Build(string containerName, string blobName, int? width = null, int? height = null)
     {
         var configuration = ConfigurationProvider.Get(containerName);
-        var drive = configuration.GetBlobManagementConfiguration();
-        drive.Validate();
+        var provider = configuration.GetBlobManagementConfiguration();
+        provider.Validate();
 
         // The tenant the file was stored under: ABP's container stores for the current tenant only when it is
         // multi-tenant, and for the host otherwise.
         var tenantId = configuration.IsMultiTenant ? CurrentTenant.Id : null;
 
-        return Options.PublicBaseUrl.TrimEnd('/') + BlobManagementPublicUrl.Build(drive.BlobManagementContainer, blobName, tenantId, width, height);
+        return Options.PublicBaseUrl.TrimEnd('/') + BlobManagementPublicUrl.Build(provider.BlobManagementContainer, blobName, tenantId, width, height);
     }
 }

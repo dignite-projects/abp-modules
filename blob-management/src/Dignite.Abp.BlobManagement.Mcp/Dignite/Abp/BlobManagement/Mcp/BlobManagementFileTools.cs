@@ -87,7 +87,7 @@ public class BlobManagementFileTools : ITransientDependency
     [McpServerTool(Name = "blob_create_upload_url", Title = "Get a link to upload a file to")]
     [Description(
         "The way to add a real file - a document, a photo: returns a one-time link, good for ten minutes, that the file is " +
-        "posted to, and the command that does it. The bytes go from the machine the file is on to the BlobManagement and never " +
+        "posted to, and the command that does it. The bytes go from the machine the file is on to Blob Management and never " +
         "through you, so a large file costs nothing here; run the command on that machine (replace FILE_PATH): command for " +
         "sh, bash, zsh and cmd.exe, powerShellCommand for PowerShell. Its output is the stored file. The container's rules " +
         "apply (its file types and size; the type is detected from the bytes, so the extension of fileName must match " +
@@ -220,7 +220,7 @@ public class BlobManagementFileTools : ITransientDependency
 
     /// <summary>
     /// Where Blob Management is reached: <see cref="BlobManagementMcpOptions.BaseUrl"/>, else the scheme and host this MCP request came
-    /// in on (with its path base), which is the BlobManagement's when the MCP server runs in its host.
+    /// in on (with its path base), which is Blob Management's when the MCP server runs in its host.
     /// </summary>
     protected virtual string GetBaseUrl()
     {

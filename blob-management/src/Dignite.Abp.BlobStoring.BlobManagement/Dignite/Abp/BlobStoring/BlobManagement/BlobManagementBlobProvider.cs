@@ -28,7 +28,7 @@ public class BlobManagementBlobProvider : BlobProviderBase, ITransientDependency
     protected IBlobManagementBlobService BlobManagementBlobService => _driveBlobService ??=
         ServiceProvider.GetService(typeof(IBlobManagementBlobService)) as IBlobManagementBlobService
         ?? throw new AbpException(
-            "No IBlobManagementBlobService is registered. The host installs Dignite.Abp.BlobManagement.Application (the BlobManagement in this process) or Dignite.Abp.BlobManagement.HttpApi.Client (a remote BlobManagement).");
+            "No IBlobManagementBlobService is registered. The host installs Dignite.Abp.BlobManagement.Application (Blob Management in this process) or Dignite.Abp.BlobManagement.HttpApi.Client (a remote Blob Management).");
 
     private IBlobManagementBlobService? _driveBlobService;
 
@@ -39,13 +39,13 @@ public class BlobManagementBlobProvider : BlobProviderBase, ITransientDependency
 
     public override async Task SaveAsync(BlobProviderSaveArgs args)
     {
-        var driveContainer = GetBlobManagementContainer(args);
+        var managedContainer = GetBlobManagementContainer(args);
 
         // The stream stays the caller's (ABP disposes what its pipeline created).
         var content = new RemoteStreamContent(args.BlobStream, fileName: args.BlobName, disposeStream: false);
         try
         {
-            await BlobManagementBlobService.SaveAsync(driveContainer, args.BlobName, content, args.OverrideExisting);
+            await BlobManagementBlobService.SaveAsync(managedContainer, args.BlobName, content, args.OverrideExisting);
         }
         catch (Exception exception) when (exception is IHasErrorCode { Code: BlobManagementErrorCodes.BlobAlreadyExists })
         {

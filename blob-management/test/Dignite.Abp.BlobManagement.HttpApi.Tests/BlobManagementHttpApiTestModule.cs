@@ -55,22 +55,22 @@ public class BlobManagementHttpApiTestModule : AbpModule
 {
     public const string AllowedClient = "site-app";
 
-    /// <summary>System container that allows <see cref="AllowedClient"/>.</summary>
+    /// <summary>Container that allows <see cref="AllowedClient"/>.</summary>
     public const string OpenContainer = "files";
 
-    /// <summary>System container that allows no client.</summary>
+    /// <summary>Container that allows no client.</summary>
     public const string ClosedContainer = "closed";
 
-    /// <summary>A user drive.</summary>
+    /// <summary>Container with directories.</summary>
     public const string DocumentsContainer = "documents";
 
-    /// <summary>System container that allows <see cref="AllowedClient"/> and is read publicly.</summary>
+    /// <summary>Container that allows <see cref="AllowedClient"/> and is read publicly.</summary>
     public const string PublicContainer = "public";
 
     /// <summary>The application's container, to <see cref="PublicContainer"/> over HTTP.</summary>
     public const string AppPublicContainer = "app-public";
 
-    /// <summary>System container that allows <see cref="AllowedClient"/>; the ticket tests change its allow-list.</summary>
+    /// <summary>Container that allows <see cref="AllowedClient"/>; the ticket tests change its allow-list.</summary>
     public const string TicketsContainer = "tickets";
 
     /// <summary>The application's container, to <see cref="TicketsContainer"/> over HTTP.</summary>
@@ -106,7 +106,7 @@ public class BlobManagementHttpApiTestModule : AbpModule
         ConfigureDatabase(context);
         ConfigureBlobStoring(context);
 
-        // The application's side: its IBlobManagementBlobService is the remote one, though the BlobManagement's in-process one is
+        // The application's side: its IBlobManagementBlobService is the remote one, though Blob Management's in-process one is
         // installed in this host too.
         Configure<AbpRemoteServiceOptions>(options =>
         {
@@ -121,7 +121,7 @@ public class BlobManagementHttpApiTestModule : AbpModule
         context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementFileAppService, BlobManagementFileAppService>());
         context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementDirectoryAppService, BlobManagementDirectoryAppService>());
 
-        // The BlobManagement's permission grants, written by the tests straight into the store; the definitions stay in code.
+        // Blob Management's permission grants, written by the tests straight into the store; the definitions stay in code.
         Configure<PermissionManagementOptions>(options =>
         {
             options.SaveStaticPermissionsToDatabase = false;
@@ -178,7 +178,7 @@ public class BlobManagementHttpApiTestModule : AbpModule
         {
             options.Containers.Configure(OpenContainer, container =>
             {
-                container.UseBlobManagementContainer(drive => drive.AllowedClientIds = new[] { AllowedClient });
+                container.UseBlobManagementContainer(managed => managed.AllowedClientIds = new[] { AllowedClient });
                 container.UseMemory();
             });
 
@@ -196,38 +196,38 @@ public class BlobManagementHttpApiTestModule : AbpModule
 
             options.Containers.Configure(PublicContainer, container =>
             {
-                container.UseBlobManagementContainer(drive =>
+                container.UseBlobManagementContainer(managed =>
                 {
-                    drive.AllowedClientIds = new[] { AllowedClient };
-                    drive.PublicRead = true;
+                    managed.AllowedClientIds = new[] { AllowedClient };
+                    managed.PublicRead = true;
                 });
                 container.UseMemory();
             });
 
             options.Containers.Configure(TicketsContainer, container =>
             {
-                container.UseBlobManagementContainer(drive => drive.AllowedClientIds = new[] { AllowedClient });
+                container.UseBlobManagementContainer(managed => managed.AllowedClientIds = new[] { AllowedClient });
                 container.UseMemory();
             });
 
             options.Containers.Configure(AppTicketsContainer, container =>
             {
-                container.UseBlobManagement(drive => drive.BlobManagementContainer = TicketsContainer);
+                container.UseBlobManagement(provider => provider.BlobManagementContainer = TicketsContainer);
             });
 
             options.Containers.Configure(AppPublicContainer, container =>
             {
-                container.UseBlobManagement(drive => drive.BlobManagementContainer = PublicContainer);
+                container.UseBlobManagement(provider => provider.BlobManagementContainer = PublicContainer);
             });
 
             options.Containers.Configure(AppContainer, container =>
             {
-                container.UseBlobManagement(drive => drive.BlobManagementContainer = OpenContainer);
+                container.UseBlobManagement(provider => provider.BlobManagementContainer = OpenContainer);
             });
 
             options.Containers.Configure(AppClosedContainer, container =>
             {
-                container.UseBlobManagement(drive => drive.BlobManagementContainer = ClosedContainer);
+                container.UseBlobManagement(provider => provider.BlobManagementContainer = ClosedContainer);
             });
         });
     }

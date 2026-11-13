@@ -1,11 +1,11 @@
 namespace Dignite.Abp.BlobManagement.Mcp;
 
-/// <summary>Options of the BlobManagement's MCP tools.</summary>
+/// <summary>Options of Blob Management's MCP tools.</summary>
 public class BlobManagementMcpOptions
 {
     /// <summary>
     /// The address Blob Management is reached at, which the links of <c>blob_create_upload_url</c> start with. <c>null</c>:
-    /// the address the MCP request came in on - right when the MCP server runs in the BlobManagement's own host. Set it when the
+    /// the address the MCP request came in on - right when the MCP server runs in Blob Management's own host. Set it when the
     /// Blob Management is a service of its own, reached through <c>Dignite.Abp.BlobManagement.HttpApi.Client</c>.
     /// </summary>
     public string? BaseUrl { get; set; }

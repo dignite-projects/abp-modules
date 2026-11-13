@@ -58,7 +58,7 @@ public abstract class BlobManagementLocalization_Tests<TStartupModule> : BlobMan
         }
     }
 
-    /// <summary>The BlobManagement's localization files as ABP reads them: from the virtual file system, by culture.</summary>
+    /// <summary>Blob Management's localization files as ABP reads them: from the virtual file system, by culture.</summary>
     private Dictionary<string, Dictionary<string, string>> ReadTexts()
     {
         var result = new Dictionary<string, Dictionary<string, string>>();

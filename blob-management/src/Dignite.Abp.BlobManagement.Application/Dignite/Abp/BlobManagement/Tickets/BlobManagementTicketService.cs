@@ -5,7 +5,7 @@ using Volo.Abp;
 namespace Dignite.Abp.BlobManagement.Tickets;
 
 /// <summary>
-/// The in-process <see cref="IBlobManagementTicketService"/>: an application in the BlobManagement's own host is a trusted issuer, and its
+/// The in-process <see cref="IBlobManagementTicketService"/>: an application in Blob Management's own host is a trusted issuer, and its
 /// tickets name no client. Never exposed over HTTP; remote issuers go through <see cref="BlobManagementTicketAppService"/>.
 /// </summary>
 [RemoteService(IsEnabled = false)]

@@ -1,4 +1,4 @@
-# Public NuGet surface of the drive module, consumed by build/smoke-test-nuget-packages.ps1.
+# Public NuGet surface of the blob-management module, consumed by build/smoke-test-nuget-packages.ps1.
 @{
     PackageIds = @(
         'Dignite.Abp.BlobManagement.Domain.Shared',

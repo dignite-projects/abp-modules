@@ -46,29 +46,29 @@ public class BlobManagementApplicationTestModule : AbpModule
             // The application's side: its own containers, keeping their bytes in Blob Management in this process.
             options.Containers.Configure(BlobManagementTestAppContainers.Media, container =>
             {
-                container.UseBlobManagement(drive => drive.BlobManagementContainer = BlobManagementTestContainers.Files);
+                container.UseBlobManagement(provider => provider.BlobManagementContainer = BlobManagementTestContainers.Files);
             });
 
             options.Containers.Configure(BlobManagementTestAppContainers.Documents, container =>
             {
-                container.UseBlobManagement(drive => drive.BlobManagementContainer = BlobManagementTestContainers.Files);
+                container.UseBlobManagement(provider => provider.BlobManagementContainer = BlobManagementTestContainers.Files);
             });
 
             options.Containers.Configure(BlobManagementTestAppContainers.PicturesOnly, container =>
             {
                 container.AddAllowedContentTypesContributor(c => c.AllowedContentTypes = new[] { "image/png" });
-                container.UseBlobManagement(drive => drive.BlobManagementContainer = BlobManagementTestContainers.Files);
+                container.UseBlobManagement(provider => provider.BlobManagementContainer = BlobManagementTestContainers.Files);
             });
 
             options.Containers.Configure(BlobManagementTestAppContainers.Images, container =>
             {
-                container.UseBlobManagement(drive => drive.BlobManagementContainer = BlobManagementTestContainers.Images);
+                container.UseBlobManagement(provider => provider.BlobManagementContainer = BlobManagementTestContainers.Images);
             });
 
             options.Containers.Configure(BlobManagementTestAppContainers.HostLevel, container =>
             {
                 container.IsMultiTenant = false;
-                container.UseBlobManagement(drive => drive.BlobManagementContainer = BlobManagementTestContainers.Files);
+                container.UseBlobManagement(provider => provider.BlobManagementContainer = BlobManagementTestContainers.Files);
             });
         });
     }

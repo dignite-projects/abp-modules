@@ -1,7 +1,7 @@
 import { EnvironmentService } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
 
-/** The API name the BlobManagement's proxies use; without an `apis.BlobManagement` entry, ABP falls back to `apis.default`. */
+/** The API name Blob Management's proxies use; without an `apis.BlobManagement` entry, ABP falls back to `apis.default`. */
 export const BLOB_MANAGEMENT_API_NAME = 'BlobManagement';
 
 /**
@@ -25,7 +25,7 @@ export function toBlobManagementPublicSize(pixels: number): number {
 export class BlobManagementFileUrlService {
   private readonly environment = inject(EnvironmentService);
 
-  /** The address on the BlobManagement's host; an absolute, `blob:` or `data:` address is returned as it is. */
+  /** The address on Blob Management's host; an absolute, `blob:` or `data:` address is returned as it is. */
   toAbsolute(url: string | null | undefined): string {
     if (!url) {
       return '';

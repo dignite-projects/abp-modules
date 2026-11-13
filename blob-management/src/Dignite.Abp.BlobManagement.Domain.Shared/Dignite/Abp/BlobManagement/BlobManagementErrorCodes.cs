@@ -8,7 +8,7 @@ public static class BlobManagementErrorCodes
     public const string Namespace = "BlobManagement";
 
     /// <summary>
-    /// The container is not one of the BlobManagement's: it was not declared with <c>UseBlobManagementContainer</c> on the Blob Management
+    /// The container is not one of Blob Management's: it was not declared with <c>UseBlobManagementContainer</c> on the Blob Management
     /// host. Data: <c>ContainerName</c>.
     /// </summary>
     public const string ContainerNotFound = Namespace + ":ContainerNotFound";

@@ -14,11 +14,10 @@ using Volo.Abp.OpenIddict.Applications;
 namespace Dignite.Abp.BlobManagement.Containers;
 
 /// <summary>
-/// Checks the Blob Management containers once the host has configured them, when the application starts. A configuration that
+/// Checks the managed containers once the host has configured them, when the application starts. A configuration that
 /// cannot work fails the start; one that works but is probably not what was meant is a warning:
 /// <list type="bullet">
-/// <item>The default container declared a Blob Management container (every name would be one): fails.</item>
-/// <item>A system container with no allowed client: no remote caller can use it (in-process callers can).</item>
+/// <item>The default container declared a managed container (every name would be one): fails.</item>
 /// <item>An allowed client id the authorization server does not know - checked only where ABP's
 /// <see cref="IApplicationFinder"/> is registered (a host with <c>Volo.Abp.OpenIddict.Domain</c>, that is a Blob Management
 /// installed next to its authorization server); a standalone Blob Management service cannot look clients up and skips it.</item>
@@ -45,7 +44,7 @@ public class BlobManagementContainerValidator : ITransientDependency
         if (BlobStoringOptions.Containers.GetConfiguration<DefaultContainer>().GetBlobManagementContainerConfiguration().IsManaged)
         {
             throw new AbpException(
-                "The default BLOB container is declared a BlobManagement container, which makes every container name one. Call UseBlobManagementContainer on named containers only.");
+                "The default BLOB container is declared a managed container, which makes every container name one. Call UseBlobManagementContainer on named containers only.");
         }
 
         var warnings = new List<string>();
@@ -92,7 +91,7 @@ public class BlobManagementContainerValidator : ITransientDependency
         if (finder == null)
         {
             Logger.LogInformation(
-                "The BlobManagement's allowed client ids are not checked: this host cannot look clients up (no IApplicationFinder, which comes with Volo.Abp.OpenIddict.Domain).");
+                "Blob Management's allowed client ids are not checked: this host cannot look clients up (no IApplicationFinder, which comes with Volo.Abp.OpenIddict.Domain).");
             return warnings;
         }
 
@@ -103,12 +102,12 @@ public class BlobManagementContainerValidator : ITransientDependency
                 if (!await ExistsAsync(finder, clientId))
                 {
                     warnings.Add(
-                        $"The client '{clientId}' allowed in the BlobManagement container(s) {string.Join(", ", containers.Select(c => $"'{c}'"))} is not known to the authorization server.");
+                        $"The client '{clientId}' allowed in the managed container(s) {string.Join(", ", containers.Select(c => $"'{c}'"))} is not known to the authorization server.");
                 }
             }
             catch (Exception exception)
             {
-                warnings.Add($"The BlobManagement could not check the allowed client '{clientId}': {exception.Message}");
+                warnings.Add($"Blob Management could not check the allowed client '{clientId}': {exception.Message}");
             }
         }
 

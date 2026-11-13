@@ -5,7 +5,7 @@ namespace Dignite.Abp.BlobManagement;
 /// <summary>
 /// A Blob Management container as a permission resource (<see cref="BlobManagementResourceNames.Container"/>), keyed by its name. A
 /// container is configuration, not an entity, so this value object stands for it where a resource grant needs an
-/// object: <c>IAuthorizationService.IsGrantedAsync(new BlobManagementContainer("documents"), BlobManagementPermissions.Container.Upload)</c>.
+/// object: <c>IAuthorizationService.IsGrantedAsync(new BlobManagementContainer("documents"), BlobManagementPermissions.Container.UploadFiles)</c>.
 /// Its full name is the resource name of the grants on it: never rename the class.
 /// </summary>
 public class BlobManagementContainer : IKeyedObject

@@ -280,7 +280,7 @@ public class FileDescriptorManager : DomainService
             if (!locked)
             {
                 Logger.LogWarning(
-                    "The BlobManagement could not take the dedup lock {LockName} within {Timeout}; the upload to {ContainerName} is stored without dedup.",
+                    "Blob Management could not take the dedup lock {LockName} within {Timeout}; the upload to {ContainerName} is stored without dedup.",
                     lockName, DedupLockTimeout, containerName);
 
                 return await StoreAsync(
@@ -681,7 +681,7 @@ public class FileDescriptorManager : DomainService
         {
             Logger.LogWarning(
                 exception,
-                "The BlobManagement could not give the name key back to the file {FileId} after an override failed.",
+                "Blob Management could not give the name key back to the file {FileId} after an override failed.",
                 existing.Id);
         }
     }
@@ -714,7 +714,7 @@ public class FileDescriptorManager : DomainService
                     if (handle == null)
                     {
                         Logger.LogWarning(
-                            "The BlobManagement could not take the dedup lock {LockName} within {Timeout}; the BLOB {BlobName} in {ContainerName} is left in storage.",
+                            "Blob Management could not take the dedup lock {LockName} within {Timeout}; the BLOB {BlobName} in {ContainerName} is left in storage.",
                             lockName, DedupLockTimeout, blobName, containerName);
                         return;
                     }
@@ -743,7 +743,7 @@ public class FileDescriptorManager : DomainService
         {
             Logger.LogWarning(
                 exception,
-                "The BlobManagement could not delete the BLOB {BlobName} in {ContainerName} after its last descriptor was deleted; it is left in storage.",
+                "Blob Management could not delete the BLOB {BlobName} in {ContainerName} after its last descriptor was deleted; it is left in storage.",
                 blobName, containerName);
         }
     }
@@ -835,7 +835,7 @@ public class FileDescriptorManager : DomainService
             catch (Exception exception)
             {
                 // A distributed provider's lock expires on its own; Blob Management must not fail a finished unit of work.
-                logger.LogWarning(exception, "The BlobManagement could not release the dedup lock {LockName}.", lockName);
+                logger.LogWarning(exception, "Blob Management could not release the dedup lock {LockName}.", lockName);
             }
         }
 

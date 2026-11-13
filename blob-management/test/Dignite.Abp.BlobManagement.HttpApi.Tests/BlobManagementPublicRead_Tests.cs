@@ -140,7 +140,7 @@ public class BlobManagementPublicRead_Tests : AbpWebApplicationFactoryIntegrated
     [Fact]
     public async Task One_Response_Should_Describe_One_File_When_The_Address_Is_Overwritten()
     {
-        // No extension: the same address takes a picture first and a type outside the BlobManagement's list after.
+        // No extension: the same address takes a picture first and a type outside Blob Management's list after.
         var name = "swap-" + Guid.NewGuid();
         var url = _urlBuilder.Build(BlobManagementHttpApiTestModule.AppPublicContainer, name);
         var picture = BlobManagementTestFiles.Png(12, 12, seed: 9);

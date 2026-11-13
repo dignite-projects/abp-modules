@@ -54,7 +54,7 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
     }
 
     /// <summary>
-    /// One lookup per read: in a system container a file's name is its address, so a file can be overwritten between
+    /// One lookup per read: where a file's name is its address a file can be overwritten between
     /// two lookups, and a response built from both would carry the old file's tag and type with the new file's bytes.
     /// The tag, the not-modified decision, the information and the bytes all come from the one descriptor found here.
     /// </summary>

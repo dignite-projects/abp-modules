@@ -9,7 +9,7 @@ public enum BlobManagementTicketKind
     Download = 1,
 
     /// <summary>
-    /// Lets whoever holds it add one file to a user drive, once, as the user who issued it - whose permissions are checked
+    /// Lets whoever holds it add one file to a container, once, as the user who issued it - whose permissions are checked
     /// again when it is used. Issued by <c>IBlobManagementFileAppService.CreateUploadTicketAsync</c>.
     /// </summary>
     FileUpload = 2

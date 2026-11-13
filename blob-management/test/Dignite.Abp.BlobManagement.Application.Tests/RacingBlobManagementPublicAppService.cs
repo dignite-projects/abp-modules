@@ -9,8 +9,7 @@ using Volo.Abp.Imaging;
 namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
-/// A <see cref="BlobManagementPublicAppService"/> that reads any system container as if it were read publicly (the application
-/// tests declare no public system container), and runs <see cref="AfterLookup"/> once right after it found the file -
+/// A <see cref="BlobManagementPublicAppService"/> that reads any container as if it were read publicly, and runs <see cref="AfterLookup"/> once right after it found the file -
 /// where an overwrite by another request would land between a read's lookup and its bytes. Exposed as itself only, so
 /// it does not replace the real <see cref="IBlobManagementPublicAppService"/>.
 /// </summary>

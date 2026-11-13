@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace />
-    <Description>Application services of Dignite BlobManagement.</Description>
+    <Description>Application services of Dignite Blob Management.</Description>
   </PropertyGroup>
 
   <ItemGroup>

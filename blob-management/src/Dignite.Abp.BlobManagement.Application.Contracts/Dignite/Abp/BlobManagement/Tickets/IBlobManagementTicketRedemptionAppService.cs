@@ -21,7 +21,7 @@ public interface IBlobManagementTicketRedemptionAppService : IApplicationService
     Task<IRemoteStreamContent> DownloadAsync(string ticket);
 
     /// <summary>
-    /// Adds the file to the user drive a file-upload ticket names, as the user who issued it: their permissions there
+    /// Adds the file to the container a file-upload ticket names, as the user who issued it: their permissions there
     /// now, not when they issued it, decide. A ticket is good for one successful upload.
     /// </summary>
     Task<BlobManagementFileDto> UploadFileAsync(string ticket, IRemoteStreamContent content);

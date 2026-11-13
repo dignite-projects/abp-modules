@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace />
-    <Description>Domain layer of Dignite BlobManagement, a per-tenant cloud drive for ABP applications.</Description>
+    <Description>Domain layer of Dignite Blob Management: the tenant's BLOB containers, their files and directories, for ABP applications.</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,8 +19,8 @@
          same-version PackageReferences. -->
     <ProjectReference Include="..\..\..\blob-storing\src\Dignite.Abp.BlobStoring.Pipeline\Dignite.Abp.BlobStoring.Pipeline.csproj" />
     <ProjectReference Include="..\..\..\blob-storing\src\Dignite.Abp.BlobStoring.Imaging\Dignite.Abp.BlobStoring.Imaging.csproj" />
-    <!-- The images preset stores a JPEG as WebP, turned upright (StoreJpegAsWebp), so SkiaSharp is a dependency of the
-         BlobManagement; the module also makes ABP's SkiaSharp resizer turn photos upright. -->
+    <!-- The images preset stores a JPEG as WebP, turned upright (StoreJpegAsWebp), so SkiaSharp is a dependency of
+         Blob Management; the module also makes ABP's SkiaSharp resizer turn photos upright. -->
     <ProjectReference Include="..\..\..\blob-storing\src\Dignite.Abp.BlobStoring.Imaging.SkiaSharp\Dignite.Abp.BlobStoring.Imaging.SkiaSharp.csproj" />
   </ItemGroup>
 

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1;net10.0</TargetFrameworks>
     <RootNamespace />
-    <Description>Application service interfaces, DTOs and permission names of Dignite BlobManagement.</Description>
+    <Description>Application service interfaces, DTOs and permission names of Dignite Blob Management.</Description>
   </PropertyGroup>
 
   <ItemGroup>

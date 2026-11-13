@@ -372,7 +372,7 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
         (await reads.ReadAsync(BlobManagementTestContainers.Files, name, new BlobManagementPublicReadInput { Width = 64, Height = 64 }, HeadersOnly()))
             .File.EntityTag.ShouldBe(plain + "-64x64");
 
-        // In a system container the name is the address: an overwrite keeps it and changes the tag behind it.
+        // For a BLOB saved under a name the name is the address: an overwrite keeps it and changes the tag behind it.
         await StoreSystemFileAsync(name, BlobManagementTestFiles.Png(200, 100, seed: 13), overrideExisting: true);
 
         var overwritten = await reads.ReadAsync(BlobManagementTestContainers.Files, name, new BlobManagementPublicReadInput(),

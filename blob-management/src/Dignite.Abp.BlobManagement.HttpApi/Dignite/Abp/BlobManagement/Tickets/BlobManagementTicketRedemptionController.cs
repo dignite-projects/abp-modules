@@ -9,10 +9,10 @@ namespace Dignite.Abp.BlobManagement.Tickets;
 
 /// <summary>
 /// Where a browser redeems a ticket: <c>POST /api/blob-management/tickets/upload?ticket=</c> with the file as the form field
-/// <c>content</c>, <c>POST /api/blob-management/tickets/upload-file?ticket=</c> the same way for a user's ticket into a user drive,
+/// <c>content</c>, <c>POST /api/blob-management/tickets/upload-file?ticket=</c> the same way for a user's ticket for adding a file,
 /// and <c>GET /api/blob-management/tickets/download?ticket=</c>. Anonymous - the ticket is the authorization - and
 /// exempt from antiforgery validation, which a signed, single-purpose ticket makes redundant (a browser that has a
-/// cookie of the BlobManagement's host would otherwise be asked for a token it does not have). Addresses for a browser, not an
+/// cookie of Blob Management's host would otherwise be asked for a token it does not have). Addresses for a browser, not an
 /// API: left out of ABP's API definition.
 /// </summary>
 [Area(BlobManagementRemoteServiceConsts.ModuleName)]
@@ -48,7 +48,7 @@ public class BlobManagementTicketRedemptionController : BlobManagementController
     {
         var content = await RedemptionAppService.DownloadAsync(ticket);
 
-        // Saved, never rendered on the BlobManagement's origin; and a ticket's address is not for a shared cache.
+        // Saved, never rendered on Blob Management's origin; and a ticket's address is not for a shared cache.
         var disposition = new ContentDispositionHeaderValue("attachment");
         if (!string.IsNullOrWhiteSpace(content.FileName))
         {

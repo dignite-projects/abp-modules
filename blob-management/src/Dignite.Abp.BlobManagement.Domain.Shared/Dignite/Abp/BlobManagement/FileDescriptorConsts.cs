@@ -5,7 +5,7 @@ public static class FileDescriptorConsts
     public static int MaxContainerNameLength { get; set; } = 64;
 
     /// <summary>
-    /// The longest <c>Name</c>: in a system container the caller's BLOB name, which may be a path
+    /// The longest <c>Name</c>: for a file addressed by name the caller's BLOB name, which may be a path
     /// (<c>2026/11/photo.png</c>), so it is longer than a display name needs.
     /// </summary>
     public static int MaxNameLength { get; set; } = 256;

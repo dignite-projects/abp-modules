@@ -12,7 +12,7 @@ describe('BlobManagementFileUrlService', () => {
     service = TestBed.inject(BlobManagementFileUrlService);
   });
 
-  it('puts a public address on the BlobManagement\'s host', () => {
+  it('puts a public address on Blob Management\'s host', () => {
     expect(service.toAbsolute('/api/blob-management/public/media/a.png')).toBe('https://blobs.example.com/api/blob-management/public/media/a.png');
     expect(service.toAbsolute('blob:x')).toBe('blob:x');
     expect(service.toAbsolute(null)).toBe('');
@@ -26,7 +26,7 @@ describe('BlobManagementFileUrlService', () => {
     expect(service.sized('blob:x', 128)).toBe('blob:x');
   });
 
-  it('rounds a size up to the next one the BlobManagement serves', () => {
+  it('rounds a size up to the next one Blob Management serves', () => {
     expect(toBlobManagementPublicSize(1)).toBe(64);
     expect(toBlobManagementPublicSize(96)).toBe(128);
     expect(toBlobManagementPublicSize(128)).toBe(128);

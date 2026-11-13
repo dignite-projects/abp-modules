@@ -61,9 +61,9 @@ public class BlobManagementTicketClient : IBlobManagementTicketClient, ITransien
     protected virtual async Task<BlobManagementTicketDto> CreateAsync(string containerName, CreateBlobManagementTicketInput input)
     {
         var configuration = ConfigurationProvider.Get(containerName);
-        var drive = configuration.GetBlobManagementConfiguration();
-        drive.Validate();
-        input.ContainerName = drive.BlobManagementContainer;
+        var provider = configuration.GetBlobManagementConfiguration();
+        provider.Validate();
+        input.ContainerName = provider.BlobManagementContainer;
 
         // The tenant ABP's container stores for: the current one when the container is multi-tenant, the host otherwise.
         BlobManagementTicketDto ticket;
@@ -81,7 +81,7 @@ public class BlobManagementTicketClient : IBlobManagementTicketClient, ITransien
     {
         return ServiceProvider.GetService(typeof(IBlobManagementTicketService)) as IBlobManagementTicketService
                ?? throw new AbpException(
-                   "No IBlobManagementTicketService is registered. The host installs Dignite.Abp.BlobManagement.Application (the BlobManagement in this process) or Dignite.Abp.BlobManagement.HttpApi.Client (a remote BlobManagement).");
+                   "No IBlobManagementTicketService is registered. The host installs Dignite.Abp.BlobManagement.Application (Blob Management in this process) or Dignite.Abp.BlobManagement.HttpApi.Client (a remote Blob Management).");
     }
 
     protected static int? ToSeconds(TimeSpan? lifetime)

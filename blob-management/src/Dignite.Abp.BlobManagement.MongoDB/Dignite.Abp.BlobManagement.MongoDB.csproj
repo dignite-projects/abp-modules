@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace />
-    <Description>MongoDB integration for Dignite BlobManagement.</Description>
+    <Description>MongoDB integration for Dignite Blob Management.</Description>
   </PropertyGroup>
 
   <ItemGroup>

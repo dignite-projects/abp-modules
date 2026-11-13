@@ -17,7 +17,7 @@ namespace Dignite.Abp.BlobManagement.Public;
 /// <b>Caching.</b> The <c>ETag</c> is the read's <see cref="BlobManagementPublicFileDto.EntityTag"/> - the file's
 /// <see cref="BlobManagementPublicFileDto.ContentId"/> plus the size asked; it changes when the file is overwritten. A matching
 /// <c>If-None-Match</c> is answered <c>304</c> after the lookup, without reading the bytes. A response is answered from
-/// one lookup of the file (<see cref="IBlobManagementPublicAppService.ReadAsync"/>): in a system container a file can be
+/// one lookup of the file (<see cref="IBlobManagementPublicAppService.ReadAsync"/>): a file addressed by name can be
 /// overwritten between two lookups, and a response made from both would store the new bytes in a shared cache under
 /// the old file's <c>ETag</c>, and decide inline or attachment on a different file than the one served.
 /// <c>Cache-Control</c> is public for a day rather than <c>immutable</c>: a file can be overwritten or deleted, and a
@@ -26,7 +26,7 @@ namespace Dignite.Abp.BlobManagement.Public;
 /// <para>
 /// <b>Safety.</b> <c>X-Content-Type-Options: nosniff</c> always; a type outside <see cref="BlobManagementFileTypes"/> (the
 /// curated list without SVG, HTML or scripts - what a container on the any-type preset can hold) is served as an
-/// attachment, never rendered on the BlobManagement's origin. No cookie is set on a response meant for a shared cache.
+/// attachment, never rendered on Blob Management's origin. No cookie is set on a response meant for a shared cache.
 /// </para>
 /// </summary>
 [Area(BlobManagementRemoteServiceConsts.ModuleName)]

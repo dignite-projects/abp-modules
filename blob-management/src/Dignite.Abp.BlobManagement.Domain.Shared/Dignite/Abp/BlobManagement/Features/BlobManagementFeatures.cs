@@ -1,7 +1,7 @@
 namespace Dignite.Abp.BlobManagement.Features;
 
 /// <summary>
-/// The BlobManagement's ABP Features: what a tenant is allocated. They are checked on Blob Management on every save - the only place
+/// Blob Management's ABP Features: what a tenant is allocated. They are checked on Blob Management on every save - the only place
 /// that sees a tenant's bytes across applications.
 /// </summary>
 public static class BlobManagementFeatures

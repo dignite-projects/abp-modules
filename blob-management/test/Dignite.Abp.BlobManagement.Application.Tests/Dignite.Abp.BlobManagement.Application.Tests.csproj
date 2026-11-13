@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Data Protection's in-memory key ring, which signs the BlobManagement's tickets in these tests (a host has ASP.NET Core's) -->
+    <!-- Data Protection's in-memory key ring, which signs Blob Management's tickets in these tests (a host has ASP.NET Core's) -->
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 

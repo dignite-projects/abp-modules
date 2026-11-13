@@ -117,7 +117,7 @@ public class BlobManagementTicketRedemptionAppService : BlobManagementAppService
         var read = TicketProtector.Read(ticket);
         if (read == null)
         {
-            throw Invalid("it is not signed by this BlobManagement, or has expired");
+            throw Invalid("it is not signed by this Blob Management, or has expired");
         }
 
         if (read.Kind != kind)
@@ -167,7 +167,7 @@ public class BlobManagementTicketRedemptionAppService : BlobManagementAppService
     }
 
     /// <summary>
-    /// The upload through the file API's own service, as the ticket's user: the drive and the permission are
+    /// The upload through the file API's own service, as the ticket's user: the container and the permission are
     /// checked as for a user uploading with a token, and the name is the ticket's.
     /// </summary>
     protected virtual async Task<BlobManagementFileDto> StoreFileAsync(BlobManagementTicket ticket, IRemoteStreamContent content)

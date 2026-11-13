@@ -38,7 +38,7 @@ public class FileDescriptor : AggregateRoot<Guid>, ICreationAuditedObject, IModi
 
     /// <param name="ownsBlob">Whether this descriptor wrote <paramref name="blobName"/>, rather than sharing a BLOB
     /// another descriptor wrote; it then holds the <see cref="DedupKey"/>.</param>
-    /// <param name="nameIsAddress">Whether <paramref name="name"/> is the file's address - a system container's file -
+    /// <param name="nameIsAddress">Whether <paramref name="name"/> is the file's address - a BLOB an application saved -
     /// so the descriptor holds the <see cref="NameKey"/>. The entity cannot tell the container's kind itself;
     /// <see cref="FileDescriptorManager"/> can.</param>
     public FileDescriptor(

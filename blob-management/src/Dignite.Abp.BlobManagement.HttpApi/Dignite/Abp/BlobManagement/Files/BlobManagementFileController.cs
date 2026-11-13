@@ -79,7 +79,7 @@ public class BlobManagementFileController : BlobManagementController, IBlobManag
     {
         var content = await FileAppService.GetContentAsync(id);
 
-        // Saved, never rendered on the BlobManagement's origin: a user's file may be HTML. A client that previews it reads the
+        // Saved, never rendered on Blob Management's origin: a user's file may be HTML. A client that previews it reads the
         // bytes and shows them itself.
         var disposition = new ContentDispositionHeaderValue("attachment");
         if (!string.IsNullOrWhiteSpace(content.FileName))

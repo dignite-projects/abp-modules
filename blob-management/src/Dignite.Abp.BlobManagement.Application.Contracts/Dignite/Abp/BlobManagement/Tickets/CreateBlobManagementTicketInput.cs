@@ -4,7 +4,7 @@ namespace Dignite.Abp.BlobManagement.Tickets;
 
 public class CreateBlobManagementTicketInput
 {
-    /// <summary>The Blob Management system container.</summary>
+    /// <summary>The managed container.</summary>
     [Required]
     public string ContainerName { get; set; } = default!;
 

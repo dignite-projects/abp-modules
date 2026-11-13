@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace />
-    <Description>ABP BLOB storing provider that keeps a container's bytes in a Dignite BlobManagement.</Description>
+    <Description>ABP BLOB storing provider that keeps a container's bytes in Dignite Blob Management.</Description>
   </PropertyGroup>
 
   <ItemGroup>

@@ -121,7 +121,7 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
     }
 
     /// <summary>
-    /// A JPEG uploaded to a user drive is stored as WebP: the physical BLOB is named <c>.webp</c>, the descriptor records
+    /// A JPEG a person uploads is stored as WebP: the physical BLOB is named <c>.webp</c>, the descriptor records
     /// the WebP, and the file's name takes the <c>.webp</c> extension, so a download is named for what it is.
     /// </summary>
     [Fact]
@@ -139,7 +139,7 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
     }
 
     /// <summary>
-    /// In a system container the name is the application's address, so it is kept; only the physical BLOB is <c>.webp</c>,
+    /// A BLOB saved under a name keeps it, the name being the application's address; only the physical BLOB is <c>.webp</c>,
     /// and the descriptor records what is served.
     /// </summary>
     [Fact]
@@ -195,7 +195,7 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
         descriptor.Name.ShouldBe("holiday.jpg");
     }
 
-    /// <summary>A PNG in a user drive keeps its type and its name.</summary>
+    /// <summary>An uploaded PNG keeps its type and its name.</summary>
     [Fact]
     public async Task A_Png_Uploaded_To_A_User_BlobManagement_Should_Keep_Its_Name()
     {

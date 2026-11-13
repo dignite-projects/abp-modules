@@ -37,18 +37,18 @@ public class BlobManagementClientChecker : ITransientDependency
         var clientId = CurrentClient.Id;
         if (string.IsNullOrWhiteSpace(clientId))
         {
-            throw new AbpAuthorizationException("The BlobManagement's integration API is for OAuth clients: the token names no client.");
+            throw new AbpAuthorizationException("Blob Management's integration API is for OAuth clients: the token names no client.");
         }
 
         if (CurrentUser.Id != null)
         {
             throw new AbpAuthorizationException(
-                "The BlobManagement's integration API refuses tokens that carry a user: an application calls it with its own client credentials, and a browser uses a ticket.");
+                "Blob Management's integration API refuses tokens that carry a user: an application calls it with its own client credentials, and a browser uses a ticket.");
         }
 
         if (!await ClientAuthorizer.IsAllowedAsync(containerName, clientId!))
         {
-            throw new AbpAuthorizationException($"The client '{clientId}' may not use the BlobManagement container '{containerName}'.");
+            throw new AbpAuthorizationException($"The client '{clientId}' may not use the managed container '{containerName}'.");
         }
 
         return clientId!;
