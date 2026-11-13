@@ -54,8 +54,6 @@
     <!-- openiddict/ (and the EF Core store of its tests) -->
     <PackageVersion Include="Volo.Abp.OpenIddict.AspNetCore" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.OpenIddict.EntityFrameworkCore" Version="10.7.0" />
-    <!-- blob-management/: IApplicationFinder, to check the clients a Blob Management container allows where the host can look them up -->
-    <PackageVersion Include="Volo.Abp.OpenIddict.Domain.Shared" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore.Mvc" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Http.Client" Version="10.7.0" />
@@ -79,9 +77,9 @@
     <PackageVersion Include="Volo.Abp.BackgroundJobs.Abstractions" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.BackgroundWorkers" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.DistributedLocking.Abstractions" Version="10.7.0" />
-    <!-- blob-management/: IDataProtectionProvider, which signs the BlobManagement's tickets. Only the abstractions: the host's ASP.NET Core
-         provides the key ring. Same version as Microsoft.Extensions.FileProviders.Embedded below. -->
-    <PackageVersion Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="10.0.12" />
+    <!-- blob-management/: IExternalUserLookupServiceProvider, which names the users of the usage figures where the
+         host has it (resolved optionally). -->
+    <PackageVersion Include="Volo.Abp.Users.Abstractions" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore.SignalR" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.Json.SystemTextJson" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared" Version="10.7.0" />

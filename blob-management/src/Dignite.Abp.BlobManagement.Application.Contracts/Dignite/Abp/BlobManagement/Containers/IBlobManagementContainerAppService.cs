@@ -14,8 +14,8 @@ public interface IBlobManagementContainerAppService : IApplicationService
     Task<ListResultDto<BlobManagementContainerDto>> GetListAsync();
 
     /// <summary>
-    /// One container, with its limits and what the caller may do at its top. Open to every signed-in user: a file input
-    /// needs the limits before it offers an upload, and the upload is authorized when it happens.
+    /// One container, with its limits and what the caller may do with its directories. Open to every signed-in user:
+    /// a business system's file input needs the limits before it offers an upload.
     /// </summary>
     Task<BlobManagementContainerDto> GetAsync(string name);
 }

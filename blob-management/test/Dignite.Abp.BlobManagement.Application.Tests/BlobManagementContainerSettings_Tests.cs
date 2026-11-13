@@ -12,7 +12,6 @@ using Shouldly;
 using Volo.Abp;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.Modularity;
-using Volo.Abp.OpenIddict.Applications;
 using Xunit;
 
 namespace Dignite.Abp.BlobManagement;
@@ -33,20 +32,12 @@ public abstract class BlobManagementContainerSettings_Tests<TStartupModule> : Bl
         options.Services.ReplaceConfiguration(Configuration(new Dictionary<string, string?>
         {
             ["BlobManagement:Containers:config-media:PublicRead"] = "true",
-            ["BlobManagement:Containers:config-media:AllowedClientIds:0"] = "site-app",
-            ["BlobManagement:Containers:config-media:AllowedClientIds:1"] = "ghost-app",
             ["BlobManagement:Containers:config-media:Preset"] = "images",
             ["BlobManagement:Containers:config-media:PresetOptions:MaxSizeInMegabytes"] = "2",
             ["BlobManagement:Containers:config-media:PresetOptions:MaxWidth"] = "100",
             ["BlobManagement:Containers:config-docs:AllowDirectories"] = "true",
             ["BlobManagement:Containers:config-docs:Preset"] = "Documents"
         }));
-    }
-
-    protected override void AfterAddApplication(IServiceCollection services)
-    {
-        // A host that can look clients up: it knows site-app, not ghost-app.
-        services.AddSingleton<IApplicationFinder>(new FakeApplicationFinder("site-app", "site-app-staging"));
     }
 
     [Fact]
@@ -58,7 +49,6 @@ public abstract class BlobManagementContainerSettings_Tests<TStartupModule> : Bl
         var mediaBlobManagement = media.GetBlobManagementContainerConfiguration();
         mediaBlobManagement.IsManaged.ShouldBeTrue();
         mediaBlobManagement.AllowDirectories.ShouldBeFalse();
-        mediaBlobManagement.AllowedClientIds.ShouldBe(new[] { "site-app", "ghost-app" });
         media.IsMultiTenant.ShouldBeTrue();
         media.GetMaxSizeContributorConfiguration().MaxSizeInBytes.ShouldBe(2L * 1024 * 1024);
         media.GetImageResizeContributorConfiguration().MaxWidth.ShouldBe(100);
@@ -79,29 +69,19 @@ public abstract class BlobManagementContainerSettings_Tests<TStartupModule> : Bl
     }
 
     [Fact]
-    public async Task The_Validator_Should_Warn_About_Unknown_Clients()
-    {
-        var warnings = await GetRequiredService<BlobManagementContainerValidator>().ValidateAsync();
-
-        warnings.ShouldContain(w => w.Contains("'ghost-app'"));
-        warnings.ShouldNotContain(w => w.Contains("'site-app'"));
-        // A container no client is allowed in is used in process, or by people: nothing to warn about.
-        warnings.ShouldNotContain(w => w.Contains($"'{BlobManagementTestContainers.Files}'"));
-    }
-
-    [Fact]
-    public async Task The_Validator_Should_Refuse_A_Default_Container_Declared_A_BlobManagement_Container()
+    public void The_Validator_Should_Refuse_A_Default_Container_Declared_A_BlobManagement_Container()
     {
         var options = new AbpBlobStoringOptions();
         options.Containers.ConfigureDefault(container => container.UseBlobManagementContainer());
 
-        await Should.ThrowAsync<AbpException>(() =>
-            new BlobManagementContainerValidator(Options.Create(options), ServiceProvider).ValidateAsync());
+        Should.Throw<AbpException>(() => new BlobManagementContainerValidator(Options.Create(options)).Validate());
     }
 
     [Theory]
     [InlineData("BlobManagement:Containers:c:Kidn", "System", "unknown key 'Kidn'")]
     [InlineData("BlobManagement:Containers:c:Scope", "Personal", "unknown key 'Scope'")]
+    // A client is granted on a container in ABP's permission management now, not listed in its configuration.
+    [InlineData("BlobManagement:Containers:c:AllowedClientIds:0", "site-app", "unknown key 'AllowedClientIds'")]
     [InlineData("BlobManagement:Containers:c:PublicRead", "yes", "PublicRead must be true or false")]
     [InlineData("BlobManagement:Containers:c:Preset", "Videos", "unknown preset 'Videos'")]
     [InlineData("BlobManagement:Containers:c:PresetOptions:MaxSizeInMegabytes", "2", "PresetOptions is given without a Preset")]

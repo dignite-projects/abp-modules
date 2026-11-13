@@ -7,20 +7,6 @@
     (keyup.enter)="search($any($event.target).value)"
     (search)="search($any($event.target).value)"
   />
-  @if (access().uploadFiles) {
-    <label class="btn btn-primary mb-0 ms-auto" [class.disabled]="uploading()">
-      <i class="fa me-1" [class.fa-upload]="!uploading()" [class.fa-spinner]="uploading()" [class.fa-pulse]="uploading()"
-        aria-hidden="true"></i>{{ 'BlobManagement::Upload' | abpLocalization }}
-      <input
-        type="file"
-        class="d-none"
-        multiple
-        [attr.accept]="accept()"
-        [disabled]="uploading()"
-        (change)="upload($event)"
-      />
-    </label>
-  }
 </div>
 
 <ngx-datatable
@@ -36,19 +22,6 @@
   rowHeight="auto"
   [messages]="{ emptyMessage: ('BlobManagement::NoFiles' | abpLocalization) }"
 >
-  @if (selection() !== 'none') {
-    <ngx-datatable-column name="" [sortable]="false" [flexGrow]="0.4">
-      <ng-template let-row="row" ngx-datatable-cell-template>
-        <input
-          class="form-check-input"
-          [type]="selection() === 'single' ? 'radio' : 'checkbox'"
-          [checked]="isSelected(row)"
-          [attr.aria-label]="row.name"
-          (change)="toggle(row, $any($event.target).checked)"
-        />
-      </ng-template>
-    </ngx-datatable-column>
-  }
   <ngx-datatable-column [name]="'BlobManagement::Name' | abpLocalization" prop="name" [flexGrow]="4">
     <ng-template let-row="row" ngx-datatable-cell-template>
       <div class="d-flex align-items-center gap-2">
@@ -63,47 +36,17 @@
   <ngx-datatable-column [name]="'BlobManagement::CreationTime' | abpLocalization" prop="creationTime" [flexGrow]="1.5">
     <ng-template let-value="value" ngx-datatable-cell-template>{{ value | date: 'short' }}</ng-template>
   </ngx-datatable-column>
-  <ngx-datatable-column [name]="'AbpUi::Actions' | abpLocalization" [sortable]="false" [flexGrow]="1">
+  <ngx-datatable-column name="" [sortable]="false" [flexGrow]="0.6">
     <ng-template let-row="row" ngx-datatable-cell-template>
-      <div ngbDropdown container="body" class="d-inline-block">
-        <button type="button" class="btn btn-sm btn-outline-secondary" ngbDropdownToggle>
-          <i class="fa fa-cog" aria-hidden="true"></i>
-        </button>
-        <div ngbDropdownMenu>
-          <button type="button" ngbDropdownItem (click)="download(row)">{{ 'BlobManagement::Download' | abpLocalization }}</button>
-          @if (canUpdate(row)) {
-            <button type="button" ngbDropdownItem (click)="openRename(row)">{{ 'BlobManagement::Rename' | abpLocalization }}</button>
-            @if (container().allowDirectories) {
-              <button type="button" ngbDropdownItem (click)="moving.set(row)">{{ 'BlobManagement::Move' | abpLocalization }}</button>
-            }
-          }
-          @if (canDelete(row)) {
-            <button type="button" ngbDropdownItem (click)="delete(row)">{{ 'AbpUi::Delete' | abpLocalization }}</button>
-          }
-        </div>
-      </div>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        [attr.aria-label]="'BlobManagement::Download' | abpLocalization"
+        [title]="'BlobManagement::Download' | abpLocalization"
+        (click)="download(row)"
+      >
+        <i class="fa fa-download" aria-hidden="true"></i>
+      </button>
     </ng-template>
   </ngx-datatable-column>
 </ngx-datatable>
-
-<blob-file-move-modal [container]="container()" [(file)]="moving" (moved)="list.get()" />
-
-<abp-modal [(visible)]="renameOpen" [busy]="renameBusy">
-  <ng-template #abpHeader>
-    <h3>{{ 'BlobManagement::Rename' | abpLocalization }}</h3>
-  </ng-template>
-  <ng-template #abpBody>
-    @if (renameForm) {
-      <form id="blob-file-rename-form" [formGroup]="renameForm" (ngSubmit)="saveRename()">
-        <label class="form-label" for="blob-file-name">{{ 'BlobManagement::Name' | abpLocalization }}</label>
-        <input id="blob-file-name" type="text" class="form-control" formControlName="name" autofocus />
-      </form>
-    }
-  </ng-template>
-  <ng-template #abpFooter>
-    <button type="button" class="btn btn-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
-    <abp-button iconClass="fa fa-check" buttonType="submit" formName="blob-file-rename-form" [loading]="renameBusy">
-      {{ 'AbpUi::Save' | abpLocalization }}
-    </abp-button>
-  </ng-template>
-</abp-modal>

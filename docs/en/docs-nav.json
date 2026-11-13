@@ -63,20 +63,20 @@
           "path": "blob-management/provider.md"
         },
         {
-          "text": "Tickets",
-          "path": "blob-management/tickets.md"
+          "text": "Keeping Files by Id",
+          "path": "blob-management/files.md"
         },
         {
           "text": "Hosting Modes",
           "path": "blob-management/hosting.md"
         },
         {
-          "text": "Attaching Files",
-          "path": "blob-management/attaching-files.md"
-        },
-        {
           "text": "Directories",
           "path": "blob-management/directories.md"
+        },
+        {
+          "text": "Usage",
+          "path": "blob-management/usage.md"
         },
         {
           "text": "Permissions",
@@ -85,10 +85,6 @@
         {
           "text": "Angular UI",
           "path": "blob-management/angular-ui.md"
-        },
-        {
-          "text": "MCP Tools",
-          "path": "blob-management/mcp.md"
         },
         {
           "text": "Importing a Directory Tree",

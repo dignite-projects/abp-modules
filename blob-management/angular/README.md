@@ -5,7 +5,7 @@ This workspace holds two things:
 | Path | What it is |
 |---|---|
 | `src/` | **Host** - the Angular application that runs against `Dignite.Abp.BlobManagement.Host` (local development and demo only, never published). It consumes the library from source through the `paths` in `tsconfig.json`. |
-| `projects/blob-management/` | **`@dignite/ng.blob-management`** - the publishable Angular library: the management page, the explorer and the file picker, the file input, services and the proxies, with the route and menu configuration in its secondary entry point `@dignite/ng.blob-management/config`. |
+| `projects/blob-management/` | **`@dignite/ng.blob-management`** - the publishable Angular library: the management page and its parts, services and the proxies, with the route and menu configuration in its secondary entry point `@dignite/ng.blob-management/config`. |
 | `projects/dev-app/` | An environment stub (`environment.ts` only, never built) that the ABP schematics read when generating the **library's** proxies: it carries the `Dignite.Abp.BlobManagement` root namespace, which `Host` (`Dignite.Abp.BlobManagement.Host`) does not. See [Generate Proxy](#generate-proxy). |
 
 For more information about the framework, visit [abp.io](https://abp.io/).

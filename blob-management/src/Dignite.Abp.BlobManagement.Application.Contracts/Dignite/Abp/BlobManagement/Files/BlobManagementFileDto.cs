@@ -31,12 +31,15 @@ public class BlobManagementFileDto : ExtensibleCreationAuditedEntityDto<Guid>
     /// <summary>The size of the stored bytes.</summary>
     public long Size { get; set; }
 
+    /// <summary>The OAuth client that stored the file over HTTP; <c>null</c> when an application stored it in process.</summary>
+    public string? ClientId { get; set; }
+
     public DateTime? LastModificationTime { get; set; }
 
     /// <summary>
     /// In a <c>PublicRead</c> container, the address anyone can read it at, relative to the host that serves Blob
     /// Management (<c>/api/blob-management/public/{container}/{blob}</c>, with <c>?__tenant=</c> for a tenant's file);
-    /// otherwise <c>null</c> - the file is read through the file API.
+    /// otherwise <c>null</c> - the application reads it and hands its bytes on.
     /// </summary>
     public string? Url { get; set; }
 }

@@ -1,7 +1,7 @@
 ```json
 //[doc-seo]
 {
-    "Description": "Dignite Blob Management permissions: the module-wide BlobManagement.Containers permissions, grants on one container and on one restricted directory, authorization by place, reading a file by its id, and the uploader deleting their own file."
+    "Description": "Dignite Blob Management permissions: the management permission BlobManagement.Containers, the directory permissions granted on a container, and the grant of a container's files to an application's OAuth client."
 }
 ```
 
@@ -9,9 +9,11 @@
 
 > Blob Management has not been released yet; see the [overview](index.md).
 
-Everything people do - the [file API](attaching-files.md), the [directories](directories.md), the back office and the [MCP tools](mcp.md) - is authorized by Blob Management's own permissions, never by another module's: whoever should work with files in a container is granted Blob Management's permissions, as a role holds the permissions of every service it uses. Applications that store through the [provider](provider.md) are authorized by the container's `AllowedClientIds` instead, and use none of this.
+Blob Management's permissions authorize **users** for the two things a user does here - read what the tenant stores (the [management page](angular-ui.md#the-management-page), the [usage](usage.md)) and keep the [directories](directories.md) of a container - and **applications** for the one thing an application does: keep the files of a container.
 
-There are three levels, each the one above limited to less: **module-wide** permissions, granted to roles and users in ABP's permission dialog; **grants on one container**; and **grants on one directory** that has permissions of its own.
+Files are an application's. An application that calls from another process, through the [provider](provider.md) or the [file service](files.md), is an OAuth client granted the container's files; in the same process it is trusted. Its own rules run before it calls. No permission lets a user store, rename, move or delete a file.
+
+Reading is **module-wide**: one permission, granted to roles and users in ABP's permission dialog. Everything else is **granted on a container**, and nowhere else: no permission keeps the directories or the files of every container.
 
 ## Module-Wide Permissions
 
@@ -19,73 +21,80 @@ In the `BlobManagement` group of ABP's permission management:
 
 | Permission | |
 |---|---|
-| `BlobManagement.Containers` | The management permission: enter the back office and see every container, with its directories and files - restricted directories included. A high, top-level permission. |
-| `BlobManagement.Containers.UploadFiles` | Upload files in every container. |
-| `BlobManagement.Containers.UpdateFiles` | Rename and move files. |
-| `BlobManagement.Containers.DeleteFiles` | Delete any file, not only one's own uploads. |
-| `BlobManagement.Containers.CreateDirectories` | Create directories. |
-| `BlobManagement.Containers.UpdateDirectories` | Rename and move directories. |
-| `BlobManagement.Containers.DeleteDirectories` | Delete (empty) directories. |
-| `BlobManagement.ManagePermissions` | Manage the grants on containers and directories, and say which directories are restricted. An administrator's permission: whoever holds it can grant themselves anything. |
+| `BlobManagement.Containers` | The management permission: enter the management page and read everything there - the usage, every container, its directories, its files and their bytes. It changes nothing. |
+| `BlobManagement.ManagePermissions` | Manage the grants on containers. An administrator's permission: whoever holds it can grant themselves anything. |
 
 ## Grants on a Container
 
-A [resource permission](https://abp.io/docs/latest/modules/permission-management) is granted on **one** container - to a role or a user, in ABP's resource permission dialog - by a holder of `BlobManagement.ManagePermissions`. The resource is `Dignite.Abp.BlobManagement.BlobManagementContainer`, keyed by the container's name:
+A [resource permission](https://abp.io/docs/latest/modules/permission-management) is granted on **one** container - to a role, a user or a client, in ABP's resource permission dialog - by a holder of `BlobManagement.ManagePermissions`. The resource is `Dignite.Abp.BlobManagement.BlobManagementContainer`, keyed by the container's name:
 
 | Permission | |
 |---|---|
-| `BlobManagement.Container.View` | See the container, its directories and the files in them. |
-| `BlobManagement.Container.UploadFiles` | Upload files in it. |
-| `BlobManagement.Container.UpdateFiles` | Rename and move its files. |
-| `BlobManagement.Container.DeleteFiles` | Delete its files. |
+| `BlobManagement.Container.Files` | For an application's OAuth client, and counted for nothing else: read, store, rename, move and delete the container's files through the BLOB API and the file API ([Granting an Application](#granting-an-application)). |
+| `BlobManagement.Container.View` | See the container's directory tree. The three directory permissions count only with it, or with the management permission. |
 | `BlobManagement.Container.CreateDirectories` | Create directories in it. |
 | `BlobManagement.Container.UpdateDirectories` | Rename and move its directories. |
-| `BlobManagement.Container.DeleteDirectories` | Delete its directories. |
+| `BlobManagement.Container.DeleteDirectories` | Delete its (empty) directories. |
 
-A grant on a container is the module-wide permission limited to that container. This is how a business system's role is given its container: grant the role `BlobManagement.Container.View` and `BlobManagement.Container.UploadFiles` on it, and its users can open the container in the explorer and upload to it, without seeing any other.
-
-## Restricted Directories
-
-A directory can have permissions of its own. It then is **restricted** (`isRestricted`, switched by a holder of `BlobManagement.ManagePermissions`), and the grants on it count. The resource is `Dignite.Abp.BlobManagement.DirectoryDescriptor`, keyed by the directory's id:
-
-| Permission | |
-|---|---|
-| `BlobManagement.Directory.View` | See the directory and everything below it. |
-| `BlobManagement.Directory.CreateDirectories` | Create directories in it and below it. |
-| `BlobManagement.Directory.UpdateDirectories` | Rename and move the directories in it and below it. |
-| `BlobManagement.Directory.DeleteDirectories` | Delete the directories in it and below it. |
-
-A restricted directory, with everything below it, is seen - and its subdirectories managed - only by those granted on it and by holders of the module-wide permissions. A directory that is not restricted follows the nearest restricted directory above it, or the container; so "below it" ends at the next restricted directory down, which has grants of its own. What may be done with the **files** in a restricted directory stays the container's permission. Grants on a directory are kept while it is not restricted, and count again when it is restricted again; they are deleted with the directory.
+A role keeps the directories of a container by the grants above alone: `BlobManagement.Container.View` and the directory permissions it needs, on that container. A holder of the management permission sees every tree already, and needs the directory permissions granted on a container like anyone else - a container is added to the host's configuration, and is granted on once.
 
 ## Who May Do What
 
-A **place** is the top of a container or a directory, and its **scope** is the nearest restricted directory at or above it, else the container. Every file and every directory at a place shares the place's answer:
+| | Allowed with |
+|---|---|
+| Read the usage, and list and read files | `BlobManagement.Containers` |
+| See a container's directory tree | `BlobManagement.Containers`, or `BlobManagement.Container.View` on it |
+| Create, rename and move, delete directories | Seeing the tree, and the permission for it granted on the container |
+| Read, store, rename, move and delete files over HTTP | An OAuth client with a token that carries no user, granted `BlobManagement.Container.Files` on the container |
+| Manage the grants on a container | `BlobManagement.ManagePermissions` |
 
-| | Scope is the container | Scope is a restricted directory |
-|---|---|---|
-| View (list its directories and files) | `BlobManagement.Containers`, or `BlobManagement.Container.View` | `BlobManagement.Containers`, or `BlobManagement.Directory.View` |
-| Upload, rename and move, delete files | View, and the module-wide or the container's permission | View, and the module-wide or the **container's** permission |
-| Create, rename and move, delete subdirectories | View, and the module-wide or the container's permission | View, and the module-wide or the **directory's** permission |
+* The answer is the **container's**, the same for every directory in it: no directory has permissions of its own, and no file has any.
+* The **list of containers** is those the caller holds `BlobManagement.Containers` for, or any grant on. **One container's limits**, by its name, are read by every signed-in user.
+* A token without a user is allowed none of the user's rows, and a token with one - whichever client it came from - none of the application's. Nobody is allowed any of them while the tenant's Blob Management is off ([The Tenant Feature](files.md#the-tenant-feature)).
 
-Nothing is allowed at a place the caller may not view: a role granted `BlobManagement.Container.UploadFiles` also needs `BlobManagement.Container.View`. Further rules:
+Each request asks the grant store once for each container it answers about, never once per directory or file. What the caller may do with a container's directories is sent with every container as `access`.
 
-* **A directory** is renamed, moved and deleted by the permission of the place it is in, by a caller who may view it. A move also takes creating directories where it lands. A restricted directory keeps its restriction where it goes.
-* **A file** is moved by renaming and moving where it is, and uploading where it lands.
-* **The uploader of a file may delete it**, wherever it is: an application's cleanup after a form is saved relies on it.
-* **Reading one file by its id** - its details or its bytes - takes a signed-in user and nothing else. The id is what a business system keeps and hands out under its own authorization; listing is what the permissions govern. Any user of the tenant who has a file's id can read it: a business system whose files must be readable only by some users stores them through the [provider](provider.md), under its own authorization, and hands out [download tickets](tickets.md). A `PublicRead` container stays anonymously readable by address.
-* **One container's limits**, by its name, are read by every signed-in user (the file input needs them). The **list of containers** is those the caller holds `BlobManagement.Containers` for, or any grant on.
-* **The directories at the top of a container** include each restricted directory the caller is granted on, even when the caller does not otherwise see the container, so that a directory granted there can be reached.
+## Granting an Application
 
-A token without a user is allowed none of these, and nobody is allowed any of them while the tenant's Blob Management is off ([The Tenant Feature](attaching-files.md#the-tenant-feature)).
+An application that calls Blob Management from another process authenticates as an OAuth client of your authorization server ([A Remote Blob Management](provider.md#a-remote-blob-management)). Grant that client `BlobManagement.Container.Files` on each container it uses; a container granted to no client is used in process only. A grant to a client is the deployment's, not a tenant's - a client is - so it is made on the host side and holds in every tenant.
 
-Each request asks the grant store once for the place and once for each restricted directory it has to tell apart, never once per file. What the caller may do is sent with every container (`access`) and directory (`access`, `canUpdate`, `canDelete`), so a UI offers each action only where it is allowed.
+* **In ABP's resource permission dialog**, the container's *Permissions* on the [management page](angular-ui.md#the-management-page), signed in on the host side: choose the client provider, find the client and tick the permission. The dialog offers clients where ABP's `Volo.Abp.PermissionManagement.Domain.OpenIddict` is installed next to the OpenIddict domain (the open-source `Volo.Abp.OpenIddict.Domain`, which looks clients up) - the authorization server's host, or a Blob Management installed in it.
+* **In a data seed contributor**, for a deployment that should start with its grants:
+
+````csharp
+public class BlobManagementClientsDataSeedContributor : IDataSeedContributor, ITransientDependency
+{
+    private readonly IResourcePermissionManager _resourcePermissionManager;
+
+    public BlobManagementClientsDataSeedContributor(IResourcePermissionManager resourcePermissionManager)
+    {
+        _resourcePermissionManager = resourcePermissionManager;
+    }
+
+    public async Task SeedAsync(DataSeedContext context)
+    {
+        if (context.TenantId != null)
+        {
+            return; // a client's grants are the host's
+        }
+
+        await _resourcePermissionManager.SetForClientAsync(
+            BlobManagementResourceNames.Container, "media", "site-app",
+            BlobManagementPermissions.Container.Files, isGranted: true);
+    }
+}
+````
+
+`SetForClientAsync` comes with `Volo.Abp.PermissionManagement.Domain.OpenIddict` as well.
+
+Granted to a user or a role, `BlobManagement.Container.Files` lets nothing through: it is defined for the client provider only, and the BLOB and file APIs refuse a token that carries a user, whichever client issued it.
 
 ## What It Needs
 
-ABP's [Permission Management](https://abp.io/docs/latest/modules/permission-management) with its resource permissions, in the host that runs Blob Management; the Angular resource permission dialog comes from `@abp/ng.permission-management`. A Blob Management that serves only applications through the provider needs none of this, and runs without Permission Management. When it runs as [its own service](hosting.md#blob-management-as-its-own-service), it needs the permission data the other services share.
+ABP's [Permission Management](https://abp.io/docs/latest/modules/permission-management) with its resource permissions, in the host that runs Blob Management - for the grants to applications as much as for users; the Angular resource permission dialog comes from `@abp/ng.permission-management`. A Blob Management used only in the application's own process needs none of this: its callers are trusted. When it runs as [its own service](hosting.md#blob-management-as-its-own-service), it needs the permission data the other services share.
 
 ## See Also
 
 * [Directories](directories.md)
-* [Attaching Files](attaching-files.md)
+* [Usage](usage.md)
 * [Angular UI](angular-ui.md)

@@ -26,8 +26,8 @@ public class ResourcePermissionCheckCounter : ISingletonDependency
 }
 
 /// <summary>
-/// ABP's resource-permission checker, counted: the tests show that a listing asks it for the place and for the
-/// restricted directories of a level, never for each item.
+/// ABP's resource-permission checker, counted: the tests show that a listing asks it once, for the container, never
+/// for each directory.
 /// </summary>
 [Dependency(ReplaceServices = true)]
 [ExposeServices(typeof(IResourcePermissionChecker))]

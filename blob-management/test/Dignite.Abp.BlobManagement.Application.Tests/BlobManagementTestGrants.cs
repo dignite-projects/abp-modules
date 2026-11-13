@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Dignite.Abp.BlobManagement.Permissions;
 using Volo.Abp.Authorization.Permissions;
 using Volo.Abp.Authorization.Permissions.Resources;
 using Volo.Abp.PermissionManagement;
@@ -20,7 +21,14 @@ public static class BlobManagementTestGrants
         return principalAccessor.Change(new ClaimsPrincipal(new ClaimsIdentity(claims, "Test")));
     }
 
-    /// <summary>Grants module-wide permissions to a user.</summary>
+    /// <summary>Calling as an OAuth client acting for itself: a token that names a client and carries no user.</summary>
+    public static IDisposable AsClient(this ICurrentPrincipalAccessor principalAccessor, string clientId)
+    {
+        return principalAccessor.Change(new ClaimsPrincipal(new ClaimsIdentity(
+            new[] { new Claim(AbpClaimTypes.ClientId, clientId) }, "Test")));
+    }
+
+    /// <summary>Grants module-wide permissions - reading, managing grants - to a user.</summary>
     public static async Task GrantAsync(this IPermissionManager permissionManager, Guid userId, params string[] permissions)
     {
         foreach (var permission in permissions)
@@ -39,14 +47,19 @@ public static class BlobManagementTestGrants
         return manager.GrantOnAsync(BlobManagementResourceNames.Container, containerName, userId, permissions);
     }
 
-    /// <summary>Grants permissions on one directory to a user.</summary>
-    public static Task GrantOnDirectoryAsync(
-        this IResourcePermissionManager manager,
-        Guid directoryId,
-        Guid userId,
-        params string[] permissions)
+    /// <summary>
+    /// Grants the files of one container to an OAuth client: ABP's resource permission for the client provider
+    /// (<c>C</c>), as ABP's resource permission dialog grants it to a client.
+    /// </summary>
+    public static Task GrantFilesToClientAsync(this IResourcePermissionManager manager, string containerName, string clientId)
     {
-        return manager.GrantOnAsync(BlobManagementResourceNames.Directory, directoryId.ToString(), userId, permissions);
+        return manager.SetAsync(
+            BlobManagementPermissions.Container.Files,
+            BlobManagementResourceNames.Container,
+            containerName,
+            ClientResourcePermissionValueProvider.ProviderName,
+            clientId,
+            true);
     }
 
     private static async Task GrantOnAsync(

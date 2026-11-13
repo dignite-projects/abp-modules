@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.BlobStoring;
-using Volo.Abp.Data;
 using Volo.Abp.Domain.Services;
 
 namespace Dignite.Abp.BlobManagement;
@@ -32,8 +31,6 @@ public class DirectoryManager : DomainService
     protected IFileDescriptorRepository FileRepository { get; }
 
     protected IBlobContainerConfigurationProvider BlobContainerConfigurationProvider { get; }
-
-    protected IDataFilter DataFilter => LazyServiceProvider.LazyGetRequiredService<IDataFilter>();
 
     public DirectoryManager(
         IDirectoryDescriptorRepository directoryRepository,
@@ -106,7 +103,8 @@ public class DirectoryManager : DomainService
     /// container) at <paramref name="order"/>, shifting the siblings at or after that position down by one. The parent
     /// must be in the same container, and not the directory itself or one below it; the deepest directory of the moved
     /// subtree stays within <see cref="DirectoryDescriptorConsts.MaxDepth"/>. The <see cref="DirectoryDescriptor.Path"/>
-    /// of every directory below it, deleted ones included, moves along.
+    /// of every live directory below it moves along; a deleted one keeps the path it was deleted with and is not
+    /// counted.
     /// <para>
     /// The check against moving a directory into itself reads the parent once: two simultaneous moves of two
     /// directories into each other can both pass it. A host that expects such traffic serializes directory moves.
@@ -134,13 +132,10 @@ public class DirectoryManager : DomainService
         var descendants = new List<DirectoryDescriptor>();
         if (parentId != directory.ParentId)
         {
-            // A live directory can have deleted subdirectories - deleted while it was being emptied - and a trash would
-            // restore them under it, so their paths move with it: a restored one would otherwise name ancestors it no
-            // longer has. Hence the soft-delete filter is off for this one query. Their name keys are cleared and stay so.
-            using (DataFilter.Disable<ISoftDelete>())
-            {
-                descendants = await DirectoryRepository.GetDescendantsAsync(directory.Path, cancellationToken);
-            }
+            // Live ones only. A deleted subdirectory keeps the path it was deleted with: nothing restores it (the
+            // module has no trash), and counting it would refuse the move of a directory that looks empty for a depth
+            // nobody can see or undo.
+            descendants = await DirectoryRepository.GetDescendantsAsync(directory.Path, cancellationToken);
 
             var depth = (parent?.GetDepth() ?? 0) + 1;
             var below = descendants.Count == 0 ? 0 : descendants.Max(d => d.GetDepth()) - directory.GetDepth();
@@ -203,25 +198,6 @@ public class DirectoryManager : DomainService
         }
 
         await DirectoryRepository.DeleteAsync(directory, autoSave: true, cancellationToken: cancellationToken);
-    }
-
-    /// <summary>
-    /// Marks whether <paramref name="directory"/> has permissions of its own (<see cref="DirectoryDescriptor.IsRestricted"/>).
-    /// </summary>
-    public virtual async Task<DirectoryDescriptor> SetRestrictedAsync(
-        DirectoryDescriptor directory,
-        bool isRestricted,
-        CancellationToken cancellationToken = default)
-    {
-        Check.NotNull(directory, nameof(directory));
-
-        if (directory.IsRestricted == isRestricted)
-        {
-            return directory;
-        }
-
-        directory.SetRestricted(isRestricted);
-        return await DirectoryRepository.UpdateAsync(directory, autoSave: true, cancellationToken: cancellationToken);
     }
 
     /// <summary>

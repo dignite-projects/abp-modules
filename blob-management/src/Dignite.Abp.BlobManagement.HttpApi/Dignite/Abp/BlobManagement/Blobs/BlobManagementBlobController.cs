@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Volo.Abp;
@@ -29,9 +30,10 @@ public class BlobManagementBlobController : BlobManagementController, IBlobManag
         string containerName,
         [FromQuery] string blobName,
         IRemoteStreamContent content,
-        [FromQuery] bool overrideExisting = false)
+        [FromQuery] bool overrideExisting = false,
+        [FromQuery] Guid? creatorId = null)
     {
-        return BlobManagementBlobAppService.SaveAsync(containerName, blobName, content, overrideExisting);
+        return BlobManagementBlobAppService.SaveAsync(containerName, blobName, content, overrideExisting, creatorId);
     }
 
     [HttpGet]

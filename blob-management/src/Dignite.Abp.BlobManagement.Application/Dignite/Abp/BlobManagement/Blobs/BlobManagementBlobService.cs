@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Content;
@@ -20,9 +21,9 @@ public class BlobManagementBlobService : BlobManagementAppService, IBlobManageme
         FileDescriptorManager = fileDescriptorManager;
     }
 
-    public virtual Task<BlobManagementBlobDto> SaveAsync(string containerName, string blobName, IRemoteStreamContent content, bool overrideExisting = false)
+    public virtual Task<BlobManagementBlobDto> SaveAsync(string containerName, string blobName, IRemoteStreamContent content, bool overrideExisting = false, Guid? creatorId = null)
     {
-        return SaveAsync(containerName, blobName, content, overrideExisting, clientId: null);
+        return SaveAsync(containerName, blobName, content, overrideExisting, creatorId, clientId: null);
     }
 
     public virtual async Task<IRemoteStreamContent?> GetOrNullAsync(string containerName, string blobName)
@@ -56,18 +57,24 @@ public class BlobManagementBlobService : BlobManagementAppService, IBlobManageme
         return true;
     }
 
-    /// <summary>Stores the content, recording <paramref name="clientId"/> as its writer when a remote client sent it.</summary>
+    /// <summary>
+    /// Stores the content, recording <paramref name="clientId"/> as its writer when a remote client sent it. The user
+    /// it is counted for is <paramref name="creatorId"/>; without one, ABP's auditing records the current user.
+    /// </summary>
     protected virtual async Task<BlobManagementBlobDto> SaveAsync(
         string containerName,
         string blobName,
         IRemoteStreamContent content,
         bool overrideExisting,
+        Guid? creatorId,
         string? clientId)
     {
         Check.NotNull(content, nameof(content));
+        CheckNameLength(blobName, nameof(blobName));
 
         // The stream is the caller's: the provider's pipeline stream, or the request body behind the BLOB API.
-        var file = await FileDescriptorManager.CreateAsync(containerName, blobName, content.GetStream(), overrideExisting, clientId);
+        var file = await FileDescriptorManager.CreateAsync(
+            containerName, blobName, content.GetStream(), overrideExisting, clientId, creatorId);
 
         return new BlobManagementBlobDto
         {

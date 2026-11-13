@@ -137,6 +137,31 @@ public abstract class DirectoryManager_Tests<TStartupModule> : BlobManagementDom
         await ShouldFailAsync(BlobManagementErrorCodes.DirectoryTooDeep, () => MoveAsync(top.Id, last.ParentId));
     }
 
+    /// <summary>
+    /// A deleted subdirectory is seen by nobody and restored by nothing: it does not make the directory it was in too
+    /// deep to move.
+    /// </summary>
+    [Fact]
+    public async Task A_Deleted_Subdirectory_Should_Not_Count_For_The_Depth_Of_A_Move()
+    {
+        Guid? parentId = null;
+        DirectoryDescriptor deep = null!;
+        for (var level = 1; level < DirectoryDescriptorConsts.MaxDepth; level++)
+        {
+            deep = await CreateAsync(BlobManagementTestContainers.Documents, "deep" + level, parentId);
+            parentId = deep.Id;
+        }
+
+        var top = await CreateAsync(BlobManagementTestContainers.Documents, "Emptied", null);
+        var below = await CreateAsync(BlobManagementTestContainers.Documents, "Below", top.Id);
+        await ShouldFailAsync(BlobManagementErrorCodes.DirectoryTooDeep, () => MoveAsync(top.Id, deep.Id));
+
+        await DeleteAsync(below.Id);
+        await MoveAsync(top.Id, deep.Id);
+
+        (await WithUnitOfWorkAsync(() => _directoryRepository.GetAsync(top.Id))).GetDepth().ShouldBe(DirectoryDescriptorConsts.MaxDepth);
+    }
+
     [Fact]
     public async Task Only_An_Empty_Directory_Should_Be_Deleted()
     {
@@ -173,22 +198,6 @@ public abstract class DirectoryManager_Tests<TStartupModule> : BlobManagementDom
         var elsewhere = await CreateAsync(BlobManagementTestContainers.Archive, "Elsewhere", null);
         await ShouldFailAsync(BlobManagementErrorCodes.DirectoryNotFound,
             () => CreateAsync(BlobManagementTestContainers.Documents, "Folder", elsewhere.Id));
-    }
-
-    [Fact]
-    public async Task A_Directory_Should_Be_Marked_Restricted()
-    {
-        var folder = await CreateAsync(BlobManagementTestContainers.Documents, "Private", null);
-        folder.IsRestricted.ShouldBeFalse();
-
-        await WithUnitOfWorkAsync(async () =>
-            await _directoryManager.SetRestrictedAsync(await _directoryRepository.GetAsync(folder.Id), true));
-        (await WithUnitOfWorkAsync(() => _directoryRepository.GetAsync(folder.Id))).IsRestricted.ShouldBeTrue();
-
-        // It keeps the mark where it goes.
-        var target = await CreateAsync(BlobManagementTestContainers.Documents, "Target", null);
-        await MoveAsync(folder.Id, target.Id);
-        (await WithUnitOfWorkAsync(() => _directoryRepository.GetAsync(folder.Id))).IsRestricted.ShouldBeTrue();
     }
 
     private Task<DirectoryDescriptor> CreateAsync(string containerName, string name, Guid? parentId)

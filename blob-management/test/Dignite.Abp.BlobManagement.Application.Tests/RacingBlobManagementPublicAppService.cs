@@ -30,7 +30,7 @@ public class RacingBlobManagementPublicAppService : BlobManagementPublicAppServi
     /// <summary>How many times the read looked the file up.</summary>
     public int Lookups { get; private set; }
 
-    protected override async Task<FileDescriptor> GetPublicFileAsync(string containerName, string blobName)
+    protected override async Task<(FileDescriptor File, string Name)> GetPublicFileAsync(string containerName, string blobName)
     {
         Lookups++;
         var file = await FileDescriptorManager.FindAsync(containerName, blobName)
@@ -43,6 +43,6 @@ public class RacingBlobManagementPublicAppService : BlobManagementPublicAppServi
             await afterLookup();
         }
 
-        return file;
+        return (file, file.Name);
     }
 }

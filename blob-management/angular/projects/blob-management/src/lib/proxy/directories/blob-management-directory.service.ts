@@ -1,4 +1,4 @@
-import type { BlobManagementDirectoryDto, CreateBlobManagementDirectoryInput, GetBlobManagementDirectoriesInput, MoveBlobManagementDirectoryInput, RestrictBlobManagementDirectoryInput, UpdateBlobManagementDirectoryInput } from './models';
+import type { BlobManagementDirectoryDto, CreateBlobManagementDirectoryInput, GetBlobManagementDirectoriesInput, MoveBlobManagementDirectoryInput, UpdateBlobManagementDirectoryInput } from './models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { ListResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
@@ -58,17 +58,6 @@ export class BlobManagementDirectoryService {
       method: 'PUT',
       headers: { Accept: 'application/json' },
       url: `/api/blob-management/directories/${id}/move`,
-      body: input,
-    },
-      { apiName: this.apiName,...config });
-  
-
-  
-  restrict = (id: string, input: RestrictBlobManagementDirectoryInput, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, BlobManagementDirectoryDto>({
-      method: 'PUT',
-      headers: { Accept: 'application/json' },
-      url: `/api/blob-management/directories/${id}/restriction`,
       body: input,
     },
       { apiName: this.apiName,...config });

@@ -1,6 +1,5 @@
 ﻿using Dignite.Abp.BlobStoring.BlobManagement;
 using Dignite.Abp.BlobStoring.Pipeline;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.Modularity;
@@ -19,11 +18,11 @@ public class BlobManagementApplicationTestModule : AbpModule
     /// <summary>A container <c>BlobManagementContainerSettings_Tests</c> declares in configuration and this module overrides in code.</summary>
     public const string ConfiguredAndOverriddenContainer = "config-media";
 
+    /// <summary>The OAuth client the tests grant the files of a container to (provider <c>C</c>).</summary>
+    public const string AllowedClient = "site-app";
+
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
-        // The key ring a Blob Management host gets from ASP.NET Core: tickets are signed and read with it.
-        context.Services.AddSingleton<IDataProtectionProvider>(new EphemeralDataProtectionProvider());
-
         // Grants for the authorization tests, written as users and roles; the definitions stay in code.
         Configure<PermissionManagementOptions>(options =>
         {
@@ -33,6 +32,7 @@ public class BlobManagementApplicationTestModule : AbpModule
             options.ManagementProviders.Add<TestRolePermissionManagementProvider>();
             options.ResourceManagementProviders.Add<TestUserResourcePermissionManagementProvider>();
             options.ResourceManagementProviders.Add<TestRoleResourcePermissionManagementProvider>();
+            options.ResourceManagementProviders.Add<TestClientResourcePermissionManagementProvider>();
         });
 
         Configure<AbpBlobStoringOptions>(options =>

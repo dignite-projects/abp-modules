@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobManagement.Features;
 using Shouldly;
@@ -12,7 +13,7 @@ namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
 /// The tenant allocation (<see cref="BlobManagementFeatures"/>) as <see cref="FileDescriptorManager"/> enforces it, and the usage
-/// <see cref="BlobManagementUsageManager"/> computes from the descriptor table.
+/// <see cref="BlobManagementUsageManager"/> and the descriptor repository compute from the descriptor table.
 /// </summary>
 public abstract class BlobManagementUsageManager_Tests<TStartupModule> : BlobManagementDomainTestBase<TStartupModule>
     where TStartupModule : IAbpModule
@@ -21,6 +22,7 @@ public abstract class BlobManagementUsageManager_Tests<TStartupModule> : BlobMan
 
     private readonly FileDescriptorManager _fileDescriptorManager;
     private readonly BlobManagementUsageManager _usageManager;
+    private readonly IFileDescriptorRepository _fileRepository;
     private readonly FakeFeatureStore _featureStore;
     private readonly ICurrentTenant _currentTenant;
 
@@ -28,6 +30,7 @@ public abstract class BlobManagementUsageManager_Tests<TStartupModule> : BlobMan
     {
         _fileDescriptorManager = GetRequiredService<FileDescriptorManager>();
         _usageManager = GetRequiredService<BlobManagementUsageManager>();
+        _fileRepository = GetRequiredService<IFileDescriptorRepository>();
         _featureStore = GetRequiredService<FakeFeatureStore>();
         _currentTenant = GetRequiredService<ICurrentTenant>();
     }
@@ -57,6 +60,73 @@ public abstract class BlobManagementUsageManager_Tests<TStartupModule> : BlobMan
         using (_currentTenant.Change(Guid.NewGuid()))
         {
             (await UsedBytesAsync()).ShouldBe(0);
+        }
+    }
+
+    [Fact]
+    public async Task Usage_Should_Be_Told_By_Container_By_User_And_By_Client()
+    {
+        var alice = Guid.NewGuid();
+        var bob = Guid.NewGuid();
+
+        using (_currentTenant.Change(Guid.NewGuid()))
+        {
+            var shared = OfSize(10 * Kilobyte, "shared");
+            var other = OfSize(4 * Kilobyte, "other");
+
+            await CreateAsync(BlobManagementTestContainers.Files, "alice.pdf", shared, "site", alice);
+            await CreateAsync(BlobManagementTestContainers.Files, "bob.pdf", shared, "site", bob);
+            await CreateAsync(BlobManagementTestContainers.Files, "bob-too.pdf", other, clientId: null, bob);
+            var small = await CreateAsync(BlobManagementTestContainers.Limited, "nobody.pdf", OfSize(Kilobyte / 2, "small"));
+
+            // A container stores each BLOB once, and the containers add up to the tenant.
+            var containers = await WithUnitOfWorkAsync(() => _fileRepository.GetContainerUsagesAsync());
+            containers.Count.ShouldBe(2);
+            var files = containers.Single(c => c.ContainerName == BlobManagementTestContainers.Files);
+            files.StoredBytes.ShouldBe(shared.Length + other.Length);
+            files.FileCount.ShouldBe(3);
+            var limited = containers.Single(c => c.ContainerName == BlobManagementTestContainers.Limited);
+            limited.StoredBytes.ShouldBe(small.Size);
+            limited.FileCount.ShouldBe(1);
+            containers.Sum(c => c.StoredBytes).ShouldBe(await UsedBytesAsync());
+
+            // A user is counted for every file of theirs, shared bytes too - the largest first, then the files of no user.
+            var users = await WithUnitOfWorkAsync(() => _fileRepository.GetCreatorUsagesAsync(null, 0, 10));
+            users.Select(u => u.CreatorId).ShouldBe(new Guid?[] { bob, alice, null });
+            users[0].UploadedBytes.ShouldBe(shared.Length + other.Length);
+            users[0].FileCount.ShouldBe(2);
+            users[1].UploadedBytes.ShouldBe(shared.Length);
+            users[1].FileCount.ShouldBe(1);
+            users[2].UploadedBytes.ShouldBe(small.Size);
+            users.Sum(u => u.UploadedBytes).ShouldBeGreaterThan(await UsedBytesAsync());
+
+            (await WithUnitOfWorkAsync(() => _fileRepository.GetCreatorCountAsync(null))).ShouldBe(3);
+            (await WithUnitOfWorkAsync(() => _fileRepository.GetCreatorUsagesAsync(null, 1, 1)))
+                .ShouldHaveSingleItem().CreatorId.ShouldBe(alice);
+
+            // In one container.
+            (await WithUnitOfWorkAsync(() => _fileRepository.GetCreatorCountAsync(BlobManagementTestContainers.Limited))).ShouldBe(1);
+            (await WithUnitOfWorkAsync(() => _fileRepository.GetCreatorUsagesAsync(BlobManagementTestContainers.Limited, 0, 10)))
+                .ShouldHaveSingleItem().CreatorId.ShouldBeNull();
+
+            // A client likewise; the files stored in process are gathered under no client.
+            var clients = await WithUnitOfWorkAsync(() => _fileRepository.GetClientUsagesAsync(null));
+            clients.Select(c => c.ClientId).ShouldBe(new[] { "site", null });
+            clients[0].UploadedBytes.ShouldBe(2L * shared.Length);
+            clients[0].FileCount.ShouldBe(2);
+            clients[1].UploadedBytes.ShouldBe(other.Length + small.Size);
+            clients[1].FileCount.ShouldBe(2);
+
+            (await WithUnitOfWorkAsync(() => _fileRepository.GetClientUsagesAsync(BlobManagementTestContainers.Limited)))
+                .ShouldHaveSingleItem().ClientId.ShouldBeNull();
+        }
+
+        // Per tenant, as the tenant's usage is.
+        using (_currentTenant.Change(Guid.NewGuid()))
+        {
+            (await WithUnitOfWorkAsync(() => _fileRepository.GetContainerUsagesAsync())).ShouldBeEmpty();
+            (await WithUnitOfWorkAsync(() => _fileRepository.GetCreatorCountAsync(null))).ShouldBe(0);
+            (await WithUnitOfWorkAsync(() => _fileRepository.GetClientUsagesAsync(null))).ShouldBeEmpty();
         }
     }
 
@@ -126,12 +196,17 @@ public abstract class BlobManagementUsageManager_Tests<TStartupModule> : BlobMan
         return BlobManagementTestFiles.Pdf(seed + new string('x', length - shell));
     }
 
-    private Task<FileDescriptor> CreateAsync(string containerName, string name, byte[] bytes)
+    private Task<FileDescriptor> CreateAsync(
+        string containerName,
+        string name,
+        byte[] bytes,
+        string? clientId = null,
+        Guid? creatorId = null)
     {
         return WithUnitOfWorkAsync(async () =>
         {
             using var stream = new MemoryStream(bytes);
-            return await _fileDescriptorManager.CreateAsync(containerName, name, stream);
+            return await _fileDescriptorManager.CreateAsync(containerName, name, stream, clientId: clientId, creatorId: creatorId);
         });
     }
 

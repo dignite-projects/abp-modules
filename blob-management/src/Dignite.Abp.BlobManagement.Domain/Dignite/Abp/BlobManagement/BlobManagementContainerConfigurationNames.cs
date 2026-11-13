@@ -9,7 +9,5 @@ public static class BlobManagementContainerConfigurationNames
 
     public const string PublicRead = "Dignite.Abp.BlobManagement.PublicRead";
 
-    public const string AllowedClientIds = "Dignite.Abp.BlobManagement.AllowedClientIds";
-
     public const string AllowDirectories = "Dignite.Abp.BlobManagement.AllowDirectories";
 }

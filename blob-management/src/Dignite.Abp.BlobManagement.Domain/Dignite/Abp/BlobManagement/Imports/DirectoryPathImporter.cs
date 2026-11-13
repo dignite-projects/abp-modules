@@ -10,13 +10,13 @@ using Volo.Abp.Domain.Services;
 namespace Dignite.Abp.BlobManagement.Imports;
 
 /// <summary>
-/// Files the unfiled uploaded files of a container into directories, by a path an extra property of each file holds.
+/// Files the unfiled files a container keeps by id into directories, by a path an extra property of each file holds.
 /// Whoever stored the files wrote the path - an application that migrates a file library of its own in - and the
 /// operator names the property: Blob Management knows nothing of the writer.
 /// <para>
 /// Repeatable: a directory is looked up by its name key before it is created (so an existing one is used, whatever its
 /// case, and a second run creates nothing the first created), and only files at the top of the container are read, so a
-/// file filed before - by an import or by a person - is left where it is. A dry run reports what an import would do
+/// file filed before - by an import or by its business system - is left where it is. A dry run reports what an import would do
 /// and writes nothing; it is the default.
 /// </para>
 /// <para>

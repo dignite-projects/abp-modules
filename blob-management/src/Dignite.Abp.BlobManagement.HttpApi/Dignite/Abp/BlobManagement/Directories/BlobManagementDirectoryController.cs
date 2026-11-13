@@ -58,11 +58,4 @@ public class BlobManagementDirectoryController : BlobManagementController, IBlob
     {
         return DirectoryAppService.DeleteAsync(id);
     }
-
-    [HttpPut]
-    [Route("{id}/restriction")]
-    public virtual Task<BlobManagementDirectoryDto> RestrictAsync(Guid id, RestrictBlobManagementDirectoryInput input)
-    {
-        return DirectoryAppService.RestrictAsync(id, input);
-    }
 }

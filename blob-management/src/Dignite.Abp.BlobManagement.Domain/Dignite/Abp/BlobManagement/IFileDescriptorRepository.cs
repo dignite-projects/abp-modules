@@ -33,12 +33,44 @@ public interface IFileDescriptorRepository : IBasicRepository<FileDescriptor, Gu
     Task<long> GetUsedStorageSizeAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// The live descriptor of the container whose physical BLOB is <paramref name="blobName"/>, if any - an uploaded
-    /// file's public address. Descriptors that share the BLOB share its bytes, so any of them answers.
+    /// The stored bytes and the files of each container that holds any, in the current tenant: stored bytes as
+    /// <see cref="GetUsedStorageSizeAsync"/> counts them, so they add up to it - content is shared within a container
+    /// only.
     /// </summary>
-    Task<FileDescriptor?> FindByBlobNameAsync(
+    Task<List<BlobManagementContainerUsage>> GetContainerUsagesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The uploaded bytes of each user files are counted for (<see cref="FileDescriptor.CreatorId"/>; <c>null</c>
+    /// gathers the files counted for none), the largest first, a page at a time - in one container, or with
+    /// <c>null</c> in all. Uploaded bytes are the sizes of the descriptors, shared content counted for each.
+    /// </summary>
+    Task<List<BlobManagementCreatorUsage>> GetCreatorUsagesAsync(
+        string? containerName,
+        int skipCount,
+        int maxResultCount,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>How many rows <see cref="GetCreatorUsagesAsync"/> finds without paging.</summary>
+    Task<long> GetCreatorCountAsync(string? containerName, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The uploaded bytes of each client (<see cref="FileDescriptor.ClientId"/>; <c>null</c> gathers the files stored
+    /// in process), the largest first - in one container, or with <c>null</c> in all.
+    /// </summary>
+    Task<List<BlobManagementClientUsage>> GetClientUsagesAsync(
+        string? containerName,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The live descriptors of the container whose physical BLOB is <paramref name="blobName"/>, by id, at most
+    /// <paramref name="maxResultCount"/> of them - the public address of a file kept by id names its BLOB. Descriptors
+    /// that share the BLOB share its bytes, type and size, and nothing else: a caller that answers for the address
+    /// asks for two, to know whether the one it got is the only one.
+    /// </summary>
+    Task<List<FileDescriptor>> GetListByBlobNameAsync(
         string containerName,
         string blobName,
+        int maxResultCount,
         CancellationToken cancellationToken = default);
 
     /// <summary>Whether a live descriptor names <paramref name="blobName"/> as its physical BLOB.</summary>

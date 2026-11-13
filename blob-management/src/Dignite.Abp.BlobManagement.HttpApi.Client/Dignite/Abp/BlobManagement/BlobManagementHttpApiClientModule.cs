@@ -1,4 +1,5 @@
 ﻿using Dignite.Abp.BlobManagement.Blobs;
+using Dignite.Abp.BlobManagement.Files;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Volo.Abp.Http.Client;
@@ -21,8 +22,10 @@ public class BlobManagementHttpApiClientModule : AbpModule
             BlobManagementRemoteServiceConsts.RemoteServiceName
         );
 
-        // What the BLOB storing provider resolves: the proxy, behind the in-process service's contract.
+        // What the BLOB storing provider and a business system's file library resolve: the proxies, behind the
+        // in-process services' contracts.
         context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementBlobService, RemoteBlobManagementBlobService>());
+        context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementFileService, RemoteBlobManagementFileService>());
 
         Configure<AbpVirtualFileSystemOptions>(options =>
         {

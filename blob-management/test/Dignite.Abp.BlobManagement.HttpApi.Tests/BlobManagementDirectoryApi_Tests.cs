@@ -18,8 +18,8 @@ using Xunit;
 namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
-/// The directories and the file library over HTTP: a signed-in user calls <c>api/blob-management/directories</c> and
-/// the listing, renaming and moving of <c>/files</c> through the generated C# client proxies.
+/// The directories over HTTP, through the generated C# client proxies: a signed-in user keeps them at
+/// <c>api/blob-management/directories</c>, and an application files, lists and moves files in them as a client.
 /// </summary>
 public class BlobManagementDirectoryApi_Tests : AbpWebApplicationFactoryIntegratedTest<Program>
 {
@@ -38,27 +38,28 @@ public class BlobManagementDirectoryApi_Tests : AbpWebApplicationFactoryIntegrat
     }
 
     [Fact]
-    public async Task A_User_Should_Manage_Directories_And_The_Files_In_Them_Through_The_Proxies()
+    public async Task A_User_Should_Keep_Directories_And_An_Application_The_Files_In_Them()
     {
-        foreach (var permission in BlobManagementPermissions.GetAll())
-        {
-            await GrantAsync(permission, _user);
-        }
+        await GrantDirectoryPermissionsAsync(_user);
 
+        BlobManagementDirectoryDto docs;
+        BlobManagementDirectoryDto year;
         using (TestCaller.As(UiClient, _user))
         {
-            var docs = await _directories.CreateAsync(new CreateBlobManagementDirectoryInput { ContainerName = Container, Name = "Docs" });
-            var year = await _directories.CreateAsync(new CreateBlobManagementDirectoryInput { ContainerName = Container, Name = "2026", ParentId = docs.Id });
+            docs = await _directories.CreateAsync(new CreateBlobManagementDirectoryInput { ContainerName = Container, Name = "Docs" });
+            year = await _directories.CreateAsync(new CreateBlobManagementDirectoryInput { ContainerName = Container, Name = "2026", ParentId = docs.Id });
             year.ParentId.ShouldBe(docs.Id);
 
             var top = (await _directories.GetListAsync(new GetBlobManagementDirectoriesInput { ContainerName = Container })).Items;
-            var listed = top.Single(d => d.Id == docs.Id);
-            listed.HasChildren.ShouldBeTrue();
-            listed.Access.UploadFiles.ShouldBeTrue();
-            (await _directories.GetAsync(year.Id)).CanDelete.ShouldBeTrue();
+            top.Single(d => d.Id == docs.Id).HasChildren.ShouldBeTrue();
+            (await _directories.GetAsync(year.Id)).Name.ShouldBe("2026");
+        }
 
+        BlobManagementFileDto file;
+        using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
+        {
             // A form upload carries the directory it is filed in.
-            var file = await _files.CreateAsync(new CreateBlobManagementFileInput
+            file = await _files.CreateAsync(new CreateBlobManagementFileInput
             {
                 ContainerName = Container,
                 DirectoryId = year.Id,
@@ -70,15 +71,30 @@ public class BlobManagementDirectoryApi_Tests : AbpWebApplicationFactoryIntegrat
             files.TotalCount.ShouldBe(1);
             files.Items.Single().Id.ShouldBe(file.Id);
 
-            (await _files.UpdateAsync(file.Id, new UpdateBlobManagementFileInput { Name = "final.pdf" })).Name.ShouldBe("final.pdf");
             (await _files.MoveAsync(file.Id, new MoveBlobManagementFileInput { DirectoryId = docs.Id })).DirectoryId.ShouldBe(docs.Id);
 
+            // Directories are a user's to keep, by the permissions put on the container: a client keeps none.
+            await ShouldFailAsync(HttpStatusCode.Forbidden,
+                () => _directories.GetListAsync(new GetBlobManagementDirectoriesInput { ContainerName = Container }));
+            await ShouldFailAsync(HttpStatusCode.Forbidden,
+                () => _directories.CreateAsync(new CreateBlobManagementDirectoryInput { ContainerName = Container, Name = "Mine" }));
+        }
+
+        using (TestCaller.As(UiClient, _user))
+        {
             (await _directories.UpdateAsync(year.Id, new UpdateBlobManagementDirectoryInput { Name = "2027" })).Name.ShouldBe("2027");
-            (await _directories.RestrictAsync(year.Id, new RestrictBlobManagementDirectoryInput { IsRestricted = true })).IsRestricted.ShouldBeTrue();
             (await _directories.MoveAsync(year.Id, new MoveBlobManagementDirectoryInput { ParentId = null, Order = 0 })).ParentId.ShouldBeNull();
 
             await ShouldFailAsync(HttpStatusCode.Conflict, () => _directories.DeleteAsync(docs.Id), BlobManagementErrorCodes.DirectoryNotEmpty);
+        }
+
+        using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
+        {
             await _files.DeleteAsync(file.Id);
+        }
+
+        using (TestCaller.As(UiClient, _user))
+        {
             await _directories.DeleteAsync(docs.Id);
             await ShouldFailAsync(HttpStatusCode.NotFound, () => _directories.GetAsync(docs.Id));
         }
@@ -87,10 +103,7 @@ public class BlobManagementDirectoryApi_Tests : AbpWebApplicationFactoryIntegrat
     [Fact]
     public async Task The_Directory_APIs_Errors_Should_Have_Their_Statuses()
     {
-        foreach (var permission in BlobManagementPermissions.GetAll())
-        {
-            await GrantAsync(permission, _user);
-        }
+        await GrantDirectoryPermissionsAsync(_user);
 
         using (TestCaller.As(UiClient, _user))
         {
@@ -106,17 +119,43 @@ public class BlobManagementDirectoryApi_Tests : AbpWebApplicationFactoryIntegrat
             await ShouldFailAsync(HttpStatusCode.BadRequest,
                 () => _directories.GetListAsync(new GetBlobManagementDirectoriesInput { ContainerName = BlobManagementHttpApiTestModule.OpenContainer }),
                 BlobManagementErrorCodes.DirectoriesNotAllowed);
-            await ShouldFailAsync(HttpStatusCode.BadRequest,
-                () => _files.GetListAsync(new GetBlobManagementFilesInput { ContainerName = Container, Sorting = "Hash" }),
-                BlobManagementErrorCodes.SortingNotSupported);
         }
 
-        // Without a grant the container's files are not listed.
+        // The management permission reads the tree and changes nothing in it.
+        var reader = Guid.NewGuid();
+        await GrantAsync(BlobManagementPermissions.Containers.Default, reader);
+        using (TestCaller.As(UiClient, reader))
+        {
+            (await _directories.GetListAsync(new GetBlobManagementDirectoriesInput { ContainerName = Container })).Items.ShouldNotBeEmpty();
+            await ShouldFailAsync(HttpStatusCode.Forbidden,
+                () => _directories.CreateAsync(new CreateBlobManagementDirectoryInput { ContainerName = Container, Name = "Mine" }));
+        }
+
+        // Without a grant the container's tree is not shown.
         using (TestCaller.As(UiClient, Guid.NewGuid()))
         {
             await ShouldFailAsync(HttpStatusCode.Forbidden,
-                () => _files.GetListAsync(new GetBlobManagementFilesInput { ContainerName = Container }));
+                () => _directories.GetListAsync(new GetBlobManagementDirectoriesInput { ContainerName = Container }));
         }
+    }
+
+    /// <summary>Seeing the tree of the documents container and every directory permission, granted on that container.</summary>
+    private async Task GrantDirectoryPermissionsAsync(Guid userId)
+    {
+        using var uow = GetRequiredService<IUnitOfWorkManager>().Begin();
+        foreach (var permission in new[]
+                 {
+                     BlobManagementPermissions.Container.View,
+                     BlobManagementPermissions.Container.CreateDirectories,
+                     BlobManagementPermissions.Container.UpdateDirectories,
+                     BlobManagementPermissions.Container.DeleteDirectories
+                 })
+        {
+            await GetRequiredService<IResourcePermissionGrantRepository>().InsertAsync(new ResourcePermissionGrant(
+                GetRequiredService<IGuidGenerator>().Create(), permission, BlobManagementResourceNames.Container, Container, "U", userId.ToString()));
+        }
+
+        await uow.CompleteAsync();
     }
 
     private async Task GrantAsync(string permission, Guid userId)

@@ -12,11 +12,12 @@ namespace Dignite.Abp.BlobManagement;
 /// One file of a managed container: the record of bytes that <see cref="FileDescriptorManager"/> stored there. Every
 /// BLOB the module holds has one, whichever way it came in; tenant usage is computed from this table.
 /// <para>
-/// <b>Two ways in.</b> An application saves a BLOB under a name of its own (the BLOB storing provider, the BLOB API):
-/// that name is its address - the application reads it back by it - unique among the live descriptors of its tenant
-/// and container, held by the <see cref="NameKey"/>, which the database keeps unique
-/// (<see cref="IsAddressedByName"/>). A person uploads a file (the file API): it is addressed by its id, its name is
-/// a display name and may repeat, and it can be filed in a directory (<see cref="DirectoryId"/>), renamed and moved.
+/// <b>Two ways in</b>, both an application's. It saves a BLOB under a name of its own (the BLOB storing provider, the
+/// BLOB API): that name is its address - the application reads it back by it - unique among the live descriptors of
+/// its tenant and container, held by the <see cref="NameKey"/>, which the database keeps unique
+/// (<see cref="IsAddressedByName"/>). Or it stores a file for its user (the file API): it is addressed by its id, its
+/// name is a display name and may repeat, and it can be filed in a directory (<see cref="DirectoryId"/>), renamed and
+/// moved.
 /// </para>
 /// <para>
 /// <b>Two names.</b> <see cref="Name"/> is the caller's. <see cref="BlobName"/> is the physical BLOB in the container's
@@ -119,11 +120,18 @@ public class FileDescriptor : AggregateRoot<Guid>, ICreationAuditedObject, IModi
     /// </summary>
     public virtual Guid? DirectoryId { get; protected set; }
 
-    /// <summary>The OAuth client that wrote the file through the BLOB API, or <c>null</c> (in-process, or a user).</summary>
+    /// <summary>
+    /// The OAuth client that stored the file over HTTP - through the BLOB API or the file API - or <c>null</c> when an
+    /// application in Blob Management's own host stored it.
+    /// </summary>
     public virtual string? ClientId { get; protected set; }
 
     public virtual DateTime CreationTime { get; set; }
 
+    /// <summary>
+    /// The user the file is counted for in the usage figures, and nothing else - no right comes with it: the
+    /// application's current user as ABP's auditing records it, or the user the application named.
+    /// </summary>
     public virtual Guid? CreatorId { get; set; }
 
     public virtual DateTime? LastModificationTime { get; set; }

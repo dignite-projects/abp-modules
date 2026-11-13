@@ -1,12 +1,13 @@
 using System;
+using System.Threading.Tasks;
 using Dignite.Abp.BlobStoring.BlobManagement;
 using Dignite.Abp.BlobManagement.Blobs;
 using Dignite.Abp.BlobManagement.Containers;
 using Dignite.Abp.BlobManagement.EntityFrameworkCore;
 using Dignite.Abp.BlobManagement.Directories;
 using Dignite.Abp.BlobManagement.Files;
-using Dignite.Abp.BlobManagement.Tickets;
-using Microsoft.AspNetCore.DataProtection;
+using Dignite.Abp.BlobManagement.Permissions;
+using Dignite.Abp.BlobManagement.Usage;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -18,9 +19,11 @@ using Volo.Abp.AspNetCore.TestBase;
 using Volo.Abp.Autofac;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.BlobStoring.Memory;
+using Volo.Abp.Authorization.Permissions.Resources;
 using Volo.Abp.Data;
 using Volo.Abp.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore.Sqlite;
+using Volo.Abp.Guids;
 using Volo.Abp.Http.Client;
 using Volo.Abp.Imaging;
 using Volo.Abp.Modularity;
@@ -55,26 +58,20 @@ public class BlobManagementHttpApiTestModule : AbpModule
 {
     public const string AllowedClient = "site-app";
 
-    /// <summary>Container that allows <see cref="AllowedClient"/>.</summary>
+    /// <summary>Container whose files <see cref="AllowedClient"/> is granted.</summary>
     public const string OpenContainer = "files";
 
     /// <summary>Container that allows no client.</summary>
     public const string ClosedContainer = "closed";
 
-    /// <summary>Container with directories.</summary>
+    /// <summary>Container with directories, whose files <see cref="AllowedClient"/> is granted.</summary>
     public const string DocumentsContainer = "documents";
 
-    /// <summary>Container that allows <see cref="AllowedClient"/> and is read publicly.</summary>
+    /// <summary>Container whose files <see cref="AllowedClient"/> is granted, and which is read publicly.</summary>
     public const string PublicContainer = "public";
 
     /// <summary>The application's container, to <see cref="PublicContainer"/> over HTTP.</summary>
     public const string AppPublicContainer = "app-public";
-
-    /// <summary>Container that allows <see cref="AllowedClient"/>; the ticket tests change its allow-list.</summary>
-    public const string TicketsContainer = "tickets";
-
-    /// <summary>The application's container, to <see cref="TicketsContainer"/> over HTTP.</summary>
-    public const string AppTicketsContainer = "app-tickets";
 
     /// <summary>The application's container, to <see cref="OpenContainer"/> over HTTP.</summary>
     public const string AppContainer = "app-remote";
@@ -106,20 +103,21 @@ public class BlobManagementHttpApiTestModule : AbpModule
         ConfigureDatabase(context);
         ConfigureBlobStoring(context);
 
-        // The application's side: its IBlobManagementBlobService is the remote one, though Blob Management's in-process one is
-        // installed in this host too.
+        // The application's side: its IBlobManagementBlobService and IBlobManagementFileService are the remote ones, though
+        // Blob Management's in-process ones are installed in this host too.
         Configure<AbpRemoteServiceOptions>(options =>
         {
             options.RemoteServices.Default = new RemoteServiceConfiguration("http://localhost/");
         });
         context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementBlobService, RemoteBlobManagementBlobService>());
-        context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementTicketService, BlobManagementTicketClientProxy>());
+        context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementFileService, RemoteBlobManagementFileService>());
 
         // The file and container services' generated proxies replace its services wherever HttpApi.Client is installed. This host is
         // the Blob Management too, so its controllers get the in-process services back; the tests call the proxies by their type.
         context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementContainerAppService, BlobManagementContainerAppService>());
         context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementFileAppService, BlobManagementFileAppService>());
         context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementDirectoryAppService, BlobManagementDirectoryAppService>());
+        context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementUsageAppService, BlobManagementUsageAppService>());
 
         // Blob Management's permission grants, written by the tests straight into the store; the definitions stay in code.
         Configure<PermissionManagementOptions>(options =>
@@ -127,9 +125,6 @@ public class BlobManagementHttpApiTestModule : AbpModule
             options.SaveStaticPermissionsToDatabase = false;
             options.IsDynamicPermissionStoreEnabled = false;
         });
-
-        // What a host provides: the tickets are signed with it. Ephemeral keys, in memory.
-        context.Services.AddDataProtection();
     }
 
     public override void OnApplicationInitialization(ApplicationInitializationContext context)
@@ -142,6 +137,28 @@ public class BlobManagementHttpApiTestModule : AbpModule
         app.UseUnitOfWork();
         app.UseAuthorization();
         app.UseConfiguredEndpoints();
+    }
+
+    /// <summary>
+    /// Grants <see cref="AllowedClient"/> the files of the containers that name it, as ABP's resource permission dialog
+    /// grants a client: on the host side, for the client provider (<c>C</c>).
+    /// </summary>
+    public override async Task OnPostApplicationInitializationAsync(ApplicationInitializationContext context)
+    {
+        var services = context.ServiceProvider;
+        using var uow = services.GetRequiredService<IUnitOfWorkManager>().Begin();
+        foreach (var container in new[] { OpenContainer, DocumentsContainer, PublicContainer })
+        {
+            await services.GetRequiredService<IResourcePermissionGrantRepository>().InsertAsync(new ResourcePermissionGrant(
+                services.GetRequiredService<IGuidGenerator>().Create(),
+                BlobManagementPermissions.Container.Files,
+                BlobManagementResourceNames.Container,
+                container,
+                ClientResourcePermissionValueProvider.ProviderName,
+                AllowedClient));
+        }
+
+        await uow.CompleteAsync();
     }
 
     public override void OnApplicationShutdown(ApplicationShutdownContext context)
@@ -178,7 +195,7 @@ public class BlobManagementHttpApiTestModule : AbpModule
         {
             options.Containers.Configure(OpenContainer, container =>
             {
-                container.UseBlobManagementContainer(managed => managed.AllowedClientIds = new[] { AllowedClient });
+                container.UseBlobManagementContainer();
                 container.UseMemory();
             });
 
@@ -196,23 +213,8 @@ public class BlobManagementHttpApiTestModule : AbpModule
 
             options.Containers.Configure(PublicContainer, container =>
             {
-                container.UseBlobManagementContainer(managed =>
-                {
-                    managed.AllowedClientIds = new[] { AllowedClient };
-                    managed.PublicRead = true;
-                });
+                container.UseBlobManagementContainer(managed => managed.PublicRead = true);
                 container.UseMemory();
-            });
-
-            options.Containers.Configure(TicketsContainer, container =>
-            {
-                container.UseBlobManagementContainer(managed => managed.AllowedClientIds = new[] { AllowedClient });
-                container.UseMemory();
-            });
-
-            options.Containers.Configure(AppTicketsContainer, container =>
-            {
-                container.UseBlobManagement(provider => provider.BlobManagementContainer = TicketsContainer);
             });
 
             options.Containers.Configure(AppPublicContainer, container =>

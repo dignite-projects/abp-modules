@@ -9,11 +9,8 @@
   <ItemGroup>
     <PackageReference Include="Volo.Abp.Mapperly" />
     <PackageReference Include="Volo.Abp.Ddd.Application" />
-    <!-- Only for IApplicationFinder (BlobManagementContainerValidator); resolved optionally, no module dependency. -->
-    <PackageReference Include="Volo.Abp.OpenIddict.Domain.Shared" />
-    <PackageReference Include="Volo.Abp.PermissionManagement.Domain" />
-    <!-- IDataProtectionProvider, which signs the tickets (BlobManagementTicketProtector); the host provides the key ring. -->
-    <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" />
+    <!-- Only for IExternalUserLookupServiceProvider (BlobManagementUsageAppService); resolved optionally, no module dependency. -->
+    <PackageReference Include="Volo.Abp.Users.Abstractions" />
   </ItemGroup>
 
   <ItemGroup>

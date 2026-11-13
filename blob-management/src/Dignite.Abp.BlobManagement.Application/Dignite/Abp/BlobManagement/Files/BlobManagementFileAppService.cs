@@ -1,198 +1,133 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
-using Dignite.Abp.BlobManagement.Authorization;
-using Dignite.Abp.BlobManagement.Features;
-using Dignite.Abp.BlobManagement.Tickets;
+using Dignite.Abp.BlobManagement.Blobs;
+using Dignite.Abp.BlobManagement.Permissions;
 using Microsoft.AspNetCore.Authorization;
+using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Content;
+using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Entities;
-using Volo.Abp.Features;
 
 namespace Dignite.Abp.BlobManagement.Files;
 
 /// <summary>
-/// The files of the managed containers. What a caller may do with files is the container's permission, at a place
-/// the caller may view (<see cref="BlobManagementAccessService"/>): it is worked out for the place, and no question is
-/// asked for each file. Reading one file by its id takes a signed-in user and nothing else - the id is what a business
-/// system keeps and hands out under its own authorization - and the uploader of a file may delete it. Storing, dedup
-/// and the quota are <see cref="FileDescriptorManager"/>'s. Part of the tenant's Blob Management: with
-/// <see cref="BlobManagementFeatures.Enable"/> off it refuses every call.
+/// The file API's <see cref="IBlobManagementFileService"/>: the in-process implementation behind an authorization of
+/// the caller. It admits two:
+/// <list type="bullet">
+/// <item>an OAuth client granted the files of the file's container, never a user (<see cref="BlobManagementClientChecker"/>) - for
+/// everything; a file it stores records it as the writer. A file in a container the client may not use is not found,
+/// so its id tells nothing;</item>
+/// <item>a user who holds the management permission - for the reads. No user stores, renames, moves or deletes a file
+/// here: that is the application's, under its own rules.</item>
+/// </list>
+/// Exposed only through <c>BlobManagementFileController</c>.
 /// </summary>
 [Authorize]
-[RequiresFeature(BlobManagementFeatures.Enable)]
-public class BlobManagementFileAppService : BlobManagementAppService, IBlobManagementFileAppService
+[RemoteService(IsEnabled = false)]
+[ExposeServices(typeof(IBlobManagementFileAppService), typeof(BlobManagementFileAppService))]
+public class BlobManagementFileAppService : BlobManagementFileService, IBlobManagementFileAppService
 {
-    protected IFileDescriptorRepository FileRepository { get; }
-
-    protected FileDescriptorManager FileDescriptorManager { get; }
+    protected BlobManagementClientChecker ClientChecker { get; }
 
     public BlobManagementFileAppService(
         IFileDescriptorRepository fileRepository,
-        FileDescriptorManager fileDescriptorManager)
+        FileDescriptorManager fileDescriptorManager,
+        BlobManagementClientChecker clientChecker)
+        : base(fileRepository, fileDescriptorManager)
     {
-        FileRepository = fileRepository;
-        FileDescriptorManager = fileDescriptorManager;
+        ClientChecker = clientChecker;
     }
 
-    public virtual async Task<BlobManagementFileDto> GetAsync(Guid id)
+    public override async Task<BlobManagementFileDto> GetAsync(Guid id)
     {
-        GetUserId();
-        return Map(await GetFileAsync(id));
+        return Map(await GetFileForReaderAsync(id));
     }
 
-    public virtual async Task<PagedResultDto<BlobManagementFileDto>> GetListAsync(GetBlobManagementFilesInput input)
+    public override async Task<PagedResultDto<BlobManagementFileDto>> GetListAsync(GetBlobManagementFilesInput input)
     {
-        GetUserId();
-        GetContainer(input.ContainerName);
-        Authorize((await GetAccessAsync(input.ContainerName, input.DirectoryId)).View);
-
-        var count = await FileRepository.GetCountAsync(input.ContainerName, input.DirectoryId, input.Filter);
-        var files = await FileRepository.GetListAsync(
-            input.ContainerName,
-            input.DirectoryId,
-            input.Filter,
-            input.Sorting,
-            input.MaxResultCount,
-            input.SkipCount);
-
-        return new PagedResultDto<BlobManagementFileDto>(count, files.Select(Map).ToList());
-    }
-
-    public virtual async Task<BlobManagementFileDto> CreateAsync(CreateBlobManagementFileInput input)
-    {
-        GetUserId();
-        await AuthorizeUploadAsync(input.ContainerName, input.DirectoryId);
-
-        // The content closes what it owns; the request's own body is the server's to close.
-        using var content = input.File;
-        var name = !input.Name.IsNullOrWhiteSpace() ? input.Name!.Trim()
-            : !content.FileName.IsNullOrWhiteSpace() ? content.FileName!.Trim()
-            : "file";
-
-        var file = await FileDescriptorManager.UploadAsync(input.ContainerName, name, content.GetStream(), input.DirectoryId);
-        return Map(file);
-    }
-
-    public virtual async Task<BlobManagementTicketDto> CreateUploadTicketAsync(CreateBlobManagementFileUploadTicketInput input)
-    {
-        var userId = GetUserId();
-        await AuthorizeUploadAsync(input.ContainerName, input.DirectoryId);
-
-        var protector = LazyServiceProvider.LazyGetRequiredService<BlobManagementTicketProtector>();
-        var ticket = new BlobManagementTicket
+        if (CurrentUser.Id != null)
         {
-            Kind = BlobManagementTicketKind.FileUpload,
-            TenantId = CurrentTenant.Id,
-            ContainerName = input.ContainerName,
-            DirectoryId = input.DirectoryId,
-            BlobName = string.Empty,
-            FileName = input.FileName.Trim(),
-            UserId = userId,
-            UserName = CurrentUser.UserName,
-            Roles = CurrentUser.Roles,
-            Nonce = Guid.NewGuid().ToString("N"),
-            ExpiresAt = protector.ExpiresAfter(input.LifetimeSeconds)
-        };
-
-        var protectedTicket = protector.Protect(ticket);
-        return new BlobManagementTicketDto
+            await CheckManagementPermissionAsync();
+        }
+        else
         {
-            Ticket = protectedTicket,
-            Kind = ticket.Kind,
-            ExpiresAt = ticket.ExpiresAt,
-            Url = BlobManagementTicketUrl.BuildFileUpload(protectedTicket)
-        };
+            await ClientChecker.CheckAsync(input.ContainerName);
+        }
+
+        return await base.GetListAsync(input);
     }
 
-    public virtual async Task<BlobManagementFileDto> UpdateAsync(Guid id, UpdateBlobManagementFileInput input)
+    public override async Task<BlobManagementFileDto> CreateAsync(CreateBlobManagementFileInput input)
     {
-        GetUserId();
-        var file = await GetFileAsync(id);
-        Authorize((await GetAccessAsync(file)).UpdateFiles);
+        var clientId = await ClientChecker.CheckAsync(input.ContainerName);
+        return await CreateAsync(input, clientId);
+    }
 
+    public override async Task<BlobManagementFileDto> UpdateAsync(Guid id, UpdateBlobManagementFileInput input)
+    {
+        var file = await GetFileForClientAsync(id);
         await FileDescriptorManager.RenameAsync(file, input.Name.Trim());
         return Map(file);
     }
 
-    /// <summary>
-    /// The caller needs to rename and move files where the file is, and to upload where it lands.
-    /// </summary>
-    public virtual async Task<BlobManagementFileDto> MoveAsync(Guid id, MoveBlobManagementFileInput input)
+    public override async Task<BlobManagementFileDto> MoveAsync(Guid id, MoveBlobManagementFileInput input)
     {
-        GetUserId();
-        var file = await GetFileAsync(id);
-        Authorize((await GetAccessAsync(file)).UpdateFiles);
-        await AuthorizeUploadAsync(file.ContainerName, input.DirectoryId);
-
+        var file = await GetFileForClientAsync(id);
         await FileDescriptorManager.MoveAsync(file, input.DirectoryId);
         return Map(file);
     }
 
-    /// <summary>The uploader deletes their own file; anyone else needs to delete files where it is.</summary>
-    public virtual async Task DeleteAsync(Guid id)
+    public override async Task DeleteAsync(Guid id)
     {
-        var userId = GetUserId();
-        var file = await FileRepository.FindAsync(id);
-        if (file == null || !IsManagedContainer(file.ContainerName))
+        var file = await FindFileForClientAsync(id);
+        if (file != null)
         {
-            return;
+            await FileDescriptorManager.DeleteAsync(file);
         }
-
-        if (file.CreatorId != userId)
-        {
-            Authorize((await GetAccessAsync(file)).DeleteFiles);
-        }
-
-        await FileDescriptorManager.DeleteAsync(file);
     }
 
-    public virtual async Task<IRemoteStreamContent> GetContentAsync(Guid id)
+    public override async Task<IRemoteStreamContent> GetContentAsync(Guid id)
     {
-        GetUserId();
-        var file = await GetFileAsync(id);
+        var file = await GetFileForReaderAsync(id);
         var stream = await FileDescriptorManager.GetStreamOrNullAsync(file)
                      ?? throw new EntityNotFoundException(typeof(FileDescriptor), id);
         return new RemoteStreamContent(stream, file.Name, file.MimeType, file.Size);
     }
 
     /// <summary>
-    /// Whether the caller may upload to the place - the same check for an upload, for a ticket that will make one and
-    /// for where a moved file lands. The container is checked first, so an unknown one is not found whoever asks.
+    /// The file, for a caller who may read it: a user who holds the management permission - checked before the file is
+    /// looked for - or a client granted the files of its container.
     /// </summary>
-    protected virtual async Task AuthorizeUploadAsync(string containerName, Guid? directoryId)
+    protected virtual async Task<FileDescriptor> GetFileForReaderAsync(Guid id)
     {
-        GetContainer(containerName);
-        Authorize((await GetAccessAsync(containerName, directoryId)).UploadFiles);
+        if (CurrentUser.Id != null)
+        {
+            await CheckManagementPermissionAsync();
+            return await GetFileAsync(id);
+        }
+
+        return await GetFileForClientAsync(id);
     }
 
-    /// <summary>What the caller may do at a place of <paramref name="containerName"/>; a directory of another container is not found.</summary>
-    protected virtual async Task<BlobManagementAccess> GetAccessAsync(string containerName, Guid? directoryId)
+    protected virtual async Task<FileDescriptor> GetFileForClientAsync(Guid id)
     {
-        var directory = directoryId.HasValue ? await GetDirectoryAsync(directoryId.Value, containerName) : null;
-        return await AccessService.GetAccessAsync(await AccessService.BeginAsync(), containerName, directory);
+        return await FindFileForClientAsync(id) ?? throw new EntityNotFoundException(typeof(FileDescriptor), id);
     }
 
     /// <summary>
-    /// What the caller may do where <paramref name="file"/> is. A file whose directory is gone - deleted while the file
-    /// was being uploaded into it - is answered by its container.
+    /// The file, for the calling client; <c>null</c> when there is none or the client is not granted its container. A
+    /// caller that is no client is refused before anything is looked for.
     /// </summary>
-    protected virtual async Task<BlobManagementAccess> GetAccessAsync(FileDescriptor file)
+    protected virtual async Task<FileDescriptor?> FindFileForClientAsync(Guid id)
     {
-        var directory = file.DirectoryId.HasValue ? await DirectoryRepository.FindAsync(file.DirectoryId.Value) : null;
-        return await AccessService.GetAccessAsync(await AccessService.BeginAsync(), file.ContainerName, directory);
+        ClientChecker.CheckIsClient();
+        var file = await FindFileAsync(id);
+        return file != null && await ClientChecker.IsAllowedAsync(file.ContainerName) ? file : null;
     }
 
-    /// <summary>A file of a managed container; any other is not found.</summary>
-    protected virtual async Task<FileDescriptor> GetFileAsync(Guid id)
+    protected virtual Task CheckManagementPermissionAsync()
     {
-        var file = await FileRepository.FindAsync(id);
-        if (file == null || !IsManagedContainer(file.ContainerName))
-        {
-            throw new EntityNotFoundException(typeof(FileDescriptor), id);
-        }
-
-        return file;
+        return AuthorizationService.CheckAsync(BlobManagementPermissions.Containers.Default);
     }
 }

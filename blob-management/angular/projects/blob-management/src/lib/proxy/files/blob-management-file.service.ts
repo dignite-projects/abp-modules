@@ -1,8 +1,7 @@
-import type { BlobManagementFileDto, CreateBlobManagementFileInput, CreateBlobManagementFileUploadTicketInput, GetBlobManagementFilesInput, MoveBlobManagementFileInput, UpdateBlobManagementFileInput } from './models';
+import type { BlobManagementFileDto, CreateBlobManagementFileInput, GetBlobManagementFilesInput, MoveBlobManagementFileInput, UpdateBlobManagementFileInput } from './models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
-import type { BlobManagementTicketDto } from '../tickets/models';
 
 @Injectable({
   providedIn: 'root',
@@ -18,17 +17,6 @@ export class BlobManagementFileService {
       method: 'POST',
       headers: { Accept: 'application/json' },
       url: '/api/blob-management/files',
-      body: input,
-    },
-      { apiName: this.apiName,...config });
-  
-
-  
-  createUploadTicket = (input: CreateBlobManagementFileUploadTicketInput, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, BlobManagementTicketDto>({
-      method: 'POST',
-      headers: { Accept: 'application/json' },
-      url: '/api/blob-management/files/upload-tickets',
       body: input,
     },
       { apiName: this.apiName,...config });

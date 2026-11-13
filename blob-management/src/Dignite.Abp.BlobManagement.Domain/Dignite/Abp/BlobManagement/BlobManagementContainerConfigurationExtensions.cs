@@ -56,7 +56,6 @@ public static class BlobManagementContainerConfigurationExtensions
 
         var configuration = new BlobManagementContainerConfiguration(containerConfiguration) { IsManaged = true };
         configureAction?.Invoke(configuration);
-        configuration.Validate();
 
         containerConfiguration.IsMultiTenant = true;
         return containerConfiguration;

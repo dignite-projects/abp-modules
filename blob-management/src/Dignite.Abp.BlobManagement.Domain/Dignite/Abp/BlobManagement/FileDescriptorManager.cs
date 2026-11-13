@@ -33,8 +33,11 @@ namespace Dignite.Abp.BlobManagement;
 /// committed (<see cref="DeleteAsync"/>), so a rollback never brings back a row whose bytes are gone. Uploads and those
 /// deletions of the same bytes take turns on the <b>dedup lock</b> (<see cref="IAbpDistributedLock"/>, named by the
 /// dedup key), which an upload holds until its unit of work is over: a deletion that waited for it sees the
-/// uploader's row, or its absence, and never removes bytes a new row is about to share. ABP's default lock is
-/// in-process; several Blob Management instances need a distributed lock provider - the same requirement as the tickets.
+/// uploader's row, or its absence, and never removes bytes a new row is about to share. Saves under one name take
+/// turns the same way, on the <b>name lock</b> (named by the name key, held as long): an overriding save takes the
+/// address from the descriptor it replaces before it stores the new one, and a save that looked the name up in
+/// between would find no holder. ABP's default lock is in-process; several Blob Management instances need a
+/// distributed lock provider.
 /// </para>
 /// </summary>
 public class FileDescriptorManager : DomainService
@@ -46,19 +49,23 @@ public class FileDescriptorManager : DomainService
     protected static readonly TimeSpan CompensationTimeout = TimeSpan.FromSeconds(30);
 
     /// <summary>
-    /// How long an upload, or the deletion of a BLOB after commit, waits for the dedup lock. Bounded so a stuck holder
-    /// costs a missed dedup or an orphaned BLOB, never a hung request.
+    /// How long an upload, a save under a name, or the deletion of a BLOB after commit waits for a lock. Bounded so a
+    /// stuck holder costs a missed dedup, an orphaned BLOB or a save that goes ahead on the unique keys alone, never a
+    /// hung request.
     /// </summary>
-    protected static readonly TimeSpan DedupLockTimeout = TimeSpan.FromSeconds(30);
+    protected static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(30);
 
     /// <summary>The dedup lock's name is this prefix and <see cref="FileDescriptor.CreateDedupKey"/>.</summary>
     protected const string DedupLockName = "Dignite.Abp.BlobManagement.Dedup:";
 
+    /// <summary>The name lock's name is this prefix and <see cref="FileDescriptor.CreateNameKey"/>.</summary>
+    protected const string NameLockName = "Dignite.Abp.BlobManagement.Name:";
+
     /// <summary>
-    /// The <see cref="IUnitOfWork.Items"/> entry with the dedup locks a unit of work holds, by lock name: a unit of
-    /// work that needs one of them again reuses it, since the lock is not reentrant and would otherwise wait for itself.
+    /// The <see cref="IUnitOfWork.Items"/> entry with the locks a unit of work holds, by lock name: a unit of work that
+    /// needs one of them again reuses it, since the lock is not reentrant and would otherwise wait for itself.
     /// </summary>
-    protected const string DedupLocksItemKey = "Dignite.Abp.BlobManagement.FileDescriptorManager.DedupLocks";
+    protected const string LocksItemKey = "Dignite.Abp.BlobManagement.FileDescriptorManager.Locks";
 
     protected IFileDescriptorRepository FileDescriptorRepository { get; }
 
@@ -103,8 +110,11 @@ public class FileDescriptorManager : DomainService
     /// <see cref="DeleteAsync"/> deletes. If the new one cannot be stored, the old one takes its key back.
     /// </para>
     /// <para>
-    /// The lookup by name is check-then-act: of two simultaneous saves under one name, the unique name key lets only
-    /// one insert succeed; the loser fails with the database provider's exception and its BLOB is deleted again.
+    /// Saves under one name take turns on the name lock, taken before the lookup and held until the current unit of
+    /// work is over (see <see cref="StoreOrShareAsync"/> for how a lock is held): the second one finds what the first
+    /// one left. When the lock cannot be had within <see cref="LockTimeout"/> the save goes ahead without it, and the
+    /// unique name key is the arbiter that is left: it lets only one insert succeed, and the loser fails with the
+    /// database provider's exception and its BLOB is deleted again.
     /// </para>
     /// <para>
     /// Sequence: the upload is copied once into memory, capped at what the container's pipeline enforces (its
@@ -142,12 +152,15 @@ public class FileDescriptorManager : DomainService
     /// <param name="name">The caller's name for the file: the BLOB name it reads it back by. Its extension, if any, is
     /// checked against the content.</param>
     /// <param name="clientId">The OAuth client writing through the BLOB API, recorded on the descriptor.</param>
+    /// <param name="creatorId">The user the BLOB is counted for; <c>null</c> leaves it to ABP's auditing - the current
+    /// user, if there is one.</param>
     public virtual async Task<FileDescriptor> CreateAsync(
         string containerName,
         string name,
         Stream stream,
         bool overrideExisting = false,
         string? clientId = null,
+        Guid? creatorId = null,
         CancellationToken cancellationToken = default)
     {
         GetBlobManagementContainerConfiguration(containerName);
@@ -155,52 +168,72 @@ public class FileDescriptorManager : DomainService
         Check.NotNull(stream, nameof(stream));
         await UsageManager.CheckEnabledAsync();
 
-        var existing = await FileDescriptorRepository.FindByNameAsync(containerName, name, cancellationToken);
-        if (existing != null && !overrideExisting)
-        {
-            throw new BusinessException(BlobManagementErrorCodes.BlobAlreadyExists)
-                .WithData("ContainerName", containerName)
-                .WithData("BlobName", name);
-        }
-
-        // The replaced descriptor gives up the address before the new one is inserted: the name key is unique, so
-        // both cannot hold it at once. (A row written before the key existed has none to give up.)
-        var releasedNameKey = false;
-        if (existing?.NameKey != null)
-        {
-            existing.ReleaseNameKey();
-            await FileDescriptorRepository.UpdateAsync(existing, autoSave: true, cancellationToken);
-            releasedNameKey = true;
-        }
-
-        FileDescriptor descriptor;
+        var lockName = GetNameLockName(CurrentTenant.Id, containerName, name);
+        var (locked, releaseOnReturn) = await AcquireLockAsync(lockName, cancellationToken);
         try
         {
-            descriptor = await StoreOrShareAsync(
-                containerName, name, stream, clientId, nameIsAddress: true, configureFile: null, cancellationToken);
-        }
-        catch
-        {
-            if (releasedNameKey)
+            if (!locked)
             {
-                await TryClaimNameKeyAsync(existing!);
+                Logger.LogWarning(
+                    "Blob Management could not take the name lock {LockName} within {Timeout}; the save to {ContainerName} goes ahead on the unique name key alone.",
+                    lockName, LockTimeout, containerName);
             }
 
-            throw;
-        }
+            var existing = await FileDescriptorRepository.FindByNameAsync(containerName, name, cancellationToken);
+            if (existing != null && !overrideExisting)
+            {
+                throw new BusinessException(BlobManagementErrorCodes.BlobAlreadyExists)
+                    .WithData("ContainerName", containerName)
+                    .WithData("BlobName", name);
+            }
 
-        if (existing != null)
+            // The replaced descriptor gives up the address before the new one is inserted: the name key is unique, so
+            // both cannot hold it at once. Until the new one is in, the name finds nobody - the lookup is by the key -
+            // which is what the name lock keeps another save from seeing.
+            if (existing != null)
+            {
+                existing.ReleaseNameKey();
+                await FileDescriptorRepository.UpdateAsync(existing, autoSave: true, cancellationToken);
+            }
+
+            FileDescriptor descriptor;
+            try
+            {
+                descriptor = await StoreOrShareAsync(
+                    containerName, name, stream, clientId, nameIsAddress: true,
+                    creatorId.HasValue ? file => file.CreatorId = creatorId : null,
+                    cancellationToken);
+            }
+            catch
+            {
+                if (existing != null)
+                {
+                    await TryClaimNameKeyAsync(existing);
+                }
+
+                throw;
+            }
+
+            if (existing != null)
+            {
+                await DeleteAsync(existing, cancellationToken);
+            }
+
+            return descriptor;
+        }
+        finally
         {
-            await DeleteAsync(existing, cancellationToken);
+            if (releaseOnReturn != null)
+            {
+                await releaseOnReturn.DisposeAsync();
+            }
         }
-
-        return descriptor;
     }
 
     /// <summary>
     /// Stores <paramref name="stream"/> as a new file named <paramref name="name"/> in the container
-    /// <paramref name="containerName"/>, under <paramref name="directoryId"/> (<c>null</c>: its top): how a person
-    /// uploads a file. The name need not be unique: the file is addressed by its id, and holds no
+    /// <paramref name="containerName"/>, under <paramref name="directoryId"/> (<c>null</c>: its top): how an
+    /// application stores a file for its user. The name need not be unique: the file is addressed by its id, and holds no
     /// <see cref="FileDescriptor.NameKey"/>. Otherwise it is stored as <see cref="CreateAsync"/> stores - allocation,
     /// buffering, detection, dedup under the dedup lock, compensation. One difference: when the container stores the
     /// upload in another format (a JPEG as WebP), the name takes that format's extension
@@ -215,12 +248,14 @@ public class FileDescriptorManager : DomainService
     /// shared with a descriptor that has them already: a caller that keeps fields of its own on the file (extra
     /// properties) sets them here, so the row is written once. It runs while the dedup lock is held, so it does no I/O;
     /// when it throws, the upload fails and nothing is stored.</param>
+    /// <param name="clientId">The OAuth client writing through the file API, recorded on the descriptor.</param>
     public virtual async Task<FileDescriptor> UploadAsync(
         string containerName,
         string name,
         Stream stream,
         Guid? directoryId = null,
         Action<FileDescriptor>? configureFile = null,
+        string? clientId = null,
         CancellationToken cancellationToken = default)
     {
         GetBlobManagementContainerConfiguration(containerName);
@@ -236,7 +271,7 @@ public class FileDescriptorManager : DomainService
         };
 
         return await StoreOrShareAsync(
-            containerName, name, stream, clientId: null, nameIsAddress: false, place, cancellationToken);
+            containerName, name, stream, clientId, nameIsAddress: false, place, cancellationToken);
     }
 
     /// <summary>
@@ -250,7 +285,7 @@ public class FileDescriptorManager : DomainService
     /// already holds the lock reuses it.
     /// </para>
     /// <para>
-    /// When the lock cannot be had within <see cref="DedupLockTimeout"/>, the upload neither fails nor dedups: the
+    /// When the lock cannot be had within <see cref="LockTimeout"/>, the upload neither fails nor dedups: the
     /// content is stored as a fresh BLOB that its descriptor does not claim the dedup key for - its name is new, so
     /// nothing else references it, and it cannot collide with the key's live holder.
     /// </para>
@@ -274,14 +309,14 @@ public class FileDescriptorManager : DomainService
         var hash = await ComputeHashAsync(content, cancellationToken);
 
         var lockName = GetDedupLockName(CurrentTenant.Id, containerName, hash);
-        var (locked, releaseOnReturn) = await AcquireDedupLockAsync(lockName, cancellationToken);
+        var (locked, releaseOnReturn) = await AcquireLockAsync(lockName, cancellationToken);
         try
         {
             if (!locked)
             {
                 Logger.LogWarning(
                     "Blob Management could not take the dedup lock {LockName} within {Timeout}; the upload to {ContainerName} is stored without dedup.",
-                    lockName, DedupLockTimeout, containerName);
+                    lockName, LockTimeout, containerName);
 
                 return await StoreAsync(
                     containerName, name, content, mimeType, hash, clientId, ownsBlob: false, nameIsAddress,
@@ -431,21 +466,24 @@ public class FileDescriptorManager : DomainService
     }
 
     /// <summary>
-    /// A live file of <paramref name="containerName"/> whose physical BLOB is <paramref name="blobName"/>, or
-    /// <c>null</c>: an uploaded file's public address names its BLOB, since its name need not be unique.
+    /// The live files of <paramref name="containerName"/> whose physical BLOB is <paramref name="blobName"/>, by id, at
+    /// most <paramref name="maxResultCount"/> of them: the public address of a file kept by id names its BLOB, since
+    /// its name need not be unique. Several files have one BLOB when they hold the same bytes; they share the bytes,
+    /// the type and the size, not the name.
     /// </summary>
-    public virtual async Task<FileDescriptor?> FindByBlobNameAsync(
+    public virtual async Task<List<FileDescriptor>> GetListByBlobNameAsync(
         string containerName,
         string blobName,
+        int maxResultCount,
         CancellationToken cancellationToken = default)
     {
         GetBlobManagementContainerConfiguration(containerName);
         if (blobName.IsNullOrWhiteSpace())
         {
-            return null;
+            return new List<FileDescriptor>();
         }
 
-        return await FileDescriptorRepository.FindByBlobNameAsync(containerName, blobName, cancellationToken);
+        return await FileDescriptorRepository.GetListByBlobNameAsync(containerName, blobName, maxResultCount, cancellationToken);
     }
 
     /// <summary>The bytes of <paramref name="file"/>, or <c>null</c> when its BLOB is missing from storage.</summary>
@@ -666,8 +704,10 @@ public class FileDescriptorManager : DomainService
 
     /// <summary>
     /// Gives <paramref name="existing"/> its name key back after an override failed to store the descriptor that was
-    /// to replace it. Best-effort: when it fails too, the old file stays live and readable by name, only without the
-    /// arbiter until it is next replaced or deleted - and the original exception is what the caller sees.
+    /// to replace it. Best-effort, and the original exception is what the caller sees. In a transactional unit of
+    /// work a failure here does not matter - the rollback gives the key back with everything else. Without a
+    /// transaction it leaves the old file live but without its address: no longer found by its name, listed as a
+    /// file kept by id, its bytes still counted - hence the warning, which names the file.
     /// </summary>
     protected virtual async Task TryClaimNameKeyAsync(FileDescriptor existing)
     {
@@ -700,7 +740,7 @@ public class FileDescriptorManager : DomainService
     {
         // Its own bounded token, as compensation has: the request's may be cancelled, or gone, by now. Long enough to
         // wait for the lock and then delete.
-        using var cleanup = new CancellationTokenSource(DedupLockTimeout + CompensationTimeout);
+        using var cleanup = new CancellationTokenSource(LockTimeout + CompensationTimeout);
         try
         {
             using (CurrentTenant.Change(tenantId))
@@ -708,14 +748,14 @@ public class FileDescriptorManager : DomainService
                 var lockName = GetDedupLockName(tenantId, containerName, hash);
 
                 IAbpDistributedLockHandle? handle = null;
-                if (completingUnitOfWork == null || !IsDedupLockHeldBy(completingUnitOfWork, lockName))
+                if (completingUnitOfWork == null || !IsLockHeldBy(completingUnitOfWork, lockName))
                 {
-                    handle = await TryAcquireDedupLockAsync(lockName, cleanup.Token);
+                    handle = await TryAcquireLockAsync(lockName, cleanup.Token);
                     if (handle == null)
                     {
                         Logger.LogWarning(
                             "Blob Management could not take the dedup lock {LockName} within {Timeout}; the BLOB {BlobName} in {ContainerName} is left in storage.",
-                            lockName, DedupLockTimeout, blobName, containerName);
+                            lockName, LockTimeout, blobName, containerName);
                         return;
                     }
                 }
@@ -753,23 +793,28 @@ public class FileDescriptorManager : DomainService
         return DedupLockName + FileDescriptor.CreateDedupKey(tenantId, containerName, hash);
     }
 
+    protected virtual string GetNameLockName(Guid? tenantId, string containerName, string name)
+    {
+        return NameLockName + FileDescriptor.CreateNameKey(tenantId, containerName, name);
+    }
+
     /// <summary>
-    /// Takes the dedup lock <paramref name="lockName"/> for the current unit of work - or reuses it, when that unit of
+    /// Takes the lock <paramref name="lockName"/> for the current unit of work - or reuses it, when that unit of
     /// work holds it already. With a unit of work the lock is released when it is disposed and
     /// <c>ReleaseOnReturn</c> is <c>null</c>; without one, <c>ReleaseOnReturn</c> is the handle, for the caller to
-    /// release. <c>Acquired</c> is <c>false</c> when the lock could not be had within <see cref="DedupLockTimeout"/>.
+    /// release. <c>Acquired</c> is <c>false</c> when the lock could not be had within <see cref="LockTimeout"/>.
     /// </summary>
-    protected virtual async Task<(bool Acquired, IAbpDistributedLockHandle? ReleaseOnReturn)> AcquireDedupLockAsync(
+    protected virtual async Task<(bool Acquired, IAbpDistributedLockHandle? ReleaseOnReturn)> AcquireLockAsync(
         string lockName,
         CancellationToken cancellationToken)
     {
         var unitOfWork = UnitOfWorkManager.Current;
-        if (unitOfWork != null && IsDedupLockHeldBy(unitOfWork, lockName))
+        if (unitOfWork != null && IsLockHeldBy(unitOfWork, lockName))
         {
             return (true, null);
         }
 
-        var handle = await TryAcquireDedupLockAsync(lockName, cancellationToken);
+        var handle = await TryAcquireLockAsync(lockName, cancellationToken);
         if (handle == null)
         {
             return (false, null);
@@ -780,20 +825,20 @@ public class FileDescriptorManager : DomainService
             return (true, handle);
         }
 
-        HoldDedupLock(unitOfWork, lockName, handle);
+        HoldLock(unitOfWork, lockName, handle);
         return (true, null);
     }
 
-    protected virtual Task<IAbpDistributedLockHandle?> TryAcquireDedupLockAsync(
+    protected virtual Task<IAbpDistributedLockHandle?> TryAcquireLockAsync(
         string lockName,
         CancellationToken cancellationToken)
     {
-        return DistributedLock.TryAcquireAsync(lockName, DedupLockTimeout, cancellationToken);
+        return DistributedLock.TryAcquireAsync(lockName, LockTimeout, cancellationToken);
     }
 
-    protected virtual bool IsDedupLockHeldBy(IUnitOfWork unitOfWork, string lockName)
+    protected virtual bool IsLockHeldBy(IUnitOfWork unitOfWork, string lockName)
     {
-        return unitOfWork.Items.TryGetValue(DedupLocksItemKey, out var item)
+        return unitOfWork.Items.TryGetValue(LocksItemKey, out var item)
                && item is Dictionary<string, IAbpDistributedLockHandle> held
                && held.ContainsKey(lockName);
     }
@@ -803,9 +848,9 @@ public class FileDescriptorManager : DomainService
     /// its <c>OnCompleted</c> handlers, or after a rollback - so a row it inserted is settled before anyone else holds
     /// the lock.
     /// </summary>
-    protected virtual void HoldDedupLock(IUnitOfWork unitOfWork, string lockName, IAbpDistributedLockHandle handle)
+    protected virtual void HoldLock(IUnitOfWork unitOfWork, string lockName, IAbpDistributedLockHandle handle)
     {
-        if (unitOfWork.Items.TryGetValue(DedupLocksItemKey, out var item)
+        if (unitOfWork.Items.TryGetValue(LocksItemKey, out var item)
             && item is Dictionary<string, IAbpDistributedLockHandle> alreadyHeld)
         {
             alreadyHeld[lockName] = handle;
@@ -813,18 +858,18 @@ public class FileDescriptorManager : DomainService
         }
 
         var held = new Dictionary<string, IAbpDistributedLockHandle> { [lockName] = handle };
-        unitOfWork.Items[DedupLocksItemKey] = held;
+        unitOfWork.Items[LocksItemKey] = held;
 
         // Taken now: the service scope may be on its way out by the time the unit of work is disposed.
         var logger = Logger;
-        unitOfWork.Disposed += (_, _) => ReleaseDedupLocks(held, logger);
+        unitOfWork.Disposed += (_, _) => ReleaseLocks(held, logger);
     }
 
     /// <summary>
-    /// Releases the dedup locks a unit of work held. <c>IUnitOfWork.Disposed</c> is a synchronous event, so each
+    /// Releases the locks a unit of work held. <c>IUnitOfWork.Disposed</c> is a synchronous event, so each
     /// asynchronous release is waited for here: the next waiter must find the lock free once the unit of work is gone.
     /// </summary>
-    protected static void ReleaseDedupLocks(Dictionary<string, IAbpDistributedLockHandle> held, ILogger logger)
+    protected static void ReleaseLocks(Dictionary<string, IAbpDistributedLockHandle> held, ILogger logger)
     {
         foreach (var (lockName, handle) in held)
         {
@@ -835,7 +880,7 @@ public class FileDescriptorManager : DomainService
             catch (Exception exception)
             {
                 // A distributed provider's lock expires on its own; Blob Management must not fail a finished unit of work.
-                logger.LogWarning(exception, "Blob Management could not release the dedup lock {LockName}.", lockName);
+                logger.LogWarning(exception, "Blob Management could not release the lock {LockName}.", lockName);
             }
         }
 

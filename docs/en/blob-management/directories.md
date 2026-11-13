@@ -1,7 +1,7 @@
 ```json
 //[doc-seo]
 {
-    "Description": "Directories in Dignite Blob Management: containers that allow them, the directory tree, listing a container's files with filter, sorting and paging, renaming, moving and deleting files and directories, and the HTTP API."
+    "Description": "Directories in Dignite Blob Management: containers that allow them, the rules of the directory tree, who may create, rename, move and delete directories, and the directory HTTP API."
 }
 ```
 
@@ -9,9 +9,11 @@
 
 > Blob Management has not been released yet; see the [overview](index.md).
 
-A directory is only the hierarchy of the files people upload. A container has directories when the host allows them (`AllowDirectories`, [Managed Containers](setting-up.md#managed-containers)); the default is no. Without them, a container's files are one flat list, every directory operation is refused (`BlobManagement:DirectoriesNotAllowed`), and a file there has no directory.
+A directory is a further classification of a container's files kept by id. A container has directories when the host allows them (`AllowDirectories`, [Managed Containers](setting-up.md#managed-containers)); the default is no. Without them, a container's files are one flat list, every directory operation is refused (`BlobManagement:DirectoriesNotAllowed`), and a file there has no directory.
 
 The **top of the container** is not a directory: files and directories are put there as well as in directories. A file an application saved under its name always stays at the top.
+
+Directories are the one thing Blob Management lets a user change, so that a business system need not build it: a user with the permission creates, renames, moves and deletes them, here or in the business system's own UI through the API below. Files are filed into a directory, and moved between directories, by the business system through the [file service](files.md).
 
 ## The Tree
 
@@ -21,59 +23,33 @@ A container that allows directories holds one tree for each tenant.
 * A tree is at most 16 directories deep.
 * The directories beside each other have an **order**: a new one goes last, and a move names the position.
 * A directory moves within its own container only, never into itself or below itself. Its files and subdirectories go with it.
-* Only an **empty** directory is deleted; one that still holds files or directories is refused (`BlobManagement:DirectoryNotEmpty`). A deleted directory is kept as a deleted row, and the grants on it are deleted with it.
+* Only an **empty** directory is deleted; one that still holds files or directories is refused (`BlobManagement:DirectoryNotEmpty`). A deleted directory is kept as a deleted row.
+
+## Who May Change It
+
+Authorization is the container's, for every directory in it ([Permissions](permissions.md)):
+
+* **See the tree**: `BlobManagement.Containers`, or `BlobManagement.Container.View` granted on the container.
+* **Create**, **rename and move**, **delete**: see the tree, and hold `BlobManagement.Container.CreateDirectories`, `.UpdateDirectories` or `.DeleteDirectories` granted on the container. No module-wide permission changes directories.
+
+What the caller may do is sent with each container as `access` (`view`, `createDirectories`, `updateDirectories`, `deleteDirectories`), so a UI offers each action only where it is allowed. A token without a user is allowed none of these.
+
+## The API
+
+`IBlobManagementDirectoryAppService`, in `Dignite.Abp.BlobManagement.Application.Contracts` - in process with `Dignite.Abp.BlobManagement.Application`, or remote with `Dignite.Abp.BlobManagement.HttpApi.Client`:
 
 | | |
 |---|---|
-| `GET api/blob-management/directories?containerName=&parentId=` | The directories directly under `parentId`, or at the top of the container without it, that the caller may see, in their order. |
-| `GET api/blob-management/directories/{id}` | One directory. |
-| `POST api/blob-management/directories` | Creates one: `containerName`, `parentId` (none for the top), `name`. |
-| `PUT api/blob-management/directories/{id}` | Renames it: `name`. |
-| `PUT api/blob-management/directories/{id}/move` | Moves it: `parentId` (none for the top of the container) and `order`, its position there; the directories at or after it move down by one. |
-| `PUT api/blob-management/directories/{id}/restriction` | Says whether it has permissions of its own: `isRestricted` ([Permissions](permissions.md#restricted-directories)). |
-| `DELETE api/blob-management/directories/{id}` | Deletes an empty directory. Deleting one that does not exist succeeds. |
+| `GET api/blob-management/directories?containerName=&parentId=` | `GetListAsync`: the directories directly under `parentId`, or at the top of the container without it, in their order. |
+| `GET api/blob-management/directories/{id}` | `GetAsync`: one directory. |
+| `POST api/blob-management/directories` | `CreateAsync`: `containerName`, `parentId` (none for the top), `name`. |
+| `PUT api/blob-management/directories/{id}` | `UpdateAsync`: renames it, `name`. |
+| `PUT api/blob-management/directories/{id}/move` | `MoveAsync`: `parentId` (none for the top of the container) and `order`, its position there; the directories at or after it move down by one. |
+| `DELETE api/blob-management/directories/{id}` | `DeleteAsync`: deletes an empty directory. Deleting one that does not exist succeeds. |
 
-A directory (`BlobManagementDirectoryDto`) has its `id`, `containerName`, `name`, `parentId`, `order`, `hasChildren`, `isRestricted`, its creation time and creator, and what the caller may do with it: `canUpdate` (rename and move it), `canDelete`, and `access`, what the caller may do inside it.
+A directory (`BlobManagementDirectoryDto`) has its `id`, `containerName`, `name`, `parentId`, `order`, `hasChildren`, and its creation time and creator.
 
-## Listing Files
-
-`GET api/blob-management/files` lists the files of one directory, or of the top of the container, a page at a time:
-
-| Parameter | |
-|---|---|
-| `containerName` | The container. Required. |
-| `directoryId` | The directory; none for the top of the container. |
-| `filter` | A part of the file name, whatever its case. |
-| `sorting` | `Name`, `Size`, `MimeType`, `CreationTime` or `LastModificationTime` (the case does not matter), then `asc` or `desc`. Default: `Name asc`. Anything else is refused (`BlobManagement:SortingNotSupported`). |
-| `skipCount`, `maxResultCount` | Paging, as everywhere in ABP. |
-
-The listing needs the permission to view the place ([Permissions](permissions.md)), and then shows every file there: whether a file may be renamed, moved or deleted is the place's answer, which the caller reads from the container's or the directory's `access`. A file with `isAddressedByName` is never renamed or moved, and a file the caller uploaded may always be deleted by them.
-
-In a container without directories the same call, without `directoryId`, lists the whole container.
-
-## Uploading Into a Directory
-
-`POST api/blob-management/files` takes a `directoryId`, the directory to file the file in; none is the top of the container. So do [upload links](attaching-files.md#upload-links-for-users). Everything else is the same upload: the type detected from the bytes, the container's limits, de-duplication, the tenant quota.
-
-## Renaming and Moving a File
-
-| | |
-|---|---|
-| `PUT api/blob-management/files/{id}` | Renames the file: `name`. Names may repeat. |
-| `PUT api/blob-management/files/{id}/move` | Moves it to `directoryId`, in the same container; none for the top of the container. |
-
-**A file never changes containers**: a directory of another container is not found. A file an application saved under its name is neither renamed nor moved (`BlobManagement:FileAddressedByName`). Moving a file does not change its public address.
-
-### Moving a File
-
-A move takes the permission to rename and move files where the file is, and the permission to upload where it lands.
-
-## From C#
-
-The services are in `Dignite.Abp.BlobManagement.Application.Contracts` - in process with `Dignite.Abp.BlobManagement.Application`, or remote with `Dignite.Abp.BlobManagement.HttpApi.Client`:
-
-* `IBlobManagementDirectoryAppService`: `GetAsync`, `GetListAsync`, `CreateAsync`, `UpdateAsync` (rename), `MoveAsync`, `DeleteAsync`, `RestrictAsync`.
-* `IBlobManagementFileAppService`: `GetAsync`, `GetListAsync`, `CreateAsync`, `CreateUploadTicketAsync`, `UpdateAsync` (rename), `MoveAsync`, `DeleteAsync`, `GetContentAsync`.
+The containers a user has something to do in, each with its `access`, are `GET api/blob-management/containers` (`IBlobManagementContainerAppService.GetListAsync`); one container by its name is `GET api/blob-management/containers/{name}`.
 
 ## Errors
 
@@ -91,5 +67,5 @@ The services are in `Dignite.Abp.BlobManagement.Application.Contracts` - in proc
 ## See Also
 
 * [Permissions](permissions.md)
-* [Attaching Files](attaching-files.md)
+* [Keeping Files by Id](files.md)
 * [Importing a Directory Tree](importing-directories.md)

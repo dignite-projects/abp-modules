@@ -14,8 +14,8 @@ using Xunit;
 namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
-/// Every text of <c>BlobManagementResource</c> - the file input's (<c>blob-file-input</c> in <c>@dignite/ng.blob-management</c>), the
-/// errors, the permission and feature names - is in every culture of it, with the English text's placeholders, and ABP
+/// Every text of <c>BlobManagementResource</c> - the management page's (<c>@dignite/ng.blob-management</c>), the errors,
+/// the permission and feature names - is in every culture of it, with the English text's placeholders, and ABP
 /// resolves them.
 /// </summary>
 public abstract class BlobManagementLocalization_Tests<TStartupModule> : BlobManagementDomainTestBase<TStartupModule>
@@ -42,14 +42,14 @@ public abstract class BlobManagementLocalization_Tests<TStartupModule> : BlobMan
     }
 
     [Theory]
-    [InlineData("de", "Upload", "Hochladen")]
-    [InlineData("zh-Hant", "NoFileSelected", "未選擇檔案。")]
-    [InlineData("zh-Hans", "Upload", "上传")]
-    [InlineData("fr", "Permission:UploadFiles", "Téléverser des fichiers")]
-    [InlineData("ko", "BlobManagement:InvalidTicket", "링크가 유효하지 않습니다. 만료되었거나 이미 사용되었을 수 있습니다.")]
+    [InlineData("de", "Usage:Uploaded", "Hochgeladen")]
+    [InlineData("zh-Hant", "Usage:NoUser", "無使用者")]
+    [InlineData("zh-Hans", "Usage", "用量")]
+    [InlineData("fr", "Permission:ManagePermissions", "Gérer les autorisations sur les conteneurs")]
+    [InlineData("ko", "Usage:StoredOfAllocation", "{1} 중 {0} 저장됨")]
     [InlineData("es", "Feature:BlobManagementStorageSize", "Almacenamiento (MB)")]
     [InlineData("zh-Hans", "Permission:CreateDirectories", "创建目录")]
-    [InlineData("de", "RestrictDirectory", "Zugriff einschränken")]
+    [InlineData("de", "Usage:Containers", "Container")]
     public void ABP_resolves_a_text_in_its_culture(string culture, string key, string expected)
     {
         using (CultureHelper.Use(culture))

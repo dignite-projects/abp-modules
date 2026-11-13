@@ -37,7 +37,6 @@ public class BlobManagementHttpApiModule : AbpModule
             options.Map(BlobManagementErrorCodes.ContainerNotFound, HttpStatusCode.NotFound);
             options.Map(BlobManagementErrorCodes.BlobNotFound, HttpStatusCode.NotFound);
             options.Map(BlobManagementErrorCodes.BlobAlreadyExists, HttpStatusCode.Conflict);
-            options.Map(BlobManagementErrorCodes.InvalidTicket, HttpStatusCode.Forbidden);
             options.Map(BlobManagementErrorCodes.DirectoryNotFound, HttpStatusCode.NotFound);
             options.Map(BlobManagementErrorCodes.DirectoryNameAlreadyExists, HttpStatusCode.Conflict);
             options.Map(BlobManagementErrorCodes.DirectoryNotEmpty, HttpStatusCode.Conflict);

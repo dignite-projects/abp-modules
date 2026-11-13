@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
@@ -23,10 +24,10 @@ public class BlobManagementBlobAppService : BlobManagementBlobService, IBlobMana
         ClientChecker = clientChecker;
     }
 
-    public override async Task<BlobManagementBlobDto> SaveAsync(string containerName, string blobName, IRemoteStreamContent content, bool overrideExisting = false)
+    public override async Task<BlobManagementBlobDto> SaveAsync(string containerName, string blobName, IRemoteStreamContent content, bool overrideExisting = false, Guid? creatorId = null)
     {
         var clientId = await CheckClientAsync(containerName);
-        return await SaveAsync(containerName, blobName, content, overrideExisting, clientId);
+        return await SaveAsync(containerName, blobName, content, overrideExisting, creatorId, clientId);
     }
 
     /// <summary>Fails with <see cref="BlobManagementErrorCodes.BlobNotFound"/> when there is no such file.</summary>

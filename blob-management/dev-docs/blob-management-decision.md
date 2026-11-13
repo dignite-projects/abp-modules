@@ -1,5 +1,9 @@
 # Blob Management: the redesign of 2026-11-12
 
+> Narrowed on 2026-11-13 by [`positioning-decision.md`](positioning-decision.md): what is written here about
+> authorization, the surface and the two ways a file arrives is replaced there. The names, the containers and the
+> directory tree's own rules stand.
+
 This record replaces the direction of [`drive-decision.md`](drive-decision.md) (kept as history, with its own names)
 and of Drive Pro's record in the commercial repository. What those two decided about the storage tier - descriptors,
 content dedup, the tenant allocation, public reads with sizing, tickets, the BLOB API and its client list - stands

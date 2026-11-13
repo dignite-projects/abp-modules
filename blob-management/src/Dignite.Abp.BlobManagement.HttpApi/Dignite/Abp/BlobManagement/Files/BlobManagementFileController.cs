@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Dignite.Abp.BlobManagement.Tickets;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
 using Volo.Abp;
@@ -10,9 +9,13 @@ using Volo.Abp.Content;
 namespace Dignite.Abp.BlobManagement.Files;
 
 /// <summary>
-/// The files of the managed containers: <c>/api/blob-management/files</c>. An upload is a form <c>POST</c> (the file in
-/// the field <c>file</c>, with <c>containerName</c> and, to file it in a directory, <c>directoryId</c>); a file's bytes
-/// are <c>GET /api/blob-management/files/{id}/content</c>, always as an attachment.
+/// The file API - <c>/api/blob-management/files</c>: the integration entry a business system's file library calls, as
+/// an OAuth client, and what the management page reads. An upload is a form <c>POST</c> (the file in the field
+/// <c>file</c>, with <c>containerName</c> and, to file it in a directory, <c>directoryId</c>); a file's bytes are
+/// <c>GET /api/blob-management/files/{id}/content</c>, always as an attachment. A host that installs
+/// <c>Dignite.Abp.BlobManagement.HttpApi.Client</c> keeps files through its C# client proxy, behind
+/// <see cref="IBlobManagementFileService"/>. Who may call is decided in <see cref="IBlobManagementFileAppService"/>, not
+/// here.
 /// </summary>
 [Area(BlobManagementRemoteServiceConsts.ModuleName)]
 [RemoteService(Name = BlobManagementRemoteServiceConsts.RemoteServiceName)]
@@ -45,13 +48,6 @@ public class BlobManagementFileController : BlobManagementController, IBlobManag
         return FileAppService.CreateAsync(input);
     }
 
-    [HttpPost]
-    [Route("upload-tickets")]
-    public virtual Task<BlobManagementTicketDto> CreateUploadTicketAsync(CreateBlobManagementFileUploadTicketInput input)
-    {
-        return FileAppService.CreateUploadTicketAsync(input);
-    }
-
     [HttpPut]
     [Route("{id}")]
     public virtual Task<BlobManagementFileDto> UpdateAsync(Guid id, UpdateBlobManagementFileInput input)
@@ -79,8 +75,8 @@ public class BlobManagementFileController : BlobManagementController, IBlobManag
     {
         var content = await FileAppService.GetContentAsync(id);
 
-        // Saved, never rendered on Blob Management's origin: a user's file may be HTML. A client that previews it reads the
-        // bytes and shows them itself.
+        // Saved, never rendered on Blob Management's origin: a file may be HTML. A page that previews it reads the bytes
+        // and shows them itself.
         var disposition = new ContentDispositionHeaderValue("attachment");
         if (!string.IsNullOrWhiteSpace(content.FileName))
         {

@@ -9,7 +9,6 @@
         'Dignite.Abp.BlobManagement.HttpApi.Client',
         'Dignite.Abp.BlobManagement.EntityFrameworkCore',
         'Dignite.Abp.BlobManagement.MongoDB',
-        'Dignite.Abp.BlobManagement.Mcp',
         'Dignite.Abp.BlobManagement.Installer',
         'Dignite.Abp.BlobStoring.BlobManagement'
     )
@@ -22,7 +21,6 @@
         'Dignite.Abp.BlobManagement.BlobManagementHttpApiClientModule',
         'Dignite.Abp.BlobManagement.EntityFrameworkCore.BlobManagementEntityFrameworkCoreModule',
         'Dignite.Abp.BlobManagement.MongoDB.BlobManagementMongoDbModule',
-        'Dignite.Abp.BlobManagement.Mcp.BlobManagementMcpModule',
         'Dignite.Abp.BlobManagement.BlobManagementInstallerModule',
         'Dignite.Abp.BlobStoring.BlobManagement.AbpBlobStoringBlobManagementModule'
     )
