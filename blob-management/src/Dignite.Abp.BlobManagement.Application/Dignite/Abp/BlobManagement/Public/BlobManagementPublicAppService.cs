@@ -68,12 +68,12 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
         // Before the lookup: a size Blob Management does not serve is refused even for a missing file.
         CheckSize(input);
 
-        var file = await GetPublicFileAsync(containerName, blobName);
+        var (file, name) = await GetPublicFileAsync(containerName, blobName);
         var result = new BlobManagementPublicReadResult
         {
             File = new BlobManagementPublicFileDto
             {
-                Name = file.Name,
+                Name = name,
                 MimeType = file.MimeType,
                 Size = file.Size,
                 ContentId = file.BlobName,
@@ -94,7 +94,7 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
             return result;
         }
 
-        result.Content = await GetContentAsync(file, input);
+        result.Content = await GetContentAsync(file, name, input);
         return result;
     }
 
@@ -131,9 +131,10 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
 
     /// <summary>
     /// The bytes of <paramref name="file"/> - the very descriptor the read was decided on - or the picture resized when
-    /// <paramref name="input"/> asks for a size. A BLOB missing from storage is <see cref="EntityNotFoundException"/>.
+    /// <paramref name="input"/> asks for a size - under <paramref name="name"/>, the name the address answers with
+    /// (see <see cref="GetPublicFileAsync"/>). A BLOB missing from storage is <see cref="EntityNotFoundException"/>.
     /// </summary>
-    protected virtual async Task<IRemoteStreamContent> GetContentAsync(FileDescriptor file, BlobManagementPublicReadInput input)
+    protected virtual async Task<IRemoteStreamContent> GetContentAsync(FileDescriptor file, string name, BlobManagementPublicReadInput input)
     {
         var stream = await FileDescriptorManager.GetStreamOrNullAsync(file)
                      ?? throw new EntityNotFoundException(typeof(FileDescriptor), file.Id);
@@ -152,10 +153,10 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
             }
 
             var content = await TryResizeAsync(bytes, file.MimeType, width, height) ?? bytes;
-            return new RemoteStreamContent(new MemoryStream(content, writable: false), FileName(file), file.MimeType, content.LongLength);
+            return new RemoteStreamContent(new MemoryStream(content, writable: false), FileName(name), file.MimeType, content.LongLength);
         }
 
-        return new RemoteStreamContent(stream, FileName(file), file.MimeType, file.Size);
+        return new RemoteStreamContent(stream, FileName(name), file.MimeType, file.Size);
     }
 
     /// <summary>
@@ -196,19 +197,36 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
     }
 
     /// <summary>
-    /// The live file at the address, when its container is a managed container that is read publicly. The address of a
-    /// file an application saved names it as the application did; that of an uploaded file, whose name may repeat,
-    /// names its physical BLOB - generated, so it is never mistaken for an application's name.
+    /// The live file at the address, when its container is a managed container that is read publicly, and the name
+    /// the address answers with. The address of a file an application saved names it as the application did; that of
+    /// a file kept by id, whose name may repeat, names its physical BLOB - generated, so it is never mistaken for an
+    /// application's name.
+    /// <para>
+    /// An address that names a BLOB names content, not one file: files that hold the same bytes share the BLOB, so it
+    /// is the address of every one of them, and it answers for as long as one of them is there. Their bytes, type and
+    /// size are the same; their names are not, and the address does not say which file it was handed out for. So it
+    /// answers with the file's name only when a single file has the BLOB, and with the BLOB's own name otherwise -
+    /// never with the name another file was given.
+    /// </para>
     /// </summary>
-    protected virtual async Task<FileDescriptor> GetPublicFileAsync(string containerName, string blobName)
+    protected virtual async Task<(FileDescriptor File, string Name)> GetPublicFileAsync(string containerName, string blobName)
     {
-        FileDescriptor? file = null;
         try
         {
             if (FileDescriptorManager.GetBlobManagementContainerConfiguration(containerName).PublicRead)
             {
-                file = await FileDescriptorManager.FindAsync(containerName, blobName)
-                       ?? await FileDescriptorManager.FindByBlobNameAsync(containerName, blobName);
+                var saved = await FileDescriptorManager.FindAsync(containerName, blobName);
+                if (saved != null)
+                {
+                    return (saved, saved.Name);
+                }
+
+                // Two are enough to know whether the first is the only one.
+                var files = await FileDescriptorManager.GetListByBlobNameAsync(containerName, blobName, maxResultCount: 2);
+                if (files.Count > 0)
+                {
+                    return (files[0], files.Count == 1 ? files[0].Name : files[0].BlobName);
+                }
             }
         }
         catch (BusinessException exception) when (exception.Code == BlobManagementErrorCodes.ContainerNotFound)
@@ -216,7 +234,7 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
             // Not a Blob Management container: as not found as a missing file, so the endpoint tells nothing about the host.
         }
 
-        return file ?? throw new EntityNotFoundException(typeof(FileDescriptor), $"{containerName}/{blobName}");
+        throw new EntityNotFoundException(typeof(FileDescriptor), $"{containerName}/{blobName}");
     }
 
     /// <summary>JPEG, PNG and WebP; a GIF would lose its animation, anything else is not a picture.</summary>
@@ -263,9 +281,9 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
         return result.State == ImageProcessState.Done ? result.Result : null;
     }
 
-    protected virtual string FileName(FileDescriptor file)
+    protected virtual string FileName(string name)
     {
-        var slash = file.Name.LastIndexOf('/');
-        return slash < 0 ? file.Name : file.Name.Substring(slash + 1);
+        var slash = name.LastIndexOf('/');
+        return slash < 0 ? name : name.Substring(slash + 1);
     }
 }

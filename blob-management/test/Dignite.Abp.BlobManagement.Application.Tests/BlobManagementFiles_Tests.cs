@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Dignite.Abp.BlobManagement.Blobs;
 using Dignite.Abp.BlobManagement.Containers;
 using Dignite.Abp.BlobManagement.Features;
 using Dignite.Abp.BlobManagement.Files;
@@ -18,6 +19,7 @@ using Volo.Abp.Modularity;
 using Volo.Abp.MultiTenancy;
 using Volo.Abp.PermissionManagement;
 using Volo.Abp.Security.Claims;
+using Volo.Abp.Validation;
 using Xunit;
 
 namespace Dignite.Abp.BlobManagement;
@@ -406,6 +408,49 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
         // The display name is not an address there: names may repeat.
         await Should.ThrowAsync<EntityNotFoundException>(() =>
             publicFiles.ReadAsync(BlobManagementTestContainers.Public, "poster.pdf", new BlobManagementPublicReadInput(), HeadersOnly()));
+    }
+
+    /// <summary>
+    /// Files that hold the same bytes share one BLOB, and so one address. It does not say which of them it was handed
+    /// out for, so it answers with no file's name while there are several - not with the name another file was given.
+    /// </summary>
+    [Fact]
+    public async Task A_Public_Address_Shared_By_Several_Files_Should_Answer_With_No_Files_Name()
+    {
+        var bytes = BlobManagementTestFiles.Pdf("shared " + Guid.NewGuid());
+        var first = await StoreAsync(BlobManagementTestContainers.Public, "contract-acme.pdf", bytes);
+        var second = await StoreAsync(BlobManagementTestContainers.Public, "doc.pdf", bytes);
+
+        second.Url.ShouldBe(first.Url);
+        var blobName = first.Url!.Split('/').Last();
+
+        var publicFiles = GetRequiredService<IBlobManagementPublicAppService>();
+        var shared = await publicFiles.ReadAsync(
+            BlobManagementTestContainers.Public, blobName, new BlobManagementPublicReadInput(), new BlobManagementPublicReadRequest());
+        shared.File.Name.ShouldBe(blobName);
+        shared.Content!.FileName.ShouldBe(blobName);
+        (await ReadAsync(shared.Content)).ShouldBe(bytes);
+
+        // Once a single file has the BLOB, the address is that file's again - and it answered all along.
+        await _files.DeleteAsync(first.Id);
+        (await publicFiles.ReadAsync(BlobManagementTestContainers.Public, blobName, new BlobManagementPublicReadInput(), HeadersOnly()))
+            .File.Name.ShouldBe("doc.pdf");
+    }
+
+    [Fact]
+    public async Task A_Name_Longer_Than_A_File_Holds_Should_Be_A_Validation_Error()
+    {
+        var tooLong = new string('n', FileDescriptorConsts.MaxNameLength - 3) + ".pdf";
+
+        // The uploaded file's own name, taken when the input names none: no DTO validated it.
+        await Should.ThrowAsync<AbpValidationException>(() => StoreAsync(BlobManagementTestContainers.Documents, tooLong));
+
+        // A BLOB name is a parameter, not a DTO's.
+        var blobs = GetRequiredService<IBlobManagementBlobService>();
+        using var content = new RemoteStreamContent(new MemoryStream(BlobManagementTestFiles.Pdf("long name")), tooLong, "application/pdf");
+        var refused = await Should.ThrowAsync<AbpValidationException>(() =>
+            blobs.SaveAsync(BlobManagementTestContainers.Files, tooLong, content));
+        refused.ValidationErrors.Single().MemberNames.ShouldContain("blobName");
     }
 
     [Fact]

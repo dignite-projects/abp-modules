@@ -108,6 +108,9 @@ public class BlobManagementFileService : BlobManagementAppService, IBlobManageme
             : !content.FileName.IsNullOrWhiteSpace() ? content.FileName!.Trim()
             : "file";
 
+        // The input's own name was validated with the input; the uploaded file's was not.
+        CheckNameLength(name, nameof(input.Name));
+
         var creatorId = input.CreatorId;
         var file = await FileDescriptorManager.UploadAsync(
             input.ContainerName,

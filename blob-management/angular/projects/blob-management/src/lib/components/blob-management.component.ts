@@ -57,7 +57,7 @@ import { BlobManagementUsageComponent } from './blob-usage/blob-usage.component'
               [resourceKey]="container.name ?? ''"
               [resourceDisplayName]="container.name ?? ''"
               [visible]="true"
-              (visibleChange)="permissionsOpen.set($event)"
+              (visibleChange)="onPermissionsVisibleChange($event)"
             />
           }
         }
@@ -82,10 +82,36 @@ export class BlobManagementComponent {
   );
 
   constructor() {
+    this.load();
+  }
+
+  /**
+   * The grants on a container are changed in the dialog, and what the caller may do with its directories comes with
+   * the container: once the dialog closes, the containers are read again.
+   */
+  onPermissionsVisibleChange(visible: boolean): void {
+    this.permissionsOpen.set(visible);
+    if (!visible) {
+      this.load();
+    }
+  }
+
+  /**
+   * Reads the containers and shows the one shown before, or the first. A container whose answer has not changed stays
+   * the object it was: the browser below starts over - its tree collapsed, its directory forgotten - when it is given
+   * another one.
+   */
+  private load(): void {
     this.containerService.getList().subscribe(result => {
       const containers = result.items ?? [];
+      const shown = this.selected();
+      const next = containers.find(container => container.name === shown?.name) ?? containers[0] ?? null;
+
       this.containers.set(containers);
-      this.selected.set(containers[0] ?? null);
+      if (!shown || !next || JSON.stringify(shown) !== JSON.stringify(next)) {
+        this.selected.set(next);
+      }
+
       this.loaded.set(true);
     });
   }

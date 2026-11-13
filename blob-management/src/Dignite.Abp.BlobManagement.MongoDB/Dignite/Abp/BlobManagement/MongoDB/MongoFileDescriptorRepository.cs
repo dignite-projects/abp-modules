@@ -130,15 +130,18 @@ public class MongoFileDescriptorRepository : MongoDbRepository<IBlobManagementMo
             .ToListAsync(token);
     }
 
-    public virtual async Task<FileDescriptor?> FindByBlobNameAsync(
+    public virtual async Task<List<FileDescriptor>> GetListByBlobNameAsync(
         string containerName,
         string blobName,
+        int maxResultCount,
         CancellationToken cancellationToken = default)
     {
-        return await FindAsync(
-            f => f.ContainerName == containerName && f.BlobName == blobName,
-            includeDetails: false,
-            GetCancellationToken(cancellationToken));
+        var token = GetCancellationToken(cancellationToken);
+        return await (await GetQueryableAsync(token))
+            .Where(f => f.ContainerName == containerName && f.BlobName == blobName)
+            .OrderBy(f => f.Id)
+            .Take(maxResultCount)
+            .ToListAsync(token);
     }
 
     public virtual async Task<bool> IsBlobInUseAsync(

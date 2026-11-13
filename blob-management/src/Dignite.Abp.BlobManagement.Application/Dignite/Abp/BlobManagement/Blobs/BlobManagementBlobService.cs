@@ -70,6 +70,7 @@ public class BlobManagementBlobService : BlobManagementAppService, IBlobManageme
         string? clientId)
     {
         Check.NotNull(content, nameof(content));
+        CheckNameLength(blobName, nameof(blobName));
 
         // The stream is the caller's: the provider's pipeline stream, or the request body behind the BLOB API.
         var file = await FileDescriptorManager.CreateAsync(

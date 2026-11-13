@@ -103,7 +103,7 @@ No user stores, renames, moves or deletes a file here.
 
 ## Public Reads
 
-In a container with `PublicRead = true`, every file has a `url`: its public address, `/api/blob-management/public/{container}/{blob}` with `?Width=&Height=` for pictures ([Public Addresses](provider.md#public-addresses)). For a file kept by id the address names the file's **physical BLOB** - 32 random hexadecimal digits and an extension - rather than its name, which need not be unique; renaming or moving the file leaves the address as it was. A file of a container that is not public has no address: the application reads it with `GetContentAsync` and hands the bytes on.
+In a container with `PublicRead = true`, every file has a `url`: its public address, `/api/blob-management/public/{container}/{blob}` with `?Width=&Height=` for pictures ([Public Addresses](provider.md#public-addresses)). For a file kept by id the address names the file's **physical BLOB** - 32 random hexadecimal digits and an extension - rather than its name, which need not be unique; renaming or moving the file leaves the address as it was. Files that hold the same bytes share one physical BLOB, and so one address: it is read for as long as one of them is there - deleting a file does not take down an address another file still has - and a download from it is named after the file only while a single file has the BLOB, after the BLOB otherwise. A file of a container that is not public has no address: the application reads it with `GetContentAsync` and hands the bytes on.
 
 ## The Tenant Feature
 

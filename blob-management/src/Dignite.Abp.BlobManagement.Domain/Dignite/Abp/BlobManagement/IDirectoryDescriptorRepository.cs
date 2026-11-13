@@ -36,8 +36,7 @@ public interface IDirectoryDescriptorRepository : IBasicRepository<DirectoryDesc
 
     /// <summary>
     /// Every directory below the one whose <see cref="DirectoryDescriptor.Path"/> is <paramref name="path"/>, at any
-    /// depth, not the directory itself. Subject to the data filters like every query here: a caller that needs deleted
-    /// directories too disables the soft-delete filter.
+    /// depth, not the directory itself. Live ones, like every query here.
     /// </summary>
     Task<List<DirectoryDescriptor>> GetDescendantsAsync(string path, CancellationToken cancellationToken = default);
 

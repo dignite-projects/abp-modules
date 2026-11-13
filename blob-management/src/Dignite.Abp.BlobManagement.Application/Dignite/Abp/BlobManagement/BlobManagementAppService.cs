@@ -1,12 +1,16 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobManagement.Authorization;
 using Dignite.Abp.BlobManagement.Files;
 using Dignite.Abp.BlobManagement.Localization;
+using Microsoft.Extensions.Localization;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Authorization;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.Domain.Entities;
+using Volo.Abp.Validation;
+using Volo.Abp.Validation.Localization;
 
 namespace Dignite.Abp.BlobManagement;
 
@@ -69,6 +73,23 @@ public abstract class BlobManagementAppService : ApplicationService
         }
 
         return directory;
+    }
+
+    /// <summary>
+    /// Refuses a file's name that is longer than a descriptor holds, as a validation error (HTTP 400) with ABP's own
+    /// text for it. For a name that reaches the service outside a validated DTO - a BLOB name, an uploaded file's own
+    /// name: the domain's argument check would otherwise answer it as an internal error.
+    /// </summary>
+    protected virtual void CheckNameLength(string? name, string memberName)
+    {
+        if (name == null || name.Length <= FileDescriptorConsts.MaxNameLength)
+        {
+            return;
+        }
+
+        var message = LazyServiceProvider.LazyGetRequiredService<IStringLocalizer<AbpValidationResource>>()[
+            "The field {0} must be a string with a maximum length of {1}.", memberName, FileDescriptorConsts.MaxNameLength];
+        throw new AbpValidationException(message, new[] { new ValidationResult(message, new[] { memberName }) });
     }
 
     protected virtual void Authorize(bool allowed)
