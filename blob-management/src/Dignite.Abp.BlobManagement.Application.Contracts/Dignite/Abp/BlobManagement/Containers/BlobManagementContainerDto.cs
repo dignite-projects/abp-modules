@@ -4,8 +4,8 @@ using Volo.Abp.ObjectExtending;
 namespace Dignite.Abp.BlobManagement.Containers;
 
 /// <summary>
-/// A managed container: its configuration as a client needs it to offer an upload, and what the caller may do at its
-/// top.
+/// A managed container: its configuration as a file input needs it to offer an upload, and what the caller may do
+/// with its directories.
 /// </summary>
 public class BlobManagementContainerDto : ExtensibleObject
 {
@@ -35,6 +35,6 @@ public class BlobManagementContainerDto : ExtensibleObject
     /// <summary>The height a picture is scaled down to, when the container resizes images.</summary>
     public int? ImageMaxHeight { get; set; }
 
-    /// <summary>What the caller may do at the top of the container.</summary>
+    /// <summary>What the caller may do with the container's directories.</summary>
     public BlobManagementAccessDto Access { get; set; } = new();
 }

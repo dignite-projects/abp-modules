@@ -18,14 +18,15 @@ namespace Dignite.Abp.BlobManagement.Blobs;
 [ExposeServices(typeof(IBlobManagementBlobService), typeof(BlobManagementBlobClientProxy))]
 public partial class BlobManagementBlobClientProxy : ClientProxyBase<IBlobManagementBlobService>, IBlobManagementBlobService
 {
-    public virtual async Task<BlobManagementBlobDto> SaveAsync(string containerName, string blobName, IRemoteStreamContent content, bool overrideExisting)
+    public virtual async Task<BlobManagementBlobDto> SaveAsync(string containerName, string blobName, IRemoteStreamContent content, bool overrideExisting, Guid? creatorId)
     {
         return await RequestAsync<BlobManagementBlobDto>(nameof(SaveAsync), new ClientProxyRequestTypeValue
         {
             { typeof(string), containerName },
             { typeof(string), blobName },
             { typeof(IRemoteStreamContent), content },
-            { typeof(bool), overrideExisting }
+            { typeof(bool), overrideExisting },
+            { typeof(Guid?), creatorId }
         });
     }
 

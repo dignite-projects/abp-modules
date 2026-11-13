@@ -100,7 +100,7 @@ public class BlobManagementBlobApi_Tests : AbpWebApplicationFactoryIntegratedTes
         }
 
         (await GetExistsAsync(BlobManagementHttpApiTestModule.OpenContainer, clientId: "another-app")).ShouldBe(HttpStatusCode.Forbidden);
-        (await GetExistsAsync(BlobManagementHttpApiTestModule.DocumentsContainer, clientId: BlobManagementHttpApiTestModule.AllowedClient)).ShouldBe(HttpStatusCode.Forbidden);
+        (await GetExistsAsync(BlobManagementHttpApiTestModule.ClosedContainer, clientId: BlobManagementHttpApiTestModule.AllowedClient)).ShouldBe(HttpStatusCode.Forbidden);
         (await GetExistsAsync("undeclared", clientId: BlobManagementHttpApiTestModule.AllowedClient)).ShouldBe(HttpStatusCode.Forbidden);
     }
 

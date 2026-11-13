@@ -11,8 +11,8 @@ using Volo.Abp.Domain.Entities;
 namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
-/// The base of Blob Management's application services, with what the user-facing ones share: the caller's user id, the
-/// managed containers, authorization through <see cref="BlobManagementAccessService"/> and the mapping of a descriptor
+/// The base of Blob Management's application services, with what they share: the caller's user id, the managed
+/// containers, authorization of users through <see cref="BlobManagementAccessService"/> and the mapping of a descriptor
 /// to its DTO.
 /// </summary>
 public abstract class BlobManagementAppService : ApplicationService
@@ -33,13 +33,13 @@ public abstract class BlobManagementAppService : ApplicationService
         LazyServiceProvider.LazyGetRequiredService<IDirectoryDescriptorRepository>();
 
     /// <summary>
-    /// The caller's user id. The file API serves users only: a token without one - a client acting for itself - is
-    /// refused, as the BLOB API refuses tokens with one.
+    /// The caller's user id, for the services that serve users - containers, directories, usage: a token without one -
+    /// a client acting for itself - is refused there, as the BLOB API refuses tokens with one.
     /// </summary>
     protected virtual Guid GetUserId()
     {
         return CurrentUser.Id ?? throw new AbpAuthorizationException(
-            "Blob Management's file API serves users. An application stores files through the BLOB storing provider.");
+            "This part of Blob Management serves users. An application keeps files through the BLOB storing provider and the file service.");
     }
 
     /// <summary>The configuration of the managed container <paramref name="containerName"/>; any other is not found.</summary>
@@ -93,8 +93,9 @@ public abstract class BlobManagementAppService : ApplicationService
             IsAddressedByName = file.IsAddressedByName,
             MimeType = file.MimeType,
             Size = file.Size,
-            // The public address of a file an application saved is its name; an uploaded file's names its physical BLOB,
-            // since its name may repeat - and renaming or moving it then leaves the address as it was.
+            ClientId = file.ClientId,
+            // The public address of a file saved under a name is that name; a file kept by its id is addressed by its
+            // physical BLOB, since its name may repeat - and renaming or moving it then leaves the address as it was.
             Url = GetContainer(file.ContainerName).PublicRead
                 ? BlobManagementPublicUrl.Build(
                     file.ContainerName, file.IsAddressedByName ? file.Name : file.BlobName, file.TenantId)

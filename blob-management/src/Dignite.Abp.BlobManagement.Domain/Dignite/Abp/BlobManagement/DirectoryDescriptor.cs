@@ -9,13 +9,13 @@ using Volo.Abp.MultiTenancy;
 namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
-/// A directory of a managed container that allows directories: the hierarchy of the files people upload there, and
-/// nothing more. The directories of one container form one tree per tenant. Every rule that keeps it a tree - unique
+/// A directory of a managed container that allows directories: a further classification of the files a business
+/// system keeps there, and nothing more. The directories of one container form one tree per tenant. Every rule that keeps it a tree - unique
 /// sibling names, a parent in the same container, no cycles, a bounded depth, deletion only when empty - lives in
 /// <see cref="DirectoryManager"/>.
 /// <para>
-/// Soft-deleted, so a deleted directory's files keep naming it (a trash, later, restores both). Its full name,
-/// <c>Dignite.Abp.BlobManagement.DirectoryDescriptor</c>, is the resource name of the grants on it: never rename the class.
+/// Soft-deleted. It has no permissions of its own: what a user may do with the directories of a container is the
+/// container's permission.
 /// </para>
 /// </summary>
 public class DirectoryDescriptor : FullAuditedAggregateRoot<Guid>, IMultiTenant
@@ -69,15 +69,6 @@ public class DirectoryDescriptor : FullAuditedAggregateRoot<Guid>, IMultiTenant
     /// <summary>Position among its siblings.</summary>
     public virtual int Order { get; protected set; }
 
-    /// <summary>
-    /// Whether the directory has permissions of its own: it, and everything below it, is then seen - and its
-    /// subdirectories managed - only by those granted on it (and by holders of the module-wide permissions). A directory
-    /// that is not restricted follows the nearest restricted directory above it, or its container. The application
-    /// services decide; this is only the mark, kept as a column so that listing a level need not ask the grant store
-    /// about every directory in it.
-    /// </summary>
-    public virtual bool IsRestricted { get; protected set; }
-
     public virtual Guid? TenantId { get; protected set; }
 
     /// <summary>
@@ -115,11 +106,6 @@ public class DirectoryDescriptor : FullAuditedAggregateRoot<Guid>, IMultiTenant
     public virtual void SetOrder(int order)
     {
         Order = order;
-    }
-
-    public virtual void SetRestricted(bool isRestricted)
-    {
-        IsRestricted = isRestricted;
     }
 
     /// <summary>

@@ -66,6 +66,17 @@
                       "summary": null,
                       "description": null,
                       "displayName": null
+                    },
+                    {
+                      "name": "creatorId",
+                      "typeAsString": "System.Nullable`1[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib",
+                      "type": "System.Guid?",
+                      "typeSimple": "string?",
+                      "isOptional": true,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
                     }
                   ],
                   "returnValue": {
@@ -182,8 +193,8 @@
             }
           ],
           "actions": {
-            "SaveAsyncByContainerNameAndBlobNameAndContentAndOverrideExisting": {
-              "uniqueName": "SaveAsyncByContainerNameAndBlobNameAndContentAndOverrideExisting",
+            "SaveAsyncByContainerNameAndBlobNameAndContentAndOverrideExistingAndCreatorId": {
+              "uniqueName": "SaveAsyncByContainerNameAndBlobNameAndContentAndOverrideExistingAndCreatorId",
               "name": "SaveAsync",
               "httpMethod": "PUT",
               "url": "api/blob-management/blobs/{containerName}",
@@ -229,6 +240,17 @@
                   "typeSimple": "boolean",
                   "isOptional": true,
                   "defaultValue": false,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "name": "creatorId",
+                  "typeAsString": "System.Nullable`1[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib",
+                  "type": "System.Guid?",
+                  "typeSimple": "string?",
+                  "isOptional": true,
+                  "defaultValue": null,
                   "summary": null,
                   "description": null,
                   "displayName": null
@@ -286,6 +308,21 @@
                   "jsonName": null,
                   "type": "System.Boolean",
                   "typeSimple": "boolean",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Query",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "creatorId",
+                  "name": "creatorId",
+                  "jsonName": null,
+                  "type": "System.Guid?",
+                  "typeSimple": "string?",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
@@ -873,40 +910,6 @@
                     "contentTypes": null,
                     "isRemoteStream": false
                   }
-                },
-                {
-                  "name": "RestrictAsync",
-                  "parametersOnMethod": [
-                    {
-                      "name": "id",
-                      "typeAsString": "System.Guid, System.Private.CoreLib",
-                      "type": "System.Guid",
-                      "typeSimple": "string",
-                      "isOptional": false,
-                      "defaultValue": null,
-                      "summary": null,
-                      "description": null,
-                      "displayName": null
-                    },
-                    {
-                      "name": "input",
-                      "typeAsString": "Dignite.Abp.BlobManagement.Directories.RestrictBlobManagementDirectoryInput, Dignite.Abp.BlobManagement.Application.Contracts",
-                      "type": "Dignite.Abp.BlobManagement.Directories.RestrictBlobManagementDirectoryInput",
-                      "typeSimple": "Dignite.Abp.BlobManagement.Directories.RestrictBlobManagementDirectoryInput",
-                      "isOptional": false,
-                      "defaultValue": null,
-                      "summary": null,
-                      "description": null,
-                      "displayName": null
-                    }
-                  ],
-                  "returnValue": {
-                    "type": "Dignite.Abp.BlobManagement.Directories.BlobManagementDirectoryDto",
-                    "typeSimple": "Dignite.Abp.BlobManagement.Directories.BlobManagementDirectoryDto",
-                    "summary": null,
-                    "contentTypes": null,
-                    "isRemoteStream": false
-                  }
                 }
               ]
             }
@@ -1304,87 +1307,6 @@
               "remarks": null,
               "description": null,
               "displayName": null
-            },
-            "RestrictAsyncByIdAndInput": {
-              "uniqueName": "RestrictAsyncByIdAndInput",
-              "name": "RestrictAsync",
-              "httpMethod": "PUT",
-              "url": "api/blob-management/directories/{id}/restriction",
-              "supportedVersions": [],
-              "parametersOnMethod": [
-                {
-                  "name": "id",
-                  "typeAsString": "System.Guid, System.Private.CoreLib",
-                  "type": "System.Guid",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "summary": null,
-                  "description": null,
-                  "displayName": null
-                },
-                {
-                  "name": "input",
-                  "typeAsString": "Dignite.Abp.BlobManagement.Directories.RestrictBlobManagementDirectoryInput, Dignite.Abp.BlobManagement.Application.Contracts",
-                  "type": "Dignite.Abp.BlobManagement.Directories.RestrictBlobManagementDirectoryInput",
-                  "typeSimple": "Dignite.Abp.BlobManagement.Directories.RestrictBlobManagementDirectoryInput",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "summary": null,
-                  "description": null,
-                  "displayName": null
-                }
-              ],
-              "parameters": [
-                {
-                  "nameOnMethod": "id",
-                  "name": "id",
-                  "jsonName": null,
-                  "type": "System.Guid",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": [],
-                  "bindingSourceId": "Path",
-                  "descriptorName": "",
-                  "summary": null,
-                  "description": null,
-                  "displayName": null
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "input",
-                  "jsonName": null,
-                  "type": "Dignite.Abp.BlobManagement.Directories.RestrictBlobManagementDirectoryInput",
-                  "typeSimple": "Dignite.Abp.BlobManagement.Directories.RestrictBlobManagementDirectoryInput",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "Body",
-                  "descriptorName": "",
-                  "summary": null,
-                  "description": null,
-                  "displayName": null
-                }
-              ],
-              "returnValue": {
-                "type": "Dignite.Abp.BlobManagement.Directories.BlobManagementDirectoryDto",
-                "typeSimple": "Dignite.Abp.BlobManagement.Directories.BlobManagementDirectoryDto",
-                "summary": null,
-                "contentTypes": [
-                  "text/plain",
-                  "application/json",
-                  "text/json"
-                ],
-                "isRemoteStream": false
-              },
-              "allowAnonymous": null,
-              "authorizeDatas": [],
-              "implementFrom": "Dignite.Abp.BlobManagement.Directories.IBlobManagementDirectoryAppService",
-              "summary": null,
-              "remarks": null,
-              "description": null,
-              "displayName": null
             }
           }
         },
@@ -1474,13 +1396,24 @@
                   }
                 },
                 {
-                  "name": "CreateUploadTicketAsync",
+                  "name": "UpdateAsync",
                   "parametersOnMethod": [
                     {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
                       "name": "input",
-                      "typeAsString": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementFileUploadTicketInput, Dignite.Abp.BlobManagement.Application.Contracts",
-                      "type": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementFileUploadTicketInput",
-                      "typeSimple": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementFileUploadTicketInput",
+                      "typeAsString": "Dignite.Abp.BlobManagement.Files.UpdateBlobManagementFileInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                      "type": "Dignite.Abp.BlobManagement.Files.UpdateBlobManagementFileInput",
+                      "typeSimple": "Dignite.Abp.BlobManagement.Files.UpdateBlobManagementFileInput",
                       "isOptional": false,
                       "defaultValue": null,
                       "summary": null,
@@ -1489,8 +1422,163 @@
                     }
                   ],
                   "returnValue": {
-                    "type": "Dignite.Abp.BlobManagement.Tickets.BlobManagementTicketDto",
-                    "typeSimple": "Dignite.Abp.BlobManagement.Tickets.BlobManagementTicketDto",
+                    "type": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                    "typeSimple": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "MoveAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "Dignite.Abp.BlobManagement.Files.MoveBlobManagementFileInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                      "type": "Dignite.Abp.BlobManagement.Files.MoveBlobManagementFileInput",
+                      "typeSimple": "Dignite.Abp.BlobManagement.Files.MoveBlobManagementFileInput",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                    "typeSimple": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "DeleteAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "GetContentAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Content.IRemoteStreamContent",
+                    "typeSimple": "Volo.Abp.Content.IRemoteStreamContent",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": true
+                  }
+                }
+              ]
+            },
+            {
+              "type": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileService",
+              "name": "IBlobManagementFileService",
+              "methods": [
+                {
+                  "name": "GetAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                    "typeSimple": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "GetListAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "Dignite.Abp.BlobManagement.Files.GetBlobManagementFilesInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                      "type": "Dignite.Abp.BlobManagement.Files.GetBlobManagementFilesInput",
+                      "typeSimple": "Dignite.Abp.BlobManagement.Files.GetBlobManagementFilesInput",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<Dignite.Abp.BlobManagement.Files.BlobManagementFileDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<Dignite.Abp.BlobManagement.Files.BlobManagementFileDto>",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "CreateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementFileInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                      "type": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementFileInput",
+                      "typeSimple": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementFileInput",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                    "typeSimple": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
                     "summary": null,
                     "contentTypes": null,
                     "isRemoteStream": false
@@ -1663,7 +1751,7 @@
               },
               "allowAnonymous": null,
               "authorizeDatas": [],
-              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileAppService",
+              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileService",
               "summary": null,
               "remarks": null,
               "description": null,
@@ -1793,7 +1881,7 @@
               },
               "allowAnonymous": null,
               "authorizeDatas": [],
-              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileAppService",
+              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileService",
               "summary": null,
               "remarks": null,
               "description": null,
@@ -1866,6 +1954,21 @@
                 },
                 {
                   "nameOnMethod": "input",
+                  "name": "CreatorId",
+                  "jsonName": null,
+                  "type": "System.Guid?",
+                  "typeSimple": "string?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Form",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "input",
                   "name": "File",
                   "jsonName": null,
                   "type": "Volo.Abp.Content.IRemoteStreamContent",
@@ -1893,62 +1996,7 @@
               },
               "allowAnonymous": null,
               "authorizeDatas": [],
-              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileAppService",
-              "summary": null,
-              "remarks": null,
-              "description": null,
-              "displayName": null
-            },
-            "CreateUploadTicketAsyncByInput": {
-              "uniqueName": "CreateUploadTicketAsyncByInput",
-              "name": "CreateUploadTicketAsync",
-              "httpMethod": "POST",
-              "url": "api/blob-management/files/upload-tickets",
-              "supportedVersions": [],
-              "parametersOnMethod": [
-                {
-                  "name": "input",
-                  "typeAsString": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementFileUploadTicketInput, Dignite.Abp.BlobManagement.Application.Contracts",
-                  "type": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementFileUploadTicketInput",
-                  "typeSimple": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementFileUploadTicketInput",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "summary": null,
-                  "description": null,
-                  "displayName": null
-                }
-              ],
-              "parameters": [
-                {
-                  "nameOnMethod": "input",
-                  "name": "input",
-                  "jsonName": null,
-                  "type": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementFileUploadTicketInput",
-                  "typeSimple": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementFileUploadTicketInput",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "Body",
-                  "descriptorName": "",
-                  "summary": null,
-                  "description": null,
-                  "displayName": null
-                }
-              ],
-              "returnValue": {
-                "type": "Dignite.Abp.BlobManagement.Tickets.BlobManagementTicketDto",
-                "typeSimple": "Dignite.Abp.BlobManagement.Tickets.BlobManagementTicketDto",
-                "summary": null,
-                "contentTypes": [
-                  "text/plain",
-                  "application/json",
-                  "text/json"
-                ],
-                "isRemoteStream": false
-              },
-              "allowAnonymous": null,
-              "authorizeDatas": [],
-              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileAppService",
+              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileService",
               "summary": null,
               "remarks": null,
               "description": null,
@@ -2029,7 +2077,7 @@
               },
               "allowAnonymous": null,
               "authorizeDatas": [],
-              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileAppService",
+              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileService",
               "summary": null,
               "remarks": null,
               "description": null,
@@ -2110,7 +2158,7 @@
               },
               "allowAnonymous": null,
               "authorizeDatas": [],
-              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileAppService",
+              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileService",
               "summary": null,
               "remarks": null,
               "description": null,
@@ -2161,7 +2209,7 @@
               },
               "allowAnonymous": null,
               "authorizeDatas": [],
-              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileAppService",
+              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileService",
               "summary": null,
               "remarks": null,
               "description": null,
@@ -2216,7 +2264,7 @@
               },
               "allowAnonymous": null,
               "authorizeDatas": [],
-              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileAppService",
+              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileService",
               "summary": null,
               "remarks": null,
               "description": null,
@@ -2224,30 +2272,41 @@
             }
           }
         },
-        "Dignite.Abp.BlobManagement.Tickets.BlobManagementTicketController": {
-          "controllerName": "BlobManagementTicket",
-          "controllerGroupName": "BlobManagementTicket",
+        "Dignite.Abp.BlobManagement.Usage.BlobManagementUsageController": {
+          "controllerName": "BlobManagementUsage",
+          "controllerGroupName": "BlobManagementUsage",
           "isRemoteService": true,
           "isIntegrationService": false,
           "apiVersion": null,
-          "type": "Dignite.Abp.BlobManagement.Tickets.BlobManagementTicketController",
+          "type": "Dignite.Abp.BlobManagement.Usage.BlobManagementUsageController",
           "summary": null,
           "remarks": null,
           "description": null,
           "displayName": null,
           "interfaces": [
             {
-              "type": "Dignite.Abp.BlobManagement.Tickets.IBlobManagementTicketService",
-              "name": "IBlobManagementTicketService",
+              "type": "Dignite.Abp.BlobManagement.Usage.IBlobManagementUsageAppService",
+              "name": "IBlobManagementUsageAppService",
               "methods": [
                 {
-                  "name": "CreateAsync",
+                  "name": "GetAsync",
+                  "parametersOnMethod": [],
+                  "returnValue": {
+                    "type": "Dignite.Abp.BlobManagement.Usage.BlobManagementUsageDto",
+                    "typeSimple": "Dignite.Abp.BlobManagement.Usage.BlobManagementUsageDto",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "GetUsersAsync",
                   "parametersOnMethod": [
                     {
                       "name": "input",
-                      "typeAsString": "Dignite.Abp.BlobManagement.Tickets.CreateBlobManagementTicketInput, Dignite.Abp.BlobManagement.Application.Contracts",
-                      "type": "Dignite.Abp.BlobManagement.Tickets.CreateBlobManagementTicketInput",
-                      "typeSimple": "Dignite.Abp.BlobManagement.Tickets.CreateBlobManagementTicketInput",
+                      "typeAsString": "Dignite.Abp.BlobManagement.Usage.GetBlobManagementUserUsagesInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                      "type": "Dignite.Abp.BlobManagement.Usage.GetBlobManagementUserUsagesInput",
+                      "typeSimple": "Dignite.Abp.BlobManagement.Usage.GetBlobManagementUserUsagesInput",
                       "isOptional": false,
                       "defaultValue": null,
                       "summary": null,
@@ -2256,8 +2315,31 @@
                     }
                   ],
                   "returnValue": {
-                    "type": "Dignite.Abp.BlobManagement.Tickets.BlobManagementTicketDto",
-                    "typeSimple": "Dignite.Abp.BlobManagement.Tickets.BlobManagementTicketDto",
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<Dignite.Abp.BlobManagement.Usage.BlobManagementUserUsageDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<Dignite.Abp.BlobManagement.Usage.BlobManagementUserUsageDto>",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "GetClientsAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "Dignite.Abp.BlobManagement.Usage.GetBlobManagementClientUsagesInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                      "type": "Dignite.Abp.BlobManagement.Usage.GetBlobManagementClientUsagesInput",
+                      "typeSimple": "Dignite.Abp.BlobManagement.Usage.GetBlobManagementClientUsagesInput",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.Abp.BlobManagement.Usage.BlobManagementClientUsageDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.Abp.BlobManagement.Usage.BlobManagementClientUsageDto>",
                     "summary": null,
                     "contentTypes": null,
                     "isRemoteStream": false
@@ -2267,45 +2349,17 @@
             }
           ],
           "actions": {
-            "CreateAsyncByInput": {
-              "uniqueName": "CreateAsyncByInput",
-              "name": "CreateAsync",
-              "httpMethod": "POST",
-              "url": "api/blob-management/tickets",
+            "GetAsync": {
+              "uniqueName": "GetAsync",
+              "name": "GetAsync",
+              "httpMethod": "GET",
+              "url": "api/blob-management/usage",
               "supportedVersions": [],
-              "parametersOnMethod": [
-                {
-                  "name": "input",
-                  "typeAsString": "Dignite.Abp.BlobManagement.Tickets.CreateBlobManagementTicketInput, Dignite.Abp.BlobManagement.Application.Contracts",
-                  "type": "Dignite.Abp.BlobManagement.Tickets.CreateBlobManagementTicketInput",
-                  "typeSimple": "Dignite.Abp.BlobManagement.Tickets.CreateBlobManagementTicketInput",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "summary": null,
-                  "description": null,
-                  "displayName": null
-                }
-              ],
-              "parameters": [
-                {
-                  "nameOnMethod": "input",
-                  "name": "input",
-                  "jsonName": null,
-                  "type": "Dignite.Abp.BlobManagement.Tickets.CreateBlobManagementTicketInput",
-                  "typeSimple": "Dignite.Abp.BlobManagement.Tickets.CreateBlobManagementTicketInput",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "Body",
-                  "descriptorName": "",
-                  "summary": null,
-                  "description": null,
-                  "displayName": null
-                }
-              ],
+              "parametersOnMethod": [],
+              "parameters": [],
               "returnValue": {
-                "type": "Dignite.Abp.BlobManagement.Tickets.BlobManagementTicketDto",
-                "typeSimple": "Dignite.Abp.BlobManagement.Tickets.BlobManagementTicketDto",
+                "type": "Dignite.Abp.BlobManagement.Usage.BlobManagementUsageDto",
+                "typeSimple": "Dignite.Abp.BlobManagement.Usage.BlobManagementUsageDto",
                 "summary": null,
                 "contentTypes": [
                   "text/plain",
@@ -2316,7 +2370,147 @@
               },
               "allowAnonymous": null,
               "authorizeDatas": [],
-              "implementFrom": "Dignite.Abp.BlobManagement.Tickets.IBlobManagementTicketService",
+              "implementFrom": "Dignite.Abp.BlobManagement.Usage.IBlobManagementUsageAppService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "GetUsersAsyncByInput": {
+              "uniqueName": "GetUsersAsyncByInput",
+              "name": "GetUsersAsync",
+              "httpMethod": "GET",
+              "url": "api/blob-management/usage/users",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "Dignite.Abp.BlobManagement.Usage.GetBlobManagementUserUsagesInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                  "type": "Dignite.Abp.BlobManagement.Usage.GetBlobManagementUserUsagesInput",
+                  "typeSimple": "Dignite.Abp.BlobManagement.Usage.GetBlobManagementUserUsagesInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "ContainerName",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "SkipCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MaxResultCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<Dignite.Abp.BlobManagement.Usage.BlobManagementUserUsageDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<Dignite.Abp.BlobManagement.Usage.BlobManagementUserUsageDto>",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Abp.BlobManagement.Usage.IBlobManagementUsageAppService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "GetClientsAsyncByInput": {
+              "uniqueName": "GetClientsAsyncByInput",
+              "name": "GetClientsAsync",
+              "httpMethod": "GET",
+              "url": "api/blob-management/usage/clients",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "Dignite.Abp.BlobManagement.Usage.GetBlobManagementClientUsagesInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                  "type": "Dignite.Abp.BlobManagement.Usage.GetBlobManagementClientUsagesInput",
+                  "typeSimple": "Dignite.Abp.BlobManagement.Usage.GetBlobManagementClientUsagesInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "ContainerName",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.Abp.BlobManagement.Usage.BlobManagementClientUsageDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.Abp.BlobManagement.Usage.BlobManagementClientUsageDto>",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Abp.BlobManagement.Usage.IBlobManagementUsageAppService",
               "summary": null,
               "remarks": null,
               "description": null,

@@ -175,22 +175,6 @@ public abstract class DirectoryManager_Tests<TStartupModule> : BlobManagementDom
             () => CreateAsync(BlobManagementTestContainers.Documents, "Folder", elsewhere.Id));
     }
 
-    [Fact]
-    public async Task A_Directory_Should_Be_Marked_Restricted()
-    {
-        var folder = await CreateAsync(BlobManagementTestContainers.Documents, "Private", null);
-        folder.IsRestricted.ShouldBeFalse();
-
-        await WithUnitOfWorkAsync(async () =>
-            await _directoryManager.SetRestrictedAsync(await _directoryRepository.GetAsync(folder.Id), true));
-        (await WithUnitOfWorkAsync(() => _directoryRepository.GetAsync(folder.Id))).IsRestricted.ShouldBeTrue();
-
-        // It keeps the mark where it goes.
-        var target = await CreateAsync(BlobManagementTestContainers.Documents, "Target", null);
-        await MoveAsync(folder.Id, target.Id);
-        (await WithUnitOfWorkAsync(() => _directoryRepository.GetAsync(folder.Id))).IsRestricted.ShouldBeTrue();
-    }
-
     private Task<DirectoryDescriptor> CreateAsync(string containerName, string name, Guid? parentId)
     {
         return WithUnitOfWorkAsync(() => _directoryManager.CreateAsync(containerName, name, parentId));

@@ -17,6 +17,13 @@ public class CreateBlobManagementFileInput
     [DynamicStringLength(typeof(FileDescriptorConsts), nameof(FileDescriptorConsts.MaxNameLength))]
     public string? Name { get; set; }
 
+    /// <summary>
+    /// The user the upload is counted for in the usage figures; no right comes with it. <c>null</c>: the application's
+    /// current user - in process as ABP's auditing records it, over HTTP as
+    /// <c>Dignite.Abp.BlobManagement.HttpApi.Client</c> sends it, since the client's token carries no user.
+    /// </summary>
+    public Guid? CreatorId { get; set; }
+
     [Required]
     public IRemoteStreamContent File { get; set; } = default!;
 }

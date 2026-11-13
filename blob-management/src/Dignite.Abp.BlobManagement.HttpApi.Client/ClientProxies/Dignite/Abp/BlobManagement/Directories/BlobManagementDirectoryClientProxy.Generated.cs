@@ -66,13 +66,4 @@ public partial class BlobManagementDirectoryClientProxy : ClientProxyBase<IBlobM
             { typeof(Guid), id }
         });
     }
-
-    public virtual async Task<BlobManagementDirectoryDto> RestrictAsync(Guid id, RestrictBlobManagementDirectoryInput input)
-    {
-        return await RequestAsync<BlobManagementDirectoryDto>(nameof(RestrictAsync), new ClientProxyRequestTypeValue
-        {
-            { typeof(Guid), id },
-            { typeof(RestrictBlobManagementDirectoryInput), input }
-        });
-    }
 }

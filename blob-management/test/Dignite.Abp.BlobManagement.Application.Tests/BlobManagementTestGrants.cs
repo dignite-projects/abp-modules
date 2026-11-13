@@ -20,6 +20,13 @@ public static class BlobManagementTestGrants
         return principalAccessor.Change(new ClaimsPrincipal(new ClaimsIdentity(claims, "Test")));
     }
 
+    /// <summary>Calling as an OAuth client acting for itself: a token that names a client and carries no user.</summary>
+    public static IDisposable AsClient(this ICurrentPrincipalAccessor principalAccessor, string clientId)
+    {
+        return principalAccessor.Change(new ClaimsPrincipal(new ClaimsIdentity(
+            new[] { new Claim(AbpClaimTypes.ClientId, clientId) }, "Test")));
+    }
+
     /// <summary>Grants module-wide permissions to a user.</summary>
     public static async Task GrantAsync(this IPermissionManager permissionManager, Guid userId, params string[] permissions)
     {
@@ -37,16 +44,6 @@ public static class BlobManagementTestGrants
         params string[] permissions)
     {
         return manager.GrantOnAsync(BlobManagementResourceNames.Container, containerName, userId, permissions);
-    }
-
-    /// <summary>Grants permissions on one directory to a user.</summary>
-    public static Task GrantOnDirectoryAsync(
-        this IResourcePermissionManager manager,
-        Guid directoryId,
-        Guid userId,
-        params string[] permissions)
-    {
-        return manager.GrantOnAsync(BlobManagementResourceNames.Directory, directoryId.ToString(), userId, permissions);
     }
 
     private static async Task GrantOnAsync(

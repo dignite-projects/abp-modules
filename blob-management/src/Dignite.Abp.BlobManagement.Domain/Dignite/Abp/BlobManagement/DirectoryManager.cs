@@ -206,25 +206,6 @@ public class DirectoryManager : DomainService
     }
 
     /// <summary>
-    /// Marks whether <paramref name="directory"/> has permissions of its own (<see cref="DirectoryDescriptor.IsRestricted"/>).
-    /// </summary>
-    public virtual async Task<DirectoryDescriptor> SetRestrictedAsync(
-        DirectoryDescriptor directory,
-        bool isRestricted,
-        CancellationToken cancellationToken = default)
-    {
-        Check.NotNull(directory, nameof(directory));
-
-        if (directory.IsRestricted == isRestricted)
-        {
-            return directory;
-        }
-
-        directory.SetRestricted(isRestricted);
-        return await DirectoryRepository.UpdateAsync(directory, autoSave: true, cancellationToken: cancellationToken);
-    }
-
-    /// <summary>
     /// The directories above <paramref name="directory"/>, nearest first, ending at the top of its tree. They are the
     /// ids in its <see cref="DirectoryDescriptor.Path"/>, read in one query; one that does not exist (or is deleted) is
     /// simply absent.

@@ -6,14 +6,15 @@ using Volo.Abp.Application.Services;
 namespace Dignite.Abp.BlobManagement.Directories;
 
 /// <summary>
-/// The directories of the containers that allow them, for signed-in users only. What a caller may do with the
-/// directories of a place is the permission of the container or, below a restricted directory, of that directory.
+/// The directories of the containers that allow them, for signed-in users: the one thing Blob Management lets a user
+/// change, so that a business system need not build it. What a caller may do is the container's permission - the
+/// module-wide one, or the one granted on that container - for every directory in it.
 /// </summary>
 public interface IBlobManagementDirectoryAppService : IApplicationService
 {
     Task<BlobManagementDirectoryDto> GetAsync(Guid id);
 
-    /// <summary>The directories of one level that the caller may view, by position.</summary>
+    /// <summary>The directories of one level, by position.</summary>
     Task<ListResultDto<BlobManagementDirectoryDto>> GetListAsync(GetBlobManagementDirectoriesInput input);
 
     Task<BlobManagementDirectoryDto> CreateAsync(CreateBlobManagementDirectoryInput input);
@@ -26,10 +27,4 @@ public interface IBlobManagementDirectoryAppService : IApplicationService
 
     /// <summary>Deletes the directory, which must be empty.</summary>
     Task DeleteAsync(Guid id);
-
-    /// <summary>
-    /// Says whether the directory has permissions of its own. It takes <c>BlobManagement.ManagePermissions</c>, as
-    /// granting on it does.
-    /// </summary>
-    Task<BlobManagementDirectoryDto> RestrictAsync(Guid id, RestrictBlobManagementDirectoryInput input);
 }

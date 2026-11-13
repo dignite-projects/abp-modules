@@ -65,9 +65,6 @@ namespace Dignite.Abp.BlobManagement.Host.Migrations
                         .HasDefaultValue(false)
                         .HasColumnName("IsDeleted");
 
-                    b.Property<bool>("IsRestricted")
-                        .HasColumnType("INTEGER");
-
                     b.Property<DateTime?>("LastModificationTime")
                         .HasColumnType("TEXT")
                         .HasColumnName("LastModificationTime");

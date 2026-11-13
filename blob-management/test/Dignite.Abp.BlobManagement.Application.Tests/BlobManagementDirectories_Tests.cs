@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,9 +22,8 @@ using Xunit;
 namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
-/// The directory service and the authorization of places - the top of a container, a directory, a restricted
-/// directory - as signed-in users, with grants written through ABP's permission managers, against the database
-/// provider of the concrete test class.
+/// The directory service - the one thing a user changes in Blob Management - as signed-in users, with grants written
+/// through ABP's permission managers, against the database provider of the concrete test class.
 /// </summary>
 public abstract class BlobManagementDirectories_Tests<TStartupModule> : BlobManagementApplicationTestBase<TStartupModule>
     where TStartupModule : IAbpModule
@@ -31,18 +31,17 @@ public abstract class BlobManagementDirectories_Tests<TStartupModule> : BlobMana
     private const string Container = BlobManagementTestContainers.Documents;
 
     private readonly IBlobManagementDirectoryAppService _directories;
-    private readonly IBlobManagementFileAppService _files;
+    private readonly IBlobManagementFileService _files;
     private readonly ICurrentPrincipalAccessor _principalAccessor;
     private readonly ResourcePermissionCheckCounter _counter;
 
     private readonly Guid _admin = Guid.NewGuid();
     private readonly Guid _alice = Guid.NewGuid();
-    private readonly Guid _bob = Guid.NewGuid();
 
     protected BlobManagementDirectories_Tests()
     {
         _directories = GetRequiredService<IBlobManagementDirectoryAppService>();
-        _files = GetRequiredService<IBlobManagementFileAppService>();
+        _files = GetRequiredService<IBlobManagementFileService>();
         _principalAccessor = GetRequiredService<ICurrentPrincipalAccessor>();
         _counter = GetRequiredService<ResourcePermissionCheckCounter>();
     }
@@ -57,9 +56,6 @@ public abstract class BlobManagementDirectories_Tests<TStartupModule> : BlobMana
             var docs = await CreateAsync("Docs", null);
             var archive = await CreateAsync("Archive", null);
             docs.HasChildren.ShouldBeFalse();
-            docs.IsRestricted.ShouldBeFalse();
-            docs.CanUpdate.ShouldBeTrue();
-            docs.Access.UploadFiles.ShouldBeTrue();
 
             var sub = await CreateAsync(" 2026 ", docs.Id);
             sub.Name.ShouldBe("2026");
@@ -100,218 +96,100 @@ public abstract class BlobManagementDirectories_Tests<TStartupModule> : BlobMana
                 new CreateBlobManagementDirectoryInput { ContainerName = BlobManagementTestContainers.Files, Name = "Folder" }));
             creating.Code.ShouldBe(BlobManagementErrorCodes.DirectoriesNotAllowed);
 
-            // Its files are one flat list: a directory of another container is not found there.
-            await Should.ThrowAsync<EntityNotFoundException>(() => UploadAsync(BlobManagementTestContainers.Files, docs.Id));
-            (await UploadAsync(BlobManagementTestContainers.Files, null)).DirectoryId.ShouldBeNull();
+            // Its files are one flat list: an application files nothing under a directory there.
+            var filing = await Should.ThrowAsync<BusinessException>(() => StoreAsync(BlobManagementTestContainers.Files, docs.Id));
+            filing.Code.ShouldBe(BlobManagementErrorCodes.DirectoriesNotAllowed);
+            (await StoreAsync(BlobManagementTestContainers.Files, null)).DirectoryId.ShouldBeNull();
+
+            // A directory of another container is not found: as a parent, or as where a moved directory lands.
+            var elsewhere = await _directories.CreateAsync(
+                new CreateBlobManagementDirectoryInput { ContainerName = BlobManagementTestContainers.Archive, Name = "Elsewhere" });
+            await Should.ThrowAsync<EntityNotFoundException>(() => CreateAsync("Folder", elsewhere.Id));
+            await Should.ThrowAsync<EntityNotFoundException>(() => ListAsync(elsewhere.Id));
+            await Should.ThrowAsync<EntityNotFoundException>(() =>
+                _directories.MoveAsync(docs.Id, new MoveBlobManagementDirectoryInput { ParentId = elsewhere.Id }));
         }
     }
 
     [Fact]
-    public async Task The_Directories_Of_A_Place_Should_Take_The_Permission_Of_The_Container()
+    public async Task The_Directories_Of_A_Container_Should_Take_Its_Permissions()
     {
         await GrantAdminAsync();
         BlobManagementDirectoryDto docs;
+        BlobManagementDirectoryDto deep;
         using (_principalAccessor.As(_admin))
         {
             docs = await CreateAsync("Docs", null);
+            deep = await CreateAsync("Deep", docs.Id);
         }
 
-        // Nothing without a grant: the top of a container lists what the caller may view, which is nothing.
+        // Nothing without a grant - not even the tree.
         using (_principalAccessor.As(_alice))
         {
-            (await ListAsync(null)).ShouldBeEmpty();
+            await Should.ThrowAsync<AbpAuthorizationException>(() => ListAsync(null));
             await Should.ThrowAsync<AbpAuthorizationException>(() => _directories.GetAsync(docs.Id));
-            await Should.ThrowAsync<AbpAuthorizationException>(() => ListAsync(docs.Id));
             await Should.ThrowAsync<AbpAuthorizationException>(() => CreateAsync("Mine", null));
         }
 
-        await GrantOnContainerAsync(_alice, BlobManagementPermissions.Container.View, BlobManagementPermissions.Container.CreateDirectories);
-
+        // Creating alone is not enough: the caller has to see the tree.
+        await GrantOnContainerAsync(_alice, BlobManagementPermissions.Container.CreateDirectories);
         using (_principalAccessor.As(_alice))
         {
-            var listed = (await ListAsync(null)).Single();
-            listed.Id.ShouldBe(docs.Id);
-            listed.Access.View.ShouldBeTrue();
-            listed.Access.CreateDirectories.ShouldBeTrue();
-            listed.CanUpdate.ShouldBeFalse();
-            listed.CanDelete.ShouldBeFalse();
+            await Should.ThrowAsync<AbpAuthorizationException>(() => CreateAsync("Mine", null));
+        }
 
-            var mine = await CreateAsync("Mine", docs.Id);
-            // Having created it gives nothing over it: renaming and deleting are the container's permissions.
+        await GrantOnContainerAsync(_alice, BlobManagementPermissions.Container.View);
+        using (_principalAccessor.As(_alice))
+        {
+            (await ListAsync(null)).Single().Id.ShouldBe(docs.Id);
+            (await _directories.GetAsync(deep.Id)).Name.ShouldBe("Deep");
+
+            // The container's answer holds at every depth.
+            var mine = await CreateAsync("Mine", deep.Id);
+
+            // Having created it gives nothing over it: renaming, moving and deleting are permissions of their own.
             await Should.ThrowAsync<AbpAuthorizationException>(() =>
                 _directories.UpdateAsync(mine.Id, new UpdateBlobManagementDirectoryInput { Name = "Ours" }));
+            await Should.ThrowAsync<AbpAuthorizationException>(() =>
+                _directories.MoveAsync(mine.Id, new MoveBlobManagementDirectoryInput { ParentId = null }));
             await Should.ThrowAsync<AbpAuthorizationException>(() => _directories.DeleteAsync(mine.Id));
+
+            // The grant is on that container only.
+            await Should.ThrowAsync<AbpAuthorizationException>(() => _directories.CreateAsync(
+                new CreateBlobManagementDirectoryInput { ContainerName = BlobManagementTestContainers.Archive, Name = "Mine" }));
         }
 
         await GrantOnContainerAsync(_alice, BlobManagementPermissions.Container.UpdateDirectories, BlobManagementPermissions.Container.DeleteDirectories);
-
         using (_principalAccessor.As(_alice))
         {
-            var mine = (await ListAsync(docs.Id)).Single();
-            mine.CanUpdate.ShouldBeTrue();
+            var mine = (await ListAsync(deep.Id)).Single();
             (await _directories.UpdateAsync(mine.Id, new UpdateBlobManagementDirectoryInput { Name = "Ours" })).Name.ShouldBe("Ours");
+            (await _directories.MoveAsync(mine.Id, new MoveBlobManagementDirectoryInput { ParentId = null })).ParentId.ShouldBeNull();
             await _directories.DeleteAsync(mine.Id);
         }
     }
 
     [Fact]
-    public async Task A_Restricted_Directory_Should_Be_Seen_And_Managed_Only_By_Those_Granted_On_It()
+    public async Task A_Module_Wide_Directory_Permission_Should_Count_In_A_Container_The_Caller_Sees()
     {
-        await GrantAdminAsync();
-        BlobManagementDirectoryDto departmentA;
-        BlobManagementDirectoryDto departmentB;
-        BlobManagementDirectoryDto open;
-        BlobManagementDirectoryDto below;
-        using (_principalAccessor.As(_admin))
-        {
-            departmentA = await CreateAsync("Department A", null);
-            departmentB = await CreateAsync("Department B", null);
-            open = await CreateAsync("Open", null);
-            below = await CreateAsync("Plans", departmentA.Id);
+        await WithUnitOfWorkAsync(() => GetRequiredService<IPermissionManager>()
+            .GrantAsync(_alice, BlobManagementPermissions.Containers.CreateDirectories));
 
-            departmentA = await _directories.RestrictAsync(departmentA.Id, new RestrictBlobManagementDirectoryInput { IsRestricted = true });
-            departmentA.IsRestricted.ShouldBeTrue();
-            await _directories.RestrictAsync(departmentB.Id, new RestrictBlobManagementDirectoryInput { IsRestricted = true });
-        }
-
-        // Both may view the container and upload in it; each is granted on one department.
-        foreach (var user in new[] { _alice, _bob })
-        {
-            await GrantOnContainerAsync(user, BlobManagementPermissions.Container.View, BlobManagementPermissions.Container.UploadFiles);
-        }
-
-        await GrantOnDirectoryAsync(departmentA.Id, _alice,
-            BlobManagementPermissions.Directory.View, BlobManagementPermissions.Directory.CreateDirectories);
-        await GrantOnDirectoryAsync(departmentB.Id, _bob, BlobManagementPermissions.Directory.View);
-
+        // Module-wide, but still only where the caller sees the tree.
         using (_principalAccessor.As(_alice))
         {
-            // A restricted directory she is not granted on is not there for her.
-            var top = await ListAsync(null);
-            top.Select(d => d.Id).ShouldBe(new[] { departmentA.Id, open.Id });
-            await Should.ThrowAsync<AbpAuthorizationException>(() => _directories.GetAsync(departmentB.Id));
-            await Should.ThrowAsync<AbpAuthorizationException>(() => ListAsync(departmentB.Id));
-            await Should.ThrowAsync<AbpAuthorizationException>(() => ListFilesAsync(departmentB.Id));
-            await Should.ThrowAsync<AbpAuthorizationException>(() => UploadAsync(Container, departmentB.Id));
-
-            // In hers, and everywhere below it, the directory's grants decide about directories...
-            top.Single(d => d.Id == departmentA.Id).Access.CreateDirectories.ShouldBeTrue();
-            var plans = (await ListAsync(departmentA.Id)).Single();
-            plans.Id.ShouldBe(below.Id);
-            plans.Access.CreateDirectories.ShouldBeTrue();
-            (await CreateAsync("2026", below.Id)).ParentId.ShouldBe(below.Id);
-            // ...and the container's about files.
-            (await UploadAsync(Container, below.Id)).DirectoryId.ShouldBe(below.Id);
-
-            // Outside it the container decides, which gave her no directory permission.
-            top.Single(d => d.Id == open.Id).Access.CreateDirectories.ShouldBeFalse();
-            await Should.ThrowAsync<AbpAuthorizationException>(() => CreateAsync("Mine", open.Id));
-
-            // Saying which directories are restricted is managing permissions.
-            await Should.ThrowAsync<AbpAuthorizationException>(() =>
-                _directories.RestrictAsync(departmentA.Id, new RestrictBlobManagementDirectoryInput { IsRestricted = false }));
+            await Should.ThrowAsync<AbpAuthorizationException>(() => CreateAsync("Mine", null));
         }
 
-        using (_principalAccessor.As(_bob))
-        {
-            (await ListAsync(null)).Select(d => d.Id).ShouldBe(new[] { departmentB.Id, open.Id });
-            await Should.ThrowAsync<AbpAuthorizationException>(() => ListFilesAsync(below.Id));
-            // He views his department, and was given nothing to do with its directories.
-            await Should.ThrowAsync<AbpAuthorizationException>(() => CreateAsync("Mine", departmentB.Id));
-        }
-
-        // The management permission sees every directory.
-        using (_principalAccessor.As(_admin))
-        {
-            (await ListAsync(null)).Select(d => d.Id).ShouldBe(new[] { departmentA.Id, departmentB.Id, open.Id });
-            await _directories.RestrictAsync(departmentB.Id, new RestrictBlobManagementDirectoryInput { IsRestricted = false });
-        }
-
-        // No longer restricted, it follows the container again.
+        await GrantOnContainerAsync(_alice, BlobManagementPermissions.Container.View);
         using (_principalAccessor.As(_alice))
         {
-            (await ListAsync(null)).Select(d => d.Id).ShouldContain(departmentB.Id);
+            (await CreateAsync("Mine", null)).Name.ShouldBe("Mine");
         }
     }
 
     [Fact]
-    public async Task A_Directory_Granted_On_Should_Be_Reached_Without_A_Grant_On_The_Container()
-    {
-        await GrantAdminAsync();
-        BlobManagementDirectoryDto granted;
-        using (_principalAccessor.As(_admin))
-        {
-            granted = await CreateAsync("Granted", null);
-            await CreateAsync("Other", null);
-            await _directories.RestrictAsync(granted.Id, new RestrictBlobManagementDirectoryInput { IsRestricted = true });
-        }
-
-        await GrantOnDirectoryAsync(granted.Id, _alice, BlobManagementPermissions.Directory.View);
-
-        using (_principalAccessor.As(_alice))
-        {
-            (await ListAsync(null)).Single().Id.ShouldBe(granted.Id);
-            (await ListFilesAsync(granted.Id)).TotalCount.ShouldBe(0);
-
-            // The top of the container is not hers to view, and files are the container's permission.
-            await Should.ThrowAsync<AbpAuthorizationException>(() => ListFilesAsync(null));
-            await Should.ThrowAsync<AbpAuthorizationException>(() => UploadAsync(Container, granted.Id));
-        }
-    }
-
-    [Fact]
-    public async Task A_Move_Should_Take_The_Place_It_Leaves_And_The_Place_It_Lands()
-    {
-        await GrantAdminAsync();
-        BlobManagementDirectoryDto folder;
-        BlobManagementDirectoryDto restricted;
-        using (_principalAccessor.As(_admin))
-        {
-            folder = await CreateAsync("Folder", null);
-            restricted = await CreateAsync("Restricted", null);
-            await _directories.RestrictAsync(restricted.Id, new RestrictBlobManagementDirectoryInput { IsRestricted = true });
-        }
-
-        await GrantOnContainerAsync(_alice, BlobManagementPermissions.Container.View, BlobManagementPermissions.Container.UpdateDirectories);
-        await GrantOnDirectoryAsync(restricted.Id, _alice, BlobManagementPermissions.Directory.View);
-
-        using (_principalAccessor.As(_alice))
-        {
-            // She may move directories at the top, but not create one where it would land.
-            await Should.ThrowAsync<AbpAuthorizationException>(() =>
-                _directories.MoveAsync(folder.Id, new MoveBlobManagementDirectoryInput { ParentId = restricted.Id }));
-            // Among its siblings it takes no more than moving.
-            (await _directories.MoveAsync(folder.Id, new MoveBlobManagementDirectoryInput { ParentId = null, Order = 0 }))
-                .ParentId.ShouldBeNull();
-        }
-
-        await GrantOnDirectoryAsync(restricted.Id, _alice, BlobManagementPermissions.Directory.CreateDirectories);
-
-        using (_principalAccessor.As(_alice))
-        {
-            var moved = await _directories.MoveAsync(folder.Id, new MoveBlobManagementDirectoryInput { ParentId = restricted.Id });
-            moved.ParentId.ShouldBe(restricted.Id);
-            // Where it is now, the restricted directory decides: she may not move it again.
-            moved.CanUpdate.ShouldBeFalse();
-        }
-
-        // A restricted directory keeps its restriction where it goes.
-        using (_principalAccessor.As(_admin))
-        {
-            var target = await CreateAsync("Target", null);
-            (await _directories.MoveAsync(restricted.Id, new MoveBlobManagementDirectoryInput { ParentId = target.Id }))
-                .IsRestricted.ShouldBeTrue();
-        }
-
-        using (_principalAccessor.As(_bob))
-        {
-            await GrantOnContainerAsync(_bob, BlobManagementPermissions.Container.View);
-            await Should.ThrowAsync<AbpAuthorizationException>(() => _directories.GetAsync(folder.Id));
-        }
-    }
-
-    [Fact]
-    public async Task A_Listing_Should_Ask_The_Grant_Store_For_The_Place_Not_For_Each_Item()
+    public async Task A_Listing_Should_Ask_The_Grant_Store_For_The_Container_Not_For_Each_Directory()
     {
         await GrantAdminAsync();
         BlobManagementDirectoryDto folder;
@@ -321,13 +199,6 @@ public abstract class BlobManagementDirectories_Tests<TStartupModule> : BlobMana
             for (var i = 0; i < 5; i++)
             {
                 await CreateAsync("Directory " + i, folder.Id);
-                await UploadAsync(Container, folder.Id);
-            }
-
-            var restricted = (await ListAsync(folder.Id)).Take(2).ToList();
-            foreach (var directory in restricted)
-            {
-                await _directories.RestrictAsync(directory.Id, new RestrictBlobManagementDirectoryInput { IsRestricted = true });
             }
         }
 
@@ -335,47 +206,19 @@ public abstract class BlobManagementDirectories_Tests<TStartupModule> : BlobMana
 
         using (_principalAccessor.As(_alice))
         {
-            // Five files: one question, about the container.
             _counter.Reset();
-            (await ListFilesAsync(folder.Id)).TotalCount.ShouldBe(5);
+            (await ListAsync(folder.Id)).Count.ShouldBe(5);
             _counter.Count.ShouldBe(1);
-
-            // Five directories, two of them restricted: the container, and the two that have to be told apart.
-            _counter.Reset();
-            (await ListAsync(folder.Id)).Count.ShouldBe(3);
-            _counter.Count.ShouldBe(3);
         }
-    }
-
-    [Fact]
-    public async Task Deleting_A_Directory_Should_Delete_Its_Grants()
-    {
-        await GrantAdminAsync();
-        BlobManagementDirectoryDto folder;
-        using (_principalAccessor.As(_admin))
-        {
-            folder = await CreateAsync("Folder", null);
-        }
-
-        await GrantOnDirectoryAsync(folder.Id, _alice, BlobManagementPermissions.Directory.View);
-        (await GetGrantsAsync(folder.Id)).ShouldNotBeEmpty();
-
-        using (_principalAccessor.As(_admin))
-        {
-            await _directories.DeleteAsync(folder.Id);
-        }
-
-        (await GetGrantsAsync(folder.Id)).ShouldBeEmpty();
     }
 
     [Fact]
     public async Task The_Directory_Service_Should_Serve_Users_And_Be_Closed_When_The_Tenants_Blob_Management_Is_Off()
     {
-        var client = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(
-            new[] { new System.Security.Claims.Claim(AbpClaimTypes.ClientId, "site-app") }, "Test"));
-        using (_principalAccessor.Change(client))
+        using (_principalAccessor.AsClient(BlobManagementApplicationTestModule.AllowedClient))
         {
             await Should.ThrowAsync<AbpAuthorizationException>(() => ListAsync(null));
+            await Should.ThrowAsync<AbpAuthorizationException>(() => CreateAsync("Folder", null));
         }
 
         var off = Guid.NewGuid();
@@ -393,17 +236,13 @@ public abstract class BlobManagementDirectories_Tests<TStartupModule> : BlobMana
         return _directories.CreateAsync(new CreateBlobManagementDirectoryInput { ContainerName = Container, Name = name, ParentId = parentId });
     }
 
-    private async Task<System.Collections.Generic.IReadOnlyList<BlobManagementDirectoryDto>> ListAsync(Guid? parentId)
+    private async Task<IReadOnlyList<BlobManagementDirectoryDto>> ListAsync(Guid? parentId)
     {
         return (await _directories.GetListAsync(new GetBlobManagementDirectoriesInput { ContainerName = Container, ParentId = parentId })).Items;
     }
 
-    private Task<Volo.Abp.Application.Dtos.PagedResultDto<BlobManagementFileDto>> ListFilesAsync(Guid? directoryId)
-    {
-        return _files.GetListAsync(new GetBlobManagementFilesInput { ContainerName = Container, DirectoryId = directoryId });
-    }
-
-    private Task<BlobManagementFileDto> UploadAsync(string containerName, Guid? directoryId)
+    /// <summary>Stores a file as an application in this process does.</summary>
+    private Task<BlobManagementFileDto> StoreAsync(string containerName, Guid? directoryId)
     {
         return _files.CreateAsync(new CreateBlobManagementFileInput
         {
@@ -423,16 +262,5 @@ public abstract class BlobManagementDirectories_Tests<TStartupModule> : BlobMana
     private Task GrantOnContainerAsync(Guid userId, params string[] permissions)
     {
         return WithUnitOfWorkAsync(() => GetRequiredService<IResourcePermissionManager>().GrantOnContainerAsync(Container, userId, permissions));
-    }
-
-    private Task GrantOnDirectoryAsync(Guid directoryId, Guid userId, params string[] permissions)
-    {
-        return WithUnitOfWorkAsync(() => GetRequiredService<IResourcePermissionManager>().GrantOnDirectoryAsync(directoryId, userId, permissions));
-    }
-
-    private Task<System.Collections.Generic.List<ResourcePermissionGrant>> GetGrantsAsync(Guid directoryId)
-    {
-        return WithUnitOfWorkAsync(() => GetRequiredService<IResourcePermissionGrantRepository>()
-            .GetPermissionsAsync(BlobManagementResourceNames.Directory, directoryId.ToString()));
     }
 }

@@ -34,7 +34,7 @@ namespace Dignite.Abp.BlobManagement;
 /// deletions of the same bytes take turns on the <b>dedup lock</b> (<see cref="IAbpDistributedLock"/>, named by the
 /// dedup key), which an upload holds until its unit of work is over: a deletion that waited for it sees the
 /// uploader's row, or its absence, and never removes bytes a new row is about to share. ABP's default lock is
-/// in-process; several Blob Management instances need a distributed lock provider - the same requirement as the tickets.
+/// in-process; several Blob Management instances need a distributed lock provider.
 /// </para>
 /// </summary>
 public class FileDescriptorManager : DomainService
@@ -142,12 +142,15 @@ public class FileDescriptorManager : DomainService
     /// <param name="name">The caller's name for the file: the BLOB name it reads it back by. Its extension, if any, is
     /// checked against the content.</param>
     /// <param name="clientId">The OAuth client writing through the BLOB API, recorded on the descriptor.</param>
+    /// <param name="creatorId">The user the BLOB is counted for; <c>null</c> leaves it to ABP's auditing - the current
+    /// user, if there is one.</param>
     public virtual async Task<FileDescriptor> CreateAsync(
         string containerName,
         string name,
         Stream stream,
         bool overrideExisting = false,
         string? clientId = null,
+        Guid? creatorId = null,
         CancellationToken cancellationToken = default)
     {
         GetBlobManagementContainerConfiguration(containerName);
@@ -177,7 +180,9 @@ public class FileDescriptorManager : DomainService
         try
         {
             descriptor = await StoreOrShareAsync(
-                containerName, name, stream, clientId, nameIsAddress: true, configureFile: null, cancellationToken);
+                containerName, name, stream, clientId, nameIsAddress: true,
+                creatorId.HasValue ? file => file.CreatorId = creatorId : null,
+                cancellationToken);
         }
         catch
         {
@@ -199,8 +204,8 @@ public class FileDescriptorManager : DomainService
 
     /// <summary>
     /// Stores <paramref name="stream"/> as a new file named <paramref name="name"/> in the container
-    /// <paramref name="containerName"/>, under <paramref name="directoryId"/> (<c>null</c>: its top): how a person
-    /// uploads a file. The name need not be unique: the file is addressed by its id, and holds no
+    /// <paramref name="containerName"/>, under <paramref name="directoryId"/> (<c>null</c>: its top): how an
+    /// application stores a file for its user. The name need not be unique: the file is addressed by its id, and holds no
     /// <see cref="FileDescriptor.NameKey"/>. Otherwise it is stored as <see cref="CreateAsync"/> stores - allocation,
     /// buffering, detection, dedup under the dedup lock, compensation. One difference: when the container stores the
     /// upload in another format (a JPEG as WebP), the name takes that format's extension
@@ -215,12 +220,14 @@ public class FileDescriptorManager : DomainService
     /// shared with a descriptor that has them already: a caller that keeps fields of its own on the file (extra
     /// properties) sets them here, so the row is written once. It runs while the dedup lock is held, so it does no I/O;
     /// when it throws, the upload fails and nothing is stored.</param>
+    /// <param name="clientId">The OAuth client writing through the file API, recorded on the descriptor.</param>
     public virtual async Task<FileDescriptor> UploadAsync(
         string containerName,
         string name,
         Stream stream,
         Guid? directoryId = null,
         Action<FileDescriptor>? configureFile = null,
+        string? clientId = null,
         CancellationToken cancellationToken = default)
     {
         GetBlobManagementContainerConfiguration(containerName);
@@ -236,7 +243,7 @@ public class FileDescriptorManager : DomainService
         };
 
         return await StoreOrShareAsync(
-            containerName, name, stream, clientId: null, nameIsAddress: false, place, cancellationToken);
+            containerName, name, stream, clientId, nameIsAddress: false, place, cancellationToken);
     }
 
     /// <summary>

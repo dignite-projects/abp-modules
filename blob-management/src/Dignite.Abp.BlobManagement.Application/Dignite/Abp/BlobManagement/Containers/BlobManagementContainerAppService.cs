@@ -15,9 +15,9 @@ using Volo.Abp.Features;
 namespace Dignite.Abp.BlobManagement.Containers;
 
 /// <summary>
-/// The managed containers the Blob Management host declares, with what a client needs to offer an upload - the size
-/// cap, the allowed types, the image limits - read from the containers' own pipeline contributors rather than
-/// restated, and what the caller may do at the top of each. Part of the tenant's Blob Management: with
+/// The managed containers the Blob Management host declares, with what a file input needs to offer an upload - the
+/// size cap, the allowed types, the image limits - read from the containers' own pipeline contributors rather than
+/// restated, and what the caller may do with the directories of each. Part of the tenant's Blob Management: with
 /// <see cref="BlobManagementFeatures.Enable"/> off it refuses every call.
 /// </summary>
 [Authorize]

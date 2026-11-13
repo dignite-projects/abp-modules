@@ -148,8 +148,8 @@ jobs:
       - name: Run BlobManagement (HttpApi) tests
         run: dotnet test blob-management/test/Dignite.Abp.BlobManagement.HttpApi.Tests/Dignite.Abp.BlobManagement.HttpApi.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/blob-management
 
-      # The blob_* MCP tools: their registration in the blob namespace, and what they add to the file API's
-      # services (upload links, inline uploads), against substituted services.
+      # The blob_* MCP tools: their registration in the blob namespace, that each of them only reads, and what they
+      # add to the services they call (paging limits), against substituted services.
       - name: Run BlobManagement (Mcp) tests
         run: dotnet test blob-management/test/Dignite.Abp.BlobManagement.Mcp.Tests/Dignite.Abp.BlobManagement.Mcp.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/blob-management
 

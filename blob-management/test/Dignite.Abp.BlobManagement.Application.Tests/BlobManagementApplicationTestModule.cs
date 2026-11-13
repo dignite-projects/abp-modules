@@ -1,6 +1,5 @@
 ﻿using Dignite.Abp.BlobStoring.BlobManagement;
 using Dignite.Abp.BlobStoring.Pipeline;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.Modularity;
@@ -19,11 +18,11 @@ public class BlobManagementApplicationTestModule : AbpModule
     /// <summary>A container <c>BlobManagementContainerSettings_Tests</c> declares in configuration and this module overrides in code.</summary>
     public const string ConfiguredAndOverriddenContainer = "config-media";
 
+    /// <summary>The OAuth client the documents container allows; no other container allows any.</summary>
+    public const string AllowedClient = "site-app";
+
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
-        // The key ring a Blob Management host gets from ASP.NET Core: tickets are signed and read with it.
-        context.Services.AddSingleton<IDataProtectionProvider>(new EphemeralDataProtectionProvider());
-
         // Grants for the authorization tests, written as users and roles; the definitions stay in code.
         Configure<PermissionManagementOptions>(options =>
         {
@@ -41,6 +40,12 @@ public class BlobManagementApplicationTestModule : AbpModule
             options.Containers.Configure(ConfiguredAndOverriddenContainer, container =>
             {
                 container.GetBlobManagementContainerConfiguration().PublicRead = false;
+            });
+
+            // What the file API asks about a remote caller; the in-process services ask nothing.
+            options.Containers.Configure(BlobManagementTestContainers.Documents, container =>
+            {
+                container.GetBlobManagementContainerConfiguration().AllowedClientIds = new[] { AllowedClient };
             });
 
             // The application's side: its own containers, keeping their bytes in Blob Management in this process.

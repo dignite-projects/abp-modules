@@ -49,6 +49,87 @@ public class MongoFileDescriptorRepository : MongoDbRepository<IBlobManagementMo
             .SumAsync(b => b.Size, token);
     }
 
+    public virtual async Task<List<BlobManagementContainerUsage>> GetContainerUsagesAsync(CancellationToken cancellationToken = default)
+    {
+        var token = GetCancellationToken(cancellationToken);
+        var files = await GetQueryableAsync(token);
+
+        // The BLOBs of each container, as GetUsedStorageSizeAsync finds them, so the containers add up to the tenant.
+        var stored = await files
+            .Select(f => new { f.ContainerName, f.BlobName, f.Size })
+            .Distinct()
+            .GroupBy(b => b.ContainerName)
+            .Select(g => new { ContainerName = g.Key, StoredBytes = g.Sum(b => b.Size) })
+            .ToListAsync(token);
+
+        var counts = (await files
+                .GroupBy(f => f.ContainerName)
+                .Select(g => new { ContainerName = g.Key, FileCount = g.LongCount() })
+                .ToListAsync(token))
+            .ToDictionary(c => c.ContainerName, c => c.FileCount);
+
+        return stored
+            .Select(s => new BlobManagementContainerUsage
+            {
+                ContainerName = s.ContainerName,
+                StoredBytes = s.StoredBytes,
+                FileCount = counts.GetValueOrDefault(s.ContainerName)
+            })
+            .ToList();
+    }
+
+    public virtual async Task<List<BlobManagementCreatorUsage>> GetCreatorUsagesAsync(
+        string? containerName,
+        int skipCount,
+        int maxResultCount,
+        CancellationToken cancellationToken = default)
+    {
+        var token = GetCancellationToken(cancellationToken);
+        return await (await GetQueryableAsync(token))
+            .WhereIf(containerName != null, f => f.ContainerName == containerName)
+            .GroupBy(f => f.CreatorId)
+            .Select(g => new BlobManagementCreatorUsage
+            {
+                CreatorId = g.Key,
+                UploadedBytes = g.Sum(f => f.Size),
+                FileCount = g.LongCount()
+            })
+            // The id ends the order, so two pages never share or miss a user.
+            .OrderByDescending(u => u.UploadedBytes)
+            .ThenBy(u => u.CreatorId)
+            .PageBy(skipCount, maxResultCount)
+            .ToListAsync(token);
+    }
+
+    public virtual async Task<long> GetCreatorCountAsync(string? containerName, CancellationToken cancellationToken = default)
+    {
+        var token = GetCancellationToken(cancellationToken);
+        return await (await GetQueryableAsync(token))
+            .WhereIf(containerName != null, f => f.ContainerName == containerName)
+            .Select(f => f.CreatorId)
+            .Distinct()
+            .LongCountAsync(token);
+    }
+
+    public virtual async Task<List<BlobManagementClientUsage>> GetClientUsagesAsync(
+        string? containerName,
+        CancellationToken cancellationToken = default)
+    {
+        var token = GetCancellationToken(cancellationToken);
+        return await (await GetQueryableAsync(token))
+            .WhereIf(containerName != null, f => f.ContainerName == containerName)
+            .GroupBy(f => f.ClientId)
+            .Select(g => new BlobManagementClientUsage
+            {
+                ClientId = g.Key,
+                UploadedBytes = g.Sum(f => f.Size),
+                FileCount = g.LongCount()
+            })
+            .OrderByDescending(u => u.UploadedBytes)
+            .ThenBy(u => u.ClientId)
+            .ToListAsync(token);
+    }
+
     public virtual async Task<FileDescriptor?> FindByBlobNameAsync(
         string containerName,
         string blobName,

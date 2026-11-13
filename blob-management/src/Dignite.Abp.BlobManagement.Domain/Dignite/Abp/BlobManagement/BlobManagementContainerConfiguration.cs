@@ -12,7 +12,7 @@ namespace Dignite.Abp.BlobManagement;
 /// on the same container as usual.
 /// <para>
 /// There is one kind of managed container. An application saves BLOBs in it under names of its own (the BLOB storing
-/// provider, the BLOB API), people upload files to it (the file API), and the back office shows both.
+/// provider, the BLOB API) and keeps files in it by id (the file service), and the management page shows both.
 /// </para>
 /// </summary>
 public class BlobManagementContainerConfiguration
@@ -39,8 +39,8 @@ public class BlobManagementContainerConfiguration
     }
 
     /// <summary>
-    /// The OAuth clients that may read, write and delete in the container through the BLOB API. Empty: no remote client
-    /// may (in-process callers are trusted).
+    /// The OAuth clients that may read, write and delete in the container through the BLOB API and the file API. Empty:
+    /// no remote client may (in-process callers are trusted).
     /// </summary>
     public string[] AllowedClientIds
     {
@@ -49,7 +49,7 @@ public class BlobManagementContainerConfiguration
     }
 
     /// <summary>
-    /// Whether the container has a directory tree for the files people upload. Default: <c>false</c> - the files of the
+    /// Whether the container has a directory tree for the files kept in it by id. Default: <c>false</c> - the files of the
     /// container are one flat list, and every directory operation is refused
     /// (<see cref="BlobManagementErrorCodes.DirectoriesNotAllowed"/>).
     /// </summary>

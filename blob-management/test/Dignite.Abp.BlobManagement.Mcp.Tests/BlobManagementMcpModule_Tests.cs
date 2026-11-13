@@ -29,30 +29,23 @@ public class BlobManagementMcpModule_Tests
 
         provider.GetServices<McpServerTool>().Select(tool => tool.ProtocolTool.Name).OrderBy(name => name).ShouldBe(new[]
         {
-            "blob_create_directory",
-            "blob_create_upload_url",
-            "blob_delete_file",
             "blob_get_file",
             "blob_list_containers",
             "blob_list_directories",
-            "blob_list_files",
-            "blob_update_file",
-            "blob_upload_file"
+            "blob_list_files"
         });
     }
 
     [Fact]
-    public void Read_Only_And_Destructive_Tools_Should_Say_So()
+    public void Every_Tool_Should_Say_That_It_Only_Reads()
     {
+        // A file is its business system's to change, and a directory a user's on the management page: these tools read.
         using var provider = BuildProvider();
-        var tools = provider.GetServices<McpServerTool>().ToDictionary(tool => tool.ProtocolTool.Name);
 
-        foreach (var name in new[] { "blob_list_containers", "blob_get_file" })
+        foreach (var tool in provider.GetServices<McpServerTool>())
         {
-            tools[name].ProtocolTool.Annotations!.ReadOnlyHint.ShouldBe(true);
+            tool.ProtocolTool.Annotations!.ReadOnlyHint.ShouldBe(true, tool.ProtocolTool.Name);
         }
-
-        tools["blob_delete_file"].ProtocolTool.Annotations!.DestructiveHint.ShouldBe(true);
     }
 
     [Fact]
