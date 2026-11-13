@@ -42,7 +42,7 @@ those.
 * [Usage](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/blob-management/usage.md) - stored and
   uploaded bytes, by tenant, container, user and client.
 * [Permissions](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/blob-management/permissions.md) - the
-  management permission and the directory permissions, module-wide and on a container.
+  management permission and the directory permissions granted on a container.
 * [Angular UI](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/blob-management/angular-ui.md) - the
   management page.
 * [Importing Directories](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/blob-management/importing-directories.md) -

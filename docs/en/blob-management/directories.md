@@ -30,7 +30,7 @@ A container that allows directories holds one tree for each tenant.
 Authorization is the container's, for every directory in it ([Permissions](permissions.md)):
 
 * **See the tree**: `BlobManagement.Containers`, or `BlobManagement.Container.View` granted on the container.
-* **Create**, **rename and move**, **delete**: see the tree, and hold `BlobManagement.Containers.CreateDirectories`, `.UpdateDirectories` or `.DeleteDirectories`, or the same granted on the container (`BlobManagement.Container.CreateDirectories`, `.UpdateDirectories`, `.DeleteDirectories`).
+* **Create**, **rename and move**, **delete**: see the tree, and hold `BlobManagement.Container.CreateDirectories`, `.UpdateDirectories` or `.DeleteDirectories` granted on the container. No module-wide permission changes directories.
 
 What the caller may do is sent with each container as `access` (`view`, `createDirectories`, `updateDirectories`, `deleteDirectories`), so a UI offers each action only where it is allowed. A token without a user is allowed none of these.
 

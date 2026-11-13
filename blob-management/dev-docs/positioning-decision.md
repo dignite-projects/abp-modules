@@ -35,7 +35,7 @@ for each, and from that table come the tenant's allocation, the usage figures an
 |---|---|---|
 | An application | In process: trusted. Over HTTP: an OAuth client the container allows (`AllowedClientIds`), with a token that carries no user | BLOBs by name (`IBlobManagementBlobService`), files by id (`IBlobManagementFileService`) |
 | Anyone | The address of a file in a `PublicRead` container | Reads it, sized if it is a picture |
-| A user | A directory permission, module-wide or on the container | Creates, renames, moves and deletes directories |
+| A user | A directory permission granted on the container | Creates, renames, moves and deletes directories |
 | An administrator | `BlobManagement.Containers` | Reads: usage, containers, directories, files and their bytes |
 
 There is no API for an end user to store, change or remove a file, and none to read one without the management
@@ -70,8 +70,15 @@ fills with the application's current user. The module believes it because it bel
 The tree and its rules are unchanged. Authorization is the container's, for every directory in it:
 
 - **See the tree**: `BlobManagement.Containers`, or `BlobManagement.Container.View` on the container.
-- **Create, rename and move, delete**: the caller sees the tree and holds `BlobManagement.Containers.CreateDirectories`
-  / `.UpdateDirectories` / `.DeleteDirectories`, or the same granted on the container.
+- **Create, rename and move, delete**: the caller sees the tree and holds `BlobManagement.Container.CreateDirectories`
+  / `.UpdateDirectories` / `.DeleteDirectories`, granted on the container.
+
+There is no module-wide permission that changes directories. The three there were
+(`BlobManagement.Containers.CreateDirectories` and its siblings) went the same day, by the owner: they were this
+module's own, not ABP's - its resource-permission checker looks at the grant on the resource and has no module-wide
+fallback - and they made two ways to the same answer, one of which did nothing without the other (a module-wide
+permission in a container the caller could not see). A container is declared in the host's configuration, so it is
+granted on once; the holder of the management permission is granted like anyone else.
 
 Removed: a directory with permissions of its own (`IsRestricted`, the `Directory` resource permissions, the cleaner of
 its grants) and with it authorization by place. A restricted directory hid its files from those not granted on it; a

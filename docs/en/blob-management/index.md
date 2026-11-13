@@ -19,7 +19,7 @@ It serves business systems. It has no upload of its own and is not shown to ordi
 |---|---|---|
 | An application | In the same process: trusted. Over HTTP: an OAuth client the container allows (`AllowedClientIds`), with a token that carries no user. | Stores and reads BLOBs by name ([Using It From an Application](provider.md)) and files by id ([Keeping Files by Id](files.md)). |
 | Anyone | The address of a file in a `PublicRead` container. | Reads it, resized if it is a picture ([Public Addresses](provider.md#public-addresses)). |
-| A user | A directory permission, module-wide or granted on the container. | Creates, renames, moves and deletes directories ([Directories](directories.md)). |
+| A user | A directory permission granted on the container. | Creates, renames, moves and deletes directories ([Directories](directories.md)). |
 | An administrator | `BlobManagement.Containers`. | Reads the usage, the containers, their directories and files, and the files' bytes ([Usage](usage.md), [Angular UI](angular-ui.md)). |
 
 No API lets an end user store, change or remove a file, and none lets a user read one without the management permission ([Permissions](permissions.md)).
@@ -76,7 +76,7 @@ Every file has a record, a *file descriptor*: the container, its name, the physi
 * [Hosting Modes](hosting.md): one host, or Blob Management as its own service, and what the second needs.
 * [Directories](directories.md): containers that allow directories, the tree, and the directory API.
 * [Usage](usage.md): stored and uploaded bytes, by tenant, container, user and client.
-* [Permissions](permissions.md): the module-wide permissions, grants on a container, and who may do what.
+* [Permissions](permissions.md): the management permission, grants on a container, and who may do what.
 * [Angular UI](angular-ui.md): the management page and its parts.
 * [Importing a Directory Tree](importing-directories.md): filing existing files into directories by a path they carry.
 

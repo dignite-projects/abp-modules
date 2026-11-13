@@ -1,7 +1,7 @@
 ```json
 //[doc-seo]
 {
-    "Description": "Dignite Blob Management permissions: the management permission BlobManagement.Containers, the directory permissions module-wide and granted on one container, and how applications are authorized by the container's allowed clients instead."
+    "Description": "Dignite Blob Management permissions: the management permission BlobManagement.Containers, the directory permissions granted on a container, and how applications are authorized by the container's allowed clients instead."
 }
 ```
 
@@ -13,7 +13,7 @@ Blob Management's permissions authorize **users**, for the two things a user doe
 
 Files are an application's. An application that stores through the [provider](provider.md) or the [file service](files.md) is authorized by the container's `AllowedClientIds` - or trusted, in the same process - and uses none of these permissions; its own rules run before it calls. No permission lets a user store, rename, move or delete a file.
 
-There are two levels: **module-wide** permissions, granted to roles and users in ABP's permission dialog, and the same **granted on one container**.
+Reading is **module-wide**: one permission, granted to roles and users in ABP's permission dialog. Keeping directories is **granted on a container**, and nowhere else: no permission creates, renames or deletes directories in every container.
 
 ## Module-Wide Permissions
 
@@ -21,10 +21,7 @@ In the `BlobManagement` group of ABP's permission management:
 
 | Permission | |
 |---|---|
-| `BlobManagement.Containers` | The management permission: enter the management page and read everything there - the usage, every container, its directories, its files and their bytes. |
-| `BlobManagement.Containers.CreateDirectories` | Create directories in every container. |
-| `BlobManagement.Containers.UpdateDirectories` | Rename and move directories. |
-| `BlobManagement.Containers.DeleteDirectories` | Delete (empty) directories. |
+| `BlobManagement.Containers` | The management permission: enter the management page and read everything there - the usage, every container, its directories, its files and their bytes. It changes nothing. |
 | `BlobManagement.ManagePermissions` | Manage the grants on containers. An administrator's permission: whoever holds it can grant themselves anything. |
 
 ## Grants on a Container
@@ -36,9 +33,9 @@ A [resource permission](https://abp.io/docs/latest/modules/permission-management
 | `BlobManagement.Container.View` | See the container's directory tree. The other three count only with it, or with the management permission. |
 | `BlobManagement.Container.CreateDirectories` | Create directories in it. |
 | `BlobManagement.Container.UpdateDirectories` | Rename and move its directories. |
-| `BlobManagement.Container.DeleteDirectories` | Delete its directories. |
+| `BlobManagement.Container.DeleteDirectories` | Delete its (empty) directories. |
 
-A grant on a container is the module-wide directory permission limited to that container. This is how a role keeps the directories of one container without the management permission: grant it `BlobManagement.Container.View` and the directory permissions it needs on that container.
+A role keeps the directories of a container by these grants alone: `BlobManagement.Container.View` and the directory permissions it needs, on that container. A holder of the management permission sees every tree already, and needs the directory permissions granted on a container like anyone else - a container is added to the host's configuration, and is granted on once.
 
 ## Who May Do What
 
@@ -46,7 +43,7 @@ A grant on a container is the module-wide directory permission limited to that c
 |---|---|
 | Read the usage, and list and read files | `BlobManagement.Containers` |
 | See a container's directory tree | `BlobManagement.Containers`, or `BlobManagement.Container.View` on it |
-| Create, rename and move, delete directories | Seeing the tree, and the module-wide permission or the one granted on the container |
+| Create, rename and move, delete directories | Seeing the tree, and the permission for it granted on the container |
 | Manage the grants on a container | `BlobManagement.ManagePermissions` |
 
 * The answer is the **container's**, the same for every directory in it: no directory has permissions of its own, and no file has any.

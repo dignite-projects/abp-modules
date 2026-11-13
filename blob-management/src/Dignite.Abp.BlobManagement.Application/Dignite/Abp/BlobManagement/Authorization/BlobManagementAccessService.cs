@@ -17,13 +17,14 @@ namespace Dignite.Abp.BlobManagement.Authorization;
 /// users is worked out, for the application services.
 /// <para>
 /// The caller sees a container's directory tree with the management permission, or with the view permission granted
-/// on the container; and creates, renames and moves, or deletes directories there with the module-wide permission for
-/// it, or with the one granted on the container. The answer is the container's: no directory has permissions of its
-/// own, so nothing is asked for a directory, let alone for a file.
+/// on the container; and creates, renames and moves, or deletes directories there with the permission for it granted
+/// on the container - and only so: the management permission reads, and no module-wide permission changes directories.
+/// The answer is the container's: no directory has permissions of its own, so nothing is asked for a directory, let
+/// alone for a file.
 /// </para>
 /// <para>
 /// ABP's resource-permission checker answers one question: is this permission granted on this one resource. It is
-/// asked here once per container and request, after the module-wide permissions are read once.
+/// asked here once per container and request, after the management permission is read once.
 /// </para>
 /// <para>
 /// Only users get access: a principal without a user id - a client-credentials token - is allowed nothing. A client
@@ -32,14 +33,6 @@ namespace Dignite.Abp.BlobManagement.Authorization;
 /// </summary>
 public class BlobManagementAccessService : ITransientDependency
 {
-    protected static readonly string[] ModuleWidePermissions =
-    {
-        BlobManagementPermissions.Containers.Default,
-        BlobManagementPermissions.Containers.CreateDirectories,
-        BlobManagementPermissions.Containers.UpdateDirectories,
-        BlobManagementPermissions.Containers.DeleteDirectories
-    };
-
     protected static readonly string[] ContainerPermissions =
     {
         BlobManagementPermissions.Container.View,
@@ -65,22 +58,17 @@ public class BlobManagementAccessService : ITransientDependency
     }
 
     /// <summary>
-    /// Starts answering for the current principal: reads the module-wide permissions, once. The context is then asked
+    /// Starts answering for the current principal: reads the management permission, once. The context is then asked
     /// about any container.
     /// </summary>
     public virtual async Task<BlobManagementAccessContext> BeginAsync()
     {
         var principal = PrincipalAccessor.Principal;
         var context = new BlobManagementAccessContext(principal, principal?.FindUserId());
-        if (context.UserId == null)
+        if (context.UserId != null)
         {
-            return context;
-        }
-
-        var result = await PermissionChecker.IsGrantedAsync(principal, ModuleWidePermissions);
-        foreach (var permission in result.Result.Where(r => r.Value == PermissionGrantResult.Granted))
-        {
-            context.ModuleWide.Add(permission.Key);
+            context.HasManagementPermission =
+                await PermissionChecker.IsGrantedAsync(principal, BlobManagementPermissions.Containers.Default);
         }
 
         return context;
@@ -97,8 +85,7 @@ public class BlobManagementAccessService : ITransientDependency
             return false;
         }
 
-        return context.ModuleWide.Contains(BlobManagementPermissions.Containers.Default) ||
-               (await GetContainerGrantsAsync(context, containerName)).Count > 0;
+        return context.HasManagementPermission || (await GetContainerGrantsAsync(context, containerName)).Count > 0;
     }
 
     /// <summary>What the caller may do with the directories of <paramref name="containerName"/>.</summary>
@@ -109,18 +96,13 @@ public class BlobManagementAccessService : ITransientDependency
             return BlobManagementAccess.None;
         }
 
-        var moduleWide = context.ModuleWide;
         var container = await GetContainerGrantsAsync(context, containerName);
 
         return new BlobManagementAccess(
-            view: moduleWide.Contains(BlobManagementPermissions.Containers.Default) ||
-                  container.Contains(BlobManagementPermissions.Container.View),
-            createDirectories: moduleWide.Contains(BlobManagementPermissions.Containers.CreateDirectories) ||
-                               container.Contains(BlobManagementPermissions.Container.CreateDirectories),
-            updateDirectories: moduleWide.Contains(BlobManagementPermissions.Containers.UpdateDirectories) ||
-                               container.Contains(BlobManagementPermissions.Container.UpdateDirectories),
-            deleteDirectories: moduleWide.Contains(BlobManagementPermissions.Containers.DeleteDirectories) ||
-                               container.Contains(BlobManagementPermissions.Container.DeleteDirectories));
+            view: context.HasManagementPermission || container.Contains(BlobManagementPermissions.Container.View),
+            createDirectories: container.Contains(BlobManagementPermissions.Container.CreateDirectories),
+            updateDirectories: container.Contains(BlobManagementPermissions.Container.UpdateDirectories),
+            deleteDirectories: container.Contains(BlobManagementPermissions.Container.DeleteDirectories));
     }
 
     /// <summary>The permissions granted on one container, asked once per context.</summary>
@@ -154,8 +136,8 @@ public class BlobManagementAccessContext
 
     public Guid? UserId { get; }
 
-    /// <summary>The module-wide permissions the caller holds.</summary>
-    public HashSet<string> ModuleWide { get; } = new(StringComparer.Ordinal);
+    /// <summary>Whether the caller holds the management permission: reads everything, in every container.</summary>
+    public bool HasManagementPermission { get; set; }
 
     /// <summary>The grants read so far, by container.</summary>
     public Dictionary<string, HashSet<string>> Grants { get; } = new(StringComparer.Ordinal);

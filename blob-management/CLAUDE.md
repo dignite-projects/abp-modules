@@ -108,7 +108,8 @@ imports the root one, so the lockstep `<Version>` applies.
    upload links (a direct upload, if a remote deployment ever needs one, can only be built here - only the module can
    verify it), and no trusted way for an application to write directories past the permissions on them.
 3. **A user's authorization is the container's, never an item's.** What a user may do with directories is the
-   module-wide permission or the one granted on that container, the same for every directory in it: a listing asks
+   permission granted on that container - no module-wide permission changes directories; the management permission
+   reads, and lets its holder see every tree - and it is the same for every directory in it: a listing asks
    the grant store once, for the container (`A_Listing_Should_Ask_The_Grant_Store_For_The_Container_Not_For_Each_Directory`).
    No directory has permissions of its own, no grants on a file, no owners, no creator's rights - `CreatorId` is who a
    file is counted for and gives nothing. A directory's visibility cannot be the module's to enforce: file listings

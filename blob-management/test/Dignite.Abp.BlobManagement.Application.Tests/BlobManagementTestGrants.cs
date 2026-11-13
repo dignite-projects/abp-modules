@@ -27,7 +27,7 @@ public static class BlobManagementTestGrants
             new[] { new Claim(AbpClaimTypes.ClientId, clientId) }, "Test")));
     }
 
-    /// <summary>Grants module-wide permissions to a user.</summary>
+    /// <summary>Grants module-wide permissions - reading, managing grants - to a user.</summary>
     public static async Task GrantAsync(this IPermissionManager permissionManager, Guid userId, params string[] permissions)
     {
         foreach (var permission in permissions)

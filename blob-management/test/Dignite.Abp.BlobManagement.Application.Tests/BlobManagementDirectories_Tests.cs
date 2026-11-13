@@ -170,21 +170,27 @@ public abstract class BlobManagementDirectories_Tests<TStartupModule> : BlobMana
     }
 
     [Fact]
-    public async Task A_Module_Wide_Directory_Permission_Should_Count_In_A_Container_The_Caller_Sees()
+    public async Task The_Management_Permission_Should_See_Every_Tree_And_Change_None()
     {
-        await WithUnitOfWorkAsync(() => GetRequiredService<IPermissionManager>()
-            .GrantAsync(_alice, BlobManagementPermissions.Containers.CreateDirectories));
+        // Every module-wide permission there is: none of them creates, renames or deletes a directory.
+        await WithUnitOfWorkAsync(() => GetRequiredService<IPermissionManager>().GrantAsync(_alice, BlobManagementPermissions.GetAll()));
 
-        // Module-wide, but still only where the caller sees the tree.
         using (_principalAccessor.As(_alice))
         {
+            (await ListAsync(null)).ShouldBeEmpty();
             await Should.ThrowAsync<AbpAuthorizationException>(() => CreateAsync("Mine", null));
         }
 
-        await GrantOnContainerAsync(_alice, BlobManagementPermissions.Container.View);
+        // Granted on the container, it does - and the management permission is what lets it see the tree.
+        await GrantOnContainerAsync(_alice, BlobManagementPermissions.Container.CreateDirectories);
         using (_principalAccessor.As(_alice))
         {
-            (await CreateAsync("Mine", null)).Name.ShouldBe("Mine");
+            var mine = await CreateAsync("Mine", null);
+            await Should.ThrowAsync<AbpAuthorizationException>(() => _directories.DeleteAsync(mine.Id));
+
+            // On that container only.
+            await Should.ThrowAsync<AbpAuthorizationException>(() => _directories.CreateAsync(
+                new CreateBlobManagementDirectoryInput { ContainerName = BlobManagementTestContainers.Archive, Name = "Mine" }));
         }
     }
 
@@ -253,10 +259,22 @@ public abstract class BlobManagementDirectories_Tests<TStartupModule> : BlobMana
         });
     }
 
-    /// <summary>The management permission with all of its children, and managing permissions.</summary>
-    private Task GrantAdminAsync()
+    /// <summary>
+    /// The management permission, and every directory permission on the two containers that have directories: there
+    /// is no permission that keeps the directories of every container.
+    /// </summary>
+    private async Task GrantAdminAsync()
     {
-        return WithUnitOfWorkAsync(() => GetRequiredService<IPermissionManager>().GrantAsync(_admin, BlobManagementPermissions.GetAll()));
+        await WithUnitOfWorkAsync(() => GetRequiredService<IPermissionManager>().GrantAsync(_admin, BlobManagementPermissions.GetAll()));
+        foreach (var container in new[] { Container, BlobManagementTestContainers.Archive })
+        {
+            await WithUnitOfWorkAsync(() => GetRequiredService<IResourcePermissionManager>().GrantOnContainerAsync(
+                container,
+                _admin,
+                BlobManagementPermissions.Container.CreateDirectories,
+                BlobManagementPermissions.Container.UpdateDirectories,
+                BlobManagementPermissions.Container.DeleteDirectories));
+        }
     }
 
     private Task GrantOnContainerAsync(Guid userId, params string[] permissions)

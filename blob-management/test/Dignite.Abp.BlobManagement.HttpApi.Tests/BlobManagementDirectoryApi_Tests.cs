@@ -40,10 +40,7 @@ public class BlobManagementDirectoryApi_Tests : AbpWebApplicationFactoryIntegrat
     [Fact]
     public async Task A_User_Should_Keep_Directories_And_An_Application_The_Files_In_Them()
     {
-        foreach (var permission in BlobManagementPermissions.GetAll())
-        {
-            await GrantAsync(permission, _user);
-        }
+        await GrantDirectoryPermissionsAsync(_user);
 
         BlobManagementDirectoryDto docs;
         BlobManagementDirectoryDto year;
@@ -106,10 +103,7 @@ public class BlobManagementDirectoryApi_Tests : AbpWebApplicationFactoryIntegrat
     [Fact]
     public async Task The_Directory_APIs_Errors_Should_Have_Their_Statuses()
     {
-        foreach (var permission in BlobManagementPermissions.GetAll())
-        {
-            await GrantAsync(permission, _user);
-        }
+        await GrantDirectoryPermissionsAsync(_user);
 
         using (TestCaller.As(UiClient, _user))
         {
@@ -127,12 +121,41 @@ public class BlobManagementDirectoryApi_Tests : AbpWebApplicationFactoryIntegrat
                 BlobManagementErrorCodes.DirectoriesNotAllowed);
         }
 
+        // The management permission reads the tree and changes nothing in it.
+        var reader = Guid.NewGuid();
+        await GrantAsync(BlobManagementPermissions.Containers.Default, reader);
+        using (TestCaller.As(UiClient, reader))
+        {
+            (await _directories.GetListAsync(new GetBlobManagementDirectoriesInput { ContainerName = Container })).Items.ShouldNotBeEmpty();
+            await ShouldFailAsync(HttpStatusCode.Forbidden,
+                () => _directories.CreateAsync(new CreateBlobManagementDirectoryInput { ContainerName = Container, Name = "Mine" }));
+        }
+
         // Without a grant the container's tree is not shown.
         using (TestCaller.As(UiClient, Guid.NewGuid()))
         {
             await ShouldFailAsync(HttpStatusCode.Forbidden,
                 () => _directories.GetListAsync(new GetBlobManagementDirectoriesInput { ContainerName = Container }));
         }
+    }
+
+    /// <summary>Seeing the tree of the documents container and every directory permission, granted on that container.</summary>
+    private async Task GrantDirectoryPermissionsAsync(Guid userId)
+    {
+        using var uow = GetRequiredService<IUnitOfWorkManager>().Begin();
+        foreach (var permission in new[]
+                 {
+                     BlobManagementPermissions.Container.View,
+                     BlobManagementPermissions.Container.CreateDirectories,
+                     BlobManagementPermissions.Container.UpdateDirectories,
+                     BlobManagementPermissions.Container.DeleteDirectories
+                 })
+        {
+            await GetRequiredService<IResourcePermissionGrantRepository>().InsertAsync(new ResourcePermissionGrant(
+                GetRequiredService<IGuidGenerator>().Create(), permission, BlobManagementResourceNames.Container, Container, "U", userId.ToString()));
+        }
+
+        await uow.CompleteAsync();
     }
 
     private async Task GrantAsync(string permission, Guid userId)

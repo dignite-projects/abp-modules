@@ -5,8 +5,9 @@ using Volo.Abp.Localization;
 namespace Dignite.Abp.BlobManagement.Permissions;
 
 /// <summary>
-/// The <c>BlobManagement</c> group: the module-wide permissions, and the resource permissions on a container. A
-/// consumer may re-point who manages the resource grants in its own provider
+/// The <c>BlobManagement</c> group: the two module-wide permissions - reading, and managing grants - and the resource
+/// permissions on a container, which are the only ones that change directories. A consumer may re-point who manages
+/// the resource grants in its own provider
 /// (<c>context.GetResourcePermissionOrNull(...).ManagementPermissionName = ...</c>).
 /// </summary>
 public class BlobManagementPermissionDefinitionProvider : PermissionDefinitionProvider
@@ -15,10 +16,7 @@ public class BlobManagementPermissionDefinitionProvider : PermissionDefinitionPr
     {
         var group = context.AddGroup(BlobManagementPermissions.GroupName, L("Permission:BlobManagement"));
 
-        var containers = group.AddPermission(BlobManagementPermissions.Containers.Default, L("Permission:Containers"));
-        containers.AddChild(BlobManagementPermissions.Containers.CreateDirectories, L("Permission:CreateDirectories"));
-        containers.AddChild(BlobManagementPermissions.Containers.UpdateDirectories, L("Permission:UpdateDirectories"));
-        containers.AddChild(BlobManagementPermissions.Containers.DeleteDirectories, L("Permission:DeleteDirectories"));
+        group.AddPermission(BlobManagementPermissions.Containers.Default, L("Permission:Containers"));
 
         group.AddPermission(BlobManagementPermissions.ManagePermissions, L("Permission:ManagePermissions"));
 

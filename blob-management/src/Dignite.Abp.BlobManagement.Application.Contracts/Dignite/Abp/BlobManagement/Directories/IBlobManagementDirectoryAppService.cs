@@ -7,8 +7,8 @@ namespace Dignite.Abp.BlobManagement.Directories;
 
 /// <summary>
 /// The directories of the containers that allow them, for signed-in users: the one thing Blob Management lets a user
-/// change, so that a business system need not build it. What a caller may do is the container's permission - the
-/// module-wide one, or the one granted on that container - for every directory in it.
+/// change, so that a business system need not build it. What a caller may do is the permission granted on the
+/// container, for every directory in it.
 /// </summary>
 public interface IBlobManagementDirectoryAppService : IApplicationService
 {
