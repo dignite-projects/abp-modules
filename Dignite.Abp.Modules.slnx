@@ -30,7 +30,6 @@
     <Project Path="blob-management/src/Dignite.Abp.BlobManagement.HttpApi/Dignite.Abp.BlobManagement.HttpApi.csproj" />
     <Project Path="blob-management/src/Dignite.Abp.BlobManagement.HttpApi.Client/Dignite.Abp.BlobManagement.HttpApi.Client.csproj" />
     <Project Path="blob-management/src/Dignite.Abp.BlobManagement.Installer/Dignite.Abp.BlobManagement.Installer.csproj" />
-    <Project Path="blob-management/src/Dignite.Abp.BlobManagement.Mcp/Dignite.Abp.BlobManagement.Mcp.csproj" />
     <Project Path="blob-management/src/Dignite.Abp.BlobManagement.MongoDB/Dignite.Abp.BlobManagement.MongoDB.csproj" />
   </Folder>
   <Folder Name="/blob-management/test/">
@@ -38,7 +37,6 @@
     <Project Path="blob-management/test/Dignite.Abp.BlobManagement.Domain.Tests/Dignite.Abp.BlobManagement.Domain.Tests.csproj" />
     <Project Path="blob-management/test/Dignite.Abp.BlobManagement.EntityFrameworkCore.Tests/Dignite.Abp.BlobManagement.EntityFrameworkCore.Tests.csproj" />
     <Project Path="blob-management/test/Dignite.Abp.BlobManagement.HttpApi.Tests/Dignite.Abp.BlobManagement.HttpApi.Tests.csproj" />
-    <Project Path="blob-management/test/Dignite.Abp.BlobManagement.Mcp.Tests/Dignite.Abp.BlobManagement.Mcp.Tests.csproj" />
     <Project Path="blob-management/test/Dignite.Abp.BlobManagement.MongoDB.Tests/Dignite.Abp.BlobManagement.MongoDB.Tests.csproj" />
     <Project Path="blob-management/test/Dignite.Abp.BlobManagement.TestBase/Dignite.Abp.BlobManagement.TestBase.csproj" />
   </Folder>

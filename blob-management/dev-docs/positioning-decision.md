@@ -56,7 +56,7 @@ moved.
 `IBlobManagementFileService` follows `IBlobManagementBlobService`: the in-process implementation is trusted and never
 exposed over HTTP; `IBlobManagementFileAppService` is the same contract behind an authorization, at
 `api/blob-management/files`. That endpoint admits two callers: an allowed client, for everything; a user who holds the
-management permission, for the reads - so the administrator's page and the MCP tools need no second file service.
+management permission, for the reads - so the administrator's page needs no second file service.
 
 ### The uploader
 
@@ -100,8 +100,13 @@ without one, by id.
 
 - Tickets, all three kinds: issuing, redeeming, `IBlobManagementTicketClient`, the upload link.
 - The file API for users, the explorer, the file picker and the file input of `@dignite/ng.blob-management`.
-- From the MCP module, every tool that writes: `blob_create_directory`, `blob_create_upload_url`, `blob_upload_file`,
-  `blob_update_file`, `blob_delete_file`.
+- The MCP module (`Dignite.Abp.BlobManagement.Mcp`, the `blob_*` tools), whole. First the tools that write went, with
+  the user-facing file API; then, the same day, the four that read. The module's callers are business systems and an
+  administrator at a page - no assistant acting for a user is among them; what the tools still showed was files
+  without the business record they belong to, which a business system's own MCP tools show with it; and in a host that
+  reaches Blob Management remotely the file tools would have read as the application's client, not as the signed-in
+  user. Nothing was published, so nothing is retired; a package can be added later, when there is something for an
+  assistant to ask here - the usage, most likely.
 - Deleting or changing a file from the administrator's page: a file belongs to the business record that refers to it.
 
 ## Surface
@@ -111,7 +116,6 @@ without one, by id.
 - `IBlobManagementDirectoryAppService`: list a level, one directory, create, rename, move, delete.
 - `IBlobManagementUsageAppService`: the tenant and its containers; by user; by client.
 - Public reads with sizing, on a `PublicRead` container.
-- MCP module `blob`: `blob_list_containers`, `blob_list_directories`, `blob_list_files`, `blob_get_file`.
 - `@dignite/ng.blob-management`: the management page - usage, containers, the directory tree with its operations, the
   files of a place, read only.
 

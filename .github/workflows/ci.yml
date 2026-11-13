@@ -148,11 +148,6 @@ jobs:
       - name: Run BlobManagement (HttpApi) tests
         run: dotnet test blob-management/test/Dignite.Abp.BlobManagement.HttpApi.Tests/Dignite.Abp.BlobManagement.HttpApi.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/blob-management
 
-      # The blob_* MCP tools: their registration in the blob namespace, that each of them only reads, and what they
-      # add to the services they call (paging limits), against substituted services.
-      - name: Run BlobManagement (Mcp) tests
-        run: dotnet test blob-management/test/Dignite.Abp.BlobManagement.Mcp.Tests/Dignite.Abp.BlobManagement.Mcp.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/blob-management
-
       # Coverage is uploaded to Codecov from the separate upload-coverage job below, not here:
       # codecov-action's upload latency is dominated by Codecov's own service (observed anywhere from
       # 2s to 4.5min per call, most likely tokenless-upload rate limiting - see the comment on that

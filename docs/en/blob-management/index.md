@@ -65,7 +65,6 @@ Every file has a record, a *file descriptor*: the container, its name, the physi
 | `Dignite.Abp.BlobManagement.Application.Contracts`, `.Application` | `IBlobManagementBlobService` and `IBlobManagementFileService` with their in-process implementations, the container, directory and usage services and their authorization, the permissions, startup checks, public reads. |
 | `Dignite.Abp.BlobManagement.HttpApi`, `.HttpApi.Client` | The HTTP API, and the C# client proxies a host uses to reach a remote Blob Management. |
 | `Dignite.Abp.BlobManagement.EntityFrameworkCore`, `.MongoDB` | The database providers. |
-| `Dignite.Abp.BlobManagement.Mcp` | Read-only [MCP tools](mcp.md) over the containers, directories and files. |
 | `Dignite.Abp.BlobManagement.Installer` | The entry point ABP Studio and ABP Suite install the module through. |
 | `@dignite/ng.blob-management` | [Angular UI](angular-ui.md): the management page - usage, directories, files read-only. |
 
@@ -79,7 +78,6 @@ Every file has a record, a *file descriptor*: the container, its name, the physi
 * [Usage](usage.md): stored and uploaded bytes, by tenant, container, user and client.
 * [Permissions](permissions.md): the module-wide permissions, grants on a container, and who may do what.
 * [Angular UI](angular-ui.md): the management page and its parts.
-* [MCP Tools](mcp.md): the read-only `blob_*` tools for AI assistants.
 * [Importing a Directory Tree](importing-directories.md): filing existing files into directories by a path they carry.
 
 ## See Also

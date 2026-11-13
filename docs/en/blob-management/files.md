@@ -87,7 +87,7 @@ A file stored over HTTP also records the client that stored it (`clientId`).
 The file service over HTTP is `IBlobManagementFileAppService`, at `api/blob-management/files`. It admits two callers:
 
 * **an OAuth client the file's container allows**, with a token that carries no user - for everything. A file in a container the client may not use is not found;
-* **a user who holds `BlobManagement.Containers`** - for the reads only: the listing, one file and its bytes. This is what the [management page](angular-ui.md#the-management-page) and the [MCP tools](mcp.md) read with.
+* **a user who holds `BlobManagement.Containers`** - for the reads only: the listing, one file and its bytes. This is what the [management page](angular-ui.md#the-management-page) reads with.
 
 No user stores, renames, moves or deletes a file here.
 

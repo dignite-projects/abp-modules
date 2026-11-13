@@ -7,8 +7,8 @@ as one service.
 
 > **Status: in development, not yet published.** Built: the provider and the file service applications store through,
 > the managed containers and their presets, the tenant storage allocation and the usage figures, content
-> de-duplication, the HTTP API, public read with image sizing, directories where a container allows them, an Angular
-> management page and read-only MCP tools.
+> de-duplication, the HTTP API, public read with image sizing, directories where a container allows them, and an
+> Angular management page.
 
 An application keeps its own rules and calls Blob Management for its users:
 `container.UseBlobManagement(provider => provider.BlobManagementContainer = "media")` makes any of its BLOB containers
@@ -45,7 +45,5 @@ those.
   management permission and the directory permissions, module-wide and on a container.
 * [Angular UI](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/blob-management/angular-ui.md) - the
   management page.
-* [MCP Tools](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/blob-management/mcp.md) - the read-only
-  `blob_*` tools for AI assistants.
 * [Importing Directories](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/blob-management/importing-directories.md) -
   bringing an application's own file library in.

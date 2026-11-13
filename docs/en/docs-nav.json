@@ -87,10 +87,6 @@
           "path": "blob-management/angular-ui.md"
         },
         {
-          "text": "MCP Tools",
-          "path": "blob-management/mcp.md"
-        },
-        {
           "text": "Importing a Directory Tree",
           "path": "blob-management/importing-directories.md"
         }

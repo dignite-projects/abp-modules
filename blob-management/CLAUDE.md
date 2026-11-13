@@ -40,8 +40,7 @@ edition, one kind of container, the names). What they kept of the storage tier w
   its own file library in.
 - Usage: `IBlobManagementUsageAppService` under `api/blob-management/usage` - the tenant and each container (stored
   bytes), each user and each client (uploaded bytes) - on the descriptor repository's usage queries.
-- `Dignite.Abp.BlobManagement.Mcp`: the `blob_*` tools, which only read. `@dignite/ng.blob-management`: the management
-  page (`blob-management-page`, routed by `createRoutes()` behind `BlobManagement.Containers`: usage, then one container
+- `@dignite/ng.blob-management`: the management page (`blob-management-page`, routed by `createRoutes()` behind `BlobManagement.Containers`: usage, then one container
   at a time - its directory tree with its operations, its files read-only), its parts (`blob-usage`, `blob-browser`,
   `blob-directory-tree`, `blob-file-list`, `blob-file-preview`), the proxies, and `provideBlobManagementConfig()` in
   the `/config` entry point.
@@ -65,14 +64,13 @@ One `.slnx` — `Dignite.Abp.BlobManagement.slnx`:
   | `Dignite.Abp.BlobManagement.Application` | The in-process `IBlobManagementBlobService` and `IBlobManagementFileService`, the application services and their authorization, usage, public reads | `Domain`, `Application.Contracts`, `Volo.Abp.Users.Abstractions` (only for `IExternalUserLookupServiceProvider`, resolved optionally to name the users of the usage figures) |
   | `Dignite.Abp.BlobManagement.HttpApi` / `.HttpApi.Client` | BLOB API, file API, container, directory and usage APIs, public read / static proxies, incl. the remote `IBlobManagementBlobService` and `IBlobManagementFileService` | `Application.Contracts` |
   | `Dignite.Abp.BlobManagement.EntityFrameworkCore` / `.MongoDB` | `BlobManagementDbProperties.DbTablePrefix = "Blob"` (`BlobFileDescriptors`, `BlobDirectoryDescriptors`), `ConnectionStringName = "BlobManagement"`, `ConfigureBlobManagement()` | `Domain` |
-  | `Dignite.Abp.BlobManagement.Mcp` | The `blob_*` tools over the container, file and directory services; every tool reads | `Application.Contracts`, `aspnetcore-mcp/` |
   | `Dignite.Abp.BlobManagement.Installer` | ABP Studio / Suite install entry point, embeds `Dignite.Abp.BlobManagement.abpmdl` | `Volo.Abp.VirtualFileSystem` |
 
 - **`test/`** — `TestBase` (`IsTestProject=false`, shared base classes), `Domain.Tests` / `Application.Tests`
   (provider-agnostic scenarios, abstract), `EntityFrameworkCore.Tests` (SQLite) and `MongoDB.Tests` (embedded mongod),
   which run those scenarios by project reference, `HttpApi.Tests` (a TestServer host that runs the module as a service
-  and calls it over HTTP through the C# client proxies, as a client and as a user) and `Mcp.Tests` (the `blob_*` tools
-  against substituted services). The last four are the ones `dotnet test` and CI run.
+  and calls it over HTTP through the C# client proxies, as a client and as a user). The last three are the ones
+  `dotnet test` and CI run.
 - **`host/`** — demo host (`Dignite.Abp.BlobManagement.Host`), local development only, never packed:
   `dotnet run --project host/Dignite.Abp.BlobManagement.Host`. Its own `Directory.Build.props` /
   `Directory.Packages.props` opt it out of the repo-root central package management. It installs the module in-process
@@ -135,15 +133,15 @@ imports the root one, so the lockstep `<Version>` applies.
    `Dignite.Abp.BlobManagement.HttpApi.Client` (remote). The two behave alike for a caller, down to the user a file is
    counted for: the application's current user, which the remote services send since the client's token carries none.
 9. **The dependency edge is `blob-management/` to `blob-storing/`, one way.** `blob-storing/` never learns of this
-   module and its "what stays out" (no upload entry point, metadata, API, UI or permissions) is unchanged.
-   `Dignite.Abp.BlobManagement.Mcp` may reference `aspnetcore-mcp/`, never the reverse. See root `CLAUDE.md`,
-   invariant 2.
+   module and its "what stays out" (no upload entry point, metadata, API, UI or permissions) is unchanged. Nothing
+   here references `aspnetcore-mcp/` since the module's MCP tools were removed. See root `CLAUDE.md`, invariant 2.
 10. **It stays a BLOB management module.** Personal drives, sharing a file with a user or by link, a trash - what makes
     a cloud drive - are not added here; an application that needs them has ABP's File Management. Neither is a file UI
-    for end users: the management page reads, and its MCP tools read.
+    for end users - the management page reads - nor tools for an AI assistant: a business system contributes its own
+    MCP tools, which know the record a file belongs to, and calls the file service from them.
 11. **Names are contracts once published** (nothing is yet): the package IDs, `@dignite/ng.blob-management`, the
     permission and feature group `BlobManagement`, the permission names, the remote service name, `api/blob-management`,
-    the `blob_` MCP prefix, the `Blob` table prefix and the `BlobManagement` connection string name, the configuration
+    the `Blob` table prefix and the `BlobManagement` connection string name, the configuration
     section `BlobManagement`, and the class a resource permission is granted on (its resource name is that type's
     full name: `Dignite.Abp.BlobManagement.BlobManagementContainer`). The names were weighed again on 2026-11-13 and
     stay: not File Management (ABP's module has that name, its routes and its permission group), not entities named

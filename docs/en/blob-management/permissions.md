@@ -9,7 +9,7 @@
 
 > Blob Management has not been released yet; see the [overview](index.md).
 
-Blob Management's permissions authorize **users**, for the two things a user does here: read what the tenant stores - the [management page](angular-ui.md#the-management-page), the [usage](usage.md), the [MCP tools](mcp.md) - and keep the [directories](directories.md) of a container.
+Blob Management's permissions authorize **users**, for the two things a user does here: read what the tenant stores - the [management page](angular-ui.md#the-management-page) and the [usage](usage.md) - and keep the [directories](directories.md) of a container.
 
 Files are an application's. An application that stores through the [provider](provider.md) or the [file service](files.md) is authorized by the container's `AllowedClientIds` - or trusted, in the same process - and uses none of these permissions; its own rules run before it calls. No permission lets a user store, rename, move or delete a file.
 

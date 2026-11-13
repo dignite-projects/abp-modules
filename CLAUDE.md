@@ -72,8 +72,8 @@ These are the things most likely to be broken by an otherwise reasonable-looking
      not a module: it hosts the one MCP server an application can have and carries no domain
      model. It passed the test the Razor tree failed because every piece of it is needed by every
      MCP-contributing module — `Dignite.Site.Mcp` and `Dignite.Vault.Extract.Mcp` in their own
-     repositories (and `Dignite.Abp.BlobManagement.Mcp` here; `Dignite.FileExplorer.Mcp` was another until File
-     Explorer left in rc.25) — and
+     repositories (`Dignite.FileExplorer.Mcp` here was another until File Explorer left in rc.25, and
+     `Dignite.Abp.BlobManagement.Mcp` until Blob Management, unreleased, dropped its tools on 2026-11-13) — and
      duplicating it is exactly how two of them had already drifted apart (see its README). The direction is one-way: a module's `*.Mcp`
      project may reference `aspnetcore-mcp/`; `aspnetcore-mcp/` never references a module. Each
      contributing module claims its own MCP namespace (tool-name prefix + resource URI scheme) via
