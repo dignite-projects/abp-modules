@@ -1,6 +1,6 @@
 # Security Policy
 
-Covers every package released from this repository — the `blob-storing/`, `drive/`, `notifications/`, and
+Covers every package released from this repository — the `blob-storing/`, `blob-management/`, `notifications/`, and
 `flex-fields/` module trees.
 
 ## Supported versions
@@ -32,7 +32,7 @@ Instead, use GitHub's private vulnerability reporting for this repository:
      provider) and version / commit
    - Any suggested remediation, if you have one
 
-Reports about the demo hosts (`notifications/host/`, `flex-fields/demo/`, `drive/host/`) are welcome but are
+Reports about the demo hosts (`notifications/host/`, `flex-fields/demo/`, `blob-management/host/`) are welcome but are
 triaged at lower priority: they are local-development demos, never packed or published, and not
 intended to be deployed.
 

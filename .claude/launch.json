@@ -28,15 +28,15 @@
       "url": "https://localhost:44330"
     },
     {
-      "name": "drive-angular",
+      "name": "blob-management-angular",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["yarn", "--cwd", "drive/angular", "start"],
+      "runtimeArgs": ["yarn", "--cwd", "blob-management/angular", "start"],
       "port": 4200
     },
     {
-      "name": "drive-host",
+      "name": "blob-management-host",
       "runtimeExecutable": "dotnet",
-      "runtimeArgs": ["run", "--project", "drive/host/Dignite.Drive.Host"],
+      "runtimeArgs": ["run", "--project", "blob-management/host/Dignite.Abp.BlobManagement.Host"],
       "port": 44352,
       "url": "https://localhost:44352"
     }

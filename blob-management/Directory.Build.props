@@ -1,0 +1,33 @@
+<Project>
+
+  <!-- MSBuild imports only the NEAREST Directory.Build.props per project and stops walking up, so
+       this file must explicitly import the repo root's to inherit the lockstep <Version> /
+       <AssemblyVersion> / shared metadata.
+       (host/Dignite.Abp.BlobManagement.Host/ has its own nearer Directory.Build.props and is
+       intentionally isolated from this chain - see the comment there.) -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <Product>Dignite Blob Management</Product>
+    <PackageTags>abp;blob;blob-management;blob-storing;file-library;multi-tenant;aspnetcore</PackageTags>
+  </PropertyGroup>
+
+  <!-- Blob Management is not published until it is complete (owner decision, 2026-11-10): its packages are not packable by
+       default, so `dotnet pack` of the aggregate solution - what the release pushes to NuGet.org and GitHub Packages -
+       produces none of them. CI opts in with -p:PackBlobManagement=true to keep verifying how they pack (the packed README and
+       icon, the lockstep version, the smoke test). To publish: delete this group, the opt-in in ci.yml, and add back
+       the blob-management smoke test in release.yml (see blob-management/dev-docs/drive-decision.md). -->
+  <PropertyGroup Condition="'$(PackBlobManagement)' != 'true'">
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!-- Each module keeps its OWN README.md as the packed PackageReadmeFile, deliberately: the root
+       README.md is a monorepo landing page, and packing it into every package would put the sibling
+       module's documentation on this module's NuGet page. CONTRIBUTING/SECURITY/CHANGELOG/LICENSE
+       are repo-wide and live only at the root. -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory).github\icon.png" Pack="true" PackagePath="\" Visible="false" />
+  </ItemGroup>
+
+</Project>

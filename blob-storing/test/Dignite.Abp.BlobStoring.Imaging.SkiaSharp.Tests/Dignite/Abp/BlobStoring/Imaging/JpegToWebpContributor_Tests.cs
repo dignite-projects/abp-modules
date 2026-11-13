@@ -61,7 +61,7 @@ public class JpegToWebpContributor_Tests : AbpIntegratedTest<BlobStoringImagingS
     }
 
     /// <summary>
-    /// In the order a Drive's images preset uses - size, types, metadata removal (which keeps the orientation), WebP,
+    /// In the order Blob Management's images preset uses - size, types, metadata removal (which keeps the orientation), WebP,
     /// resize - a sideways photo larger than the box is turned, then fitted with its long side, in one encode.
     /// </summary>
     [Fact]

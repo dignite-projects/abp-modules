@@ -1,0 +1,104 @@
+using System;
+using System.Threading.Tasks;
+using Dignite.Abp.BlobManagement.Authorization;
+using Dignite.Abp.BlobManagement.Files;
+using Dignite.Abp.BlobManagement.Localization;
+using Volo.Abp.Application.Services;
+using Volo.Abp.Authorization;
+using Volo.Abp.BlobStoring;
+using Volo.Abp.Domain.Entities;
+
+namespace Dignite.Abp.BlobManagement;
+
+/// <summary>
+/// The base of Blob Management's application services, with what the user-facing ones share: the caller's user id, the
+/// managed containers, authorization through <see cref="BlobManagementAccessService"/> and the mapping of a descriptor
+/// to its DTO.
+/// </summary>
+public abstract class BlobManagementAppService : ApplicationService
+{
+    protected BlobManagementAppService()
+    {
+        LocalizationResource = typeof(BlobManagementResource);
+        ObjectMapperContext = typeof(BlobManagementApplicationModule);
+    }
+
+    protected IBlobContainerConfigurationProvider ContainerConfigurationProvider =>
+        LazyServiceProvider.LazyGetRequiredService<IBlobContainerConfigurationProvider>();
+
+    protected BlobManagementAccessService AccessService =>
+        LazyServiceProvider.LazyGetRequiredService<BlobManagementAccessService>();
+
+    protected IDirectoryDescriptorRepository DirectoryRepository =>
+        LazyServiceProvider.LazyGetRequiredService<IDirectoryDescriptorRepository>();
+
+    /// <summary>
+    /// The caller's user id. The file API serves users only: a token without one - a client acting for itself - is
+    /// refused, as the BLOB API refuses tokens with one.
+    /// </summary>
+    protected virtual Guid GetUserId()
+    {
+        return CurrentUser.Id ?? throw new AbpAuthorizationException(
+            "Blob Management's file API serves users. An application stores files through the BLOB storing provider.");
+    }
+
+    /// <summary>The configuration of the managed container <paramref name="containerName"/>; any other is not found.</summary>
+    protected virtual BlobManagementContainerConfiguration GetContainer(string containerName)
+    {
+        return ContainerConfigurationProvider.GetBlobManagementContainerConfiguration(containerName);
+    }
+
+    protected virtual bool IsManagedContainer(string containerName)
+    {
+        return ContainerConfigurationProvider.IsManagedContainer(containerName);
+    }
+
+    /// <summary>
+    /// The directory <paramref name="id"/> of <paramref name="containerName"/>, which must allow directories; any other
+    /// is not found, so nothing is told about directories elsewhere.
+    /// </summary>
+    protected virtual async Task<DirectoryDescriptor> GetDirectoryAsync(Guid id, string containerName)
+    {
+        var directory = await DirectoryRepository.FindAsync(id);
+        if (directory == null ||
+            directory.ContainerName != containerName ||
+            !IsManagedContainer(containerName) ||
+            !GetContainer(containerName).AllowDirectories)
+        {
+            throw new EntityNotFoundException(typeof(DirectoryDescriptor), id);
+        }
+
+        return directory;
+    }
+
+    protected virtual void Authorize(bool allowed)
+    {
+        if (!allowed)
+        {
+            throw new AbpAuthorizationException(code: AbpAuthorizationErrorCodes.GivenPolicyHasNotGranted);
+        }
+    }
+
+    protected virtual BlobManagementFileDto Map(FileDescriptor file)
+    {
+        return new BlobManagementFileDto
+        {
+            Id = file.Id,
+            CreationTime = file.CreationTime,
+            CreatorId = file.CreatorId,
+            LastModificationTime = file.LastModificationTime,
+            ContainerName = file.ContainerName,
+            DirectoryId = file.DirectoryId,
+            Name = file.Name,
+            IsAddressedByName = file.IsAddressedByName,
+            MimeType = file.MimeType,
+            Size = file.Size,
+            // The public address of a file an application saved is its name; an uploaded file's names its physical BLOB,
+            // since its name may repeat - and renaming or moving it then leaves the address as it was.
+            Url = GetContainer(file.ContainerName).PublicRead
+                ? BlobManagementPublicUrl.Build(
+                    file.ContainerName, file.IsAddressedByName ? file.Name : file.BlobName, file.TenantId)
+                : null
+        };
+    }
+}

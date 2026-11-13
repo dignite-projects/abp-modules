@@ -19,31 +19,31 @@
     <Project Path="blob-storing/test/Dignite.Abp.BlobStoring.Pipeline.Tests/Dignite.Abp.BlobStoring.Pipeline.Tests.csproj" />
   </Folder>
 
-  <Folder Name="/drive/" />
-  <Folder Name="/drive/src/">
-    <Project Path="drive/src/Dignite.Abp.BlobStoring.Drive/Dignite.Abp.BlobStoring.Drive.csproj" />
-    <Project Path="drive/src/Dignite.Drive.Application/Dignite.Drive.Application.csproj" />
-    <Project Path="drive/src/Dignite.Drive.Application.Contracts/Dignite.Drive.Application.Contracts.csproj" />
-    <Project Path="drive/src/Dignite.Drive.Domain/Dignite.Drive.Domain.csproj" />
-    <Project Path="drive/src/Dignite.Drive.Domain.Shared/Dignite.Drive.Domain.Shared.csproj" />
-    <Project Path="drive/src/Dignite.Drive.EntityFrameworkCore/Dignite.Drive.EntityFrameworkCore.csproj" />
-    <Project Path="drive/src/Dignite.Drive.HttpApi/Dignite.Drive.HttpApi.csproj" />
-    <Project Path="drive/src/Dignite.Drive.HttpApi.Client/Dignite.Drive.HttpApi.Client.csproj" />
-    <Project Path="drive/src/Dignite.Drive.Installer/Dignite.Drive.Installer.csproj" />
-    <Project Path="drive/src/Dignite.Drive.Mcp/Dignite.Drive.Mcp.csproj" />
-    <Project Path="drive/src/Dignite.Drive.MongoDB/Dignite.Drive.MongoDB.csproj" />
+  <Folder Name="/blob-management/" />
+  <Folder Name="/blob-management/src/">
+    <Project Path="blob-management/src/Dignite.Abp.BlobStoring.BlobManagement/Dignite.Abp.BlobStoring.BlobManagement.csproj" />
+    <Project Path="blob-management/src/Dignite.Abp.BlobManagement.Application/Dignite.Abp.BlobManagement.Application.csproj" />
+    <Project Path="blob-management/src/Dignite.Abp.BlobManagement.Application.Contracts/Dignite.Abp.BlobManagement.Application.Contracts.csproj" />
+    <Project Path="blob-management/src/Dignite.Abp.BlobManagement.Domain/Dignite.Abp.BlobManagement.Domain.csproj" />
+    <Project Path="blob-management/src/Dignite.Abp.BlobManagement.Domain.Shared/Dignite.Abp.BlobManagement.Domain.Shared.csproj" />
+    <Project Path="blob-management/src/Dignite.Abp.BlobManagement.EntityFrameworkCore/Dignite.Abp.BlobManagement.EntityFrameworkCore.csproj" />
+    <Project Path="blob-management/src/Dignite.Abp.BlobManagement.HttpApi/Dignite.Abp.BlobManagement.HttpApi.csproj" />
+    <Project Path="blob-management/src/Dignite.Abp.BlobManagement.HttpApi.Client/Dignite.Abp.BlobManagement.HttpApi.Client.csproj" />
+    <Project Path="blob-management/src/Dignite.Abp.BlobManagement.Installer/Dignite.Abp.BlobManagement.Installer.csproj" />
+    <Project Path="blob-management/src/Dignite.Abp.BlobManagement.Mcp/Dignite.Abp.BlobManagement.Mcp.csproj" />
+    <Project Path="blob-management/src/Dignite.Abp.BlobManagement.MongoDB/Dignite.Abp.BlobManagement.MongoDB.csproj" />
   </Folder>
-  <Folder Name="/drive/test/">
-    <Project Path="drive/test/Dignite.Drive.Application.Tests/Dignite.Drive.Application.Tests.csproj" />
-    <Project Path="drive/test/Dignite.Drive.Domain.Tests/Dignite.Drive.Domain.Tests.csproj" />
-    <Project Path="drive/test/Dignite.Drive.EntityFrameworkCore.Tests/Dignite.Drive.EntityFrameworkCore.Tests.csproj" />
-    <Project Path="drive/test/Dignite.Drive.HttpApi.Tests/Dignite.Drive.HttpApi.Tests.csproj" />
-    <Project Path="drive/test/Dignite.Drive.Mcp.Tests/Dignite.Drive.Mcp.Tests.csproj" />
-    <Project Path="drive/test/Dignite.Drive.MongoDB.Tests/Dignite.Drive.MongoDB.Tests.csproj" />
-    <Project Path="drive/test/Dignite.Drive.TestBase/Dignite.Drive.TestBase.csproj" />
+  <Folder Name="/blob-management/test/">
+    <Project Path="blob-management/test/Dignite.Abp.BlobManagement.Application.Tests/Dignite.Abp.BlobManagement.Application.Tests.csproj" />
+    <Project Path="blob-management/test/Dignite.Abp.BlobManagement.Domain.Tests/Dignite.Abp.BlobManagement.Domain.Tests.csproj" />
+    <Project Path="blob-management/test/Dignite.Abp.BlobManagement.EntityFrameworkCore.Tests/Dignite.Abp.BlobManagement.EntityFrameworkCore.Tests.csproj" />
+    <Project Path="blob-management/test/Dignite.Abp.BlobManagement.HttpApi.Tests/Dignite.Abp.BlobManagement.HttpApi.Tests.csproj" />
+    <Project Path="blob-management/test/Dignite.Abp.BlobManagement.Mcp.Tests/Dignite.Abp.BlobManagement.Mcp.Tests.csproj" />
+    <Project Path="blob-management/test/Dignite.Abp.BlobManagement.MongoDB.Tests/Dignite.Abp.BlobManagement.MongoDB.Tests.csproj" />
+    <Project Path="blob-management/test/Dignite.Abp.BlobManagement.TestBase/Dignite.Abp.BlobManagement.TestBase.csproj" />
   </Folder>
-  <Folder Name="/drive/host/">
-    <Project Path="drive/host/Dignite.Drive.Host/Dignite.Drive.Host.csproj" />
+  <Folder Name="/blob-management/host/">
+    <Project Path="blob-management/host/Dignite.Abp.BlobManagement.Host/Dignite.Abp.BlobManagement.Host.csproj" />
   </Folder>
   <Folder Name="/notifications/" />
   <Folder Name="/notifications/core/" />

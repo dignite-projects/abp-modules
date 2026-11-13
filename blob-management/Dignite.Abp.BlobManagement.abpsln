@@ -1,0 +1,24 @@
+{
+  "id": "9a01cabd-b149-4693-bb4f-69ce6e0d63f8",
+  "template": "empty",
+  "versions": {
+    "AbpFramework": "10.7.0",
+    "AbpStudio": "3.1.6",
+    "TargetDotnetFramework": "net10.0"
+  },
+  "modules": {
+    "Dignite.Abp.BlobManagement": {
+      "path": "Dignite.Abp.BlobManagement.abpmdl"
+    }
+  },
+  "runProfiles": {
+    "Default": {
+      "path": "host/etc/run-profiles/Default.abprun.json"
+    }
+  },
+  "options": {
+    "httpRequests": {
+      "ignoredUrls": []
+    }
+  }
+}

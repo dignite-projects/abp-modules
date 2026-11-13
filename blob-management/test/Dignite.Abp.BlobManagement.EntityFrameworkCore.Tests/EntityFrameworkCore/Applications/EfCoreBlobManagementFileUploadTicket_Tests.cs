@@ -1,0 +1,5 @@
+namespace Dignite.Abp.BlobManagement.EntityFrameworkCore.Applications;
+
+public class EfCoreBlobManagementFileUploadTicket_Tests : BlobManagementFileUploadTicket_Tests<BlobManagementEntityFrameworkCoreTestModule>
+{
+}

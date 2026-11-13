@@ -7,8 +7,8 @@
 > `Dignite.Abp.BlobStoring.*`. Read the rest as history: its names (`IFileStorer`, `IFileHandler`, `Dignite.Abp.FileStoring`)
 > no longer exist.
 
-> **Partly superseded, 2026-11-10** by [`drive-decision.md`](../../drive/dev-docs/drive-decision.md). A per-tenant
-> Drive now exists as its own tree: applications install a BLOB storing provider and keep their own metadata and
+> **Partly superseded, 2026-11-10** by [`drive-decision.md`](../../blob-management/dev-docs/drive-decision.md). A per-tenant
+> Drive - Blob Management since 2026-11-12, `blob-management/` - now exists as its own tree: applications install a BLOB storing provider and keep their own metadata and
 > authorization, which settles reasons 1 and 4 below and retires reason 2. Reason 3 stands, and what this module keeps
 > is unchanged: pipeline contributors, and nothing in front of `IBlobContainer`.
 

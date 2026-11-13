@@ -37,7 +37,7 @@ jobs:
           cache-dependency-path: |
             notifications/angular/yarn.lock
             flex-fields/angular/yarn.lock
-            drive/angular/yarn.lock
+            blob-management/angular/yarn.lock
 
       - name: Verify NuGet and npm version lockstep
         id: version
@@ -71,7 +71,7 @@ jobs:
             exit 1
           fi
 
-      # Includes the three demo hosts (notifications/host/..., flex-fields/demo/..., drive/host/...) - each opts out of
+      # Includes the three demo hosts (notifications/host/..., flex-fields/demo/..., blob-management/host/...) - each opts out of
       # central package management on its own (each host's own Directory.Build.props /
       # Directory.Packages.props) and pins its own inline package versions.
       - name: Build
@@ -132,26 +132,26 @@ jobs:
       - name: Run FlexFields (Web) tests
         run: dotnet test flex-fields/test/Dignite.Abp.FlexFields.Web.Tests/Dignite.Abp.FlexFields.Web.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/flex-fields
 
-      # --- drive tests ---
-      # Dignite.Drive.TestBase is IsTestProject=false, and the provider-agnostic scenarios live in
-      # Dignite.Drive.Domain.Tests / Application.Tests; both are exercised through the EF Core and MongoDB
+      # --- blob-management tests ---
+      # Dignite.Abp.BlobManagement.TestBase is IsTestProject=false, and the provider-agnostic scenarios live in
+      # Dignite.Abp.BlobManagement.Domain.Tests / Application.Tests; both are exercised through the EF Core and MongoDB
       # projects below, never run directly. The MongoDB project starts an embedded mongod via MongoSandbox.
-      # Coverage lands under coverage/drive, uploaded under its own "drive" flag below.
-      - name: Run Drive (EF Core) tests
-        run: dotnet test drive/test/Dignite.Drive.EntityFrameworkCore.Tests/Dignite.Drive.EntityFrameworkCore.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/drive
+      # Coverage lands under coverage/blob-management, uploaded under its own "blob-management" flag below.
+      - name: Run BlobManagement (EF Core) tests
+        run: dotnet test blob-management/test/Dignite.Abp.BlobManagement.EntityFrameworkCore.Tests/Dignite.Abp.BlobManagement.EntityFrameworkCore.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/blob-management
 
-      - name: Run Drive (MongoDB) tests
-        run: dotnet test drive/test/Dignite.Drive.MongoDB.Tests/Dignite.Drive.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/drive
+      - name: Run BlobManagement (MongoDB) tests
+        run: dotnet test blob-management/test/Dignite.Abp.BlobManagement.MongoDB.Tests/Dignite.Abp.BlobManagement.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/blob-management
 
-      # The BLOB API over HTTP: one test host that runs the Drive as a service and an application calling it through the
-      # generated C# client proxies (Dignite.Drive.HttpApi.Client) and the provider - EF Core on SQLite, BLOBs in memory.
-      - name: Run Drive (HttpApi) tests
-        run: dotnet test drive/test/Dignite.Drive.HttpApi.Tests/Dignite.Drive.HttpApi.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/drive
+      # The BLOB API over HTTP: one test host that runs Blob Management as a service and an application calling it through the
+      # generated C# client proxies (Dignite.Abp.BlobManagement.HttpApi.Client) and the provider - EF Core on SQLite, BLOBs in memory.
+      - name: Run BlobManagement (HttpApi) tests
+        run: dotnet test blob-management/test/Dignite.Abp.BlobManagement.HttpApi.Tests/Dignite.Abp.BlobManagement.HttpApi.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/blob-management
 
-      # The drive_* MCP tools: their registration in the drive namespace, and what they add to the file API's
+      # The blob_* MCP tools: their registration in the blob namespace, and what they add to the file API's
       # services (upload links, inline uploads), against substituted services.
-      - name: Run Drive (Mcp) tests
-        run: dotnet test drive/test/Dignite.Drive.Mcp.Tests/Dignite.Drive.Mcp.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/drive
+      - name: Run BlobManagement (Mcp) tests
+        run: dotnet test blob-management/test/Dignite.Abp.BlobManagement.Mcp.Tests/Dignite.Abp.BlobManagement.Mcp.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./artifacts-ci/coverage/blob-management
 
       # Coverage is uploaded to Codecov from the separate upload-coverage job below, not here:
       # codecov-action's upload latency is dominated by Codecov's own service (observed anywhere from
@@ -166,12 +166,12 @@ jobs:
           if-no-files-found: error
 
       # Projects with IsPackable=false (the demo hosts + test projects) are skipped automatically.
-      # Drive's packages are not packable by default (drive/Directory.Build.props: it is not published until it
-      # is complete); -p:PackDrive=true opts in here so that how they pack stays verified by the smoke test below.
+      # BlobManagement's packages are not packable by default (blob-management/Directory.Build.props: it is not published until it
+      # is complete); -p:PackBlobManagement=true opts in here so that how they pack stays verified by the smoke test below.
       # Every packable project in the aggregate solution is produced - deliberately not counted here, a
       # number in this comment had already drifted (it said 33 while 38 were being packed).
       - name: Pack NuGet packages
-        run: dotnet pack Dignite.Abp.Modules.slnx --no-build --configuration Release --output ./artifacts-ci/nuget -p:PackDrive=true
+        run: dotnet pack Dignite.Abp.Modules.slnx --no-build --configuration Release --output ./artifacts-ci/nuget -p:PackBlobManagement=true
 
       - name: Smoke-test blob-storing NuGet packages
         shell: pwsh
@@ -185,9 +185,9 @@ jobs:
         shell: pwsh
         run: ./build/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}' -Module flex-fields
 
-      - name: Smoke-test drive NuGet packages
+      - name: Smoke-test blob-management NuGet packages
         shell: pwsh
-        run: ./build/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}' -Module drive
+        run: ./build/smoke-test-nuget-packages.ps1 ./artifacts-ci/nuget '${{ steps.version.outputs.version }}' -Module blob-management
 
       - name: Smoke-test aspnetcore-mcp NuGet packages
         shell: pwsh
@@ -319,49 +319,49 @@ jobs:
           }
           node ./flex-fields/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
 
-      # --- drive Angular (angular/projects/drive) ---
-      - name: Install drive Angular dependencies
-        working-directory: drive/angular
+      # --- blob-management Angular (angular/projects/blob-management) ---
+      - name: Install blob-management Angular dependencies
+        working-directory: blob-management/angular
         run: yarn install --frozen-lockfile
 
-      - name: Check drive Angular package duplicates
-        run: node ./build/check-angular-package-duplicates.mjs drive/angular/node_modules ng-zorro-antd @angular/cdk
+      - name: Check blob-management Angular package duplicates
+        run: node ./build/check-angular-package-duplicates.mjs blob-management/angular/node_modules ng-zorro-antd @angular/cdk
 
-      - name: Lint drive Angular projects
-        working-directory: drive/angular
+      - name: Lint blob-management Angular projects
+        working-directory: blob-management/angular
         run: yarn lint --max-warnings=0
 
-      - name: Run drive Angular unit tests
-        working-directory: drive/angular
+      - name: Run blob-management Angular unit tests
+        working-directory: blob-management/angular
         run: yarn test --watch=false
 
-      - name: Build drive Angular library
-        working-directory: drive/angular
+      - name: Build blob-management Angular library
+        working-directory: blob-management/angular
         run: yarn build:lib
 
-      - name: Check drive Angular package dependencies
-        run: node ./build/check-angular-package-deps.mjs drive/angular/dist/drive
+      - name: Check blob-management Angular package dependencies
+        run: node ./build/check-angular-package-deps.mjs blob-management/angular/dist/blob-management
 
-      - name: Build drive Angular demo
-        working-directory: drive/angular
+      - name: Build blob-management Angular demo
+        working-directory: blob-management/angular
         run: yarn build:prod
 
-      - name: Pack drive Angular library
+      - name: Pack blob-management Angular library
         shell: pwsh
-        working-directory: drive/angular
+        working-directory: blob-management/angular
         run: |
-          New-Item -ItemType Directory -Force ../../artifacts-ci/npm/drive | Out-Null
-          npm pack ./dist/drive --pack-destination ../../artifacts-ci/npm/drive
+          New-Item -ItemType Directory -Force ../../artifacts-ci/npm/blob-management | Out-Null
+          npm pack ./dist/blob-management --pack-destination ../../artifacts-ci/npm/blob-management
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Smoke-test drive Angular package
+      - name: Smoke-test blob-management Angular package
         shell: pwsh
         run: |
-          $tarballs = @(Get-ChildItem ./artifacts-ci/npm/drive/*.tgz)
+          $tarballs = @(Get-ChildItem ./artifacts-ci/npm/blob-management/*.tgz)
           if ($tarballs.Count -ne 1) {
-            throw "Expected one drive Angular package tarball, found $($tarballs.Count)."
+            throw "Expected one blob-management Angular package tarball, found $($tarballs.Count)."
           }
-          node ./drive/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
+          node ./blob-management/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
 
   # Not a required check: Codecov's upload latency is Codecov's, not ours (observed anywhere from a
   # few seconds to 4+ minutes per module, most likely tokenless-upload rate limiting), and it must
@@ -415,12 +415,12 @@ jobs:
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Upload drive coverage to Codecov
+      - name: Upload blob-management coverage to Codecov
         uses: codecov/codecov-action@v7
         continue-on-error: true
         with:
-          directory: ./artifacts-ci/coverage/drive
-          flags: drive
+          directory: ./artifacts-ci/coverage/blob-management
+          flags: blob-management
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 

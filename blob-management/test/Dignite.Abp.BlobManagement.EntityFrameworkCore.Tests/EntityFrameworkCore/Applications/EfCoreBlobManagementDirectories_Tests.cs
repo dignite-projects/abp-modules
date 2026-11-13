@@ -1,0 +1,5 @@
+namespace Dignite.Abp.BlobManagement.EntityFrameworkCore.Applications;
+
+public class EfCoreBlobManagementDirectories_Tests : BlobManagementDirectories_Tests<BlobManagementEntityFrameworkCoreTestModule>
+{
+}

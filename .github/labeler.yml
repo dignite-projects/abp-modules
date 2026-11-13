@@ -12,12 +12,11 @@
           - 'blob-storing/**'
           - 'docs/en/blob-storing/**'
 
-"module: drive":
+"module: blob-management":
   - changed-files:
       - any-glob-to-any-file:
-          - 'drive/**'
-          - 'docs/en/drive/**'
-          - 'docs/en/drive-pro/**'
+          - 'blob-management/**'
+          - 'docs/en/blob-management/**'
 
 "module: notifications":
   - changed-files:
@@ -48,7 +47,7 @@
       - any-glob-to-any-file:
           - 'notifications/angular/**'
           - 'flex-fields/angular/**'
-          - 'drive/angular/**'
+          - 'blob-management/angular/**'
 
 "area: build/ci":
   - changed-files:

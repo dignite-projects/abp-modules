@@ -1,0 +1,14 @@
+﻿{
+  "packages":[
+    {
+      "tsJsonPathRecordConfigurations":[
+        {
+          "name": "@dignite/ng.blob-management",
+          "paths": [
+            "angular/projects/blob-management/src/public-api.ts"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <RootNamespace />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Data Protection's in-memory key ring, which signs Blob Management's tickets in these tests (a host has ASP.NET Core's) -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Volo.Abp.PermissionManagement.Domain" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Dignite.Abp.BlobManagement.Application\Dignite.Abp.BlobManagement.Application.csproj" />
+    <ProjectReference Include="..\..\src\Dignite.Abp.BlobStoring.BlobManagement\Dignite.Abp.BlobStoring.BlobManagement.csproj" />
+    <ProjectReference Include="..\Dignite.Abp.BlobManagement.Domain.Tests\Dignite.Abp.BlobManagement.Domain.Tests.csproj" />
+  </ItemGroup>
+
+</Project>

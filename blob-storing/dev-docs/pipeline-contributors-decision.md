@@ -144,7 +144,7 @@ Not planned:
 
 **Why now.** Dignite Site stored every JPEG of its images container as WebP, turned upright by its EXIF orientation,
 with a contributor and a replacement for ABP's SkiaSharp resizer of its own. When Site's files move into the open Drive
-(`drive/dev-docs/drive-decision.md`, amendment of the same day), the browser, CKEditor and MCP upload straight to the
+(`blob-management/dev-docs/drive-decision.md`, amendment of the same day; the Drive is Blob Management since 2026-11-12), the browser, CKEditor and MCP upload straight to the
 Drive, so only a contributor on the Drive's container sees every upload. The owner decided that the conversion is the
 Drive container's and that the Drive's images preset does it by default; how it is built, below, was proposed with it
 and is not the owner's decision.

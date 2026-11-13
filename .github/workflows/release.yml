@@ -163,15 +163,15 @@ jobs:
       - name: Run FlexFields (Web) tests
         run: dotnet test flex-fields/test/Dignite.Abp.FlexFields.Web.Tests/Dignite.Abp.FlexFields.Web.Tests.csproj --no-build --configuration Release --verbosity normal
 
-      # --- drive tests ---
-      - name: Run Drive (EF Core) tests
-        run: dotnet test drive/test/Dignite.Drive.EntityFrameworkCore.Tests/Dignite.Drive.EntityFrameworkCore.Tests.csproj --no-build --configuration Release --verbosity normal
+      # --- blob-management tests ---
+      - name: Run BlobManagement (EF Core) tests
+        run: dotnet test blob-management/test/Dignite.Abp.BlobManagement.EntityFrameworkCore.Tests/Dignite.Abp.BlobManagement.EntityFrameworkCore.Tests.csproj --no-build --configuration Release --verbosity normal
 
-      - name: Run Drive (MongoDB) tests
-        run: dotnet test drive/test/Dignite.Drive.MongoDB.Tests/Dignite.Drive.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal
+      - name: Run BlobManagement (MongoDB) tests
+        run: dotnet test blob-management/test/Dignite.Abp.BlobManagement.MongoDB.Tests/Dignite.Abp.BlobManagement.MongoDB.Tests.csproj --no-build --configuration Release --verbosity normal
 
       # Projects with IsPackable=false (the demo hosts + test projects) are skipped automatically, and so are
-      # Drive's packages until it is published (drive/Directory.Build.props) - hence no drive smoke test below.
+      # BlobManagement's packages until it is published (blob-management/Directory.Build.props) - hence no blob-management smoke test below.
       # Every packable project in the aggregate solution is produced - deliberately not counted here, a
       # number in this comment had already drifted (it said 33 while 38 were being packed).
       - name: Pack NuGet packages

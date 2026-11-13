@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace />
+    <Description>MCP tools of Dignite Blob Management, contributed to the application's MCP server.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignite.Abp.BlobManagement.Application.Contracts\Dignite.Abp.BlobManagement.Application.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\aspnetcore-mcp\src\Dignite.Abp.AspNetCore.Mcp\Dignite.Abp.AspNetCore.Mcp.csproj" />
+  </ItemGroup>
+
+</Project>

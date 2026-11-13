@@ -19,7 +19,7 @@ param(
     [string] $Version,
 
     [Parameter(Mandatory = $true)]
-    [ValidateSet('aspnetcore-mcp', 'blob-storing', 'drive', 'flex-fields', 'notifications', 'openiddict')]
+    [ValidateSet('aspnetcore-mcp', 'blob-management', 'blob-storing', 'flex-fields', 'notifications', 'openiddict')]
     [string] $Module
 )
 

@@ -11,7 +11,7 @@ Resolves #xxxx (write the related issue number if there is one)
      CLAUDE.md files declare, so most PRs touch only one. -->
 
 - [ ] `blob-storing/` (Dignite.Abp.BlobStoring.*)
-- [ ] `drive/` (Dignite.Drive / Dignite.Abp.BlobStoring.Drive / @dignite/ng.drive)
+- [ ] `blob-management/` (Dignite.Abp.BlobManagement / Dignite.Abp.BlobStoring.BlobManagement / @dignite/ng.blob-management)
 - [ ] `notifications/` (Dignite.Abp.Notifications / Dignite.NotificationCenter)
 - [ ] `flex-fields/` (Dignite.Abp.FlexFields / @dignite/ng.flex-fields)
 - [ ] `aspnetcore-mcp/` (Dignite.Abp.AspNetCore.Mcp)
