@@ -45,12 +45,12 @@ export class BlobManagementBlobService {
   
 
   
-  save = (containerName: string, blobName: string, content: FormData, overrideExisting?: boolean, config?: Partial<Rest.Config>) =>
+  save = (containerName: string, blobName: string, content: FormData, overrideExisting?: boolean, creatorId?: string, config?: Partial<Rest.Config>) =>
     this.restService.request<any, BlobManagementBlobDto>({
       method: 'PUT',
       headers: { Accept: 'application/json' },
       url: `/api/blob-management/blobs/${containerName}`,
-      params: { blobName, overrideExisting },
+      params: { blobName, overrideExisting, creatorId },
       body: content,
     },
       { apiName: this.apiName,...config });

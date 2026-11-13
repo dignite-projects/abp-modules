@@ -1,6 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
-import { PermissionService } from '@abp/ng.core';
 import { CoreTestingModule } from '@abp/ng.core/testing';
 import { ConfirmationService } from '@abp/ng.theme.shared';
 import { BLOB_MANAGEMENT_ROOT_KEY, BlobManagementDirectoryTreeComponent } from './blob-directory-tree.component';
@@ -9,34 +8,24 @@ import { BlobManagementDirectoryService } from '../../proxy/directories';
 describe('BlobManagementDirectoryTreeComponent', () => {
   let getList: ReturnType<typeof vi.fn>;
   let move: ReturnType<typeof vi.fn>;
-  let restrict: ReturnType<typeof vi.fn>;
   let fixture: ComponentFixture<BlobManagementDirectoryTreeComponent>;
 
-  const docs = {
-    id: 'd1',
-    name: 'Docs',
-    order: 1,
-    hasChildren: true,
-    canUpdate: true,
-    canDelete: false,
-    access: { view: true, createDirectories: true },
-  };
-  const locked = { id: 'd2', name: 'Locked', order: 2, isRestricted: true, canUpdate: false, access: { view: true } };
+  const docs = { id: 'd1', name: 'Docs', order: 1, hasChildren: true };
+  const locked = { id: 'd2', name: 'Locked', order: 2 };
+  const all = { view: true, createDirectories: true, updateDirectories: true, deleteDirectories: true };
 
   function node(directory?: object, key = BLOB_MANAGEMENT_ROOT_KEY, parentNode: object | null = null) {
     return { key, origin: { key, directory }, parentNode, isExpanded: true } as never;
   }
 
-  function render(levels: Record<string, unknown[]> = { root: [docs, locked] }, access: object = { view: true }) {
+  function render(levels: Record<string, unknown[]> = { root: [docs, locked] }, access: object = all) {
     getList = vi.fn((input: { parentId?: string | null }) => of({ items: levels[input.parentId ?? 'root'] ?? [] }));
     move = vi.fn(() => of({}));
-    restrict = vi.fn(() => of({}));
     TestBed.configureTestingModule({
       imports: [BlobManagementDirectoryTreeComponent, CoreTestingModule.withConfig()],
       providers: [
-        { provide: BlobManagementDirectoryService, useValue: { getList, move, restrict } },
+        { provide: BlobManagementDirectoryService, useValue: { getList, move } },
         { provide: ConfirmationService, useValue: {} },
-        { provide: PermissionService, useValue: { getGrantedPolicy: () => true, getGrantedPolicy$: () => of(true) } },
       ],
     });
     fixture = TestBed.createComponent(BlobManagementDirectoryTreeComponent);
@@ -54,15 +43,18 @@ describe('BlobManagementDirectoryTreeComponent', () => {
     expect(tree.nodes()[0].children[0].isLeaf).toBe(false);
   });
 
-  it('offers creating by the place, and renaming and deleting as the server worked them out', () => {
-    const tree = render(undefined, { view: true, createDirectories: false });
+  it('offers what the container allows, the same for every directory, and never renames or deletes its top', () => {
+    const tree = render(undefined, { view: true, createDirectories: true, updateDirectories: true, deleteDirectories: false });
 
-    expect(tree.canCreateIn(node())).toBe(false);
-    expect(tree.canCreateIn(node(docs, 'd1'))).toBe(true);
-    expect(tree.canCreateIn(node(locked, 'd2'))).toBe(false);
+    expect(tree.canCreate()).toBe(true);
     expect(tree.canRename(node(docs, 'd1'))).toBe(true);
+    expect(tree.canRename(node(locked, 'd2'))).toBe(true);
     expect(tree.canDelete(node(docs, 'd1'))).toBe(false);
     expect(tree.canRename(node())).toBe(false);
+    expect(tree.canDelete(node())).toBe(false);
+
+    TestBed.resetTestingModule();
+    expect(render(undefined, { view: true }).canCreate()).toBe(false);
   });
 
   it('loads a level when it is first expanded, and not again', () => {
@@ -106,21 +98,12 @@ describe('BlobManagementDirectoryTreeComponent', () => {
     expect(chosen).toEqual([docs, null]);
   });
 
-  it('restricts a directory, and lifts the restriction', () => {
-    const tree = render();
-
-    tree.toggleRestricted(node(docs, 'd1'));
-    tree.toggleRestricted(node(locked, 'd2'));
-
-    expect(restrict).toHaveBeenNthCalledWith(1, 'd1', { isRestricted: true });
-    expect(restrict).toHaveBeenNthCalledWith(2, 'd2', { isRestricted: false });
-  });
-
-  it('moves a directory where it is dropped, when the caller may move it', () => {
-    const tree = render();
-
-    tree.beforeDrop({ pos: 0, dragNode: node(locked, 'd2'), node: node(docs, 'd1') });
+  it('moves a directory where it is dropped, when the caller may move directories', () => {
+    render(undefined, { view: true }).beforeDrop({ pos: 0, dragNode: node(locked, 'd2'), node: node(docs, 'd1') });
     expect(move).not.toHaveBeenCalled();
+
+    TestBed.resetTestingModule();
+    const tree = render();
 
     tree.beforeDrop({ pos: 0, dragNode: node(docs, 'd1'), node: node(locked, 'd2') });
     expect(move).toHaveBeenLastCalledWith('d1', { parentId: 'd2', order: 0 });

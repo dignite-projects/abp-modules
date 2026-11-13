@@ -1,5 +1,4 @@
 import type { CreationAuditedEntityDto } from '@abp/ng.core';
-import type { BlobManagementAccessDto } from '../models';
 
 export interface BlobManagementDirectoryDto extends CreationAuditedEntityDto<string> {
   containerName?: string;
@@ -7,10 +6,6 @@ export interface BlobManagementDirectoryDto extends CreationAuditedEntityDto<str
   parentId?: string | null;
   order?: number;
   hasChildren?: boolean;
-  isRestricted?: boolean;
-  canUpdate?: boolean;
-  canDelete?: boolean;
-  access?: BlobManagementAccessDto;
 }
 
 export interface CreateBlobManagementDirectoryInput {
@@ -27,10 +22,6 @@ export interface GetBlobManagementDirectoriesInput {
 export interface MoveBlobManagementDirectoryInput {
   parentId?: string | null;
   order?: number;
-}
-
-export interface RestrictBlobManagementDirectoryInput {
-  isRestricted?: boolean;
 }
 
 export interface UpdateBlobManagementDirectoryInput {

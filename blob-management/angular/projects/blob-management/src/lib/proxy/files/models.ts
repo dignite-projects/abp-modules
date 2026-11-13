@@ -8,6 +8,7 @@ export interface BlobManagementFileDto extends ExtensibleCreationAuditedEntityDt
   isAddressedByName?: boolean;
   mimeType?: string;
   size?: number;
+  clientId?: string | null;
   lastModificationTime?: string | null;
   url?: string | null;
 }
@@ -16,14 +17,8 @@ export interface CreateBlobManagementFileInput {
   containerName: string;
   directoryId?: string | null;
   name?: string | null;
+  creatorId?: string | null;
   file: IRemoteStreamContent;
-}
-
-export interface CreateBlobManagementFileUploadTicketInput {
-  containerName: string;
-  directoryId?: string | null;
-  fileName: string;
-  lifetimeSeconds?: number | null;
 }
 
 export interface GetBlobManagementFilesInput extends PagedAndSortedResultRequestDto {

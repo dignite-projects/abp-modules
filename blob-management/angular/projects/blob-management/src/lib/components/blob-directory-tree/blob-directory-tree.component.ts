@@ -1,25 +1,9 @@
 import { TreeModule } from '@abp/ng.components/tree';
-import { CoreModule, PermissionService } from '@abp/ng.core';
-import { ResourcePermissionManagementComponent } from '@abp/ng.permission-management';
+import { CoreModule } from '@abp/ng.core';
 import { Confirmation, ConfirmationService, ThemeSharedModule } from '@abp/ng.theme.shared';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  inject,
-  input,
-  output,
-  signal,
-  untracked,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable, catchError, finalize, forkJoin, map, of } from 'rxjs';
-import {
-  BlobManagementPermissionTarget,
-  eBlobManagementPolicyNames,
-  eBlobManagementResourceNames,
-} from '../../blob-management-permissions';
 import { BlobManagementContainerDto } from '../../proxy/containers';
 import { BlobManagementDirectoryDto, BlobManagementDirectoryService } from '../../proxy/directories';
 
@@ -55,24 +39,23 @@ interface TreeNodeRef {
 /**
  * The directories of one container, loaded a level at a time: the top when the container is shown, a directory's
  * subdirectories when it is first expanded. Directories are created, renamed and deleted from a node's menu and moved
- * by dragging, each offered only where the caller may do it; a holder of `BlobManagement.ManagePermissions` restricts
- * a directory and grants on it. Every change reloads the levels already loaded. With `manage` off it only chooses a
- * directory - no menu, no dragging - as the file move does.
+ * by dragging, each offered only when the caller may do it - which is the container's answer, the same for every
+ * directory in it. Every change reloads the levels already loaded. With `manage` off it only chooses a directory - no
+ * menu, no dragging.
  */
 @Component({
   selector: 'blob-directory-tree',
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './blob-directory-tree.component.html',
-  imports: [CoreModule, ThemeSharedModule, TreeModule, ReactiveFormsModule, ResourcePermissionManagementComponent],
+  imports: [CoreModule, ThemeSharedModule, TreeModule, ReactiveFormsModule],
 })
 export class BlobManagementDirectoryTreeComponent {
   private readonly directoryService = inject(BlobManagementDirectoryService);
   private readonly confirmation = inject(ConfirmationService);
   private readonly fb = inject(FormBuilder);
-  private readonly permissionService = inject(PermissionService);
 
   readonly container = input.required<BlobManagementContainerDto>();
-  /** Whether directories are created, renamed, deleted, moved, restricted and granted here, or only chosen. */
+  /** Whether directories are created, renamed, deleted and moved here, or only chosen. */
   readonly manage = input(true);
 
   /** The directory chosen; `null` for the top of the container. */
@@ -82,13 +65,6 @@ export class BlobManagementDirectoryTreeComponent {
   readonly nodes = signal<BlobManagementTreeNode[]>([]);
   readonly selectedKey = signal(BLOB_MANAGEMENT_ROOT_KEY);
   expandedKeys: string[] = [BLOB_MANAGEMENT_ROOT_KEY];
-
-  /** Whether the caller manages grants: ABP's dialog checks the same standard permission. */
-  readonly canManagePermissions = computed(() =>
-    this.permissionService.getGrantedPolicy(eBlobManagementPolicyNames.ManagePermissions),
-  );
-  /** The directory whose grants ABP's dialog shows. */
-  readonly permissionTarget = signal<BlobManagementPermissionTarget | null>(null);
 
   /** The subdirectories loaded so far, by the key of their parent. */
   private readonly levels = new Map<string, BlobManagementDirectoryDto[]>();
@@ -125,8 +101,8 @@ export class BlobManagementDirectoryTreeComponent {
   /**
    * Loads the subdirectories of `parentKey` and redraws the tree. An answer is dropped when the container has changed
    * since it was asked for, or when a newer request for the same level was sent after it: the newest one wins. A
-   * level that can no longer be read - its directory deleted elsewhere, or no longer the caller's to view - is
-   * forgotten, so it does not fail the reloads that follow.
+   * level that can no longer be read - its directory deleted elsewhere - is forgotten, so it does not fail the
+   * reloads that follow.
    */
   load(parentKey: string): Observable<void> {
     const generation = this.generation;
@@ -222,42 +198,18 @@ export class BlobManagementDirectoryTreeComponent {
 
   isNodeSelected = (node: { key: string }): boolean => node.key === this.selectedKey();
 
-  /** Creating in a node is the permission of that place: the directory's, or the top of the container's. */
-  canCreateIn(node: TreeNodeRef): boolean {
-    const directory = node.origin.directory;
-    return !!(directory ? directory.access?.createDirectories : this.container().access?.createDirectories);
+  /** Creating directories is the container's permission, in any node: at its top or in a directory. */
+  canCreate(): boolean {
+    return !!this.container().access?.createDirectories;
   }
 
-  /** Renaming and deleting a directory are the permissions of the place it is in, which the server has worked out. */
+  /** Renaming and moving a directory - never the node that stands for the container. */
   canRename(node: TreeNodeRef): boolean {
-    return !!node.origin.directory?.canUpdate;
+    return !!node.origin.directory && !!this.container().access?.updateDirectories;
   }
 
   canDelete(node: TreeNodeRef): boolean {
-    return !!node.origin.directory?.canDelete;
-  }
-
-  openPermissions(node: TreeNodeRef): void {
-    const directory = node.origin.directory;
-    if (directory?.id) {
-      this.permissionTarget.set({
-        resourceName: eBlobManagementResourceNames.Directory,
-        resourceKey: directory.id,
-        displayName: directory.name ?? '',
-      });
-    }
-  }
-
-  /** Says whether the directory has permissions of its own; the grants on it count only while it does. */
-  toggleRestricted(node: TreeNodeRef): void {
-    const directory = node.origin.directory;
-    if (!directory?.id) {
-      return;
-    }
-
-    this.directoryService
-      .restrict(directory.id, { isRestricted: !directory.isRestricted })
-      .subscribe(() => this.reload());
+    return !!node.origin.directory && !!this.container().access?.deleteDirectories;
   }
 
   openCreateForm(node: TreeNodeRef): void {
@@ -334,7 +286,7 @@ export class BlobManagementDirectoryTreeComponent {
   beforeDrop = (arg: unknown): Observable<boolean> => {
     const { pos, dragNode, node } = arg as { pos: number; dragNode: TreeNodeRef; node: TreeNodeRef };
     const moved = dragNode.origin.directory;
-    if (!moved?.id || !moved.canUpdate) {
+    if (!moved?.id || !this.canRename(dragNode)) {
       return of(false);
     }
 

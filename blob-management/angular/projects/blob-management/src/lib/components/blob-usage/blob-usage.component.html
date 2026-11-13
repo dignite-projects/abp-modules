@@ -1,0 +1,124 @@
+@if (usage(); as usage) {
+  <div class="d-flex flex-wrap align-items-baseline gap-2 mb-2">
+    <h5 class="mb-0">{{ 'BlobManagement::Usage' | abpLocalization }}</h5>
+    @if (usage.storageSize) {
+      <span>{{
+        'BlobManagement::Usage:StoredOfAllocation'
+          | abpLocalization: (usage.storedBytes | blobFileSize) : (usage.storageSize | blobFileSize)
+      }}</span>
+    } @else {
+      <span>{{ 'BlobManagement::Usage:Stored' | abpLocalization }}: {{ usage.storedBytes | blobFileSize }}</span>
+    }
+    <span class="text-muted">{{ 'BlobManagement::Usage:Files' | abpLocalization }}: {{ usage.fileCount }}</span>
+  </div>
+  @if (usedPercent() !== null) {
+    <div
+      class="progress mb-3"
+      role="progressbar"
+      [attr.aria-valuenow]="usedPercent()"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      style="height: 0.5rem"
+    >
+      <div class="progress-bar" [class.bg-danger]="usedPercent()! >= 90" [style.width.%]="usedPercent()"></div>
+    </div>
+  }
+
+  <ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+      <button type="button" class="nav-link" [class.active]="view() === 'containers'" (click)="show('containers')">
+        {{ 'BlobManagement::Usage:Containers' | abpLocalization }}
+      </button>
+    </li>
+    <li class="nav-item">
+      <button type="button" class="nav-link" [class.active]="view() === 'users'" (click)="show('users')">
+        {{ 'BlobManagement::Usage:Users' | abpLocalization }}
+      </button>
+    </li>
+    <li class="nav-item">
+      <button type="button" class="nav-link" [class.active]="view() === 'clients'" (click)="show('clients')">
+        {{ 'BlobManagement::Usage:Clients' | abpLocalization }}
+      </button>
+    </li>
+  </ul>
+
+  @switch (view()) {
+    @case ('containers') {
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'BlobManagement::Name' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'BlobManagement::Usage:Stored' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'BlobManagement::Usage:Files' | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (container of usage.containers; track container.containerName) {
+            <tr>
+              <td>{{ container.containerName }}</td>
+              <td class="text-end">{{ container.storedBytes | blobFileSize }}</td>
+              <td class="text-end">{{ container.fileCount }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+    @case ('users') {
+      <p class="text-muted small">{{ 'BlobManagement::Usage:Hint' | abpLocalization }}</p>
+      <ngx-datatable
+        class="material"
+        [rows]="users().items"
+        [count]="users().totalCount"
+        [list]="list"
+        [externalPaging]="true"
+        columnMode="flex"
+        [headerHeight]="45"
+        [footerHeight]="45"
+        rowHeight="auto"
+      >
+        <ngx-datatable-column [name]="'BlobManagement::Name' | abpLocalization" [sortable]="false" [flexGrow]="3">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            @if (row.userId) {
+              <span class="text-break">{{ row.userName || row.userId }}</span>
+            } @else {
+              <span class="text-muted">{{ 'BlobManagement::Usage:NoUser' | abpLocalization }}</span>
+            }
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column [name]="'BlobManagement::Usage:Uploaded' | abpLocalization" [sortable]="false" [flexGrow]="1">
+          <ng-template let-row="row" ngx-datatable-cell-template>{{ row.uploadedBytes | blobFileSize }}</ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column [name]="'BlobManagement::Usage:Files' | abpLocalization" [sortable]="false" [flexGrow]="1">
+          <ng-template let-row="row" ngx-datatable-cell-template>{{ row.fileCount }}</ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    }
+    @case ('clients') {
+      <p class="text-muted small">{{ 'BlobManagement::Usage:Hint' | abpLocalization }}</p>
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'BlobManagement::Name' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'BlobManagement::Usage:Uploaded' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'BlobManagement::Usage:Files' | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (client of clients() ?? []; track client.clientId) {
+            <tr>
+              <td>
+                @if (client.clientId) {
+                  {{ client.clientId }}
+                } @else {
+                  <span class="text-muted">{{ 'BlobManagement::Usage:InProcess' | abpLocalization }}</span>
+                }
+              </td>
+              <td class="text-end">{{ client.uploadedBytes | blobFileSize }}</td>
+              <td class="text-end">{{ client.fileCount }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  }
+}
