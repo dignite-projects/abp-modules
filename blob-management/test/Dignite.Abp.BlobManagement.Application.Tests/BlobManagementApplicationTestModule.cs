@@ -11,7 +11,7 @@ namespace Dignite.Abp.BlobManagement;
     typeof(BlobManagementApplicationModule),
     typeof(AbpBlobStoringBlobManagementModule),
     typeof(BlobManagementDomainTestModule),
-    typeof(AbpPermissionManagementDomainModule)
+    typeof(AbpPermissionManagementApplicationModule)
     )]
 public class BlobManagementApplicationTestModule : AbpModule
 {

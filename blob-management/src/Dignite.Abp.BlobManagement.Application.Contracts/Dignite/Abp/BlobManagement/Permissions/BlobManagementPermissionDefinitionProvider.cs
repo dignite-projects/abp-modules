@@ -1,7 +1,7 @@
 using Dignite.Abp.BlobManagement.Localization;
 using Volo.Abp.Authorization.Permissions;
-using Volo.Abp.Authorization.Permissions.Resources;
 using Volo.Abp.Localization;
+using Volo.Abp.MultiTenancy;
 
 namespace Dignite.Abp.BlobManagement.Permissions;
 
@@ -26,19 +26,24 @@ public class BlobManagementPermissionDefinitionProvider : PermissionDefinitionPr
         AddResourcePermission(context, BlobManagementPermissions.Container.UpdateDirectories, BlobManagementResourceNames.Container, "Permission:UpdateDirectories");
         AddResourcePermission(context, BlobManagementPermissions.Container.DeleteDirectories, BlobManagementResourceNames.Container, "Permission:DeleteDirectories");
 
-        // Only a client's grant counts: granted to a user or a role it would let nothing through, since the file API
-        // refuses a token that carries a user.
-        AddResourcePermission(context, BlobManagementPermissions.Container.Files, BlobManagementResourceNames.Container, "Permission:Files")
-            .WithProviders(ClientResourcePermissionValueProvider.ProviderName);
+        // A client's grant, which is the deployment's: on the host side only, so a tenant's administrator never sees it.
+        // Only a client's grant counts, and BlobManagementClientChecker sees to it - a token that carries a user is
+        // refused before any grant is read - so a grant to a user or a role lets nothing through. It is not restricted
+        // to the client provider: ABP's dialog saves every permission of a resource for whoever it edits, and would
+        // fail on one that refuses users and roles.
+        AddResourcePermission(context, BlobManagementPermissions.Container.Files, BlobManagementResourceNames.Container, "Permission:Files",
+            MultiTenancySides.Host);
     }
 
     private static PermissionDefinition AddResourcePermission(
         IPermissionDefinitionContext context,
         string name,
         string resourceName,
-        string displayName)
+        string displayName,
+        MultiTenancySides multiTenancySide = MultiTenancySides.Both)
     {
-        return context.AddResourcePermission(name, resourceName, BlobManagementPermissions.ManagePermissions, L(displayName));
+        return context.AddResourcePermission(
+            name, resourceName, BlobManagementPermissions.ManagePermissions, L(displayName), multiTenancySide);
     }
 
     private static LocalizableString L(string name)

@@ -89,6 +89,7 @@
     <PackageVersion Include="Volo.Abp.Identity.Domain.Shared" Version="10.7.0" />
     <!-- blob-management/: the grant stores of its tests, which grant the BlobManagement's permissions through ABP's permission manager.
          The BlobManagement's own packages do not reference Permission Management. -->
+    <PackageVersion Include="Volo.Abp.PermissionManagement.Application" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.PermissionManagement.Domain" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.PermissionManagement.EntityFrameworkCore" Version="10.7.0" />
     <PackageVersion Include="Volo.Abp.PermissionManagement.MongoDB" Version="10.7.0" />

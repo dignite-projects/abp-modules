@@ -15,6 +15,7 @@ using Volo.Abp.AspNetCore.TestBase;
 using Volo.Abp.Content;
 using Volo.Abp.Guids;
 using Volo.Abp.Http.Client;
+using Volo.Abp.MultiTenancy;
 using Volo.Abp.PermissionManagement;
 using Volo.Abp.Security.Claims;
 using Volo.Abp.Uow;
@@ -38,6 +39,7 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
     private readonly BlobManagementContainerClientProxy _containers;
     private readonly BlobManagementUsageClientProxy _usage;
     private readonly ICurrentPrincipalAccessor _principalAccessor;
+    private readonly ICurrentTenant _currentTenant;
 
     private readonly Guid _admin = Guid.NewGuid();
     private readonly Guid _appUser = Guid.NewGuid();
@@ -50,6 +52,31 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
         _containers = GetRequiredService<BlobManagementContainerClientProxy>();
         _usage = GetRequiredService<BlobManagementUsageClientProxy>();
         _principalAccessor = GetRequiredService<ICurrentPrincipalAccessor>();
+        _currentTenant = GetRequiredService<ICurrentTenant>();
+    }
+
+    [Fact]
+    public async Task A_Granted_Client_Should_Keep_A_Tenants_Files_By_Its_Grant_On_The_Host_Side()
+    {
+        // The grant is the host's (the client provider writes it there); the call names the tenant in __tenant, which
+        // ABP's client proxy sends for the current tenant, and the token names none.
+        using (_currentTenant.Change(BlobManagementHttpApiTestModule.TenantId))
+        {
+            BlobManagementFileDto file;
+            using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
+            {
+                file = await _files.CreateAsync(NewFile(Container, "tenant.pdf"));
+                (await _files.GetAsync(file.Id)).Name.ShouldBe("tenant.pdf");
+                (await _files.GetListAsync(new GetBlobManagementFilesInput { ContainerName = Container, Filter = "tenant.pdf" }))
+                    .Items.Select(f => f.Id).ShouldContain(file.Id);
+            }
+
+            using (TestCaller.As("another-app"))
+            {
+                await ShouldFailAsync(HttpStatusCode.Forbidden, () => _files.CreateAsync(NewFile(Container, "a.pdf")));
+                await ShouldFailAsync(HttpStatusCode.NotFound, () => _files.GetAsync(file.Id));
+            }
+        }
     }
 
     [Fact]
