@@ -102,15 +102,32 @@ It also has `GetOrNullAsync`, `ExistsAsync` and `DeleteAsync`, by container and 
 
 ## Public Addresses
 
-A file in a managed container that is read publicly (`PublicRead`) can be served to anyone, without signing in. `IBlobManagementPublicUrlBuilder` gives the address of a file the application saved:
+A file the application marks public can be served to anyone, without signing in. For the BLOBs it saves by name, the application declares it on its own container, and the provider sends it with every save:
+
+````csharp
+options.Containers.Configure<ProfilePictureContainer>(container =>
+{
+    container.UseBlobManagement(provider =>
+    {
+        provider.BlobManagementContainer = "media";
+        provider.IsPublic = true;
+    });
+});
+````
+
+The mark is the file's, written when it is saved: turning `IsPublic` on or off changes what is saved from then on, and a BLOB saved before keeps what it was saved with until it is saved again. Whether anyone may read a file is the business system's call, not Blob Management's: a managed container has no setting for it. (A file kept by id is marked by its own call, [Public Files](files.md#public-files).)
+
+`IBlobManagementPublicUrlBuilder` gives the address of a file the application saved:
 
 ````csharp
 var url = _publicUrlBuilder.Build(
     "profile-pictures",          // the application's container
     "2026/11/photo.png",
     width: 256);                 // optional: width, height
-// /api/blob-management/public/media/2026/11/photo.png?__tenant=…&Width=256
+// /blobs/media/2026/11/photo.png?__tenant=…&Width=256
 ````
+
+* Public reads are at `/blobs/{container}/{name}`: an address a page embeds and a CDN caches, not an API, so it is not under `/api`. A host behind a gateway routes `/blobs/*` to Blob Management as well ([Hosting Modes](hosting.md#blob-management-as-its-own-service)).
 
 * The address names the managed container and the file. When the file belongs to a tenant it carries `__tenant=`: the request is anonymous, so nothing else says whose file it is. ABP's query-string tenant resolver, on by default, reads it.
 * `Width` and `Height` resize a JPEG, PNG or WebP: with both, the picture is cropped to fill the box; with one, the other follows its proportions. A picture is never enlarged, and one larger than 4096 pixels on a side is served as stored. Other files are always served as stored.
@@ -126,7 +143,7 @@ Configure<AbpBlobStoringBlobManagementOptions>(options =>
 
 A file kept by id has a public address too, given as the `url` of the file ([Public Reads](files.md#public-reads)): it names the file's physical BLOB rather than its name, so renaming or moving the file never breaks a published link.
 
-The response is cacheable by anyone for a day, with an `ETag` that changes when the file is overwritten (a matching `If-None-Match` is answered `304`). It never sets a cookie, is marked `nosniff`, and serves a type outside the module's list of known types as a download. `HEAD` is answered without reading the file. A file whose container is not read publicly is not found.
+The response is cacheable by anyone for a day, with an `ETag` that changes when the file is overwritten (a matching `If-None-Match` is answered `304`). It never sets a cookie, is marked `nosniff`, and serves a type outside the module's list of known types as a download. `HEAD` is answered without reading the file. A file that is not public is not found, as a missing one is; a cache that kept the response keeps it for up to a day after the file stops being public.
 
 The host sets the allowed sizes with `BlobManagementPublicReadOptions` (in `Dignite.Abp.BlobManagement.Application`); the list replaces the default, so clear it first to restrict it and add to it to extend it. A value above 4096 is never served, whatever the list says:
 
@@ -138,7 +155,9 @@ Configure<BlobManagementPublicReadOptions>(options =>
 });
 ````
 
-There is no server-side cache of renditions: a size is rendered again on each request that is not answered by an HTTP cache. A CDN, reverse proxy or rate limit in front of the host is still the host's job; the list of sizes only bounds how many different renditions an address can ask for.
+There is no server-side cache of renditions: a size is rendered again on each request that is not answered by an HTTP cache. A CDN, reverse proxy or rate limit in front of the host is still the host's job - with the query string in the cache key, since the tenant and the size are there; the list of sizes only bounds how many different renditions an address can ask for.
+
+A file that is not public is read in the application and handed on, or by the browser with a [read link](files.md#read-links) the application asks for.
 
 ## See Also
 

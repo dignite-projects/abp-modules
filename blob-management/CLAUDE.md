@@ -4,13 +4,18 @@ Blob Management for ABP Framework (LGPL-3.0-only): the tenant's BLOB containers,
 not an application**: a BLOB storing provider with a ledger. Business systems keep their bytes in it - as BLOBs under
 a name, or as files by id, filed in directories - and the module writes a descriptor for each, from which come the
 tenant's allocation, the usage figures and a page an administrator reads. It serves business systems and has no
-upload of its own: a business system builds its own file UI and calls the module as a client. The one thing a user
+business rules: a business system builds its own file UI, decides what its user may do, and calls the module as a
+client - from its back end, and for its browser through a ticket or a link the module signs. The one thing a user
 changes here is the directories of a container, by permissions put on the container. Hostable in an application's own
 process or once as its own service. It is not a cloud drive: no personal drives, no sharing a file with someone
 (ABP's File Management does that; this module does not compete with it).
 
-The design is in [`dev-docs/positioning-decision.md`](dev-docs/positioning-decision.md) (2026-11-13: what the module
-is for, who calls it, usage; tickets, the user-facing file API and restricted directories removed), which narrows
+How a business system integrates is in
+[`dev-docs/business-system-integration-decision.md`](dev-docs/business-system-integration-decision.md) (2026-11-14:
+three layers of credentials - the client token, upload tickets and read links, public addresses; a file, not its
+container, is public; `/blobs`), which replaces part of
+[`dev-docs/positioning-decision.md`](dev-docs/positioning-decision.md) (2026-11-13: what the module
+is for, who calls it, usage; the user-facing file API and restricted directories removed), which narrows
 [`dev-docs/blob-management-decision.md`](dev-docs/blob-management-decision.md) (the redesign of 2026-11-12: one
 edition, one kind of container, the names). What they kept of the storage tier was decided in
 [`dev-docs/drive-decision.md`](dev-docs/drive-decision.md), which is history and keeps the names the module had then
@@ -27,12 +32,19 @@ edition, one kind of container, the names). What they kept of the storage tier w
   `IBlobManagementBlobService` with its in-process implementation, and the provider (`BlobManagementBlobProvider`,
   `UseBlobManagement`); the BLOB API (`BlobManagementBlobController`, `BlobManagementBlobAppService`,
   `BlobManagementClientChecker`) and its C# client proxies
-  (`RemoteBlobManagementBlobService`); public reads with sizing (`BlobManagementPublicController`,
-  `BlobManagementPublicAppService`, `IBlobManagementPublicUrlBuilder`).
+  (`RemoteBlobManagementBlobService`); public reads with sizing at `/blobs` of the files marked public
+  (`FileDescriptor.IsPublic`; `BlobManagementPublicController`, `BlobManagementPublicAppService`,
+  `IBlobManagementPublicUrlBuilder`).
 - Files by id, for a business system: `IBlobManagementFileService` (list a place, one file, bytes, store, rename,
-  move, delete) with its trusted in-process implementation (`BlobManagementFileService`), the file API behind it
-  (`IBlobManagementFileAppService`, `api/blob-management/files`: a granted client for everything, a user with the
-  management permission for the reads) and the remote implementation (`RemoteBlobManagementFileService`).
+  move, mark public, delete; upload tickets and confirmation; read links) with its trusted in-process implementation
+  (`BlobManagementFileService`), the file API behind it (`IBlobManagementFileAppService`, `api/blob-management/files`:
+  a granted client for everything, a user with the management permission for the reads) and the remote implementation
+  (`RemoteBlobManagementFileService`).
+- For the browser, signed with Data Protection (`BlobManagementTicketProtector`): the anonymous upload with a ticket
+  (`BlobManagementUploadController`, `BlobManagementUploadAppService`, `api/blob-management/uploads/{ticket}`), whose
+  file is pending until confirmed and deleted by `BlobManagementPendingFileCleanupWorker` if never; the anonymous read
+  with a link (`BlobManagementReadLinkController`, `BlobManagementReadLinkAppService`, `BlobManagementReadLinkIssuer`,
+  `api/blob-management/links/{link}`).
 - Directories, for users: `DirectoryDescriptor` and `DirectoryManager` (in a container that sets `AllowDirectories`),
   `IBlobManagementDirectoryAppService` (list a level, one, create, rename, move, delete) under
   `api/blob-management/directories`, authorized by the container (`BlobManagementAccessService`);
@@ -100,14 +112,17 @@ imports the root one, so the lockstep `<Version>` applies.
    the file can be filed in a directory, renamed and moved. Both are `FileDescriptor` rows of any managed container;
    the difference is the file's (`IsAddressedByName`), not the container's. There is one kind of container - `Kind`
    does not come back.
-2. **A file is its business system's; the module has no upload of its own.** No user stores, renames, moves or deletes
-   a file through the module, whatever permission they hold: an application's rules run in the application, before it
+2. **A file is its business system's; the module has no business rules.** No user stores, renames, moves or deletes
+   a file through the module by a permission of theirs: an application's rules run in the application, before it
    calls. The BLOB API and the file API authorize *clients* by ABP's resource permission
-   `BlobManagement.Container.Files` granted to the client (provider `C`) on the container - ABP's own mechanism, not
-   a list of this module's - and reject any token that carries a user id for a write; the file API's reads also admit a user who holds the management
-   permission - the management page - and nothing more. No bridging to business permission names, no tickets or
-   upload links (a direct upload, if a remote deployment ever needs one, can only be built here - only the module can
-   verify it), and no trusted way for an application to write directories past the permissions on them.
+   `BlobManagement.Container.Files` granted to the client (provider `C`, defined on the host side) on the container -
+   ABP's own mechanism, not a list of this module's - and reject any token that carries a user id for a write; the file
+   API's reads also admit a user who holds the management permission - the management page - and nothing more. A
+   browser comes in only with what a granted client asked for on its behalf: an upload ticket or a read link, which
+   the module alone signs and verifies (Data Protection; the keys never leave it) and which carry the tenant, the file
+   and the user. A file uploaded with a ticket is pending until its business system confirms it. No bridging to
+   business permission names, no tickets a business system signs itself, and no trusted way for an application to
+   write directories past the permissions on them.
 3. **A user's authorization is the container's, never an item's.** What a user may do with directories is the
    permission granted on that container - no module-wide permission changes directories; the management permission
    reads, and lets its holder see every tree - and it is the same for every directory in it: a listing asks
@@ -127,7 +142,8 @@ imports the root one, so the lockstep `<Version>` applies.
    **stored bytes** (the tenant, a container: each physical BLOB once; the containers add up to the tenant, and the
    allocation is checked against it) and **uploaded bytes** (a user, a client: the sizes of their descriptors, shared
    content counted for each). The allocation is the tenant's only. A file's public address is its name when it is
-   addressed by name, else its physical BLOB name, so renaming or moving never breaks a published link.
+   addressed by name, else its physical BLOB name, so renaming or moving never breaks a published link; it answers
+   while a confirmed file that refers to it is public (`IsPublic`, the business system's mark, never the container's).
 7. **One installation per deployment environment.** Never two business hosts each installing the module behind one
    gateway.
 8. **Business code depends on the provider package** (plus `Application.Contracts` if it keeps files by id through
@@ -138,12 +154,14 @@ imports the root one, so the lockstep `<Version>` applies.
    module and its "what stays out" (no upload entry point, metadata, API, UI or permissions) is unchanged. Nothing
    here references `aspnetcore-mcp/` since the module's MCP tools were removed. See root `CLAUDE.md`, invariant 2.
 10. **It stays a BLOB management module.** Personal drives, sharing a file with a user or by link, a trash - what makes
-    a cloud drive - are not added here; an application that needs them has ABP's File Management. Neither is a file UI
+    a cloud drive - are not added here (a read link is not a share: a business system asks for it for its own user, and
+    it lives minutes); an application that needs them has ABP's File Management. Neither is a file UI
     for end users - the management page reads - nor tools for an AI assistant: a business system contributes its own
     MCP tools, which know the record a file belongs to, and calls the file service from them.
 11. **Names are contracts once published** (nothing is yet): the package IDs, `@dignite/ng.blob-management`, the
     permission and feature group `BlobManagement`, the permission names, the remote service name, `api/blob-management`,
-    `/blobs` (the public read prefix, `BlobManagementPublicUrl.RoutePrefix`), the `Blob` table prefix and the `BlobManagement` connection string name, the configuration
+    `/blobs` (the public read prefix, `BlobManagementPublicUrl.RoutePrefix`), the `Blob` table prefix and the
+    `BlobManagement` connection string name, the Data Protection purposes of tickets and links, the configuration
     section `BlobManagement`, and the class a resource permission is granted on (its resource name is that type's
     full name: `Dignite.Abp.BlobManagement.BlobManagementContainer`). The names were weighed again on 2026-11-13 and
     stay: not File Management (ABP's module has that name, its routes and its permission group), not entities named

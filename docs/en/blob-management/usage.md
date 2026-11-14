@@ -18,7 +18,7 @@ Every BLOB has a file descriptor, so Blob Management counts what the current ten
 | The tenant, each container | **Stored bytes**: each physical BLOB once, however many files share it. Content is shared within a container only, so the containers add up to the tenant. |
 | Each user, each client | **Uploaded bytes**: the sizes of their files. Two users who uploaded the same bytes are each counted for them, so these do not add up to the stored bytes. |
 
-A user is the one a file is counted for, its `CreatorId` ([The Uploader](files.md#the-uploader)); a client is the OAuth client that stored it over HTTP, its `ClientId`. Files stored in Blob Management's own process have no client, and are gathered in one row. Deleted files do not count.
+A user is the one a file is counted for, its `CreatorId` ([The Uploader](files.md#the-uploader)); a client is the OAuth client that stored it over HTTP, its `ClientId`. Files stored in Blob Management's own process have no client, and are gathered in one row. Deleted files do not count; files uploaded with a ticket and not confirmed yet do ([Upload Tickets](files.md#upload-tickets)).
 
 ## The API
 
