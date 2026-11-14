@@ -6,6 +6,9 @@ public static class BlobManagementTestAppContainers
     /// <summary>To Blob Management's <see cref="BlobManagementTestContainers.Files"/>.</summary>
     public const string Media = "app-media";
 
+    /// <summary>To Blob Management's <see cref="BlobManagementTestContainers.Files"/>, declared public.</summary>
+    public const string PublicMedia = "app-public-media";
+
     /// <summary>To Blob Management's <see cref="BlobManagementTestContainers.Files"/> as well.</summary>
     public const string Documents = "app-documents";
 

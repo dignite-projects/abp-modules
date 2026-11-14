@@ -10,7 +10,22 @@ export interface BlobManagementFileDto extends ExtensibleCreationAuditedEntityDt
   size?: number;
   clientId?: string | null;
   lastModificationTime?: string | null;
+  isPublic?: boolean;
+  isPending?: boolean;
   url?: string | null;
+}
+
+export interface BlobManagementReadLinkDto {
+  fileId?: string;
+  url?: string;
+  expirationTime?: string;
+}
+
+export interface BlobManagementUploadTicketDto {
+  ticket?: string;
+  uploadUrl?: string;
+  fileId?: string;
+  expirationTime?: string;
 }
 
 export interface CreateBlobManagementFileInput {
@@ -18,7 +33,26 @@ export interface CreateBlobManagementFileInput {
   directoryId?: string | null;
   name?: string | null;
   creatorId?: string | null;
+  isPublic?: boolean;
   file: IRemoteStreamContent;
+}
+
+export interface CreateBlobManagementReadLinkInput {
+  lifetimeInSeconds?: number | null;
+}
+
+export interface CreateBlobManagementReadLinksInput {
+  ids: string[];
+  lifetimeInSeconds?: number | null;
+}
+
+export interface CreateBlobManagementUploadTicketInput {
+  containerName: string;
+  directoryId?: string | null;
+  uploaderId?: string | null;
+  maxSize?: number | null;
+  allowedContentTypes?: string[];
+  lifetimeInSeconds?: number | null;
 }
 
 export interface GetBlobManagementFilesInput extends PagedAndSortedResultRequestDto {
@@ -29,6 +63,10 @@ export interface GetBlobManagementFilesInput extends PagedAndSortedResultRequest
 
 export interface MoveBlobManagementFileInput {
   directoryId?: string | null;
+}
+
+export interface SetBlobManagementFilePublicInput {
+  isPublic?: boolean;
 }
 
 export interface UpdateBlobManagementFileInput {

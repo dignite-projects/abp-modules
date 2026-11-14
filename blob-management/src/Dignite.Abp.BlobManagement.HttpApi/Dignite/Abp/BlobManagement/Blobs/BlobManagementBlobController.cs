@@ -31,9 +31,10 @@ public class BlobManagementBlobController : BlobManagementController, IBlobManag
         [FromQuery] string blobName,
         IRemoteStreamContent content,
         [FromQuery] bool overrideExisting = false,
-        [FromQuery] Guid? creatorId = null)
+        [FromQuery] Guid? creatorId = null,
+        [FromQuery] bool isPublic = false)
     {
-        return BlobManagementBlobAppService.SaveAsync(containerName, blobName, content, overrideExisting, creatorId);
+        return BlobManagementBlobAppService.SaveAsync(containerName, blobName, content, overrideExisting, creatorId, isPublic);
     }
 
     [HttpGet]

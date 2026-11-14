@@ -1,5 +1,9 @@
 ﻿using Dignite.Abp.BlobStoring.Imaging;
+using System.Threading.Tasks;
+using Dignite.Abp.BlobManagement.Uploads;
 using Dignite.Abp.BlobStoring.Pipeline;
+using Volo.Abp;
+using Volo.Abp.BackgroundWorkers;
 using Volo.Abp.DistributedLocking;
 using Volo.Abp.Domain;
 using Volo.Abp.Domain.Entities.Events.Distributed;
@@ -10,6 +14,7 @@ namespace Dignite.Abp.BlobManagement;
 [DependsOn(
     typeof(AbpDddDomainModule),
     typeof(AbpDistributedLockingAbstractionsModule),
+    typeof(AbpBackgroundWorkersModule),
     typeof(AbpBlobStoringPipelineModule),
     typeof(AbpBlobStoringImagingModule),
     typeof(AbpBlobStoringImagingSkiaSharpModule),
@@ -26,5 +31,10 @@ public class BlobManagementDomainModule : AbpModule
         {
             options.AutoEventSelectors.Add<FileDescriptor>();
         });
+    }
+
+    public override async Task OnApplicationInitializationAsync(ApplicationInitializationContext context)
+    {
+        await context.AddBackgroundWorkerAsync<BlobManagementPendingFileCleanupWorker>();
     }
 }

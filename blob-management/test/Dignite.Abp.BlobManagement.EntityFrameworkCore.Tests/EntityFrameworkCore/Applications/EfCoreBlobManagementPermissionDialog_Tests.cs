@@ -1,0 +1,5 @@
+namespace Dignite.Abp.BlobManagement.EntityFrameworkCore.Applications;
+
+public class EfCoreBlobManagementPermissionDialog_Tests : BlobManagementPermissionDialog_Tests<BlobManagementEntityFrameworkCoreTestModule>
+{
+}

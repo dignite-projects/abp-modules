@@ -4,8 +4,8 @@ using Volo.Abp.Application.Services;
 namespace Dignite.Abp.BlobManagement.Public;
 
 /// <summary>
-/// Anonymous reads of the files in a <c>PublicRead</c> container (<see cref="BlobManagementPublicUrl"/>), in the request's
-/// tenant. Any other container, a missing file and a deleted one are all simply not found.
+/// Anonymous reads of the files marked public (<see cref="BlobManagementPublicUrl"/>), in the request's tenant. A file
+/// that is not public, a missing or deleted one and a container that is not managed are all simply not found.
 /// </summary>
 public interface IBlobManagementPublicAppService : IApplicationService
 {
@@ -15,7 +15,7 @@ public interface IBlobManagementPublicAppService : IApplicationService
     /// <paramref name="input"/> asks for a size. Everything in the result comes from the same lookup of the file, so a
     /// file overwritten meanwhile never mixes the old one's tag or type with the new one's bytes.
     /// <para>
-    /// A width or height must be one the Blob Management allows (<c>BlobManagementPublicReadOptions.AllowedSizes</c>), otherwise
+    /// A width or height must be one of the container's public sizes (<c>GetBlobManagementPublicSizes</c>), otherwise
     /// <see cref="Volo.Abp.Validation.AbpValidationException"/>, checked before the lookup. A missing file - or a file
     /// whose bytes are missing from storage - is <see cref="Volo.Abp.Domain.Entities.EntityNotFoundException"/>.
     /// </para>

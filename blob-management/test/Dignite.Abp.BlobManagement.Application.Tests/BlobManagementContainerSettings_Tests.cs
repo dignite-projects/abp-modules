@@ -31,12 +31,16 @@ public abstract class BlobManagementContainerSettings_Tests<TStartupModule> : Bl
 
         options.Services.ReplaceConfiguration(Configuration(new Dictionary<string, string?>
         {
-            ["BlobManagement:Containers:config-media:PublicRead"] = "true",
+            ["BlobManagement:Containers:config-media:AllowDirectories"] = "true",
             ["BlobManagement:Containers:config-media:Preset"] = "images",
             ["BlobManagement:Containers:config-media:PresetOptions:MaxSizeInMegabytes"] = "2",
             ["BlobManagement:Containers:config-media:PresetOptions:MaxWidth"] = "100",
             ["BlobManagement:Containers:config-docs:AllowDirectories"] = "true",
-            ["BlobManagement:Containers:config-docs:Preset"] = "Documents"
+            ["BlobManagement:Containers:config-docs:Preset"] = "Documents",
+            ["BlobManagement:Containers:config-media:PublicSizes:0"] = "200",
+            ["BlobManagement:Containers:config-media:PublicSizes:1"] = "100",
+            ["BlobManagement:PublicSizes:0"] = "96",
+            ["BlobManagement:PublicSizes:1"] = "192"
         }));
     }
 
@@ -60,12 +64,23 @@ public abstract class BlobManagementContainerSettings_Tests<TStartupModule> : Bl
     }
 
     [Fact]
+    public void A_Container_Should_Take_Its_Own_Public_Sizes_Else_The_Hosts_Default()
+    {
+        var provider = GetRequiredService<IBlobContainerConfigurationProvider>();
+
+        provider.Get(BlobManagementApplicationTestModule.ConfiguredAndOverriddenContainer)
+            .GetBlobManagementPublicSizes().ShouldBe(new[] { 100, 200 });
+        // No list of its own: the default container's, which the root key set.
+        provider.Get(Docs).GetBlobManagementPublicSizes().ShouldBe(new[] { 96, 192 });
+    }
+
+    [Fact]
     public void Code_Should_Override_The_Configuration()
     {
-        // PublicRead is true in configuration; BlobManagementApplicationTestModule sets it false in code.
+        // AllowDirectories is true in configuration; BlobManagementApplicationTestModule sets it false in code.
         GetRequiredService<IBlobContainerConfigurationProvider>()
             .Get(BlobManagementApplicationTestModule.ConfiguredAndOverriddenContainer)
-            .GetBlobManagementContainerConfiguration().PublicRead.ShouldBeFalse();
+            .GetBlobManagementContainerConfiguration().AllowDirectories.ShouldBeFalse();
     }
 
     [Fact]
@@ -82,8 +97,12 @@ public abstract class BlobManagementContainerSettings_Tests<TStartupModule> : Bl
     [InlineData("BlobManagement:Containers:c:Scope", "Personal", "unknown key 'Scope'")]
     // A client is granted on a container in ABP's permission management now, not listed in its configuration.
     [InlineData("BlobManagement:Containers:c:AllowedClientIds:0", "site-app", "unknown key 'AllowedClientIds'")]
-    [InlineData("BlobManagement:Containers:c:PublicRead", "yes", "PublicRead must be true or false")]
+    // Whether a file is read publicly is its business system's call, made on the file, not the container's.
+    [InlineData("BlobManagement:Containers:c:PublicRead", "true", "unknown key 'PublicRead'")]
     [InlineData("BlobManagement:Containers:c:Preset", "Videos", "unknown preset 'Videos'")]
+    [InlineData("BlobManagement:Containers:c:PublicSizes", "64", "PublicSizes must be a list of numbers")]
+    [InlineData("BlobManagement:Containers:c:PublicSizes:0", "big", "PublicSizes must be a list of numbers")]
+    [InlineData("BlobManagement:Containers:c:PublicSizes:0", "5000", "from 1 to 4096")]
     [InlineData("BlobManagement:Containers:c:PresetOptions:MaxSizeInMegabytes", "2", "PresetOptions is given without a Preset")]
     public void Reading_Should_Stop_At_A_Mistake(string key, string value, string message)
     {
@@ -92,6 +111,17 @@ public abstract class BlobManagementContainerSettings_Tests<TStartupModule> : Bl
 
         exception.Message.ShouldContain(message);
         exception.Message.ShouldContain("'c'");
+    }
+
+    [Fact]
+    public void Reading_Should_Stop_At_A_Wrong_Default_Public_Size()
+    {
+        BlobManagementContainerSettings.ReadDefaultPublicSizes(Configuration(new Dictionary<string, string?>())).ShouldBeNull();
+
+        Should.Throw<AbpException>(() => BlobManagementContainerSettings.ReadDefaultPublicSizes(Configuration(new Dictionary<string, string?>
+        {
+            ["BlobManagement:PublicSizes:0"] = "0"
+        }))).Message.ShouldContain("from 1 to 4096");
     }
 
     [Fact]

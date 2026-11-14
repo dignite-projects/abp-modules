@@ -85,10 +85,11 @@ public class BlobManagementDomainTestModule : AbpModule
                 container.UseMemory();
             });
 
-            options.Containers.Configure(BlobManagementTestContainers.Public, container =>
+            options.Containers.Configure(BlobManagementTestContainers.Avatars, container =>
             {
-                container.UseBlobManagementContainer(managed => managed.PublicRead = true);
+                container.UseBlobManagementContainer();
                 container.UseMemory();
+                container.UseBlobManagementPublicSizes(BlobManagementTestContainers.AvatarSizes);
             });
 
             // Not a managed container: the manager refuses it.

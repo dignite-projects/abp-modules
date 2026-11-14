@@ -10,7 +10,7 @@ using Volo.Abp.Validation;
 namespace Dignite.Abp.BlobManagement.Public;
 
 /// <summary>
-/// Public reads: <c>GET|HEAD /api/blob-management/public/{containerName}/{blobName}</c>, optionally <c>?Width=&amp;Height=</c>, and
+/// Public reads: <c>GET|HEAD /blobs/{containerName}/{blobName}</c>, optionally <c>?Width=&amp;Height=</c>, and
 /// <c>?__tenant=</c> to name the tenant of an anonymous request (see <see cref="BlobManagementPublicUrl"/>). An address, not an
 /// API: it is left out of ABP's API definition, so no client proxy is generated for it.
 /// <para>
@@ -57,7 +57,7 @@ public class BlobManagementPublicController : BlobManagementController
         }
         catch (AbpValidationException)
         {
-            // A size outside BlobManagementPublicReadOptions.AllowedSizes, for GET and HEAD alike.
+            // A size outside the container's public sizes, for GET and HEAD alike.
             return BadRequest();
         }
         catch (EntityNotFoundException)

@@ -115,9 +115,11 @@ public abstract class BlobManagementAppService : ApplicationService
             MimeType = file.MimeType,
             Size = file.Size,
             ClientId = file.ClientId,
+            IsPublic = file.IsPublic,
+            IsPending = file.IsPending,
             // The public address of a file saved under a name is that name; a file kept by its id is addressed by its
             // physical BLOB, since its name may repeat - and renaming or moving it then leaves the address as it was.
-            Url = GetContainer(file.ContainerName).PublicRead
+            Url = file.IsPublic
                 ? BlobManagementPublicUrl.Build(
                     file.ContainerName, file.IsAddressedByName ? file.Name : file.BlobName, file.TenantId)
                 : null

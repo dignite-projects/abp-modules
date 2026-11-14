@@ -1,7 +1,7 @@
 ```json
 //[doc-seo]
 {
-    "Description": "Install Dignite Blob Management in an ABP host: its modules and database, managed containers declared in code or in appsettings.json, directories, upload presets, public read and the tenant storage allocation."
+    "Description": "Install Dignite Blob Management in an ABP host: its modules and database, managed containers declared in code or in appsettings.json, directories, upload presets and the tenant storage allocation."
 }
 ```
 
@@ -58,7 +58,7 @@ Configure<AbpBlobStoringOptions>(options =>
 
     options.Containers.Configure("media", container =>
     {
-        container.UseBlobManagementContainer(managed => managed.PublicRead = true);
+        container.UseBlobManagementContainer();
         container.UseImagesPreset(preset => preset.MaxWidth = 2048);
     });
 
@@ -72,10 +72,11 @@ Configure<AbpBlobStoringOptions>(options =>
 
 There is one kind of managed container: applications store in it by name through the [provider](provider.md) and by id through the [file service](files.md), and the management page shows both. `BlobManagementContainerConfiguration` has:
 
-* `PublicRead`: whether anyone may read the container's files at their [public address](provider.md#public-addresses), without signing in. Default: `false`.
 * `AllowDirectories`: whether the container has a directory tree for its files addressed by id ([Directories](directories.md)). Default: `false` - the container's files are one flat list, and every directory operation is refused (`BlobManagement:DirectoriesNotAllowed`).
 
 Which applications may use a container over HTTP is not configured here: an OAuth client is granted the container's files in ABP's permission management ([Granting an Application](permissions.md#granting-an-application)). An application in the same process is trusted and needs no grant.
+
+Nor is whether a file is read publicly: that is the business system's call, made on each file - by the application's own container for the BLOBs it saves by name ([Public Addresses](provider.md#public-addresses)), and when it stores a file by id or later ([Public Files](files.md#public-files)).
 
 `UseBlobManagementContainer` also makes the container multi-tenant: every managed container keeps each tenant's files apart. Declare named containers only; a default container declared managed would make every container name one, and the host refuses to start.
 
@@ -94,7 +95,7 @@ A preset adds the [BLOB Storing](../blob-storing/index.md) contributors a kind o
 container.UseDocumentsPreset(preset => preset.MaxSizeInMegabytes = 50);
 ````
 
-The allowed types leave out SVG, HTML and scripts, which a browser would run on the host's own address. `UseAnyPreset` does not: do not combine it with `PublicRead`. (A public read serves a type outside the module's list as a download, never inline, but the container should not hold such files to begin with.)
+The allowed types leave out SVG, HTML and scripts, which a browser would run on the host's own address. `UseAnyPreset` does not: a public read or a read link serves a type outside the module's list as a download, never inline, but a container whose files are read by browsers should not hold such files to begin with.
 
 A container can do without a preset, or add contributors after one; calling an `Add…Contributor` method again changes that contributor's configuration.
 
@@ -125,20 +126,24 @@ A host with no code of its own for Blob Management - the module run as its own s
   "BlobManagement": {
     "Containers": {
       "media": {
-        "PublicRead": true,
         "Preset": "Images",
         "PresetOptions": { "MaxSizeInMegabytes": 10, "MaxWidth": 2048 }
       },
       "documents": {
         "AllowDirectories": true,
         "Preset": "Documents"
+      },
+      "avatars": {
+        "Preset": "Images",
+        "PublicSizes": [ 64, 128, 256 ]
       }
-    }
+    },
+    "PublicSizes": [ 128, 256, 512, 1024 ]
   }
 }
 ````
 
-Each container is applied with the same methods code uses. The keys are `PublicRead`, `AllowDirectories`, `Preset` and `PresetOptions`. `Preset` is one of `Images`, `Documents`, `BinaryAssets` and `Any`, compared without case; `PresetOptions` holds that preset's parameters. The storage provider is not declared here: the containers take the default container's provider and its settings, configured in code as above.
+Each container is applied with the same methods code uses. The keys are `AllowDirectories`, `Preset`, `PresetOptions` and `PublicSizes`. `Preset` is one of `Images`, `Documents`, `BinaryAssets` and `Any`, compared without case; `PresetOptions` holds that preset's parameters. `PublicSizes` is the list of widths and heights a [public read](provider.md#public-addresses) of the container's pictures may ask for; `PublicSizes` at the root of the section is the host's default for every container without one. The storage provider is not declared here: the containers take the default container's provider and its settings, configured in code as above.
 
 Every mistake stops the host when it starts - an unknown key or preset, a value of the wrong type, `PresetOptions` without a `Preset`, a misspelt or invalid preset parameter - rather than on the first upload. Code runs after the section is applied, so a module's or the host's own `Configure<AbpBlobStoringOptions>` overrides it.
 
@@ -166,10 +171,10 @@ How much a tenant may store is an ABP [feature](https://abp.io/docs/latest/frame
 
 | Feature | Default | |
 |---|---|---|
-| `BlobManagement.Enable` | `true` | Whether the tenant may store files. Turning it off stops storing, and closes the file, directory, container and usage services; it does not close reading what is already public. |
+| `BlobManagement.Enable` | `true` | Whether the tenant may store files. Turning it off stops storing, and closes the file, directory, container and usage services; it does not close reading what is already public, or a read link already handed out. |
 | `BlobManagement.StorageSize` | `0` | The most the tenant may store, in megabytes. `0` is no limit. |
 
-Usage is counted from the file descriptors: each stored BLOB once, however many files share it, across every managed container; deleted files do not count. New bytes beyond the allocation are refused with `BlobManagement:StorageQuotaExceeded`; the same bytes stored again add nothing and are not refused. The check reads the usage and then stores, so two uploads at the same moment can both pass it: it is a soft limit, exceeded by at most an upload each. The allocation is the tenant's only: there is none for a container or a user. What is used is shown on the [Usage](usage.md) page.
+Usage is counted from the file descriptors: each stored BLOB once, however many files share it, across every managed container; deleted files do not count, and files uploaded with a ticket and not confirmed yet do. New bytes beyond the allocation are refused with `BlobManagement:StorageQuotaExceeded`; the same bytes stored again add nothing and are not refused. The check reads the usage and then stores, so two uploads at the same moment can both pass it: it is a soft limit, exceeded by at most an upload each. The allocation is the tenant's only: there is none for a container or a user. What is used is shown on the [Usage](usage.md) page.
 
 ## Errors
 
@@ -180,7 +185,11 @@ Usage is counted from the file descriptors: each stored BLOB once, however many 
 | `BlobManagement:BlobNotFound` | No file of that name (HTTP 404). |
 | `BlobManagement:BlobManagementDisabled` | The tenant's `BlobManagement.Enable` is off. |
 | `BlobManagement:StorageQuotaExceeded` | The tenant's `BlobManagement.StorageSize` would be exceeded. |
-| `BlobManagement:FileAddressedByName` | The file was saved by an application under its name, and is not renamed or moved (HTTP 409). |
+| `BlobManagement:FileAddressedByName` | The file was saved by an application under its name, and is not renamed, moved or marked public by id (HTTP 409). |
+| `BlobManagement:UploadTicketInvalid` | An upload ticket that is expired, altered or not this Blob Management's (HTTP 403). |
+| `BlobManagement:UploadTicketUsed` | The ticket's file was stored already: a ticket stores one file, once (HTTP 409). |
+| `BlobManagement:FilePending` | The file was uploaded with a ticket and is not confirmed yet, so it gets no read link (HTTP 409). |
+| `BlobManagement:ReadLinkInvalid` | A read link that is expired, altered or not this Blob Management's (HTTP 403). |
 | `BlobManagement:DirectoriesNotAllowed` and the other directory errors | See [Directories](directories.md#errors). |
 
 The container's contributors add their own, such as `Dignite.Abp.BlobStoring:ContentTooLarge` and `Dignite.Abp.BlobStoring:ContentTypeNotAllowed`.

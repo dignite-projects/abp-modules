@@ -1,7 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobManagement.Features;
+using Dignite.Abp.BlobManagement.Links;
+using Dignite.Abp.BlobManagement.Tickets;
+using Dignite.Abp.BlobManagement.Uploads;
+using Dignite.Abp.BlobStoring.Pipeline;
+using Microsoft.Extensions.Options;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Content;
@@ -24,6 +30,16 @@ public class BlobManagementFileService : BlobManagementAppService, IBlobManageme
     protected IFileDescriptorRepository FileRepository { get; }
 
     protected FileDescriptorManager FileDescriptorManager { get; }
+
+    // Resolved lazily, not injected, so the constructor - which the file API repeats - stays as it was.
+    protected BlobManagementTicketProtector TicketProtector =>
+        LazyServiceProvider.LazyGetRequiredService<BlobManagementTicketProtector>();
+
+    protected BlobManagementReadLinkIssuer ReadLinkIssuer =>
+        LazyServiceProvider.LazyGetRequiredService<BlobManagementReadLinkIssuer>();
+
+    protected BlobManagementUploadOptions UploadOptions =>
+        LazyServiceProvider.LazyGetRequiredService<IOptions<BlobManagementUploadOptions>>().Value;
 
     public BlobManagementFileService(
         IFileDescriptorRepository fileRepository,
@@ -77,6 +93,45 @@ public class BlobManagementFileService : BlobManagementAppService, IBlobManageme
         return Map(file);
     }
 
+    public virtual async Task<BlobManagementFileDto> SetPublicAsync(Guid id, SetBlobManagementFilePublicInput input)
+    {
+        var file = await GetFileAsync(id);
+        await FileDescriptorManager.SetPublicAsync(file, input.IsPublic);
+        return Map(file);
+    }
+
+    public virtual Task<BlobManagementUploadTicketDto> CreateUploadTicketAsync(CreateBlobManagementUploadTicketInput input)
+    {
+        return CreateUploadTicketAsync(input, clientId: null);
+    }
+
+    public virtual async Task<BlobManagementFileDto> ConfirmAsync(Guid id)
+    {
+        var file = await GetFileAsync(id);
+        await FileDescriptorManager.ConfirmAsync(file);
+        return Map(file);
+    }
+
+    public virtual async Task<BlobManagementReadLinkDto> CreateReadLinkAsync(Guid id, CreateBlobManagementReadLinkInput input)
+    {
+        return await ReadLinkIssuer.IssueAsync(await GetFileAsync(id), input?.LifetimeInSeconds);
+    }
+
+    public virtual async Task<ListResultDto<BlobManagementReadLinkDto>> CreateReadLinksAsync(CreateBlobManagementReadLinksInput input)
+    {
+        var links = new List<BlobManagementReadLinkDto>();
+        foreach (var id in input.Ids.Distinct())
+        {
+            var file = await FindFileForLinkAsync(id);
+            if (file is { IsPending: false })
+            {
+                links.Add(await ReadLinkIssuer.IssueAsync(file, input.LifetimeInSeconds));
+            }
+        }
+
+        return new ListResultDto<BlobManagementReadLinkDto>(links);
+    }
+
     public virtual async Task DeleteAsync(Guid id)
     {
         var file = await FindFileAsync(id);
@@ -112,15 +167,83 @@ public class BlobManagementFileService : BlobManagementAppService, IBlobManageme
         CheckNameLength(name, nameof(input.Name));
 
         var creatorId = input.CreatorId;
+        var isPublic = input.IsPublic;
         var file = await FileDescriptorManager.UploadAsync(
             input.ContainerName,
             name,
             content.GetStream(),
             input.DirectoryId,
-            creatorId.HasValue ? descriptor => descriptor.CreatorId = creatorId : null,
+            descriptor =>
+            {
+                descriptor.SetPublic(isPublic);
+                if (creatorId.HasValue)
+                {
+                    descriptor.CreatorId = creatorId;
+                }
+            },
             clientId);
 
         return Map(file);
+    }
+
+    /// <summary>
+    /// Issues an upload ticket, recording <paramref name="clientId"/> as the writer of the file it brings in when a
+    /// remote client asked for it. The place is checked now - a container that is not managed, or a directory that is
+    /// not one of the container, is refused before a ticket exists. The ticket's size is the input's, never more than
+    /// the container takes; its lifetime the input's, never more than
+    /// <see cref="BlobManagementUploadOptions.MaxTicketLifetime"/>; its user the input's, else the current one.
+    /// </summary>
+    protected virtual async Task<BlobManagementUploadTicketDto> CreateUploadTicketAsync(
+        CreateBlobManagementUploadTicketInput input,
+        string? clientId)
+    {
+        GetContainer(input.ContainerName);
+        if (input.DirectoryId.HasValue)
+        {
+            await GetDirectoryAsync(input.DirectoryId.Value, input.ContainerName);
+        }
+
+        var containerMax = BlobStreamBuffering.GetMaxBufferedBytes(ContainerConfigurationProvider.Get(input.ContainerName));
+        var lifetime = input.LifetimeInSeconds is > 0
+            ? TimeSpan.FromSeconds(input.LifetimeInSeconds.Value)
+            : UploadOptions.TicketLifetime;
+        if (lifetime > UploadOptions.MaxTicketLifetime)
+        {
+            lifetime = UploadOptions.MaxTicketLifetime;
+        }
+
+        var upload = new BlobManagementUploadTicket
+        {
+            TenantId = CurrentTenant.Id,
+            ContainerName = input.ContainerName,
+            DirectoryId = input.DirectoryId,
+            FileId = GuidGenerator.Create(),
+            UploaderId = input.UploaderId ?? CurrentUser.Id,
+            ClientId = clientId,
+            MaxSize = input.MaxSize is > 0 ? Math.Min(input.MaxSize.Value, containerMax) : containerMax,
+            AllowedContentTypes = (input.AllowedContentTypes ?? new())
+                .Where(type => !type.IsNullOrWhiteSpace())
+                .Select(type => type.Trim().ToLowerInvariant())
+                .Distinct()
+                .ToList()
+        };
+
+        var expiration = DateTimeOffset.UtcNow.Add(lifetime);
+        var ticket = TicketProtector.Protect(BlobManagementUploadTicket.Purpose, upload, expiration);
+
+        return new BlobManagementUploadTicketDto
+        {
+            Ticket = ticket,
+            UploadUrl = BlobManagementUploadUrl.Build(ticket),
+            FileId = upload.FileId,
+            ExpirationTime = expiration.UtcDateTime
+        };
+    }
+
+    /// <summary>A file the caller may have a read link for, or <c>null</c>: in process, any file of a managed container.</summary>
+    protected virtual Task<FileDescriptor?> FindFileForLinkAsync(Guid id)
+    {
+        return FindFileAsync(id);
     }
 
     /// <summary>A file of a managed container; any other is not found.</summary>

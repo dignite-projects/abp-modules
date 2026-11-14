@@ -21,9 +21,9 @@ public class BlobManagementBlobService : BlobManagementAppService, IBlobManageme
         FileDescriptorManager = fileDescriptorManager;
     }
 
-    public virtual Task<BlobManagementBlobDto> SaveAsync(string containerName, string blobName, IRemoteStreamContent content, bool overrideExisting = false, Guid? creatorId = null)
+    public virtual Task<BlobManagementBlobDto> SaveAsync(string containerName, string blobName, IRemoteStreamContent content, bool overrideExisting = false, Guid? creatorId = null, bool isPublic = false)
     {
-        return SaveAsync(containerName, blobName, content, overrideExisting, creatorId, clientId: null);
+        return SaveAsync(containerName, blobName, content, overrideExisting, creatorId, isPublic, clientId: null);
     }
 
     public virtual async Task<IRemoteStreamContent?> GetOrNullAsync(string containerName, string blobName)
@@ -67,6 +67,7 @@ public class BlobManagementBlobService : BlobManagementAppService, IBlobManageme
         IRemoteStreamContent content,
         bool overrideExisting,
         Guid? creatorId,
+        bool isPublic,
         string? clientId)
     {
         Check.NotNull(content, nameof(content));
@@ -74,7 +75,7 @@ public class BlobManagementBlobService : BlobManagementAppService, IBlobManageme
 
         // The stream is the caller's: the provider's pipeline stream, or the request body behind the BLOB API.
         var file = await FileDescriptorManager.CreateAsync(
-            containerName, blobName, content.GetStream(), overrideExisting, clientId, creatorId);
+            containerName, blobName, content.GetStream(), overrideExisting, clientId, creatorId, isPublic);
 
         return new BlobManagementBlobDto
         {

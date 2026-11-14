@@ -60,6 +60,48 @@ public partial class BlobManagementFileClientProxy : ClientProxyBase<IBlobManage
         });
     }
 
+    public virtual async Task<BlobManagementFileDto> SetPublicAsync(Guid id, SetBlobManagementFilePublicInput input)
+    {
+        return await RequestAsync<BlobManagementFileDto>(nameof(SetPublicAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(Guid), id },
+            { typeof(SetBlobManagementFilePublicInput), input }
+        });
+    }
+
+    public virtual async Task<BlobManagementUploadTicketDto> CreateUploadTicketAsync(CreateBlobManagementUploadTicketInput input)
+    {
+        return await RequestAsync<BlobManagementUploadTicketDto>(nameof(CreateUploadTicketAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(CreateBlobManagementUploadTicketInput), input }
+        });
+    }
+
+    public virtual async Task<BlobManagementFileDto> ConfirmAsync(Guid id)
+    {
+        return await RequestAsync<BlobManagementFileDto>(nameof(ConfirmAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(Guid), id }
+        });
+    }
+
+    public virtual async Task<BlobManagementReadLinkDto> CreateReadLinkAsync(Guid id, CreateBlobManagementReadLinkInput input)
+    {
+        return await RequestAsync<BlobManagementReadLinkDto>(nameof(CreateReadLinkAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(Guid), id },
+            { typeof(CreateBlobManagementReadLinkInput), input }
+        });
+    }
+
+    public virtual async Task<ListResultDto<BlobManagementReadLinkDto>> CreateReadLinksAsync(CreateBlobManagementReadLinksInput input)
+    {
+        return await RequestAsync<ListResultDto<BlobManagementReadLinkDto>>(nameof(CreateReadLinksAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(CreateBlobManagementReadLinksInput), input }
+        });
+    }
+
     public virtual async Task DeleteAsync(Guid id)
     {
         await RequestAsync(nameof(DeleteAsync), new ClientProxyRequestTypeValue

@@ -28,8 +28,10 @@ public static class BlobManagementTestContainers
     /// <summary>Another container that allows directories.</summary>
     public const string Archive = "archive";
 
-    /// <summary>A container whose files anyone may read.</summary>
-    public const string Public = "public";
+    /// <summary>A container whose public reads are resized to <see cref="AvatarSizes"/> only.</summary>
+    public const string Avatars = "avatars";
+
+    public static readonly int[] AvatarSizes = { 32, 48 };
 
     /// <summary>A BLOB container the Blob Management host did not declare.</summary>
     public const string NotManaged = "not-managed";

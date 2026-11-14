@@ -11,18 +11,19 @@
 
 Blob Management is an **ABP infrastructure module**: a [BLOB storing](https://abp.io/docs/latest/framework/infrastructure/blob-storing) provider with a ledger. Business systems store their bytes through it; it writes a record of each BLOB, and from those records come the tenant's storage allocation, the usage figures and a management page for administrators. It runs inside an application's own process, or once as a service that several applications share.
 
-It serves business systems. It has no upload of its own and is not shown to ordinary users: a business system builds the UI its users store, rename, move and delete files with, applies its own rules, and calls Blob Management for them.
+It serves business systems. It has no business rules and is not shown to ordinary users: a business system builds the UI its users store, rename, move and delete files with, applies its own rules, and calls Blob Management for them - from its back end as an OAuth client, and for its users' browsers with [upload tickets and read links](files.md#upload-tickets) that Blob Management signs.
 
 ## Who Calls It
 
 | Caller | Admitted by | Does |
 |---|---|---|
 | An application | In the same process: trusted. Over HTTP: an OAuth client granted the container's files, with a token that carries no user. | Stores and reads BLOBs by name ([Using It From an Application](provider.md)) and files by id ([Keeping Files by Id](files.md)). |
-| Anyone | The address of a file in a `PublicRead` container. | Reads it, resized if it is a picture ([Public Addresses](provider.md#public-addresses)). |
+| A browser | An upload ticket or a read link an application asked for. | Stores one file, pending until the application confirms it, or reads one file, for a few minutes ([Upload Tickets](files.md#upload-tickets), [Read Links](files.md#read-links)). |
+| Anyone | The address of a file its application marked public. | Reads it, resized if it is a picture ([Public Addresses](provider.md#public-addresses)). |
 | A user | A directory permission granted on the container. | Creates, renames, moves and deletes directories ([Directories](directories.md)). |
 | An administrator | `BlobManagement.Containers`. | Reads the usage, the containers, their directories and files, and the files' bytes ([Usage](usage.md), [Angular UI](angular-ui.md)). |
 
-No API lets an end user store, change or remove a file, and none lets a user read one without the management permission ([Permissions](permissions.md)).
+No permission lets an end user store, change or remove a file, or read one without the management permission ([Permissions](permissions.md)): a user's browser comes in only with a ticket or a link its application asked for.
 
 ## Two Ways to Address a File
 
@@ -41,7 +42,8 @@ What every managed container adds to plain BLOB storing:
 * **usage figures**: what the tenant, each container, each user and each client store ([Usage](usage.md));
 * **de-duplication**: the same bytes stored twice in a container are kept once;
 * **upload rules** per container, as presets of the [BLOB Storing](../blob-storing/index.md) pipeline contributors ([Presets](setting-up.md#presets));
-* **public read** with image sizing, for containers read by anyone ([Public Addresses](provider.md#public-addresses));
+* **public read** at `/blobs` with image sizing, for the files an application marks public ([Public Addresses](provider.md#public-addresses));
+* **upload tickets and read links**, so a browser sends or reads a file directly ([Keeping Files by Id](files.md#upload-tickets));
 * **directories**, in a container that allows them ([Directories](directories.md)).
 
 ## What It Is Not
@@ -72,8 +74,8 @@ Every file has a record, a *file descriptor*: the container, its name, the physi
 
 * [Setting Up](setting-up.md): install the module in a host, declare its containers in code or in configuration, presets, the tenant allocation.
 * [Using It From an Application](provider.md): `UseBlobManagement`, Blob Management in the same process or remote, public addresses.
-* [Keeping Files by Id](files.md): `IBlobManagementFileService`, what a business system's file library calls, and who a file is counted for.
-* [Hosting Modes](hosting.md): one host, or Blob Management as its own service, and what the second needs.
+* [Keeping Files by Id](files.md): `IBlobManagementFileService`, what a business system's file library calls, public files, upload tickets and read links, and who a file is counted for.
+* [Hosting Modes](hosting.md): one host, or Blob Management as its own service, and what the second needs - routes, Data Protection, CORS, a CDN.
 * [Directories](directories.md): containers that allow directories, the tree, and the directory API.
 * [Usage](usage.md): stored and uploaded bytes, by tenant, container, user and client.
 * [Permissions](permissions.md): the management permission, grants on a container, and who may do what.

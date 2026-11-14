@@ -123,14 +123,14 @@ public class EfCoreFileDescriptorRepository : EfCoreRepository<IBlobManagementDb
             .ToListAsync(GetCancellationToken(cancellationToken));
     }
 
-    public virtual async Task<List<FileDescriptor>> GetListByBlobNameAsync(
+    public virtual async Task<List<FileDescriptor>> GetPublicListByBlobNameAsync(
         string containerName,
         string blobName,
         int maxResultCount,
         CancellationToken cancellationToken = default)
     {
         return await (await GetDbSetAsync())
-            .Where(f => f.ContainerName == containerName && f.BlobName == blobName)
+            .Where(f => f.ContainerName == containerName && f.BlobName == blobName && f.IsPublic && !f.IsPending && f.NameKey == null)
             .OrderBy(f => f.Id)
             .Take(maxResultCount)
             .ToListAsync(GetCancellationToken(cancellationToken));
@@ -176,6 +176,18 @@ public class EfCoreFileDescriptorRepository : EfCoreRepository<IBlobManagementDb
             .AnyAsync(f => f.DirectoryId == directoryId, GetCancellationToken(cancellationToken));
     }
 
+    public virtual async Task<List<FileDescriptor>> GetExpiredPendingListAsync(
+        DateTime createdBefore,
+        int maxResultCount,
+        CancellationToken cancellationToken = default)
+    {
+        return await (await GetDbSetAsync())
+            .Where(f => f.IsPending && f.CreationTime < createdBefore)
+            .OrderBy(f => f.CreationTime)
+            .Take(maxResultCount)
+            .ToListAsync(GetCancellationToken(cancellationToken));
+    }
+
     public virtual async Task<List<FileDescriptor>> GetUnfiledListAsync(
         string containerName,
         int skipCount,
@@ -183,7 +195,7 @@ public class EfCoreFileDescriptorRepository : EfCoreRepository<IBlobManagementDb
         CancellationToken cancellationToken = default)
     {
         return await (await GetDbSetAsync())
-            .Where(f => f.ContainerName == containerName && f.DirectoryId == null && f.NameKey == null)
+            .Where(f => f.ContainerName == containerName && f.DirectoryId == null && f.NameKey == null && !f.IsPending)
             .OrderBy(f => f.Id)
             .PageBy(skipCount, maxResultCount)
             .ToListAsync(GetCancellationToken(cancellationToken));
@@ -198,7 +210,7 @@ public class EfCoreFileDescriptorRepository : EfCoreRepository<IBlobManagementDb
         // database's collation happens to ignore it.
         var term = filter.IsNullOrWhiteSpace() ? null : filter!.Trim().ToUpperInvariant();
         return (await GetDbSetAsync())
-            .Where(f => f.ContainerName == containerName && f.DirectoryId == directoryId)
+            .Where(f => f.ContainerName == containerName && f.DirectoryId == directoryId && !f.IsPending)
             .WhereIf(term != null, f => f.Name.ToUpper().Contains(term!));
     }
 }

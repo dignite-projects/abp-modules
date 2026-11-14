@@ -59,6 +59,11 @@ export class BlobManagementFilePreviewComponent {
   readonly name = input<string | null | undefined>('');
   /** The thumbnail's side, in pixels. */
   readonly pixels = input(48);
+  /**
+   * The sizes the file's container serves a public picture at (`BlobManagementContainerDto.publicSizes`); without
+   * them a public picture is loaded as stored.
+   */
+  readonly sizes = input<readonly number[] | null | undefined>([]);
 
   readonly size = computed(() => `${this.pixels()}px`);
 
@@ -70,8 +75,8 @@ export class BlobManagementFilePreviewComponent {
       return '';
     }
 
-    // Twice the side, for high-density screens, rounded up to a size the server serves; the CSS size stays `pixels`.
-    const side = toBlobManagementPublicSize(this.pixels() * 2);
+    // Twice the side, for high-density screens, rounded up to a size the container serves; the CSS size stays `pixels`.
+    const side = toBlobManagementPublicSize(this.pixels() * 2, this.sizes());
     return this.urls.sized(src, side, side);
   });
 

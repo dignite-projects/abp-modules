@@ -37,9 +37,22 @@ public class BlobManagementFileDto : ExtensibleCreationAuditedEntityDto<Guid>
     public DateTime? LastModificationTime { get; set; }
 
     /// <summary>
-    /// In a <c>PublicRead</c> container, the address anyone can read it at, relative to the host that serves Blob
-    /// Management (<c>/api/blob-management/public/{container}/{blob}</c>, with <c>?__tenant=</c> for a tenant's file);
-    /// otherwise <c>null</c> - the application reads it and hands its bytes on.
+    /// Whether anyone may read the file at its public address (<see cref="Url"/>). A file saved under a name takes it
+    /// from its application's container at each save; a file kept by id takes it when it is stored, and changes it with
+    /// <see cref="IBlobManagementFileService.SetPublicAsync"/>.
+    /// </summary>
+    public bool IsPublic { get; set; }
+
+    /// <summary>
+    /// Whether the file came in with an upload ticket and its business system has not confirmed it yet
+    /// (<see cref="IBlobManagementFileService.ConfirmAsync"/>). Only a lookup by id shows such a file.
+    /// </summary>
+    public bool IsPending { get; set; }
+
+    /// <summary>
+    /// For a public file, the address anyone can read it at, relative to the host that serves Blob Management
+    /// (<c>/blobs/{container}/{blob}</c>, with <c>?__tenant=</c> for a tenant's file); otherwise <c>null</c> - the
+    /// application reads it and hands its bytes on, or asks for a read link.
     /// </summary>
     public string? Url { get; set; }
 }

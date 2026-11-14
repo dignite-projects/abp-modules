@@ -26,6 +26,18 @@ public class BlobManagementBlobProviderConfiguration
         set => _containerConfiguration.SetConfiguration(BlobManagementBlobProviderConfigurationNames.BlobManagementContainer, value);
     }
 
+    /// <summary>
+    /// Whether anyone may read the container's BLOBs at their public address (<see cref="IBlobManagementPublicUrlBuilder"/>),
+    /// without signing in. The application decides it, and the provider sends it with every save, so it applies to
+    /// what is saved from then on; a BLOB saved before keeps what it was saved with until it is saved again. Default:
+    /// <c>false</c>.
+    /// </summary>
+    public bool IsPublic
+    {
+        get => _containerConfiguration.GetConfigurationOrDefault(BlobManagementBlobProviderConfigurationNames.IsPublic, false);
+        set => _containerConfiguration.SetConfiguration(BlobManagementBlobProviderConfigurationNames.IsPublic, value);
+    }
+
     /// <summary>Throws <see cref="AbpException"/> when the configuration cannot be applied.</summary>
     public virtual void Validate()
     {

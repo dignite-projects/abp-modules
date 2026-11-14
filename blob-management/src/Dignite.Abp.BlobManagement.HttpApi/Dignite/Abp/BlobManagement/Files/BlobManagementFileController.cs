@@ -62,6 +62,41 @@ public class BlobManagementFileController : BlobManagementController, IBlobManag
         return FileAppService.MoveAsync(id, input);
     }
 
+    [HttpPut]
+    [Route("{id}/public")]
+    public virtual Task<BlobManagementFileDto> SetPublicAsync(Guid id, SetBlobManagementFilePublicInput input)
+    {
+        return FileAppService.SetPublicAsync(id, input);
+    }
+
+    [HttpPost]
+    [Route("upload-tickets")]
+    public virtual Task<BlobManagementUploadTicketDto> CreateUploadTicketAsync(CreateBlobManagementUploadTicketInput input)
+    {
+        return FileAppService.CreateUploadTicketAsync(input);
+    }
+
+    [HttpPost]
+    [Route("{id}/confirm")]
+    public virtual Task<BlobManagementFileDto> ConfirmAsync(Guid id)
+    {
+        return FileAppService.ConfirmAsync(id);
+    }
+
+    [HttpPost]
+    [Route("{id}/read-link")]
+    public virtual Task<BlobManagementReadLinkDto> CreateReadLinkAsync(Guid id, CreateBlobManagementReadLinkInput input)
+    {
+        return FileAppService.CreateReadLinkAsync(id, input);
+    }
+
+    [HttpPost]
+    [Route("read-links")]
+    public virtual Task<ListResultDto<BlobManagementReadLinkDto>> CreateReadLinksAsync(CreateBlobManagementReadLinksInput input)
+    {
+        return FileAppService.CreateReadLinksAsync(input);
+    }
+
     [HttpDelete]
     [Route("{id}")]
     public virtual Task DeleteAsync(Guid id)

@@ -35,9 +35,10 @@ public static class BlobManagementPermissions
         public const string Default = GroupName + ".Container";
 
         /// <summary>
-        /// For an OAuth client, and counted for nothing else (ABP's client provider, <c>C</c>): read, store, rename,
-        /// move and delete the container's files through the BLOB API and the file API. Granted to a client, it is
-        /// the deployment's, not a tenant's - a client is - so it holds in every tenant.
+        /// For an OAuth client (ABP's client provider, <c>C</c>): read, store, rename, move and delete the container's
+        /// files through the BLOB API and the file API. Granted to a client, it is the deployment's, not a tenant's -
+        /// a client is - so it is defined on the host side only and holds in every tenant. Granted to a user or a role
+        /// it lets nothing through: the APIs refuse a token that carries a user before they read a grant.
         /// </summary>
         public const string Files = Default + ".Files";
 

@@ -1,0 +1,5 @@
+namespace Dignite.Abp.BlobManagement.EntityFrameworkCore.Applications;
+
+public class EfCoreBlobManagementReadLinks_Tests : BlobManagementReadLinks_Tests<BlobManagementEntityFrameworkCoreTestModule>
+{
+}

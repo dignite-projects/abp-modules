@@ -3,10 +3,10 @@ import type { BlobManagementAccessDto } from '../models';
 
 export interface BlobManagementContainerDto extends ExtensibleObject {
   name?: string;
-  publicRead?: boolean;
   allowDirectories?: boolean;
   maxFileSize?: number;
   allowedFileExtensions?: string[];
+  publicSizes?: number[];
   imageMaxWidth?: number | null;
   imageMaxHeight?: number | null;
   access?: BlobManagementAccessDto;

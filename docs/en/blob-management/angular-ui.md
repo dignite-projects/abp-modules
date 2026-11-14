@@ -47,7 +47,7 @@ The page, at `/blob-management`, is for holders of `BlobManagement.Containers` (
 * **Usage** comes first: the tenant's stored bytes against its allocation, then by container, by user or by client ([Usage](usage.md)).
 * Below it, the managed containers, **one at a time** as tabs. A container that [allows directories](directories.md) shows its **directory tree** beside the **files** of the directory chosen; one without them shows its files as one list.
 * The tree loads a level when it is opened. Directories are created, renamed and deleted from a node's menu, and moved by dragging, each offered only where the container's `access` allows it.
-* The file list pages and searches the files, and downloads one. A picture of a public container is shown as a thumbnail. Nothing else is done to a file here: it belongs to the business record that refers to it.
+* The file list pages and searches the files, and downloads one. A public picture is shown as a thumbnail; a file uploaded with a ticket and not confirmed yet is not listed. Nothing else is done to a file here: it belongs to the business record that refers to it.
 * A holder of `BlobManagement.ManagePermissions` opens ABP's resource permission dialog for the container shown.
 
 The page is a [replaceable component](https://abp.io/docs/latest/framework/ui/angular/component-replacement) under `eBlobManagementComponents.BlobManagement` (`'BlobManagement.BlobManagementComponent'`). Leave out `provideBlobManagementConfig()` to place the page elsewhere.
@@ -70,7 +70,7 @@ The page is made of standalone components the library exports, for an applicatio
 The library also exports:
 
 * the proxies and their DTOs by name: `BlobManagementContainerService`, `BlobManagementDirectoryService`, `BlobManagementFileService` (whose reads the page uses), `BlobManagementUsageService`, `BlobManagementContainerDto`, `BlobManagementDirectoryDto`, `BlobManagementFileDto`, `BlobManagementAccessDto` and the usage DTOs;
-* `BlobManagementFileUrlService` (`toAbsolute`, and `sized` for a public picture at one of the sizes the host serves, `BLOB_MANAGEMENT_PUBLIC_SIZES`), `ObjectUrlService`, and the `blobFileSize` pipe;
+* `BlobManagementFileUrlService` (`toAbsolute`, and `sized` for a public picture at one of the sizes its container serves, chosen with `toBlobManagementPublicSize` from the container's `publicSizes`), `ObjectUrlService`, and the `blobFileSize` pipe;
 * `eBlobManagementPolicyNames` and `eBlobManagementResourceNames`, the permission and resource names the UI uses.
 
 ## See Also

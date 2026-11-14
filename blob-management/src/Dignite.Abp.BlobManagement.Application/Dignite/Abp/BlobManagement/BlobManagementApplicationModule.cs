@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Dignite.Abp.BlobManagement.Containers;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp;
 using Volo.Abp.Application;
@@ -21,6 +22,9 @@ public class BlobManagementApplicationModule : AbpModule
     {
         context.Services.AddMapperlyObjectMapper<BlobManagementApplicationModule>();
 
+        // Upload tickets and read links are signed with the host's key ring; the host decides where it is kept.
+        context.Services.AddDataProtection();
+
         ConfigureContainersFromConfiguration(context);
     }
 
@@ -37,15 +41,22 @@ public class BlobManagementApplicationModule : AbpModule
     /// </summary>
     private void ConfigureContainersFromConfiguration(ServiceConfigurationContext context)
     {
+        var configuration = context.Services.GetConfiguration();
         var presets = context.Services.ExecutePreConfiguredActions<BlobManagementPresetOptions>();
-        var containers = BlobManagementContainerSettings.Read(context.Services.GetConfiguration(), presets);
-        if (containers.Count == 0)
+        var containers = BlobManagementContainerSettings.Read(configuration, presets);
+        var defaultPublicSizes = BlobManagementContainerSettings.ReadDefaultPublicSizes(configuration);
+        if (containers.Count == 0 && defaultPublicSizes == null)
         {
             return;
         }
 
         Configure<AbpBlobStoringOptions>(options =>
         {
+            if (defaultPublicSizes != null)
+            {
+                options.Containers.ConfigureDefault(container => container.UseBlobManagementPublicSizes(defaultPublicSizes));
+            }
+
             foreach (var container in containers)
             {
                 options.Containers.Configure(container.ContainerName, container.Apply);

@@ -24,10 +24,10 @@ public class BlobManagementBlobAppService : BlobManagementBlobService, IBlobMana
         ClientChecker = clientChecker;
     }
 
-    public override async Task<BlobManagementBlobDto> SaveAsync(string containerName, string blobName, IRemoteStreamContent content, bool overrideExisting = false, Guid? creatorId = null)
+    public override async Task<BlobManagementBlobDto> SaveAsync(string containerName, string blobName, IRemoteStreamContent content, bool overrideExisting = false, Guid? creatorId = null, bool isPublic = false)
     {
         var clientId = await CheckClientAsync(containerName);
-        return await SaveAsync(containerName, blobName, content, overrideExisting, creatorId, clientId);
+        return await SaveAsync(containerName, blobName, content, overrideExisting, creatorId, isPublic, clientId);
     }
 
     /// <summary>Fails with <see cref="BlobManagementErrorCodes.BlobNotFound"/> when there is no such file.</summary>

@@ -1,5 +1,9 @@
 # Blob Management: what it is for (2026-11-13)
 
+> Partly replaced by [`business-system-integration-decision.md`](business-system-integration-decision.md) (2026-11-14):
+> the module issues upload tickets and read links again, and a file - not its container - is public. What is written
+> below about "no upload of its own", tickets and `PublicRead` is history.
+
 This record narrows [`blob-management-decision.md`](blob-management-decision.md) (2026-11-12). Its sections on
 authorization, on the surface and on the two ways a file arrives are replaced by what is written here; the names, the
 containers, the directory tree's own rules and everything [`drive-decision.md`](drive-decision.md) decided about the

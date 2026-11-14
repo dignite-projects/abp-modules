@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobStoring.Imaging;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Options;
 using Volo.Abp;
 using Volo.Abp.Content;
 using Volo.Abp.Domain.Entities;
@@ -18,15 +17,17 @@ using Volo.Abp.Validation;
 namespace Dignite.Abp.BlobManagement.Public;
 
 /// <summary>
-/// Serves the files of <c>PublicRead</c> containers to anyone, in the request's tenant (an anonymous request names it
-/// with <c>?__tenant=</c>, see <see cref="BlobManagementPublicUrl"/>). Not gated by <c>BlobManagement.Enable</c>: turning the Blob Management off
-/// stops a tenant storing, not its published files being read.
+/// Serves the files their business system marked public (<c>FileDescriptor.IsPublic</c>) to anyone, in the request's
+/// tenant (an anonymous request names it with <c>?__tenant=</c>, see <see cref="BlobManagementPublicUrl"/>). Not gated by
+/// <c>BlobManagement.Enable</c>: turning the Blob Management off stops a tenant storing, not its published files being
+/// read.
 /// <para>
 /// A size is rendered on every request with ABP's <see cref="IImageResizer"/> - the imaging provider the Blob Management host
 /// installs; without one, the picture is served as stored. Responses are cached by HTTP (the endpoint's <c>ETag</c> and
 /// <c>Cache-Control</c>); there is no server-side cache of renditions. A width or height must be one of
-/// <see cref="BlobManagementPublicReadOptions.AllowedSizes"/> (a ladder from 64 to 4096 by default), otherwise the request is
-/// refused with <see cref="AbpValidationException"/> before any bytes are read: the endpoint is anonymous, and an open
+/// the container's public sizes (<c>GetBlobManagementPublicSizes</c>: the container's own list, else the host's default
+/// container's, else a ladder from 64 to 4096), otherwise the request is refused with
+/// <see cref="AbpValidationException"/> before any bytes are read: the endpoint is anonymous, and an open
 /// range of sizes would let a visitor make it render a distinct picture for every request. A size is never snapped to
 /// the nearest allowed one - with both sides given the picture is cropped to the box, and snapping the sides
 /// independently would change its shape. A picture larger than
@@ -41,16 +42,12 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
 
     protected IImageResizer ImageResizer { get; }
 
-    protected BlobManagementPublicReadOptions ReadOptions { get; }
-
     public BlobManagementPublicAppService(
         FileDescriptorManager fileDescriptorManager,
-        IImageResizer imageResizer,
-        IOptions<BlobManagementPublicReadOptions> options)
+        IImageResizer imageResizer)
     {
         FileDescriptorManager = fileDescriptorManager;
         ImageResizer = imageResizer;
-        ReadOptions = options.Value;
     }
 
     /// <summary>
@@ -66,7 +63,7 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
         BlobManagementPublicReadRequest request)
     {
         // Before the lookup: a size Blob Management does not serve is refused even for a missing file.
-        CheckSize(input);
+        CheckSize(containerName, input);
 
         var (file, name) = await GetPublicFileAsync(containerName, blobName);
         var result = new BlobManagementPublicReadResult
@@ -160,20 +157,26 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
     }
 
     /// <summary>
-    /// A width or height asked for (above 0) must be in <see cref="BlobManagementPublicReadOptions.AllowedSizes"/> and no larger
+    /// A width or height asked for (above 0) must be one of the container's public sizes and no larger
     /// than <see cref="BlobManagementPublicUrl.MaxDimension"/>; no size asked is always fine.
     /// </summary>
-    protected virtual void CheckSize(BlobManagementPublicReadInput? input)
+    protected virtual void CheckSize(string containerName, BlobManagementPublicReadInput? input)
     {
-        var errors = new List<ValidationResult>();
-        if (input?.Width > 0 && !IsAllowedSize(input.Width.Value))
+        if (!(input?.Width > 0) && !(input?.Height > 0))
         {
-            errors.Add(new ValidationResult(SizeMessage(nameof(input.Width)), new[] { nameof(input.Width) }));
+            return;
         }
 
-        if (input?.Height > 0 && !IsAllowedSize(input.Height.Value))
+        var allowed = GetAllowedSizes(containerName);
+        var errors = new List<ValidationResult>();
+        if (input?.Width > 0 && !IsAllowedSize(allowed, input.Width.Value))
         {
-            errors.Add(new ValidationResult(SizeMessage(nameof(input.Height)), new[] { nameof(input.Height) }));
+            errors.Add(new ValidationResult(SizeMessage(allowed, nameof(input.Width)), new[] { nameof(input.Width) }));
+        }
+
+        if (input?.Height > 0 && !IsAllowedSize(allowed, input.Height.Value))
+        {
+            errors.Add(new ValidationResult(SizeMessage(allowed, nameof(input.Height)), new[] { nameof(input.Height) }));
         }
 
         if (errors.Count > 0)
@@ -182,51 +185,54 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
         }
     }
 
-    protected virtual bool IsAllowedSize(int size)
+    /// <summary>
+    /// The sizes the container's pictures are served at: its own list, else the default container's, else the module's.
+    /// A container that is not managed answers with the default's: its address is not found anyway, and a size it
+    /// refuses tells nothing more.
+    /// </summary>
+    protected virtual IReadOnlyList<int> GetAllowedSizes(string containerName)
     {
-        return size <= BlobManagementPublicUrl.MaxDimension && ReadOptions.AllowedSizes.Contains(size);
+        return ContainerConfigurationProvider.Get(containerName).GetBlobManagementPublicSizes();
     }
 
-    protected virtual string SizeMessage(string side)
+    protected virtual bool IsAllowedSize(IReadOnlyList<int> allowed, int size)
     {
-        var allowed = ReadOptions.AllowedSizes
-            .Where(size => size > 0 && size <= BlobManagementPublicUrl.MaxDimension)
-            .Distinct()
-            .OrderBy(size => size);
+        return size <= BlobManagementPublicUrl.MaxDimension && allowed.Contains(size);
+    }
+
+    protected virtual string SizeMessage(IReadOnlyList<int> allowed, string side)
+    {
         return L["PublicReadSizeNotAllowed", side, string.Join(", ", allowed)];
     }
 
     /// <summary>
-    /// The live file at the address, when its container is a managed container that is read publicly, and the name
-    /// the address answers with. The address of a file an application saved names it as the application did; that of
-    /// a file kept by id, whose name may repeat, names its physical BLOB - generated, so it is never mistaken for an
-    /// application's name.
+    /// The live public file at the address of a managed container, and the name the address answers with. The address
+    /// of a file an application saved names it as the application did; that of a file kept by id, whose name may
+    /// repeat, names its physical BLOB - generated, so it is never mistaken for an application's name.
     /// <para>
-    /// An address that names a BLOB names content, not one file: files that hold the same bytes share the BLOB, so it
-    /// is the address of every one of them, and it answers for as long as one of them is there. Their bytes, type and
-    /// size are the same; their names are not, and the address does not say which file it was handed out for. So it
-    /// answers with the file's name only when a single file has the BLOB, and with the BLOB's own name otherwise -
-    /// never with the name another file was given.
+    /// An address that names a BLOB names content, not one file: files kept by id that hold the same bytes share the
+    /// BLOB, so it is the address of every one of them, and it answers for as long as one of them is there and public.
+    /// Their bytes, type and size are the same; their names are not, and the address does not say which file it was
+    /// handed out for. So it answers with the file's name only when a single public file has the BLOB, and with the
+    /// BLOB's own name otherwise - never with the name another file was given. A file that is not public answers as
+    /// a missing one: whether it is there is not the visitor's to know.
     /// </para>
     /// </summary>
     protected virtual async Task<(FileDescriptor File, string Name)> GetPublicFileAsync(string containerName, string blobName)
     {
         try
         {
-            if (FileDescriptorManager.GetBlobManagementContainerConfiguration(containerName).PublicRead)
+            var saved = await FileDescriptorManager.FindAsync(containerName, blobName);
+            if (saved is { IsPublic: true })
             {
-                var saved = await FileDescriptorManager.FindAsync(containerName, blobName);
-                if (saved != null)
-                {
-                    return (saved, saved.Name);
-                }
+                return (saved, saved.Name);
+            }
 
-                // Two are enough to know whether the first is the only one.
-                var files = await FileDescriptorManager.GetListByBlobNameAsync(containerName, blobName, maxResultCount: 2);
-                if (files.Count > 0)
-                {
-                    return (files[0], files.Count == 1 ? files[0].Name : files[0].BlobName);
-                }
+            // Two are enough to know whether the first is the only one.
+            var files = await FileDescriptorManager.GetPublicListByBlobNameAsync(containerName, blobName, maxResultCount: 2);
+            if (files.Count > 0)
+            {
+                return (files[0], files.Count == 1 ? files[0].Name : files[0].BlobName);
             }
         }
         catch (BusinessException exception) when (exception.Code == BlobManagementErrorCodes.ContainerNotFound)

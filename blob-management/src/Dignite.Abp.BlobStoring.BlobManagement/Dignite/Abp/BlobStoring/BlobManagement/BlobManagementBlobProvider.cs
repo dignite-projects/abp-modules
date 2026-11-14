@@ -40,12 +40,13 @@ public class BlobManagementBlobProvider : BlobProviderBase, ITransientDependency
     public override async Task SaveAsync(BlobProviderSaveArgs args)
     {
         var managedContainer = GetBlobManagementContainer(args);
+        var isPublic = args.Configuration.GetBlobManagementConfiguration().IsPublic;
 
         // The stream stays the caller's (ABP disposes what its pipeline created).
         var content = new RemoteStreamContent(args.BlobStream, fileName: args.BlobName, disposeStream: false);
         try
         {
-            await BlobManagementBlobService.SaveAsync(managedContainer, args.BlobName, content, args.OverrideExisting);
+            await BlobManagementBlobService.SaveAsync(managedContainer, args.BlobName, content, args.OverrideExisting, isPublic: isPublic);
         }
         catch (Exception exception) when (exception is IHasErrorCode { Code: BlobManagementErrorCodes.BlobAlreadyExists })
         {

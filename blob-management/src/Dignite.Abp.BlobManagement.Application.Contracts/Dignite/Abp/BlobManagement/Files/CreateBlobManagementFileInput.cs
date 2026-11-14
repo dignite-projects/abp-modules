@@ -24,6 +24,12 @@ public class CreateBlobManagementFileInput
     /// </summary>
     public Guid? CreatorId { get; set; }
 
+    /// <summary>
+    /// Whether anyone may read the file at its public address, without signing in; the application's call. Changed
+    /// later with <see cref="IBlobManagementFileService.SetPublicAsync"/>.
+    /// </summary>
+    public bool IsPublic { get; set; }
+
     [Required]
     public IRemoteStreamContent File { get; set; } = default!;
 }
