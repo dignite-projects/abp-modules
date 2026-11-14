@@ -1,4 +1,4 @@
-import type { BlobManagementFileDto, CreateBlobManagementFileInput, GetBlobManagementFilesInput, MoveBlobManagementFileInput, SetBlobManagementFilePublicInput, UpdateBlobManagementFileInput } from './models';
+import type { BlobManagementFileDto, BlobManagementUploadTicketDto, CreateBlobManagementFileInput, CreateBlobManagementUploadTicketInput, GetBlobManagementFilesInput, MoveBlobManagementFileInput, SetBlobManagementFilePublicInput, UpdateBlobManagementFileInput } from './models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
@@ -12,11 +12,32 @@ export class BlobManagementFileService {
   
 
   
+  confirm = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, BlobManagementFileDto>({
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+      url: `/api/blob-management/files/${id}/confirm`,
+    },
+      { apiName: this.apiName,...config });
+  
+
+  
   create = (input: FormData, config?: Partial<Rest.Config>) =>
     this.restService.request<any, BlobManagementFileDto>({
       method: 'POST',
       headers: { Accept: 'application/json' },
       url: '/api/blob-management/files',
+      body: input,
+    },
+      { apiName: this.apiName,...config });
+  
+
+  
+  createUploadTicket = (input: CreateBlobManagementUploadTicketInput, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, BlobManagementUploadTicketDto>({
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+      url: '/api/blob-management/files/upload-tickets',
       body: input,
     },
       { apiName: this.apiName,...config });

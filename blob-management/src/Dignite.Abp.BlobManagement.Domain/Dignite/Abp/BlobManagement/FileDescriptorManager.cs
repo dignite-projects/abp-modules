@@ -259,6 +259,9 @@ public class FileDescriptorManager : DomainService
     /// properties) sets them here, so the row is written once. It runs while the dedup lock is held, so it does no I/O;
     /// when it throws, the upload fails and nothing is stored.</param>
     /// <param name="clientId">The OAuth client writing through the file API, recorded on the descriptor.</param>
+    /// <param name="id">The id the file takes; <c>null</c> generates one. An upload ticket names its file's id in
+    /// advance, and its second use fails on the primary key - after its bytes were stored, which are removed again
+    /// as for any insert that fails.</param>
     public virtual async Task<FileDescriptor> UploadAsync(
         string containerName,
         string name,
@@ -266,6 +269,7 @@ public class FileDescriptorManager : DomainService
         Guid? directoryId = null,
         Action<FileDescriptor>? configureFile = null,
         string? clientId = null,
+        Guid? id = null,
         CancellationToken cancellationToken = default)
     {
         GetBlobManagementContainerConfiguration(containerName);
@@ -281,7 +285,7 @@ public class FileDescriptorManager : DomainService
         };
 
         return await StoreOrShareAsync(
-            containerName, name, stream, clientId, nameIsAddress: false, place, cancellationToken);
+            containerName, name, stream, clientId, nameIsAddress: false, place, cancellationToken, id);
     }
 
     /// <summary>
@@ -303,6 +307,7 @@ public class FileDescriptorManager : DomainService
     /// <param name="nameIsAddress">Whether an application saves the file under its name, so that its descriptor holds the
     /// <see cref="FileDescriptor.NameKey"/>.</param>
     /// <param name="configureFile">Runs on the new descriptor before it is inserted (see <see cref="UploadAsync"/>).</param>
+    /// <param name="id">The new descriptor's id; <c>null</c> generates one.</param>
     protected virtual async Task<FileDescriptor> StoreOrShareAsync(
         string containerName,
         string name,
@@ -310,7 +315,8 @@ public class FileDescriptorManager : DomainService
         string? clientId,
         bool nameIsAddress,
         Action<FileDescriptor>? configureFile,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? id = null)
     {
         var maxBytes = BlobStreamBuffering.GetMaxBufferedBytes(BlobContainerConfigurationProvider.Get(containerName));
         await using var content = await BlobStreamBuffering.CopyToBufferAsync(stream, maxBytes, cancellationToken);
@@ -330,7 +336,7 @@ public class FileDescriptorManager : DomainService
 
                 return await StoreAsync(
                     containerName, name, content, mimeType, hash, clientId, ownsBlob: false, nameIsAddress,
-                    configureFile, cancellationToken);
+                    configureFile, cancellationToken, id);
             }
 
             var source = await FindDedupSourceAsync(containerName, hash, cancellationToken);
@@ -340,7 +346,7 @@ public class FileDescriptorManager : DomainService
                 // uploaded file's name follows.
                 var sharedName = nameIsAddress ? name : GetNameForStoredType(name, mimeType, source.MimeType);
                 var shared = new FileDescriptor(
-                    GuidGenerator.Create(), containerName, sharedName, source.BlobName, source.MimeType, source.Size, hash,
+                    id ?? GuidGenerator.Create(), containerName, sharedName, source.BlobName, source.MimeType, source.Size, hash,
                     ownsBlob: false, clientId, CurrentTenant.Id, nameIsAddress);
                 configureFile?.Invoke(shared);
                 return await FileDescriptorRepository.InsertAsync(shared, autoSave: true, cancellationToken);
@@ -348,7 +354,7 @@ public class FileDescriptorManager : DomainService
 
             return await StoreAsync(
                 containerName, name, content, mimeType, hash, clientId, ownsBlob: true, nameIsAddress,
-                configureFile, cancellationToken);
+                configureFile, cancellationToken, id);
         }
         finally
         {
@@ -454,6 +460,23 @@ public class FileDescriptorManager : DomainService
         }
 
         file.Rename(name);
+        return await FileDescriptorRepository.UpdateAsync(file, autoSave: true, cancellationToken: cancellationToken);
+    }
+
+    /// <summary>
+    /// Confirms a file that came in through an upload ticket (<see cref="FileDescriptor.IsPending"/>): its business
+    /// system filed it with a record of its own, so it is listed, can be read by link and is no longer deleted as
+    /// abandoned. A file that is not pending is left as it is.
+    /// </summary>
+    public virtual async Task<FileDescriptor> ConfirmAsync(FileDescriptor file, CancellationToken cancellationToken = default)
+    {
+        Check.NotNull(file, nameof(file));
+        if (!file.IsPending)
+        {
+            return file;
+        }
+
+        file.Confirm();
         return await FileDescriptorRepository.UpdateAsync(file, autoSave: true, cancellationToken: cancellationToken);
     }
 
@@ -593,7 +616,8 @@ public class FileDescriptorManager : DomainService
         bool ownsBlob,
         bool nameIsAddress,
         Action<FileDescriptor>? configureFile,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? id = null)
     {
         // Taken before the save: the content belongs to the pipeline while it runs.
         var uploadLength = content.Length;
@@ -622,7 +646,7 @@ public class FileDescriptorManager : DomainService
             var storedName = nameIsAddress ? name : GetNameForStoredType(name, mimeType, storedType);
 
             var descriptor = new FileDescriptor(
-                GuidGenerator.Create(), containerName, storedName, blobName, storedType, size, hash,
+                id ?? GuidGenerator.Create(), containerName, storedName, blobName, storedType, size, hash,
                 ownsBlob, clientId, CurrentTenant.Id, nameIsAddress);
             configureFile?.Invoke(descriptor);
 

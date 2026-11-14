@@ -64,4 +64,13 @@ public static class BlobManagementErrorCodes
     /// renamed or moved. Data: <c>Name</c>.
     /// </summary>
     public const string FileAddressedByName = Namespace + ":FileAddressedByName";
+
+    /// <summary>An upload ticket that is expired, altered, or was not issued by this Blob Management.</summary>
+    public const string UploadTicketInvalid = Namespace + ":UploadTicketInvalid";
+
+    /// <summary>An upload ticket whose file was stored already: a ticket stores one file, once.</summary>
+    public const string UploadTicketUsed = Namespace + ":UploadTicketUsed";
+
+    /// <summary>A pending file - uploaded with a ticket, not confirmed yet - asked for what only a confirmed one has.</summary>
+    public const string FilePending = Namespace + ":FilePending";
 }

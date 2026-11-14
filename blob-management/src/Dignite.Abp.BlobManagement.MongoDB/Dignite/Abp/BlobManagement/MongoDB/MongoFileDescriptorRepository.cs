@@ -138,7 +138,7 @@ public class MongoFileDescriptorRepository : MongoDbRepository<IBlobManagementMo
     {
         var token = GetCancellationToken(cancellationToken);
         return await (await GetQueryableAsync(token))
-            .Where(f => f.ContainerName == containerName && f.BlobName == blobName && f.IsPublic && f.NameKey == null)
+            .Where(f => f.ContainerName == containerName && f.BlobName == blobName && f.IsPublic && !f.IsPending && f.NameKey == null)
             .OrderBy(f => f.Id)
             .Take(maxResultCount)
             .ToListAsync(token);
@@ -187,6 +187,19 @@ public class MongoFileDescriptorRepository : MongoDbRepository<IBlobManagementMo
         return await (await GetQueryableAsync(token)).AnyAsync(f => f.DirectoryId == directory, token);
     }
 
+    public virtual async Task<List<FileDescriptor>> GetExpiredPendingListAsync(
+        DateTime createdBefore,
+        int maxResultCount,
+        CancellationToken cancellationToken = default)
+    {
+        var token = GetCancellationToken(cancellationToken);
+        return await (await GetQueryableAsync(token))
+            .Where(f => f.IsPending && f.CreationTime < createdBefore)
+            .OrderBy(f => f.CreationTime)
+            .Take(maxResultCount)
+            .ToListAsync(token);
+    }
+
     public virtual async Task<List<FileDescriptor>> GetUnfiledListAsync(
         string containerName,
         int skipCount,
@@ -195,7 +208,7 @@ public class MongoFileDescriptorRepository : MongoDbRepository<IBlobManagementMo
     {
         var token = GetCancellationToken(cancellationToken);
         return await (await GetQueryableAsync(token))
-            .Where(f => f.ContainerName == containerName && f.DirectoryId == null && f.NameKey == null)
+            .Where(f => f.ContainerName == containerName && f.DirectoryId == null && f.NameKey == null && !f.IsPending)
             .OrderBy(f => f.Id)
             .PageBy(skipCount, maxResultCount)
             .ToListAsync(token);
@@ -210,7 +223,7 @@ public class MongoFileDescriptorRepository : MongoDbRepository<IBlobManagementMo
         // Upper-cased on both sides, as on EF Core: a search finds a name whatever its case.
         var term = filter.IsNullOrWhiteSpace() ? null : filter!.Trim().ToUpperInvariant();
         return (await GetQueryableAsync(cancellationToken))
-            .Where(f => f.ContainerName == containerName && f.DirectoryId == directoryId)
+            .Where(f => f.ContainerName == containerName && f.DirectoryId == directoryId && !f.IsPending)
             .WhereIf(term != null, f => f.Name.ToUpper().Contains(term!));
     }
 }

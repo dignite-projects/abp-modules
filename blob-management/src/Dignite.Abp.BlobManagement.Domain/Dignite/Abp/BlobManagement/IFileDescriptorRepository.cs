@@ -62,7 +62,7 @@ public interface IFileDescriptorRepository : IBasicRepository<FileDescriptor, Gu
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// The live public descriptors kept by id (no name key) of the container whose physical BLOB is
+    /// The live, confirmed public descriptors kept by id (no name key) of the container whose physical BLOB is
     /// <paramref name="blobName"/>, by id, at most <paramref name="maxResultCount"/> of them - the public address of a
     /// file kept by id names its BLOB. Descriptors that share the BLOB share its bytes, type and size, and nothing
     /// else: a caller that answers for the address asks for two, to know whether the one it got is the only one.
@@ -80,7 +80,8 @@ public interface IFileDescriptorRepository : IBasicRepository<FileDescriptor, Gu
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// The files of one place of a container: <paramref name="directoryId"/>, or with <c>null</c> its top - where the
+    /// The confirmed files of one place of a container (a file uploaded through a ticket and still pending is left
+    /// out): <paramref name="directoryId"/>, or with <c>null</c> its top - where the
     /// files applications saved under a name are as well. <paramref name="filter"/> is matched against the name,
     /// whatever its case; <paramref name="sorting"/> is checked by <see cref="FileDescriptorSorting.Normalize"/>, which
     /// ends every order with the id, so two pages never share or miss a file.
@@ -103,6 +104,15 @@ public interface IFileDescriptorRepository : IBasicRepository<FileDescriptor, Gu
 
     /// <summary>Whether a live file is filed in <paramref name="directoryId"/>.</summary>
     Task<bool> AnyInDirectoryAsync(Guid directoryId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The live files of the current tenant still pending (<see cref="FileDescriptor.IsPending"/>) that were created
+    /// before <paramref name="createdBefore"/>, oldest first, at most <paramref name="maxResultCount"/> of them.
+    /// </summary>
+    Task<List<FileDescriptor>> GetExpiredPendingListAsync(
+        DateTime createdBefore,
+        int maxResultCount,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// The uploaded files of <paramref name="containerName"/> filed in no directory - not the ones addressed by a name

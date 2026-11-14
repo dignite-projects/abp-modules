@@ -135,6 +135,14 @@ public class FileDescriptor : AggregateRoot<Guid>, ICreationAuditedObject, IModi
     /// </summary>
     public virtual bool IsPublic { get; protected set; }
 
+    /// <summary>
+    /// Whether the file came in through an upload ticket and its business system has not confirmed it yet - has not
+    /// filed it with a record of its own (<see cref="FileDescriptorManager.ConfirmAsync"/>). A pending file is left out
+    /// of listings, gets no read link and is never read publicly; it is counted in the usage and the allocation, and
+    /// one left pending past <c>BlobManagementUploadOptions.PendingLifetime</c> is deleted.
+    /// </summary>
+    public virtual bool IsPending { get; protected set; }
+
     public virtual DateTime CreationTime { get; set; }
 
     /// <summary>
@@ -186,6 +194,24 @@ public class FileDescriptor : AggregateRoot<Guid>, ICreationAuditedObject, IModi
     public virtual void SetPublic(bool isPublic)
     {
         IsPublic = isPublic;
+    }
+
+    /// <summary>
+    /// Marks the file pending: stored through an upload ticket, until its business system confirms it. Set before the
+    /// descriptor is inserted.
+    /// </summary>
+    public virtual void MarkPending()
+    {
+        IsPending = true;
+    }
+
+    /// <summary>
+    /// Confirms a pending file. <see cref="FileDescriptorManager.ConfirmAsync"/> saves it; a confirmed file is not
+    /// pending again.
+    /// </summary>
+    public virtual void Confirm()
+    {
+        IsPending = false;
     }
 
     /// <summary>Whether this descriptor wrote its BLOB and still holds the <see cref="DedupKey"/>.</summary>

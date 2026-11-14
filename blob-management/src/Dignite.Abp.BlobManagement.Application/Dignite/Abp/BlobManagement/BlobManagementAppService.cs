@@ -116,6 +116,7 @@ public abstract class BlobManagementAppService : ApplicationService
             Size = file.Size,
             ClientId = file.ClientId,
             IsPublic = file.IsPublic,
+            IsPending = file.IsPending,
             // The public address of a file saved under a name is that name; a file kept by its id is addressed by its
             // physical BLOB, since its name may repeat - and renaming or moving it then leaves the address as it was.
             Url = file.IsPublic

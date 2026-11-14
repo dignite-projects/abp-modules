@@ -11,7 +11,15 @@ export interface BlobManagementFileDto extends ExtensibleCreationAuditedEntityDt
   clientId?: string | null;
   lastModificationTime?: string | null;
   isPublic?: boolean;
+  isPending?: boolean;
   url?: string | null;
+}
+
+export interface BlobManagementUploadTicketDto {
+  ticket?: string;
+  uploadUrl?: string;
+  fileId?: string;
+  expirationTime?: string;
 }
 
 export interface CreateBlobManagementFileInput {
@@ -21,6 +29,15 @@ export interface CreateBlobManagementFileInput {
   creatorId?: string | null;
   isPublic?: boolean;
   file: IRemoteStreamContent;
+}
+
+export interface CreateBlobManagementUploadTicketInput {
+  containerName: string;
+  directoryId?: string | null;
+  uploaderId?: string | null;
+  maxSize?: number | null;
+  allowedContentTypes?: string[];
+  lifetimeInSeconds?: number | null;
 }
 
 export interface GetBlobManagementFilesInput extends PagedAndSortedResultRequestDto {

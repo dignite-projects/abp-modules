@@ -58,6 +58,18 @@ public class RemoteBlobManagementFileService : IBlobManagementFileService
         return Proxy.SetPublicAsync(id, input);
     }
 
+    public virtual Task<BlobManagementUploadTicketDto> CreateUploadTicketAsync(CreateBlobManagementUploadTicketInput input)
+    {
+        // The token carries no user: the upload is for the application's current one, as the in-process service takes it.
+        input.UploaderId ??= CurrentUser.Id;
+        return Proxy.CreateUploadTicketAsync(input);
+    }
+
+    public virtual Task<BlobManagementFileDto> ConfirmAsync(Guid id)
+    {
+        return Proxy.ConfirmAsync(id);
+    }
+
     public virtual Task DeleteAsync(Guid id)
     {
         return Proxy.DeleteAsync(id);

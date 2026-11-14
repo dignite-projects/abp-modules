@@ -69,6 +69,22 @@ public partial class BlobManagementFileClientProxy : ClientProxyBase<IBlobManage
         });
     }
 
+    public virtual async Task<BlobManagementUploadTicketDto> CreateUploadTicketAsync(CreateBlobManagementUploadTicketInput input)
+    {
+        return await RequestAsync<BlobManagementUploadTicketDto>(nameof(CreateUploadTicketAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(CreateBlobManagementUploadTicketInput), input }
+        });
+    }
+
+    public virtual async Task<BlobManagementFileDto> ConfirmAsync(Guid id)
+    {
+        return await RequestAsync<BlobManagementFileDto>(nameof(ConfirmAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(Guid), id }
+        });
+    }
+
     public virtual async Task DeleteAsync(Guid id)
     {
         await RequestAsync(nameof(DeleteAsync), new ClientProxyRequestTypeValue

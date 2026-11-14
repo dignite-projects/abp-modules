@@ -39,6 +39,21 @@ public interface IBlobManagementFileService : IApplicationService
     /// </summary>
     Task<BlobManagementFileDto> SetPublicAsync(Guid id, SetBlobManagementFilePublicInput input);
 
+    /// <summary>
+    /// Issues an upload ticket: a browser stores one file with it, without signing in, before it expires - the file's
+    /// id is given now. The file is pending until <see cref="ConfirmAsync"/>: it is not listed, gets no read link and is
+    /// not read publicly, and one never confirmed is deleted after <c>BlobManagementUploadOptions.PendingLifetime</c>.
+    /// <see cref="GetAsync"/> shows a pending file with the user it was uploaded for (<c>CreatorId</c>), which the
+    /// business system checks against its own current user before it confirms.
+    /// </summary>
+    Task<BlobManagementUploadTicketDto> CreateUploadTicketAsync(CreateBlobManagementUploadTicketInput input);
+
+    /// <summary>
+    /// Confirms a file uploaded with a ticket, once the business system has filed it with a record of its own. A file
+    /// that is not pending is left as it is.
+    /// </summary>
+    Task<BlobManagementFileDto> ConfirmAsync(Guid id);
+
     /// <summary>Deletes a file; a file that is not there is no error.</summary>
     Task DeleteAsync(Guid id);
 

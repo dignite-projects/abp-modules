@@ -85,6 +85,19 @@ public class BlobManagementFileAppService : BlobManagementFileService, IBlobMana
         return Map(file);
     }
 
+    public override async Task<BlobManagementUploadTicketDto> CreateUploadTicketAsync(CreateBlobManagementUploadTicketInput input)
+    {
+        var clientId = await ClientChecker.CheckAsync(input.ContainerName);
+        return await CreateUploadTicketAsync(input, clientId);
+    }
+
+    public override async Task<BlobManagementFileDto> ConfirmAsync(Guid id)
+    {
+        var file = await GetFileForClientAsync(id);
+        await FileDescriptorManager.ConfirmAsync(file);
+        return Map(file);
+    }
+
     public override async Task DeleteAsync(Guid id)
     {
         var file = await FindFileForClientAsync(id);

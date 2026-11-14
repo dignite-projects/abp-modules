@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Dignite.Abp.BlobManagement.Containers;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp;
 using Volo.Abp.Application;
@@ -20,6 +21,9 @@ public class BlobManagementApplicationModule : AbpModule
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         context.Services.AddMapperlyObjectMapper<BlobManagementApplicationModule>();
+
+        // Upload tickets and read links are signed with the host's key ring; the host decides where it is kept.
+        context.Services.AddDataProtection();
 
         ConfigureContainersFromConfiguration(context);
     }
