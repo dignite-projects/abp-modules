@@ -74,6 +74,7 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
                 MimeType = file.MimeType,
                 Size = file.Size,
                 ContentId = file.BlobName,
+                LastModified = file.CreationTime,
                 EntityTag = CreateEntityTag(file, input)
             }
         };

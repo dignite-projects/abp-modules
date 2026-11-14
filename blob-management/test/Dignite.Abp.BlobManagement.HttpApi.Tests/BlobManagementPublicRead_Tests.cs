@@ -299,6 +299,68 @@ public class BlobManagementPublicRead_Tests : AbpWebApplicationFactoryIntegrated
         response.Content.Headers.ContentDisposition!.FileName.ShouldBe("marked.pdf");
     }
 
+    /// <summary>
+    /// The bytes go out through ASP.NET Core's file result: a range is served, <c>If-Range</c> with the current tag
+    /// keeps it a range and with a stale one gets the whole file, and <c>Last-Modified</c> answers
+    /// <c>If-Modified-Since</c>.
+    /// </summary>
+    [Fact]
+    public async Task A_Public_Read_Should_Serve_Ranges_And_Answer_By_Date()
+    {
+        var bytes = BlobManagementTestFiles.Png(40, 20, seed: 21);
+        await StoreAsync("ranged.png", bytes);
+        var url = _urlBuilder.Build(BlobManagementHttpApiTestModule.AppPublicContainer, "ranged.png");
+
+        EntityTagHeaderValue etag;
+        DateTimeOffset lastModified;
+        using (var whole = await Client.GetAsync(url))
+        {
+            whole.StatusCode.ShouldBe(HttpStatusCode.OK);
+            whole.Headers.AcceptRanges.ShouldContain("bytes");
+            etag = whole.Headers.ETag!;
+            lastModified = whole.Content.Headers.LastModified!.Value;
+        }
+
+        using (var part = await GetRangeAsync(url, 2, 9))
+        {
+            part.StatusCode.ShouldBe(HttpStatusCode.PartialContent);
+            part.Content.Headers.ContentRange!.From.ShouldBe(2);
+            part.Content.Headers.ContentRange.To.ShouldBe(9);
+            part.Content.Headers.ContentRange.Length.ShouldBe(bytes.Length);
+            (await part.Content.ReadAsByteArrayAsync()).ShouldBe(bytes[2..10]);
+        }
+
+        using (var current = await GetRangeAsync(url, 0, 3, ifRange: etag))
+        {
+            current.StatusCode.ShouldBe(HttpStatusCode.PartialContent);
+        }
+
+        using (var stale = await GetRangeAsync(url, 0, 3, ifRange: new EntityTagHeaderValue("\"stale\"")))
+        {
+            stale.StatusCode.ShouldBe(HttpStatusCode.OK);
+            (await stale.Content.ReadAsByteArrayAsync()).ShouldBe(bytes);
+        }
+
+        using (var request = new HttpRequestMessage(HttpMethod.Get, url))
+        {
+            request.Headers.IfModifiedSince = lastModified;
+            using var notModified = await Client.SendAsync(request);
+            notModified.StatusCode.ShouldBe(HttpStatusCode.NotModified);
+        }
+    }
+
+    private Task<HttpResponseMessage> GetRangeAsync(string url, long from, long to, EntityTagHeaderValue? ifRange = null)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Range = new RangeHeaderValue(from, to);
+        if (ifRange != null)
+        {
+            request.Headers.IfRange = new RangeConditionHeaderValue(ifRange);
+        }
+
+        return Client.SendAsync(request);
+    }
+
     private async Task StoreAsync(string name, byte[] bytes, bool overrideExisting = false)
     {
         using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))

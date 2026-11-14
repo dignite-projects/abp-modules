@@ -11,6 +11,10 @@ The four changes at the end of this record, in their order, each its own change.
    lock and the check whether a BLOB is still in use are gone, and a BLOB is deleted with its descriptor after commit.
    Usage has one measure, stored bytes, for the tenant, the containers, the users and the clients
    (`UploadedBytes` became `StoredBytes`), and a public address is one file's. The hash stays on the file.
+2. **Bytes are served through ASP.NET Core's `FileStreamResult`** (§3), from one base of both addresses
+   (`BlobManagementFileReadController`): `Range` and `If-Range`, `Last-Modified` (the file's creation time - its bytes
+   never change) and every precondition are the framework's. The `If-None-Match` check before the bytes are opened,
+   and `HEAD` without them, stay.
 
 Until now the module was compared with ABP's File Management only, which is a personal drive. The projects below are
 storage services that business systems integrate with, which is what [`positioning-decision.md`](positioning-decision.md)

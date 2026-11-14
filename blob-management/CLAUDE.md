@@ -12,7 +12,8 @@ process or once as its own service. It is not a cloud drive: no personal drives,
 
 The module was compared with the open-source storage services in its position (Supabase Storage, Nhost, Appwrite,
 UploadThing and others) in [`dev-docs/peer-comparison.md`](dev-docs/peer-comparison.md) (2026-11-14), and changes in the
-order decided there; the first, done: every file has a BLOB of its own - content is no longer shared between files.
+order decided there. Done: every file has a BLOB of its own - content is no longer shared between files; the bytes
+go out through ASP.NET Core's `FileStreamResult`, with ranges.
 How a business system integrates is in
 [`dev-docs/business-system-integration-decision.md`](dev-docs/business-system-integration-decision.md) (2026-11-14:
 three layers of credentials - the client token, upload tickets and read links, public addresses; a file, not its
@@ -37,7 +38,9 @@ edition, one kind of container, the names). What they kept of the storage tier w
   `BlobManagementClientChecker`) and its C# client proxies
   (`RemoteBlobManagementBlobService`); public reads with sizing at `/blobs` of the files marked public
   (`FileDescriptor.IsPublic`; `BlobManagementPublicController`, `BlobManagementPublicAppService`,
-  `IBlobManagementPublicUrlBuilder`).
+  `IBlobManagementPublicUrlBuilder`). The public read and the read with a link share `BlobManagementFileReadController`:
+  conditional and range requests are ASP.NET Core's `FileStreamResult`'s - do not answer them by hand - except a
+  matching `If-None-Match` and a `HEAD`, answered before the bytes are opened.
 - Files by id, for a business system: `IBlobManagementFileService` (list a place, one file, bytes, store, rename,
   move, mark public, delete; upload tickets and confirmation; read links) with its trusted in-process implementation
   (`BlobManagementFileService`), the file API behind it (`IBlobManagementFileAppService`, `api/blob-management/files`:

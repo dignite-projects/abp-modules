@@ -167,7 +167,7 @@ var page = await _files.CreateReadLinksAsync(new CreateBlobManagementReadLinksIn
 * `CreateReadLinksAsync` takes up to 100 ids; a file that is not there, not the client's, or pending is left out of the result.
 * A pending file gets no link (`BlobManagement:FilePending`, 409).
 
-The browser reads `GET` (or `HEAD`) `/api/blob-management/links/{link}` anonymously. The response is `Cache-Control: private`, for no longer than the link has left, with an `ETag` (a matching `If-None-Match` is answered `304`), `nosniff`, and a type outside the module's list served as an attachment. An expired or altered link answers 403; a file deleted meanwhile, 404. A link is a credential: give it to the user it is for, and do not log it.
+The browser reads `GET` (or `HEAD`) `/api/blob-management/links/{link}` anonymously. The response is `Cache-Control: private`, for no longer than the link has left, with an `ETag` and a `Last-Modified` (conditional requests are answered `304`), `Range` requests served as on a public read ([Public Addresses](provider.md#public-addresses)), `nosniff`, and a type outside the module's list served as an attachment. An expired or altered link answers 403; a file deleted meanwhile, 404. A link is a credential: give it to the user it is for, and do not log it.
 
 ````csharp
 Configure<BlobManagementReadLinkOptions>(options =>
