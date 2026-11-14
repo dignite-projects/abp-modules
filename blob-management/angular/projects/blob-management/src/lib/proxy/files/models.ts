@@ -15,6 +15,12 @@ export interface BlobManagementFileDto extends ExtensibleCreationAuditedEntityDt
   url?: string | null;
 }
 
+export interface BlobManagementReadLinkDto {
+  fileId?: string;
+  url?: string;
+  expirationTime?: string;
+}
+
 export interface BlobManagementUploadTicketDto {
   ticket?: string;
   uploadUrl?: string;
@@ -29,6 +35,15 @@ export interface CreateBlobManagementFileInput {
   creatorId?: string | null;
   isPublic?: boolean;
   file: IRemoteStreamContent;
+}
+
+export interface CreateBlobManagementReadLinkInput {
+  lifetimeInSeconds?: number | null;
+}
+
+export interface CreateBlobManagementReadLinksInput {
+  ids: string[];
+  lifetimeInSeconds?: number | null;
 }
 
 export interface CreateBlobManagementUploadTicketInput {

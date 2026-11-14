@@ -1,6 +1,6 @@
-import type { BlobManagementFileDto, BlobManagementUploadTicketDto, CreateBlobManagementFileInput, CreateBlobManagementUploadTicketInput, GetBlobManagementFilesInput, MoveBlobManagementFileInput, SetBlobManagementFilePublicInput, UpdateBlobManagementFileInput } from './models';
+import type { BlobManagementFileDto, BlobManagementReadLinkDto, BlobManagementUploadTicketDto, CreateBlobManagementFileInput, CreateBlobManagementReadLinkInput, CreateBlobManagementReadLinksInput, CreateBlobManagementUploadTicketInput, GetBlobManagementFilesInput, MoveBlobManagementFileInput, SetBlobManagementFilePublicInput, UpdateBlobManagementFileInput } from './models';
 import { RestService, Rest } from '@abp/ng.core';
-import type { PagedResultDto } from '@abp/ng.core';
+import type { ListResultDto, PagedResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
 
 @Injectable({
@@ -27,6 +27,28 @@ export class BlobManagementFileService {
       method: 'POST',
       headers: { Accept: 'application/json' },
       url: '/api/blob-management/files',
+      body: input,
+    },
+      { apiName: this.apiName,...config });
+  
+
+  
+  createReadLink = (id: string, input: CreateBlobManagementReadLinkInput, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, BlobManagementReadLinkDto>({
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+      url: `/api/blob-management/files/${id}/read-link`,
+      body: input,
+    },
+      { apiName: this.apiName,...config });
+  
+
+  
+  createReadLinks = (input: CreateBlobManagementReadLinksInput, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, ListResultDto<BlobManagementReadLinkDto>>({
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+      url: '/api/blob-management/files/read-links',
       body: input,
     },
       { apiName: this.apiName,...config });

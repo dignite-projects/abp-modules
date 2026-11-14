@@ -17,6 +17,7 @@
     "BlobManagement:UploadTicketInvalid": "Latauslinkki ei ole kelvollinen tai se on vanhentunut.",
     "BlobManagement:UploadTicketUsed": "Latauslinkki on jo käytetty.",
     "BlobManagement:FilePending": "Tiedostoa ei ole vielä vahvistettu.",
+    "BlobManagement:ReadLinkInvalid": "Linkki ei ole kelvollinen tai se on vanhentunut.",
     "Feature:BlobManagementGroup": "Blob-hallinta",
     "Feature:BlobManagementEnable": "Ota Blob-hallinta käyttöön",
     "Feature:BlobManagementEnableDescription": "Saako vuokraaja tallentaa tiedostoja BLOB-säilöihin.",

@@ -17,6 +17,7 @@
     "BlobManagement:UploadTicketInvalid": "Upphleðslutengillinn er ógildur eða útrunninn.",
     "BlobManagement:UploadTicketUsed": "Upphleðslutengillinn hefur þegar verið notaður.",
     "BlobManagement:FilePending": "Skráin hefur ekki verið staðfest enn.",
+    "BlobManagement:ReadLinkInvalid": "Tengillinn er ógildur eða útrunninn.",
     "Feature:BlobManagementGroup": "Blob-umsýsla",
     "Feature:BlobManagementEnable": "Virkja Blob-umsýslu",
     "Feature:BlobManagementEnableDescription": "Hvort leigjandinn megi geyma skrár í BLOB-gámunum.",

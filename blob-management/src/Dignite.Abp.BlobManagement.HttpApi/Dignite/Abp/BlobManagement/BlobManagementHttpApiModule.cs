@@ -40,6 +40,7 @@ public class BlobManagementHttpApiModule : AbpModule
             options.Map(BlobManagementErrorCodes.UploadTicketInvalid, HttpStatusCode.Forbidden);
             options.Map(BlobManagementErrorCodes.UploadTicketUsed, HttpStatusCode.Conflict);
             options.Map(BlobManagementErrorCodes.FilePending, HttpStatusCode.Conflict);
+            options.Map(BlobManagementErrorCodes.ReadLinkInvalid, HttpStatusCode.Forbidden);
             options.Map(BlobManagementErrorCodes.DirectoryNotFound, HttpStatusCode.NotFound);
             options.Map(BlobManagementErrorCodes.DirectoryNameAlreadyExists, HttpStatusCode.Conflict);
             options.Map(BlobManagementErrorCodes.DirectoryNotEmpty, HttpStatusCode.Conflict);

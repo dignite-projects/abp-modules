@@ -17,6 +17,7 @@
     "BlobManagement:UploadTicketInvalid": "Der Upload-Link ist ungültig oder abgelaufen.",
     "BlobManagement:UploadTicketUsed": "Der Upload-Link wurde bereits verwendet.",
     "BlobManagement:FilePending": "Die Datei wurde noch nicht bestätigt.",
+    "BlobManagement:ReadLinkInvalid": "Der Link ist ungültig oder abgelaufen.",
     "Feature:BlobManagementGroup": "Blob-Verwaltung",
     "Feature:BlobManagementEnable": "Blob-Verwaltung aktivieren",
     "Feature:BlobManagementEnableDescription": "Ob der Mandant Dateien in den BLOB-Containern speichern darf.",

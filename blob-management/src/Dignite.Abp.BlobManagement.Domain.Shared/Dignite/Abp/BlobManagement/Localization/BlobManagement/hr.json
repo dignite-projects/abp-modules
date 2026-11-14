@@ -17,6 +17,7 @@
     "BlobManagement:UploadTicketInvalid": "Poveznica za prijenos nije valjana ili je istekla.",
     "BlobManagement:UploadTicketUsed": "Poveznica za prijenos već je iskorištena.",
     "BlobManagement:FilePending": "Datoteka još nije potvrđena.",
+    "BlobManagement:ReadLinkInvalid": "Poveznica nije valjana ili je istekla.",
     "Feature:BlobManagementGroup": "Upravljanje BLOB-ovima",
     "Feature:BlobManagementEnable": "Omogući upravljanje BLOB-ovima",
     "Feature:BlobManagementEnableDescription": "Smije li zakupac spremati datoteke u BLOB spremnike.",

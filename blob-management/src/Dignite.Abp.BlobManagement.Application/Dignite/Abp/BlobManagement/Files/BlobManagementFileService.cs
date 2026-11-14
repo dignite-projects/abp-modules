@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobManagement.Features;
+using Dignite.Abp.BlobManagement.Links;
 using Dignite.Abp.BlobManagement.Tickets;
 using Dignite.Abp.BlobManagement.Uploads;
 using Dignite.Abp.BlobStoring.Pipeline;
@@ -32,6 +34,9 @@ public class BlobManagementFileService : BlobManagementAppService, IBlobManageme
     // Resolved lazily, not injected, so the constructor - which the file API repeats - stays as it was.
     protected BlobManagementTicketProtector TicketProtector =>
         LazyServiceProvider.LazyGetRequiredService<BlobManagementTicketProtector>();
+
+    protected BlobManagementReadLinkIssuer ReadLinkIssuer =>
+        LazyServiceProvider.LazyGetRequiredService<BlobManagementReadLinkIssuer>();
 
     protected BlobManagementUploadOptions UploadOptions =>
         LazyServiceProvider.LazyGetRequiredService<IOptions<BlobManagementUploadOptions>>().Value;
@@ -105,6 +110,26 @@ public class BlobManagementFileService : BlobManagementAppService, IBlobManageme
         var file = await GetFileAsync(id);
         await FileDescriptorManager.ConfirmAsync(file);
         return Map(file);
+    }
+
+    public virtual async Task<BlobManagementReadLinkDto> CreateReadLinkAsync(Guid id, CreateBlobManagementReadLinkInput input)
+    {
+        return await ReadLinkIssuer.IssueAsync(await GetFileAsync(id), input?.LifetimeInSeconds);
+    }
+
+    public virtual async Task<ListResultDto<BlobManagementReadLinkDto>> CreateReadLinksAsync(CreateBlobManagementReadLinksInput input)
+    {
+        var links = new List<BlobManagementReadLinkDto>();
+        foreach (var id in input.Ids.Distinct())
+        {
+            var file = await FindFileForLinkAsync(id);
+            if (file is { IsPending: false })
+            {
+                links.Add(await ReadLinkIssuer.IssueAsync(file, input.LifetimeInSeconds));
+            }
+        }
+
+        return new ListResultDto<BlobManagementReadLinkDto>(links);
     }
 
     public virtual async Task DeleteAsync(Guid id)
@@ -213,6 +238,12 @@ public class BlobManagementFileService : BlobManagementAppService, IBlobManageme
             FileId = upload.FileId,
             ExpirationTime = expiration.UtcDateTime
         };
+    }
+
+    /// <summary>A file the caller may have a read link for, or <c>null</c>: in process, any file of a managed container.</summary>
+    protected virtual Task<FileDescriptor?> FindFileForLinkAsync(Guid id)
+    {
+        return FindFileAsync(id);
     }
 
     /// <summary>A file of a managed container; any other is not found.</summary>

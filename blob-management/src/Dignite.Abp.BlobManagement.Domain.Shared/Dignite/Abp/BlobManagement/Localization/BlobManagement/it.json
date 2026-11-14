@@ -17,6 +17,7 @@
     "BlobManagement:UploadTicketInvalid": "Il link di caricamento non è valido o è scaduto.",
     "BlobManagement:UploadTicketUsed": "Il link di caricamento è già stato utilizzato.",
     "BlobManagement:FilePending": "Il file non è ancora stato confermato.",
+    "BlobManagement:ReadLinkInvalid": "Il link non è valido o è scaduto.",
     "Feature:BlobManagementGroup": "Gestione dei BLOB",
     "Feature:BlobManagementEnable": "Abilita la gestione dei BLOB",
     "Feature:BlobManagementEnableDescription": "Indica se il tenant può archiviare file nei contenitori BLOB.",

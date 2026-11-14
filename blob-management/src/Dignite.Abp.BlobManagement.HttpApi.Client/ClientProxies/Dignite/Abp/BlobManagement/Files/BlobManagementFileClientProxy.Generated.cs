@@ -85,6 +85,23 @@ public partial class BlobManagementFileClientProxy : ClientProxyBase<IBlobManage
         });
     }
 
+    public virtual async Task<BlobManagementReadLinkDto> CreateReadLinkAsync(Guid id, CreateBlobManagementReadLinkInput input)
+    {
+        return await RequestAsync<BlobManagementReadLinkDto>(nameof(CreateReadLinkAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(Guid), id },
+            { typeof(CreateBlobManagementReadLinkInput), input }
+        });
+    }
+
+    public virtual async Task<ListResultDto<BlobManagementReadLinkDto>> CreateReadLinksAsync(CreateBlobManagementReadLinksInput input)
+    {
+        return await RequestAsync<ListResultDto<BlobManagementReadLinkDto>>(nameof(CreateReadLinksAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(CreateBlobManagementReadLinksInput), input }
+        });
+    }
+
     public virtual async Task DeleteAsync(Guid id)
     {
         await RequestAsync(nameof(DeleteAsync), new ClientProxyRequestTypeValue

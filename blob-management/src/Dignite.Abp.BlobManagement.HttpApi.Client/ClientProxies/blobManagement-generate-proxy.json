@@ -1581,6 +1581,63 @@
                   }
                 },
                 {
+                  "name": "CreateReadLinkAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinkInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                      "type": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinkInput",
+                      "typeSimple": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinkInput",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Dignite.Abp.BlobManagement.Files.BlobManagementReadLinkDto",
+                    "typeSimple": "Dignite.Abp.BlobManagement.Files.BlobManagementReadLinkDto",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "CreateReadLinksAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinksInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                      "type": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinksInput",
+                      "typeSimple": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinksInput",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.Abp.BlobManagement.Files.BlobManagementReadLinkDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.Abp.BlobManagement.Files.BlobManagementReadLinkDto>",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
                   "name": "DeleteAsync",
                   "parametersOnMethod": [
                     {
@@ -1844,6 +1901,63 @@
                   "returnValue": {
                     "type": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
                     "typeSimple": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "CreateReadLinkAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinkInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                      "type": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinkInput",
+                      "typeSimple": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinkInput",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Dignite.Abp.BlobManagement.Files.BlobManagementReadLinkDto",
+                    "typeSimple": "Dignite.Abp.BlobManagement.Files.BlobManagementReadLinkDto",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "CreateReadLinksAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinksInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                      "type": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinksInput",
+                      "typeSimple": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinksInput",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.Abp.BlobManagement.Files.BlobManagementReadLinkDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.Abp.BlobManagement.Files.BlobManagementReadLinkDto>",
                     "summary": null,
                     "contentTypes": null,
                     "isRemoteStream": false
@@ -2551,6 +2665,142 @@
               "returnValue": {
                 "type": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
                 "typeSimple": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "CreateReadLinkAsyncByIdAndInput": {
+              "uniqueName": "CreateReadLinkAsyncByIdAndInput",
+              "name": "CreateReadLinkAsync",
+              "httpMethod": "POST",
+              "url": "api/blob-management/files/{id}/read-link",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinkInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                  "type": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinkInput",
+                  "typeSimple": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinkInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinkInput",
+                  "typeSimple": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinkInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "Dignite.Abp.BlobManagement.Files.BlobManagementReadLinkDto",
+                "typeSimple": "Dignite.Abp.BlobManagement.Files.BlobManagementReadLinkDto",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "CreateReadLinksAsyncByInput": {
+              "uniqueName": "CreateReadLinksAsyncByInput",
+              "name": "CreateReadLinksAsync",
+              "httpMethod": "POST",
+              "url": "api/blob-management/files/read-links",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinksInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                  "type": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinksInput",
+                  "typeSimple": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinksInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinksInput",
+                  "typeSimple": "Dignite.Abp.BlobManagement.Files.CreateBlobManagementReadLinksInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.Abp.BlobManagement.Files.BlobManagementReadLinkDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.Abp.BlobManagement.Files.BlobManagementReadLinkDto>",
                 "summary": null,
                 "contentTypes": [
                   "text/plain",

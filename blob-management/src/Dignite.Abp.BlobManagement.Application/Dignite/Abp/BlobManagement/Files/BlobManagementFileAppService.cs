@@ -98,6 +98,17 @@ public class BlobManagementFileAppService : BlobManagementFileService, IBlobMana
         return Map(file);
     }
 
+    public override async Task<BlobManagementReadLinkDto> CreateReadLinkAsync(Guid id, CreateBlobManagementReadLinkInput input)
+    {
+        return await ReadLinkIssuer.IssueAsync(await GetFileForClientAsync(id), input?.LifetimeInSeconds);
+    }
+
+    /// <summary>Only a client's: a link is handed to a browser by its business system, never asked for by a user.</summary>
+    protected override Task<FileDescriptor?> FindFileForLinkAsync(Guid id)
+    {
+        return FindFileForClientAsync(id);
+    }
+
     public override async Task DeleteAsync(Guid id)
     {
         var file = await FindFileForClientAsync(id);

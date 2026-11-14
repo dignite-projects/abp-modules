@@ -54,6 +54,20 @@ public interface IBlobManagementFileService : IApplicationService
     /// </summary>
     Task<BlobManagementFileDto> ConfirmAsync(Guid id);
 
+    /// <summary>
+    /// A read link for a file: the address a browser reads it at, without signing in, for a few minutes - for a file
+    /// that is not public, which the business system has decided its user may see. A pending file gets none
+    /// (<see cref="BlobManagementErrorCodes.FilePending"/>). The same file asked for within one window
+    /// (<c>BlobManagementReadLinkOptions.LinkWindow</c>) gets the same link, so a browser's cache serves it again.
+    /// </summary>
+    Task<BlobManagementReadLinkDto> CreateReadLinkAsync(Guid id, CreateBlobManagementReadLinkInput input);
+
+    /// <summary>
+    /// Read links for several files, as <see cref="CreateReadLinkAsync"/> issues them; a file that is not there, not
+    /// the caller's to read, or pending is left out of the result rather than failing the others.
+    /// </summary>
+    Task<ListResultDto<BlobManagementReadLinkDto>> CreateReadLinksAsync(CreateBlobManagementReadLinksInput input);
+
     /// <summary>Deletes a file; a file that is not there is no error.</summary>
     Task DeleteAsync(Guid id);
 

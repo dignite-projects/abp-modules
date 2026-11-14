@@ -17,6 +17,7 @@
     "BlobManagement:UploadTicketInvalid": "Linkul de încărcare nu este valid sau a expirat.",
     "BlobManagement:UploadTicketUsed": "Linkul de încărcare a fost deja folosit.",
     "BlobManagement:FilePending": "Fișierul nu a fost încă confirmat.",
+    "BlobManagement:ReadLinkInvalid": "Linkul nu este valid sau a expirat.",
     "Feature:BlobManagementGroup": "Gestionare bloburi",
     "Feature:BlobManagementEnable": "Activează gestionarea bloburilor",
     "Feature:BlobManagementEnableDescription": "Dacă chiriașul poate stoca fișiere în containerele BLOB.",

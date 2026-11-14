@@ -17,6 +17,7 @@
     "BlobManagement:UploadTicketInvalid": "O link de envio não é válido ou expirou.",
     "BlobManagement:UploadTicketUsed": "O link de envio já foi usado.",
     "BlobManagement:FilePending": "O arquivo ainda não foi confirmado.",
+    "BlobManagement:ReadLinkInvalid": "O link não é válido ou expirou.",
     "Feature:BlobManagementGroup": "Gerenciamento de blobs",
     "Feature:BlobManagementEnable": "Habilitar o gerenciamento de blobs",
     "Feature:BlobManagementEnableDescription": "Indica se o locatário pode armazenar arquivos nos contêineres BLOB.",

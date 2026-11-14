@@ -83,6 +83,20 @@ public class BlobManagementFileController : BlobManagementController, IBlobManag
         return FileAppService.ConfirmAsync(id);
     }
 
+    [HttpPost]
+    [Route("{id}/read-link")]
+    public virtual Task<BlobManagementReadLinkDto> CreateReadLinkAsync(Guid id, CreateBlobManagementReadLinkInput input)
+    {
+        return FileAppService.CreateReadLinkAsync(id, input);
+    }
+
+    [HttpPost]
+    [Route("read-links")]
+    public virtual Task<ListResultDto<BlobManagementReadLinkDto>> CreateReadLinksAsync(CreateBlobManagementReadLinksInput input)
+    {
+        return FileAppService.CreateReadLinksAsync(input);
+    }
+
     [HttpDelete]
     [Route("{id}")]
     public virtual Task DeleteAsync(Guid id)

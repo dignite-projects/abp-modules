@@ -17,6 +17,7 @@
     "BlobManagement:UploadTicketInvalid": "Povezava za nalaganje ni veljavna ali je potekla.",
     "BlobManagement:UploadTicketUsed": "Povezava za nalaganje je bila že uporabljena.",
     "BlobManagement:FilePending": "Datoteka še ni potrjena.",
+    "BlobManagement:ReadLinkInvalid": "Povezava ni veljavna ali je potekla.",
     "Feature:BlobManagementGroup": "Upravljanje objektov BLOB",
     "Feature:BlobManagementEnable": "Omogoči upravljanje objektov BLOB",
     "Feature:BlobManagementEnableDescription": "Ali lahko najemnik shranjuje datoteke v vsebnike BLOB.",

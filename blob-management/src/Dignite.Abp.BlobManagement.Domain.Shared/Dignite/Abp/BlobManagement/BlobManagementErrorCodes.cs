@@ -73,4 +73,7 @@ public static class BlobManagementErrorCodes
 
     /// <summary>A pending file - uploaded with a ticket, not confirmed yet - asked for what only a confirmed one has.</summary>
     public const string FilePending = Namespace + ":FilePending";
+
+    /// <summary>A read link that is expired, altered, or was not issued by this Blob Management.</summary>
+    public const string ReadLinkInvalid = Namespace + ":ReadLinkInvalid";
 }

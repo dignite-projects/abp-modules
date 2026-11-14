@@ -17,6 +17,7 @@
     "BlobManagement:UploadTicketInvalid": "上傳連結無效或已過期。",
     "BlobManagement:UploadTicketUsed": "上傳連結已被使用。",
     "BlobManagement:FilePending": "檔案尚未確認。",
+    "BlobManagement:ReadLinkInvalid": "連結無效或已過期。",
     "Feature:BlobManagementGroup": "Blob 管理",
     "Feature:BlobManagementEnable": "啟用 Blob 管理",
     "Feature:BlobManagementEnableDescription": "租戶是否可以在 BLOB 容器中儲存檔案。",

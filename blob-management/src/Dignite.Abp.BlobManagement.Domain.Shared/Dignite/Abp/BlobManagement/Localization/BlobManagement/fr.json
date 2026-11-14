@@ -17,6 +17,7 @@
     "BlobManagement:UploadTicketInvalid": "Le lien de téléversement n’est pas valide ou a expiré.",
     "BlobManagement:UploadTicketUsed": "Le lien de téléversement a déjà été utilisé.",
     "BlobManagement:FilePending": "Le fichier n’a pas encore été confirmé.",
+    "BlobManagement:ReadLinkInvalid": "Le lien n’est pas valide ou a expiré.",
     "Feature:BlobManagementGroup": "Gestion des blobs",
     "Feature:BlobManagementEnable": "Activer la gestion des blobs",
     "Feature:BlobManagementEnableDescription": "Indique si le locataire peut stocker des fichiers dans les conteneurs BLOB.",

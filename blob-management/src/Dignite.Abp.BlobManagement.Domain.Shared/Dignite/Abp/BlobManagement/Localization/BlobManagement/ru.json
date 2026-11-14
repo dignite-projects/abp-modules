@@ -17,6 +17,7 @@
     "BlobManagement:UploadTicketInvalid": "Ссылка для загрузки недействительна или срок её действия истёк.",
     "BlobManagement:UploadTicketUsed": "Ссылка для загрузки уже использована.",
     "BlobManagement:FilePending": "Файл ещё не подтверждён.",
+    "BlobManagement:ReadLinkInvalid": "Ссылка недействительна или срок её действия истёк.",
     "Feature:BlobManagementGroup": "Управление BLOB-объектами",
     "Feature:BlobManagementEnable": "Включить управление BLOB-объектами",
     "Feature:BlobManagementEnableDescription": "Может ли арендатор хранить файлы в BLOB-контейнерах.",

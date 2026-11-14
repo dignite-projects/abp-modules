@@ -17,6 +17,7 @@
     "BlobManagement:UploadTicketInvalid": "Link do przesyłania jest nieprawidłowy lub wygasł.",
     "BlobManagement:UploadTicketUsed": "Link do przesyłania został już użyty.",
     "BlobManagement:FilePending": "Plik nie został jeszcze potwierdzony.",
+    "BlobManagement:ReadLinkInvalid": "Link jest nieprawidłowy lub wygasł.",
     "Feature:BlobManagementGroup": "Zarządzanie obiektami BLOB",
     "Feature:BlobManagementEnable": "Włącz zarządzanie obiektami BLOB",
     "Feature:BlobManagementEnableDescription": "Czy dzierżawa może przechowywać pliki w kontenerach BLOB.",

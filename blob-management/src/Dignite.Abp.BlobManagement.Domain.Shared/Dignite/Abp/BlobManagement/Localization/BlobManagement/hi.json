@@ -17,6 +17,7 @@
     "BlobManagement:UploadTicketInvalid": "अपलोड लिंक मान्य नहीं है या इसकी समय-सीमा समाप्त हो गई है।",
     "BlobManagement:UploadTicketUsed": "अपलोड लिंक पहले ही उपयोग किया जा चुका है।",
     "BlobManagement:FilePending": "फ़ाइल की अभी पुष्टि नहीं हुई है।",
+    "BlobManagement:ReadLinkInvalid": "लिंक मान्य नहीं है या इसकी समय-सीमा समाप्त हो गई है।",
     "Feature:BlobManagementGroup": "ब्लॉब प्रबंधन",
     "Feature:BlobManagementEnable": "ब्लॉब प्रबंधन सक्षम करें",
     "Feature:BlobManagementEnableDescription": "क्या टेनेंट BLOB कंटेनरों में फ़ाइलें संग्रहीत कर सकता है।",

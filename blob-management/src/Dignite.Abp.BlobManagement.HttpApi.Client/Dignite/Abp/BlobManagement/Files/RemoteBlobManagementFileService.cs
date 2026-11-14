@@ -70,6 +70,16 @@ public class RemoteBlobManagementFileService : IBlobManagementFileService
         return Proxy.ConfirmAsync(id);
     }
 
+    public virtual Task<BlobManagementReadLinkDto> CreateReadLinkAsync(Guid id, CreateBlobManagementReadLinkInput input)
+    {
+        return Proxy.CreateReadLinkAsync(id, input);
+    }
+
+    public virtual Task<ListResultDto<BlobManagementReadLinkDto>> CreateReadLinksAsync(CreateBlobManagementReadLinksInput input)
+    {
+        return Proxy.CreateReadLinksAsync(input);
+    }
+
     public virtual Task DeleteAsync(Guid id)
     {
         return Proxy.DeleteAsync(id);

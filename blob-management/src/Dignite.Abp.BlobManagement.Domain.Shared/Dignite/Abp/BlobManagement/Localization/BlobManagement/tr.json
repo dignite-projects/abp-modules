@@ -17,6 +17,7 @@
     "BlobManagement:UploadTicketInvalid": "Yükleme bağlantısı geçerli değil veya süresi doldu.",
     "BlobManagement:UploadTicketUsed": "Yükleme bağlantısı zaten kullanıldı.",
     "BlobManagement:FilePending": "Dosya henüz onaylanmadı.",
+    "BlobManagement:ReadLinkInvalid": "Bağlantı geçerli değil veya süresi doldu.",
     "Feature:BlobManagementGroup": "Blob Yönetimi",
     "Feature:BlobManagementEnable": "Blob Yönetimini etkinleştir",
     "Feature:BlobManagementEnableDescription": "Kiracının BLOB kapsayıcılarında dosya depolayıp depolayamayacağı.",

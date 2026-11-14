@@ -17,6 +17,7 @@
     "BlobManagement:UploadTicketInvalid": "Odkaz pro nahrání není platný nebo vypršel.",
     "BlobManagement:UploadTicketUsed": "Odkaz pro nahrání už byl použit.",
     "BlobManagement:FilePending": "Soubor ještě nebyl potvrzen.",
+    "BlobManagement:ReadLinkInvalid": "Odkaz není platný nebo vypršel.",
     "Feature:BlobManagementGroup": "Správa objektů BLOB",
     "Feature:BlobManagementEnable": "Povolit správu objektů BLOB",
     "Feature:BlobManagementEnableDescription": "Zda může tenant ukládat soubory do kontejnerů BLOB.",

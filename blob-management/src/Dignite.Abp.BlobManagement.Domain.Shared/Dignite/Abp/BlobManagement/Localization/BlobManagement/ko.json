@@ -17,6 +17,7 @@
     "BlobManagement:UploadTicketInvalid": "업로드 링크가 유효하지 않거나 만료되었습니다.",
     "BlobManagement:UploadTicketUsed": "업로드 링크가 이미 사용되었습니다.",
     "BlobManagement:FilePending": "파일이 아직 확인되지 않았습니다.",
+    "BlobManagement:ReadLinkInvalid": "링크가 유효하지 않거나 만료되었습니다.",
     "Feature:BlobManagementGroup": "Blob 관리",
     "Feature:BlobManagementEnable": "Blob 관리 사용",
     "Feature:BlobManagementEnableDescription": "테넌트가 BLOB 컨테이너에 파일을 저장할 수 있는지 여부입니다.",
