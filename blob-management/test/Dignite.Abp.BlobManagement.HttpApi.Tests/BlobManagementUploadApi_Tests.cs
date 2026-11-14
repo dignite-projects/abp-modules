@@ -6,6 +6,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobManagement.Files;
+using Dignite.Abp.BlobStoring.Pipeline;
 using Shouldly;
 using Volo.Abp.AspNetCore.TestBase;
 using Volo.Abp.Http.Client;
@@ -139,8 +140,59 @@ public class BlobManagementUploadApi_Tests : AbpWebApplicationFactoryIntegratedT
 
         using (var tooLarge = await PostFileAsync(small.UploadUrl, "big.pdf", BlobManagementTestFiles.Pdf("larger than thirty-two bytes " + Guid.NewGuid())))
         {
-            tooLarge.IsSuccessStatusCode.ShouldBeFalse();
+            tooLarge.StatusCode.ShouldBe(HttpStatusCode.RequestEntityTooLarge);
         }
+    }
+
+    /// <summary>
+    /// What the container's pipeline refuses is the request's content, not the caller's rights: 413, 415 or 400 with the
+    /// pipeline's own error code, never ABP's default 403 for a business exception.
+    /// </summary>
+    [Fact]
+    public async Task Refused_Content_Should_Answer_The_Status_Of_What_Is_Wrong_With_It()
+    {
+        BlobManagementUploadTicketDto picturesOnly, disguised;
+        using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
+        {
+            picturesOnly = await _files.CreateUploadTicketAsync(new CreateBlobManagementUploadTicketInput
+            {
+                ContainerName = Container,
+                AllowedContentTypes = { "image/png" }
+            });
+            disguised = await _files.CreateUploadTicketAsync(new CreateBlobManagementUploadTicketInput { ContainerName = Container });
+        }
+
+        using (var notAllowed = await PostFileAsync(picturesOnly.UploadUrl, "letter.pdf", BlobManagementTestFiles.Pdf("not a picture " + Guid.NewGuid())))
+        {
+            notAllowed.StatusCode.ShouldBe(HttpStatusCode.UnsupportedMediaType);
+            (await notAllowed.Content.ReadAsStringAsync()).ShouldContain(BlobStoringPipelineErrorCodes.ContentTypeNotAllowed);
+        }
+
+        using (var mismatch = await PostFileAsync(disguised.UploadUrl, "photo.png", BlobManagementTestFiles.Pdf("a pdf named png " + Guid.NewGuid())))
+        {
+            mismatch.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+            (await mismatch.Content.ReadAsStringAsync()).ShouldContain(BlobStoringPipelineErrorCodes.ContentTypeMismatch);
+        }
+    }
+
+    /// <summary>
+    /// The HttpApi layer maps blob-storing's codes by their strings, since it does not reference blob-storing's packages:
+    /// this pins those strings to blob-storing's constants.
+    /// </summary>
+    [Fact]
+    public void BlobStorings_Codes_Should_Be_Mapped_By_Their_Published_Names()
+    {
+        var mappings = GetRequiredService<Microsoft.Extensions.Options.IOptions<Volo.Abp.AspNetCore.ExceptionHandling.AbpExceptionHttpStatusCodeOptions>>()
+            .Value.ErrorCodeToHttpStatusCodeMappings;
+
+        mappings[BlobStoringPipelineErrorCodes.ContentTooLarge].ShouldBe(HttpStatusCode.RequestEntityTooLarge);
+        mappings[BlobStoringPipelineErrorCodes.ContentTypeNotAllowed].ShouldBe(HttpStatusCode.UnsupportedMediaType);
+        mappings[BlobStoringPipelineErrorCodes.ContentTypeMismatch].ShouldBe(HttpStatusCode.BadRequest);
+        mappings[Dignite.Abp.BlobStoring.Imaging.BlobStoringImagingErrorCodes.ImageTooLarge].ShouldBe(HttpStatusCode.BadRequest);
+        mappings[Dignite.Abp.BlobStoring.Imaging.BlobStoringImagingErrorCodes.ImageTooSmall].ShouldBe(HttpStatusCode.BadRequest);
+        mappings[Dignite.Abp.BlobStoring.Imaging.BlobStoringImagingErrorCodes.ImageProcessingFailed].ShouldBe(HttpStatusCode.UnprocessableEntity);
+        mappings[Dignite.Abp.BlobStoring.Imaging.BlobStoringImagingErrorCodes.ImageDecodeTimeout].ShouldBe(HttpStatusCode.UnprocessableEntity);
+        mappings[BlobManagementErrorCodes.StorageQuotaExceeded].ShouldBe(HttpStatusCode.InsufficientStorage);
     }
 
     private async Task<HttpResponseMessage> PostFileAsync(string url, string name, byte[] bytes)
