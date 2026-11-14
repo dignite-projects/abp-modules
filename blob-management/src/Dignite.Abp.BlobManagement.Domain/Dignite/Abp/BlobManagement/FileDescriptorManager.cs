@@ -474,9 +474,11 @@ public class FileDescriptorManager : DomainService
     /// <summary>
     /// Buffers, detects and hashes the upload, saves it under a new BLOB name and writes its descriptor.
     /// <para>
-    /// The upload is copied once into memory, capped at what the container's pipeline enforces (its <c>MaxSize</c>
-    /// contributor, else <see cref="BlobStoringPipelineConsts.DefaultMaxBufferedBytes"/>), so an oversized upload fails
-    /// with <c>Dignite.Abp.BlobStoring:ContentTooLarge</c> before anything is stored. Its type is detected from the
+    /// The upload is copied once into a seekable buffer - memory, or a temporary file past
+    /// <see cref="BlobStoringPipelineConsts.MemoryBufferThreshold"/> (<see cref="BlobStreamBuffering.CopyToSeekableAsync"/>)
+    /// - capped at what the container's pipeline enforces (its <c>MaxSize</c> contributor, else
+    /// <see cref="BlobStoringPipelineConsts.DefaultMaxBufferedBytes"/>), so an oversized upload fails with
+    /// <c>Dignite.Abp.BlobStoring:ContentTooLarge</c> before anything is stored. Its type is detected from the
     /// bytes and reconciled with the extension of <paramref name="name"/>
     /// (<c>Dignite.Abp.BlobStoring:ContentTypeMismatch</c>), and it is hashed (SHA-256, upper-case hex).
     /// </para>
@@ -512,7 +514,7 @@ public class FileDescriptorManager : DomainService
         Guid? id = null)
     {
         var maxBytes = BlobStreamBuffering.GetMaxBufferedBytes(BlobContainerConfigurationProvider.Get(containerName));
-        await using var content = await BlobStreamBuffering.CopyToBufferAsync(stream, maxBytes, cancellationToken);
+        await using var content = await BlobStreamBuffering.CopyToSeekableAsync(stream, maxBytes, cancellationToken);
 
         var mimeType = await MimeTypeDetector.DetectAsync(content, name, cancellationToken);
         var hash = await ComputeHashAsync(content, cancellationToken);

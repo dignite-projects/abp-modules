@@ -85,7 +85,7 @@ public class BlobManagementUploadAppService : BlobManagementAppService, IBlobMan
             CheckNameLength(name, nameof(IRemoteStreamContent.FileName));
 
             // Capped at the ticket's size whatever the request said its length was.
-            await using var buffer = await BlobStreamBuffering.CopyToBufferAsync(content.GetStream(), upload.MaxSize, default);
+            await using var buffer = await BlobStreamBuffering.CopyToSeekableAsync(content.GetStream(), upload.MaxSize, default);
             var contentType = await MimeTypeDetector.DetectAsync(buffer, name);
             if (!upload.Allows(contentType))
             {

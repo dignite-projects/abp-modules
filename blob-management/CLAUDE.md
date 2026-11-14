@@ -14,7 +14,8 @@ The module was compared with the open-source storage services in its position (S
 UploadThing and others) in [`dev-docs/peer-comparison.md`](dev-docs/peer-comparison.md) (2026-11-14), and changes in the
 order decided there. Done: every file has a BLOB of its own - content is no longer shared between files; the bytes
 go out through ASP.NET Core's `FileStreamResult`, with ranges; the anonymous addresses are rate-limited by ASP.NET
-Core's limiter.
+Core's limiter; an upload is buffered in memory up to 64 KB and in a temporary file beyond (blob-storing's
+`BlobStreamBuffering.CopyToSeekableAsync`).
 How a business system integrates is in
 [`dev-docs/business-system-integration-decision.md`](dev-docs/business-system-integration-decision.md) (2026-11-14:
 three layers of credentials - the client token, upload tickets and read links, public addresses; a file, not its

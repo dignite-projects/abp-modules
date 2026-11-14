@@ -20,6 +20,11 @@ The four changes at the end of this record, in their order, each its own change.
    answered `429` with `Retry-After`. A public read that asks for a size is a rendition, limited apart from reads as
    stored; the limits are `BlobManagementRateLimitingOptions` (renditions 120, uploads 60, reads as stored and with a
    link unlimited). The host runs `app.UseRateLimiter()` after routing: a module cannot place middleware there.
+4. **Buffered copies spill to disk** (§2), in blob-storing: `BlobStreamBuffering.CopyToSeekableAsync` keeps up to
+   `BlobStoringPipelineConsts.MemoryBufferThreshold` (64 KB, ASP.NET Core's form threshold) in memory and the rest in a
+   temporary file deleted with the copy; the cap is unchanged. `EnsureSeekableAsync`, `MaxSizeContributor`,
+   `FileDescriptorManager` and the upload with a ticket copy through it. `CopyToBufferAsync`, published, still returns a
+   `MemoryStream`. Resumable uploads stay out until large files are wanted.
 
 Until now the module was compared with ABP's File Management only, which is a personal drive. The projects below are
 storage services that business systems integrate with, which is what [`positioning-decision.md`](positioning-decision.md)

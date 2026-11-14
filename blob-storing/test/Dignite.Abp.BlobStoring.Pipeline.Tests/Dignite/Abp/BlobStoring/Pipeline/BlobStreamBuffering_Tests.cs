@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Shouldly;
 using Volo.Abp;
@@ -91,6 +92,70 @@ public class BlobStreamBuffering_Tests : BlobStoringPipelineTestBase
 
             Samples.Gunzip((await GetStoredBytesAsync(BlobStoringPipelineTestModule.GZipContainer, "blob"))!).ShouldBe(content);
         });
+    }
+
+    [Fact]
+    public async Task CopyToSeekableAsync_Should_Keep_Content_Up_To_The_Threshold_In_Memory()
+    {
+        var content = RandomBytes(BlobStoringPipelineConsts.MemoryBufferThreshold, seed: 1);
+
+        await using var copy = await BlobStreamBuffering.CopyToSeekableAsync(
+            new TrackingStream(content, canSeek: false), long.MaxValue, default);
+
+        copy.ShouldBeOfType<MemoryStream>();
+        copy.Position.ShouldBe(0);
+        ReadAll(copy).ShouldBe(content);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CopyToSeekableAsync_Should_Hold_Content_Past_The_Threshold_In_A_File_Deleted_With_It(bool canSeek)
+    {
+        var content = RandomBytes(3 * BlobStoringPipelineConsts.MemoryBufferThreshold + 17, seed: 2);
+        var source = new TrackingStream(content, canSeek);
+
+        string path;
+        await using (var copy = await BlobStreamBuffering.CopyToSeekableAsync(source, long.MaxValue, default))
+        {
+            path = copy.ShouldBeOfType<FileStream>().Name;
+            File.Exists(path).ShouldBeTrue();
+            copy.Position.ShouldBe(0);
+            copy.Length.ShouldBe(content.Length);
+            ReadAll(copy).ShouldBe(content);
+        }
+
+        File.Exists(path).ShouldBeFalse();
+        source.IsDisposed.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task CopyToSeekableAsync_Should_Stop_At_The_Cap_On_Disk_Too()
+    {
+        var content = RandomBytes(4 * BlobStoringPipelineConsts.MemoryBufferThreshold, seed: 3);
+        var cap = 2L * BlobStoringPipelineConsts.MemoryBufferThreshold;
+        var source = new TrackingStream(content, canSeek: false);
+
+        var exception = await Should.ThrowAsync<BusinessException>(() => BlobStreamBuffering.CopyToSeekableAsync(source, cap, default));
+
+        exception.Code.ShouldBe(BlobStoringPipelineErrorCodes.ContentTooLarge);
+        exception.Data["MaxSizeInBytes"].ShouldBe(cap);
+        source.BytesRead.ShouldBeLessThan(content.Length);
+        source.IsDisposed.ShouldBeFalse();
+    }
+
+    private static byte[] RandomBytes(int length, int seed)
+    {
+        var bytes = new byte[length];
+        new Random(seed).NextBytes(bytes);
+        return bytes;
+    }
+
+    private static byte[] ReadAll(Stream stream)
+    {
+        using var memory = new MemoryStream();
+        stream.CopyTo(memory);
+        return memory.ToArray();
     }
 
     private static async Task WithLowDefaultAsync(Func<Task> action)

@@ -41,6 +41,21 @@ so it stays clear which part of the repository actually moved.
 - **`ImageHeaderReader.ReadExifOrientation(stream)`** returns a JPEG's, WebP's or TIFF's EXIF orientation (1-8) from the
   header, read where SkiaSharp reads it, and `ImageHeaderReader.SwapsSides(orientation)` says whether it is a quarter
   turn.
+- **`BlobStreamBuffering.CopyToSeekableAsync`: a capped, seekable copy that spills to disk.** It keeps the content in
+  memory up to `BlobStoringPipelineConsts.MemoryBufferThreshold` (64 KB, ASP.NET Core's own threshold for a form's
+  files) and moves it to a temporary file beyond it, deleted when the copy is disposed (`FileOptions.DeleteOnClose`).
+  The cap is unchanged: `ContentTooLarge` as soon as more than `maxBytes` have been read. `CopyToBufferAsync` still
+  returns a `MemoryStream`. See [Custom Contributors](docs/en/blob-storing/custom-contributors.md#blobstreambuffering).
+
+### Changed
+
+#### blob-storing
+
+- **The pipeline's own copies spill to disk.** `EnsureSeekableAsync` (the allowed content types, the image contributors)
+  and `MaxSizeContributor` copy a stream with `CopyToSeekableAsync` instead of into memory, so an upload no longer holds
+  its whole size in memory while the container's contributors run, and a size limit above 2 GB is possible. The copy is
+  still seekable and still assigned to `BlobPipelineContext.BlobStream`, which the pipeline disposes after the save; a
+  contributor that took `context.BlobStream` to be a `MemoryStream` gets a `FileStream` for content past 64 KB.
 
 ### Fixed
 
