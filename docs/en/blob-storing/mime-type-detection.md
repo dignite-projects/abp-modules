@@ -31,7 +31,7 @@ public class AttachmentManager : DomainService
 
 `DetectAsync(stream, fileName, cancellationToken)` gets the following parameters:
 
-* **stream** (`Stream`): The content. It must be **seekable**; it is read from position `0`, and its position is restored to `0` afterwards. Use `BlobStreamBuffering.CopyToBufferAsync` to make a capped, seekable copy of a request stream (see [Saving Uploaded Files](saving-uploaded-files.md)).
+* **stream** (`Stream`): The content. It must be **seekable**; it is read from position `0`, and its position is restored to `0` afterwards. Use `BlobStreamBuffering.CopyToSeekableAsync` to make a capped, seekable copy of a request stream (see [Saving Uploaded Files](saving-uploaded-files.md)).
 * **fileName** (`string`, optional): A file name or a path-like BLOB name. Only its **extension** is used, to reconcile it with the content.
 * **cancellationToken** (`CancellationToken`, optional).
 

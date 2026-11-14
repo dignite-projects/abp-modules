@@ -40,7 +40,7 @@ public class AttachmentManager : DomainService
         CancellationToken cancellationToken = default)
     {
         // One capped, seekable copy: detecting the type and hashing both read it
-        await using var content = await BlobStreamBuffering.CopyToBufferAsync(
+        await using var content = await BlobStreamBuffering.CopyToSeekableAsync(
             upload, MaxUploadBytes, cancellationToken);
 
         // Throws ContentTypeMismatch for a disguised file
@@ -75,7 +75,7 @@ In an [application service](https://abp.io/docs/latest/framework/architecture/do
 
 ## What to Notice
 
-* **`BlobStreamBuffering.CopyToBufferAsync`** makes a seekable copy of a request stream that is not seekable, and fails with `ContentTooLarge` as soon as it passes the limit. Use the same limit as the container's size limit contributor.
+* **`BlobStreamBuffering.CopyToSeekableAsync`** makes a seekable copy of a request stream that is not seekable - in memory up to 64 KB, in a temporary file beyond, deleted when the copy is disposed - and fails with `ContentTooLarge` as soon as it passes the limit. Use the same limit as the container's size limit contributor.
 * **`overrideExisting: false`** turns a name collision into a `BlobAlreadyExistsException` instead of a silent overwrite. Never "compensate" that by deleting the BLOB: it belongs to someone else.
 * **Store the BLOB first, write the row second, and delete the BLOB if the row fails.** That is all an in-request file write needs; do not reach for an outbox to make it atomic.
 * **The type, hash and size above describe the upload.** If a resize, a compression or GZip changes the stored bytes, they no longer describe what is stored. A row that needs the stored size or hash reads the BLOB back with `GetAsync`; the image contributors store ordinary images, and GZip is undone on read.

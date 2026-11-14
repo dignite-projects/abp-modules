@@ -134,11 +134,14 @@ Public, because contributors in other packages (Imaging, and any a consumer writ
   `BlobStoringPipelineConsts.DefaultMaxBufferedBytes`.
 - `EnsureSeekableAsync(context, maxBytes)` returns `context.BlobStream` when it is seekable, at position 0 and not longer
   than `maxBytes` (a longer one fails with `ContentTooLarge` before it is read), otherwise copies it from its current
-  position into memory (failing beyond `maxBytes`) and assigns the copy to `context.BlobStream`, so the pipeline owns
-  and disposes it.
-- `CopyToBufferAsync(source, maxBytes, cancellationToken)` copies into memory, failing with `ContentTooLarge` as soon as
-  more than `maxBytes` have been read — and before reading anything when a seekable source already reports a larger
-  remaining length. It leaves `source` open, disposes its own buffer on failure and returns the buffer at position 0.
+  position with `CopyToSeekableAsync` (failing beyond `maxBytes`) and assigns the copy to `context.BlobStream`, so the
+  pipeline owns and disposes it.
+- `CopyToSeekableAsync(source, maxBytes, cancellationToken)` copies into memory up to
+  `BlobStoringPipelineConsts.MemoryBufferThreshold` (64 KB) and into a temporary file (`DeleteOnClose`) beyond it; the
+  copy `MaxSizeContributor` makes is this one. `CopyToBufferAsync(source, maxBytes, cancellationToken)` copies into
+  memory only (a `MemoryStream`). Both fail with `ContentTooLarge` as soon as more than `maxBytes` have been read — and
+  before reading anything when a seekable source already reports a larger remaining length — leave `source` open,
+  dispose their own buffer on failure and return it at position 0.
 - `CreateContentTooLargeException(maxBytes)` builds the `ContentTooLarge` exception with `MaxSizeInBytes` data.
 
 Every contributor that reads content enforces a cap, seekable stream or not: the container's `MaxSizeInBytes`, or

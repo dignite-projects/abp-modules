@@ -44,11 +44,16 @@ replacing the stream is valid only for a contributor that does not consume the c
 
 ## 3. Every buffering path is capped
 
-Content is never copied into memory without a bound. The bound is the container's `MaxSizeContributor` limit, or
+Content is never buffered without a bound. The bound is the container's `MaxSizeContributor` limit, or
 `BlobStoringPipelineConsts.DefaultMaxBufferedBytes` (100 MB) when it has none. `MaxSizeContributor` enforces its limit
 **while copying** (it rejects a seekable stream whose remaining length already exceeds it without reading, and any stream
-as soon as the copy passes it) — never check size after buffering the whole thing. Limits above `Array.MaxLength` are not
-supported by this design (a spill-to-disk buffer would be the change, not removing the cap).
+as soon as the copy passes it) — never check size after buffering the whole thing.
+
+- The copies the pipeline makes - `EnsureSeekableAsync`, `MaxSizeContributor` - are
+  `BlobStreamBuffering.CopyToSeekableAsync`'s: memory up to `BlobStoringPipelineConsts.MemoryBufferThreshold` (64 KB,
+  ASP.NET Core's form threshold), a temporary file (`DeleteOnClose`) beyond it. The spill does not replace the cap: both
+  hold. Whoever owns such a copy disposes it, or the file stays until the process ends.
+- `CopyToBufferAsync` (a `MemoryStream`) stays for callers that want memory - a published signature, not to be changed.
 
 - **Every contributor that reads the content enforces the cap itself** - the container's `MaxSize`, or
   `DefaultMaxBufferedBytes` (100 MB) when none is configured - whether the stream is seekable or not. Resolve it with
