@@ -349,6 +349,32 @@ public class BlobManagementPublicRead_Tests : AbpWebApplicationFactoryIntegrated
         }
     }
 
+    /// <summary>
+    /// Renditions are rendered on the request, so one client asks for so many a minute and is then answered 429 with
+    /// <c>Retry-After</c>; its reads as stored are a limit of their own and still served.
+    /// </summary>
+    [Fact]
+    public async Task Renditions_Past_The_Limit_Should_Be_Refused_But_Not_Reads_As_Stored()
+    {
+        await StoreAsync("limited.png", BlobManagementTestFiles.Png(80, 40, seed: 22));
+        var sized = _urlBuilder.Build(BlobManagementHttpApiTestModule.AppPublicContainer, "limited.png", width: 64);
+
+        for (var i = 0; i < BlobManagementHttpApiTestModule.RenditionsPerMinute; i++)
+        {
+            using var served = await Client.GetAsync(sized);
+            served.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+
+        using (var refused = await Client.GetAsync(sized))
+        {
+            refused.StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
+            refused.Headers.RetryAfter.ShouldNotBeNull();
+        }
+
+        using var asStored = await Client.GetAsync(_urlBuilder.Build(BlobManagementHttpApiTestModule.AppPublicContainer, "limited.png"));
+        asStored.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
     private Task<HttpResponseMessage> GetRangeAsync(string url, long from, long to, EntityTagHeaderValue? ifRange = null)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, url);

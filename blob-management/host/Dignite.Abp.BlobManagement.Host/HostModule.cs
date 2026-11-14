@@ -426,6 +426,8 @@ public class HostModule : AbpModule
 
         app.UseCorrelationId();
         app.UseRouting();
+        // Blob Management's anonymous addresses name rate limiting policies; the limiter applies them after routing.
+        app.UseRateLimiter();
         app.UseStaticFiles();
         app.UseAbpStudioLink();
         app.UseAbpSecurityHeaders();

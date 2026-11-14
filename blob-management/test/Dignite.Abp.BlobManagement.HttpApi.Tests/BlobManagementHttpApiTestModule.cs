@@ -7,6 +7,7 @@ using Dignite.Abp.BlobManagement.EntityFrameworkCore;
 using Dignite.Abp.BlobManagement.Directories;
 using Dignite.Abp.BlobManagement.Files;
 using Dignite.Abp.BlobManagement.Permissions;
+using Dignite.Abp.BlobManagement.RateLimiting;
 using Dignite.Abp.BlobManagement.Usage;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
@@ -58,6 +59,9 @@ public class BlobManagementHttpApiTestModule : AbpModule
 {
     public const string AllowedClient = "site-app";
 
+    /// <summary>The renditions one client may ask for in a minute on this host.</summary>
+    public const int RenditionsPerMinute = 20;
+
     /// <summary>Container whose files <see cref="AllowedClient"/> is granted.</summary>
     public const string OpenContainer = "files";
 
@@ -90,6 +94,9 @@ public class BlobManagementHttpApiTestModule : AbpModule
 
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
+        // Low enough for a test to reach; above what any other test of this host renders.
+        Configure<BlobManagementRateLimitingOptions>(options => options.RenditionsPerMinute = RenditionsPerMinute);
+
         context.Services
             .AddAuthentication(options => options.DefaultScheme = TestCallerAuthenticationHandler.SchemeName)
             .AddScheme<AuthenticationSchemeOptions, TestCallerAuthenticationHandler>(TestCallerAuthenticationHandler.SchemeName, null);
@@ -132,6 +139,7 @@ public class BlobManagementHttpApiTestModule : AbpModule
         var app = context.GetApplicationBuilder();
 
         app.UseRouting();
+        app.UseRateLimiter();
         app.UseAuthentication();
         app.UseMultiTenancy();
         app.UseUnitOfWork();

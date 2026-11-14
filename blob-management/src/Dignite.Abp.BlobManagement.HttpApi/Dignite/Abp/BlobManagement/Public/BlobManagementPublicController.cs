@@ -1,7 +1,9 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Dignite.Abp.BlobManagement.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Net.Http.Headers;
 using Volo.Abp.Domain.Entities;
 using Volo.Abp.Validation;
@@ -23,10 +25,15 @@ namespace Dignite.Abp.BlobManagement.Public;
 /// and a day bounds how long a shared cache serves the old one. No cookie is set on a response meant for a shared
 /// cache.
 /// </para>
+/// <para>
+/// <b>Limits.</b> <see cref="BlobManagementRateLimiting.PublicReads"/>: a read that asks for a size is rendered on the
+/// request, and is limited per client apart from reads as stored (<see cref="BlobManagementRateLimitingOptions"/>).
+/// </para>
 /// </summary>
 [Area(BlobManagementRemoteServiceConsts.ModuleName)]
 [ApiExplorerSettings(IgnoreApi = true)]
 [Route(BlobManagementPublicUrl.RoutePrefix)]
+[EnableRateLimiting(BlobManagementRateLimiting.PublicReads)]
 public class BlobManagementPublicController : BlobManagementFileReadController
 {
     public const int MaxAgeSeconds = 24 * 60 * 60;

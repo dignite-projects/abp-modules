@@ -15,6 +15,11 @@ The four changes at the end of this record, in their order, each its own change.
    (`BlobManagementFileReadController`): `Range` and `If-Range`, `Last-Modified` (the file's creation time - its bytes
    never change) and every precondition are the framework's. The `If-None-Match` check before the bytes are opened,
    and `HEAD` without them, stay.
+3. **The anonymous addresses name ASP.NET Core rate limiting policies** (§4), which the module registers
+   (`BlobManagementRateLimiting`, `BlobManagementRateLimiterPolicy`): a fixed window of a minute per client address,
+   answered `429` with `Retry-After`. A public read that asks for a size is a rendition, limited apart from reads as
+   stored; the limits are `BlobManagementRateLimitingOptions` (renditions 120, uploads 60, reads as stored and with a
+   link unlimited). The host runs `app.UseRateLimiter()` after routing: a module cannot place middleware there.
 
 Until now the module was compared with ABP's File Management only, which is a personal drive. The projects below are
 storage services that business systems integrate with, which is what [`positioning-decision.md`](positioning-decision.md)

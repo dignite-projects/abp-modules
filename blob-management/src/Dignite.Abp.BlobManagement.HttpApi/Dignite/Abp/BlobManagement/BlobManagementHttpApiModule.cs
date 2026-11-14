@@ -1,9 +1,12 @@
 using Localization.Resources.AbpUi;
 using Dignite.Abp.BlobManagement.Localization;
+using Dignite.Abp.BlobManagement.RateLimiting;
 using Volo.Abp.AspNetCore.Mvc;
 using Volo.Abp.Localization;
 using Volo.Abp.Modularity;
 using System.Net;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.AspNetCore.ExceptionHandling;
 
@@ -24,6 +27,15 @@ public class BlobManagementHttpApiModule : AbpModule
 
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
+        // The anonymous addresses' limits, ASP.NET Core's rate limiter's policies. They act where the host runs the
+        // limiter after routing; a module cannot place middleware there itself.
+        context.Services.AddRateLimiter(options =>
+        {
+            options.AddPolicy(BlobManagementRateLimiting.PublicReads, new BlobManagementRateLimiterPolicy(BlobManagementRateLimiting.PublicReads));
+            options.AddPolicy(BlobManagementRateLimiting.Uploads, new BlobManagementRateLimiterPolicy(BlobManagementRateLimiting.Uploads));
+            options.AddPolicy(BlobManagementRateLimiting.ReadLinks, new BlobManagementRateLimiterPolicy(BlobManagementRateLimiting.ReadLinks));
+        });
+
         Configure<AbpLocalizationOptions>(options =>
         {
             options.Resources
