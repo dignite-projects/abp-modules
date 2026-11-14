@@ -1,7 +1,7 @@
 ```json
 //[doc-seo]
 {
-    "Description": "Storage usage in Dignite Blob Management: stored bytes for the tenant and each container, uploaded bytes for each user and each OAuth client, the three usage endpoints and the tenant allocation."
+    "Description": "Storage usage in Dignite Blob Management: stored bytes for the tenant, each container, each user and each OAuth client, the three usage endpoints and the tenant allocation."
 }
 ```
 
@@ -11,12 +11,9 @@
 
 Every BLOB has a file descriptor, so Blob Management counts what the current tenant keeps from that table: the tenant, each container, each user and each client. The figures are for holders of `BlobManagement.Containers` ([Permissions](permissions.md)), and the [management page](angular-ui.md#the-management-page) shows them.
 
-## Two Measures
+## Stored Bytes
 
-| Figure | Measure |
-|---|---|
-| The tenant, each container | **Stored bytes**: each physical BLOB once, however many files share it. Content is shared within a container only, so the containers add up to the tenant. |
-| Each user, each client | **Uploaded bytes**: the sizes of their files. Two users who uploaded the same bytes are each counted for them, so these do not add up to the stored bytes. |
+Every figure is in **stored bytes**: the sizes of the files, as stored - after the container's pipeline contributors ran, so a JPEG the container keeps as WebP counts as its WebP. Every file has a physical BLOB of its own, also when another file holds the same bytes, so the same bytes kept in two files count twice. The containers add up to the tenant, and so do the users and the clients.
 
 A user is the one a file is counted for, its `CreatorId` ([The Uploader](files.md#the-uploader)); a client is the OAuth client that stored it over HTTP, its `ClientId`. Files stored in Blob Management's own process have no client, and are gathered in one row. Deleted files do not count; files uploaded with a ticket and not confirmed yet do ([Upload Tickets](files.md#upload-tickets)).
 
@@ -27,8 +24,8 @@ A user is the one a file is counted for, its `CreatorId` ([The Uploader](files.m
 | | |
 |---|---|
 | `GET api/blob-management/usage` | `GetAsync`: the tenant's stored bytes, file count and allocation (`storageSize`, in bytes; none when it has no limit), and each container's stored bytes and file count. Every managed container is listed, empty ones too, and any other container that still holds files. |
-| `GET api/blob-management/usage/users?containerName=` | `GetUsersAsync`: each user's uploaded bytes and file count, the largest first, a page at a time (`skipCount`, `maxResultCount`). `containerName` narrows it to one container. |
-| `GET api/blob-management/usage/clients?containerName=` | `GetClientsAsync`: each client's uploaded bytes and file count, the largest first. |
+| `GET api/blob-management/usage/users?containerName=` | `GetUsersAsync`: each user's stored bytes and file count, the largest first, a page at a time (`skipCount`, `maxResultCount`). `containerName` narrows it to one container. |
+| `GET api/blob-management/usage/clients?containerName=` | `GetClientsAsync`: each client's stored bytes and file count, the largest first. |
 
 A user row has `userId` and `userName`. The name comes from ABP's `IExternalUserLookupServiceProvider` where the host has one - its Identity module, or that module's HTTP client - and still knows the user; without it, the user is shown by id. Files recorded for no user are gathered in a row without `userId`.
 

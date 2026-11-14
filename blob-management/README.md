@@ -45,8 +45,8 @@ those.
   host, or Blob Management as its own service.
 * [Directories](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/blob-management/directories.md) -
   containers with directories, the tree and its API.
-* [Usage](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/blob-management/usage.md) - stored and
-  uploaded bytes, by tenant, container, user and client.
+* [Usage](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/blob-management/usage.md) - stored bytes,
+  by tenant, container, user and client.
 * [Permissions](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/blob-management/permissions.md) - the
   management permission, granting an application a container, and the directory permissions granted on it.
 * [Angular UI](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/blob-management/angular-ui.md) - the

@@ -97,7 +97,7 @@ Whether anyone may read a file at its public address, without signing in, is the
 
 A public file has a `url`: `/blobs/{container}/{blob}`, with `?Width=&Height=` for pictures ([Public Addresses](provider.md#public-addresses)). For a file kept by id the address names the file's **physical BLOB** - 32 random hexadecimal digits and an extension - rather than its name, which need not be unique; renaming or moving the file leaves the address as it was.
 
-Files kept by id that hold the same bytes share one physical BLOB, and so **one address**: it answers while one of them is public - marking one file private does not close an address another public file has, and a file that is not public reads at it while one with the same bytes is public. A download from it is named after the file only while a single public file has the BLOB, after the BLOB otherwise. A file that is not public, or not confirmed yet, has no `url`, and its address answers 404 unless another file opens it. A cache that kept a response keeps it for up to a day after the file stops being public.
+Every file has a physical BLOB of its own, so an address is **one file's**, also when another file holds the same bytes: it answers while that file is public, and a download from it is named after that file. A file that is not public, or not confirmed yet, has no `url`, and its address answers 404. A cache that kept a response keeps it for up to a day after the file stops being public.
 
 ## Upload Tickets
 

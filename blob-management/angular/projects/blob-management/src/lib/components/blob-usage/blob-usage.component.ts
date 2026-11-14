@@ -15,8 +15,7 @@ export type BlobManagementUsageView = 'containers' | 'users' | 'clients';
 
 /**
  * What the tenant keeps in Blob Management: its stored bytes against its allocation, then by container, by user or by
- * client. Two measures, said apart on the page: stored bytes count each piece of content once; uploaded bytes - a
- * user's, a client's - count every file of theirs, so they do not add up to the stored bytes.
+ * client - each of which adds up to the tenant's stored bytes.
  */
 @Component({
   selector: 'blob-usage',

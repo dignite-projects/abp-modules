@@ -46,14 +46,12 @@
     "Usage": "Használat",
     "Usage:StoredOfAllocation": "{0} tárolva ebből: {1}",
     "Usage:Stored": "Tárolva",
-    "Usage:Uploaded": "Feltöltve",
     "Usage:Files": "Fájlok",
     "Usage:Containers": "Tárolók",
     "Usage:Users": "Felhasználók",
     "Usage:Clients": "Kliensek",
     "Usage:NoUser": "Nincs felhasználó",
     "Usage:InProcess": "Nincs kliens (folyamaton belül tárolva)",
-    "Usage:Hint": "A „Tárolva” minden tartalmat egyszer számol. A „Feltöltve” minden fájlt számol, így a kétszer megőrzött tartalom kétszer számít, és ezek az értékek együtt nem adják ki a tárolt összmennyiséget.",
     "PublicReadSizeNotAllowed": "A(z) {0} értéke a következők egyike lehet: {1}."
   }
 }

@@ -10651,7 +10651,7 @@
           "displayName": null
         },
         {
-          "name": "UploadedBytes",
+          "name": "StoredBytes",
           "jsonName": null,
           "type": "System.Int64",
           "typeSimple": "number",
@@ -10866,7 +10866,7 @@
           "displayName": null
         },
         {
-          "name": "UploadedBytes",
+          "name": "StoredBytes",
           "jsonName": null,
           "type": "System.Int64",
           "typeSimple": "number",

@@ -46,14 +46,12 @@
     "Usage": "Utilizzo",
     "Usage:StoredOfAllocation": "{0} di {1} archiviati",
     "Usage:Stored": "Archiviato",
-    "Usage:Uploaded": "Caricato",
     "Usage:Files": "File",
     "Usage:Containers": "Contenitori",
     "Usage:Users": "Utenti",
     "Usage:Clients": "Client",
     "Usage:NoUser": "Nessun utente",
     "Usage:InProcess": "Nessun client (archiviato nel processo)",
-    "Usage:Hint": "«Archiviato» conta ogni contenuto una sola volta. «Caricato» conta ogni file: un contenuto conservato due volte viene contato due volte e queste cifre non danno come somma il totale archiviato.",
     "PublicReadSizeNotAllowed": "{0} deve essere uno dei seguenti valori: {1}."
   }
 }

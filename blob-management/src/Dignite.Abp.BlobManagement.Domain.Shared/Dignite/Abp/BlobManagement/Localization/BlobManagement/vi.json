@@ -46,14 +46,12 @@
     "Usage": "Mức sử dụng",
     "Usage:StoredOfAllocation": "Đã lưu {0} trên {1}",
     "Usage:Stored": "Đã lưu",
-    "Usage:Uploaded": "Đã tải lên",
     "Usage:Files": "Tệp",
     "Usage:Containers": "Bộ chứa",
     "Usage:Users": "Người dùng",
     "Usage:Clients": "Ứng dụng khách",
     "Usage:NoUser": "Không có người dùng",
     "Usage:InProcess": "Không có ứng dụng khách (lưu trong tiến trình)",
-    "Usage:Hint": "“Đã lưu” tính mỗi nội dung một lần. “Đã tải lên” tính từng tệp, nên nội dung được giữ hai lần sẽ được tính hai lần và các con số này cộng lại không bằng tổng đã lưu.",
     "PublicReadSizeNotAllowed": "{0} phải là một trong các giá trị: {1}."
   }
 }

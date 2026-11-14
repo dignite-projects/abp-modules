@@ -46,14 +46,12 @@
     "Usage": "Gebruik",
     "Usage:StoredOfAllocation": "{0} van {1} opgeslagen",
     "Usage:Stored": "Opgeslagen",
-    "Usage:Uploaded": "Geüpload",
     "Usage:Files": "Bestanden",
     "Usage:Containers": "Containers",
     "Usage:Users": "Gebruikers",
     "Usage:Clients": "Clients",
     "Usage:NoUser": "Geen gebruiker",
     "Usage:InProcess": "Geen client (in het proces opgeslagen)",
-    "Usage:Hint": "‘Opgeslagen’ telt elke inhoud één keer. ‘Geüpload’ telt elk bestand; inhoud die twee keer is bewaard, wordt dus twee keer geteld en deze cijfers tellen niet op tot het opgeslagen totaal.",
     "PublicReadSizeNotAllowed": "{0} moet een van de volgende waarden zijn: {1}."
   }
 }

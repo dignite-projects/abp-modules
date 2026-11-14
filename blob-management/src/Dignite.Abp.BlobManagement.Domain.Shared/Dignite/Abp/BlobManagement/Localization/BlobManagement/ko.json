@@ -46,14 +46,12 @@
     "Usage": "사용량",
     "Usage:StoredOfAllocation": "{1} 중 {0} 저장됨",
     "Usage:Stored": "저장됨",
-    "Usage:Uploaded": "업로드됨",
     "Usage:Files": "파일",
     "Usage:Containers": "컨테이너",
     "Usage:Users": "사용자",
     "Usage:Clients": "클라이언트",
     "Usage:NoUser": "사용자 없음",
     "Usage:InProcess": "클라이언트 없음(프로세스 내 저장)",
-    "Usage:Hint": "‘저장됨’은 같은 내용을 한 번만 셉니다. ‘업로드됨’은 파일마다 세므로 같은 내용을 두 번 보관하면 두 번 계산되며, 여기의 수치를 더해도 저장된 총량과 같지 않습니다.",
     "PublicReadSizeNotAllowed": "{0}은(는) 다음 중 하나여야 합니다: {1}."
   }
 }

@@ -246,11 +246,11 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
             usage.Containers.Sum(c => c.StoredBytes).ShouldBe(usage.StoredBytes);
 
             var users = await _usage.GetUsersAsync(new GetBlobManagementUserUsagesInput { ContainerName = Container });
-            users.Items.Single(u => u.UserId == _appUser).UploadedBytes.ShouldBe(bytes.Length);
+            users.Items.Single(u => u.UserId == _appUser).StoredBytes.ShouldBe(bytes.Length);
 
             var clients = await _usage.GetClientsAsync(new GetBlobManagementClientUsagesInput { ContainerName = Container });
             clients.Items.Single(c => c.ClientId == BlobManagementHttpApiTestModule.AllowedClient)
-                .UploadedBytes.ShouldBeGreaterThanOrEqualTo(bytes.Length);
+                .StoredBytes.ShouldBeGreaterThanOrEqualTo(bytes.Length);
         }
 
         // Not without the permission, and not for a client.

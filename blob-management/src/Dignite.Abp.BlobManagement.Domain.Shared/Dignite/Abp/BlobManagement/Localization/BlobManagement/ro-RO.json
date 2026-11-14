@@ -46,14 +46,12 @@
     "Usage": "Utilizare",
     "Usage:StoredOfAllocation": "{0} din {1} stocat",
     "Usage:Stored": "Stocat",
-    "Usage:Uploaded": "Încărcat",
     "Usage:Files": "Fișiere",
     "Usage:Containers": "Containere",
     "Usage:Users": "Utilizatori",
     "Usage:Clients": "Clienți",
     "Usage:NoUser": "Niciun utilizator",
     "Usage:InProcess": "Niciun client (stocat în proces)",
-    "Usage:Hint": "„Stocat” numără fiecare conținut o singură dată. „Încărcat” numără fiecare fișier, astfel că un conținut păstrat de două ori este numărat de două ori, iar aceste cifre nu însumează totalul stocat.",
     "PublicReadSizeNotAllowed": "{0} trebuie să fie una dintre valorile: {1}."
   }
 }

@@ -106,16 +106,19 @@ public abstract class BlobManagementBlobProvider_Tests<TStartupModule> : BlobMan
     }
 
     [Fact]
-    public async Task Application_Containers_Sharing_A_BlobManagement_Container_Share_Its_Names_And_Its_Bytes()
+    public async Task Application_Containers_Sharing_A_BlobManagement_Container_Share_Its_Names()
     {
-        var bytes = BlobManagementTestFiles.Pdf("shared " + Guid.NewGuid());
+        var bytes = BlobManagementTestFiles.Pdf("one container " + Guid.NewGuid());
         await _blobContainerFactory.Create(BlobManagementTestAppContainers.Media).SaveAsync("a.pdf", bytes);
         await _blobContainerFactory.Create(BlobManagementTestAppContainers.Documents).SaveAsync("b.pdf", bytes);
 
         (await _blobContainerFactory.Create(BlobManagementTestAppContainers.Documents).GetAllBytesAsync("a.pdf")).ShouldBe(bytes);
+        (await _blobContainerFactory.Create(BlobManagementTestAppContainers.Media).GetAllBytesAsync("b.pdf")).ShouldBe(bytes);
+
+        // Two names, two files, each with its own bytes.
         var a = await FindInBlobManagementAsync(BlobManagementTestContainers.Files, "a.pdf");
         var b = await FindInBlobManagementAsync(BlobManagementTestContainers.Files, "b.pdf");
-        b!.BlobName.ShouldBe(a!.BlobName);
+        b!.BlobName.ShouldNotBe(a!.BlobName);
     }
 
     private Task<FileDescriptor?> FindInBlobManagementAsync(string driveContainer, string name)

@@ -46,14 +46,12 @@
     "Usage": "الاستخدام",
     "Usage:StoredOfAllocation": "تم تخزين {0} من {1}",
     "Usage:Stored": "المخزَّن",
-    "Usage:Uploaded": "المرفوع",
     "Usage:Files": "الملفات",
     "Usage:Containers": "الحاويات",
     "Usage:Users": "المستخدمون",
     "Usage:Clients": "العملاء",
     "Usage:NoUser": "بلا مستخدم",
     "Usage:InProcess": "بلا عميل (مخزَّن داخل العملية)",
-    "Usage:Hint": "«المخزَّن» يحسب كل محتوى مرة واحدة. «المرفوع» يحسب كل ملف، فالمحتوى المحفوظ مرتين يُحسب مرتين، ومجموع هذه الأرقام لا يساوي إجمالي المخزَّن.",
     "PublicReadSizeNotAllowed": "يجب أن تكون {0} إحدى القيم التالية: {1}."
   }
 }

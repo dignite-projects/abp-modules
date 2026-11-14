@@ -1,5 +1,8 @@
 # Blob Management: how a business system integrates (2026-11-14)
 
+> Partly replaced by [`peer-comparison.md`](peer-comparison.md) (the same day): files no longer share stored bytes, so
+> a public address is one file's. What is written below about files kept by id sharing one address is history.
+
 This record replaces three parts of [`positioning-decision.md`](positioning-decision.md) (2026-11-13): that the module
 "has no upload of its own", that tickets are gone (its owner's decision on tickets, the ticket line of *What is removed*
 and *Keeping the client tickets* under *Not chosen*), and the container's `PublicRead`. Everything else there stands:

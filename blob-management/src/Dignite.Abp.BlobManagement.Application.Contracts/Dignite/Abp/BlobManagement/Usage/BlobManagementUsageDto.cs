@@ -4,7 +4,7 @@ namespace Dignite.Abp.BlobManagement.Usage;
 
 public class BlobManagementUsageDto
 {
-    /// <summary>The bytes the tenant stores: each physical BLOB once.</summary>
+    /// <summary>The bytes the tenant stores: the sizes of its files.</summary>
     public long StoredBytes { get; set; }
 
     /// <summary>The tenant's allocation in bytes; <c>null</c> when it has no limit.</summary>
@@ -15,7 +15,7 @@ public class BlobManagementUsageDto
 
     /// <summary>
     /// Every managed container, by name, and any other that still holds files. Their stored bytes add up to the
-    /// tenant's: content is shared within a container only.
+    /// tenant's.
     /// </summary>
     public List<BlobManagementContainerUsageDto> Containers { get; set; } = new();
 }

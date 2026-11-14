@@ -46,14 +46,12 @@
     "Usage": "用量",
     "Usage:StoredOfAllocation": "已儲存 {0}，共 {1}",
     "Usage:Stored": "已儲存",
-    "Usage:Uploaded": "已上傳",
     "Usage:Files": "檔案數",
     "Usage:Containers": "容器",
     "Usage:Users": "使用者",
     "Usage:Clients": "用戶端",
     "Usage:NoUser": "無使用者",
     "Usage:InProcess": "無用戶端（處理序內儲存）",
-    "Usage:Hint": "「已儲存」對相同內容只計一次。「已上傳」按每個檔案計，同一內容儲存兩次就計兩次，因此這裡的數字加起來不等於已儲存的總量。",
     "PublicReadSizeNotAllowed": "{0} 必須是以下之一：{1}。"
   }
 }

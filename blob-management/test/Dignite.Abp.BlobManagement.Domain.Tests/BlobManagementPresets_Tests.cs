@@ -161,19 +161,20 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
     }
 
     /// <summary>
-    /// Dedup compares the upload's hash, so the same JPEG uploaded again shares the WebP stored the first time - and its
-    /// name, too, takes the extension of what is shared.
+    /// The same JPEG uploaded again is converted again, into a WebP of its own, and its name takes that extension too;
+    /// the two files have the hash of what was uploaded in common.
     /// </summary>
     [Fact]
-    public async Task The_Same_Jpeg_Uploaded_Again_Should_Share_The_Webp_And_Be_Named_For_It()
+    public async Task The_Same_Jpeg_Uploaded_Again_Should_Be_Stored_As_A_Webp_Of_Its_Own()
     {
         var upload = BlobManagementTestFiles.Jpeg(40, 40, seed: 7);
 
         var first = await UploadAsync(BlobManagementTestContainers.UserImages, "a.jpg", upload);
         var second = await UploadAsync(BlobManagementTestContainers.UserImages, "b.jpeg", upload);
 
-        second.OwnsBlob().ShouldBeFalse();
-        second.BlobName.ShouldBe(first.BlobName);
+        second.BlobName.ShouldNotBe(first.BlobName);
+        second.BlobName.ShouldEndWith(".webp");
+        second.Hash.ShouldBe(first.Hash);
         second.MimeType.ShouldBe("image/webp");
         second.Name.ShouldBe("b.webp");
     }

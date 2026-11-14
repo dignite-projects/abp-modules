@@ -8,8 +8,8 @@ public class BlobManagementClientUsageDto
     /// </summary>
     public string? ClientId { get; set; }
 
-    /// <summary>The sizes of the client's files, whether or not they share their bytes with another file.</summary>
-    public long UploadedBytes { get; set; }
+    /// <summary>The sizes of the client's files.</summary>
+    public long StoredBytes { get; set; }
 
     public long FileCount { get; set; }
 }

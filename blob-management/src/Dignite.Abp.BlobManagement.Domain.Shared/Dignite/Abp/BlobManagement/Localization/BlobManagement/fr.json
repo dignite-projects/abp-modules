@@ -46,14 +46,12 @@
     "Usage": "Utilisation",
     "Usage:StoredOfAllocation": "{0} sur {1} stockés",
     "Usage:Stored": "Stocké",
-    "Usage:Uploaded": "Téléversé",
     "Usage:Files": "Fichiers",
     "Usage:Containers": "Conteneurs",
     "Usage:Users": "Utilisateurs",
     "Usage:Clients": "Clients",
     "Usage:NoUser": "Aucun utilisateur",
     "Usage:InProcess": "Aucun client (stocké en interne)",
-    "Usage:Hint": "« Stocké » compte chaque contenu une seule fois. « Téléversé » compte chaque fichier : un contenu conservé deux fois est compté deux fois, et ces chiffres ne s’additionnent pas pour donner le total stocké.",
     "PublicReadSizeNotAllowed": "{0} doit être l’une des valeurs suivantes : {1}."
   }
 }

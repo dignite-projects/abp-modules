@@ -46,14 +46,12 @@
     "Usage": "Usage",
     "Usage:StoredOfAllocation": "{0} of {1} stored",
     "Usage:Stored": "Stored",
-    "Usage:Uploaded": "Uploaded",
     "Usage:Files": "Files",
     "Usage:Containers": "Containers",
     "Usage:Users": "Users",
     "Usage:Clients": "Clients",
     "Usage:NoUser": "No user",
     "Usage:InProcess": "No client (stored in process)",
-    "Usage:Hint": "Stored counts each piece of content once. Uploaded counts every file, so content kept twice is counted twice and these figures do not add up to the stored total.",
     "PublicReadSizeNotAllowed": "{0} must be one of: {1}."
   }
 }

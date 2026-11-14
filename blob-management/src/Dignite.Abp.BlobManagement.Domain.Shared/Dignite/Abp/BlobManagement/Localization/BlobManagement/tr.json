@@ -46,14 +46,12 @@
     "Usage": "Kullanım",
     "Usage:StoredOfAllocation": "{0} / {1} depolandı",
     "Usage:Stored": "Depolanan",
-    "Usage:Uploaded": "Yüklenen",
     "Usage:Files": "Dosyalar",
     "Usage:Containers": "Kapsayıcılar",
     "Usage:Users": "Kullanıcılar",
     "Usage:Clients": "İstemciler",
     "Usage:NoUser": "Kullanıcı yok",
     "Usage:InProcess": "İstemci yok (işlem içinde depolandı)",
-    "Usage:Hint": "“Depolanan” her içeriği bir kez sayar. “Yüklenen” her dosyayı sayar; iki kez saklanan içerik iki kez sayılır ve bu rakamların toplamı depolanan toplamı vermez.",
     "PublicReadSizeNotAllowed": "{0} şunlardan biri olmalıdır: {1}."
   }
 }

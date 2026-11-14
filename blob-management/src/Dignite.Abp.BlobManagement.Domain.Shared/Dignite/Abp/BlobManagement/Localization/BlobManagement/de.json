@@ -46,14 +46,12 @@
     "Usage": "Nutzung",
     "Usage:StoredOfAllocation": "{0} von {1} gespeichert",
     "Usage:Stored": "Gespeichert",
-    "Usage:Uploaded": "Hochgeladen",
     "Usage:Files": "Dateien",
     "Usage:Containers": "Container",
     "Usage:Users": "Benutzer",
     "Usage:Clients": "Clients",
     "Usage:NoUser": "Kein Benutzer",
     "Usage:InProcess": "Kein Client (im Prozess gespeichert)",
-    "Usage:Hint": "„Gespeichert“ zählt jeden Inhalt einmal. „Hochgeladen“ zählt jede Datei; doppelt abgelegter Inhalt wird also doppelt gezählt, und diese Werte ergeben zusammen nicht die gespeicherte Gesamtmenge.",
     "PublicReadSizeNotAllowed": "{0} muss einer der folgenden Werte sein: {1}."
   }
 }
