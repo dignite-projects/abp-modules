@@ -18,9 +18,10 @@ using Volo.Abp.Validation;
 namespace Dignite.Abp.BlobManagement.Public;
 
 /// <summary>
-/// Serves the files of <c>PublicRead</c> containers to anyone, in the request's tenant (an anonymous request names it
-/// with <c>?__tenant=</c>, see <see cref="BlobManagementPublicUrl"/>). Not gated by <c>BlobManagement.Enable</c>: turning the Blob Management off
-/// stops a tenant storing, not its published files being read.
+/// Serves the files their business system marked public (<c>FileDescriptor.IsPublic</c>) to anyone, in the request's
+/// tenant (an anonymous request names it with <c>?__tenant=</c>, see <see cref="BlobManagementPublicUrl"/>). Not gated by
+/// <c>BlobManagement.Enable</c>: turning the Blob Management off stops a tenant storing, not its published files being
+/// read.
 /// <para>
 /// A size is rendered on every request with ABP's <see cref="IImageResizer"/> - the imaging provider the Blob Management host
 /// installs; without one, the picture is served as stored. Responses are cached by HTTP (the endpoint's <c>ETag</c> and
@@ -197,36 +198,33 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
     }
 
     /// <summary>
-    /// The live file at the address, when its container is a managed container that is read publicly, and the name
-    /// the address answers with. The address of a file an application saved names it as the application did; that of
-    /// a file kept by id, whose name may repeat, names its physical BLOB - generated, so it is never mistaken for an
-    /// application's name.
+    /// The live public file at the address of a managed container, and the name the address answers with. The address
+    /// of a file an application saved names it as the application did; that of a file kept by id, whose name may
+    /// repeat, names its physical BLOB - generated, so it is never mistaken for an application's name.
     /// <para>
-    /// An address that names a BLOB names content, not one file: files that hold the same bytes share the BLOB, so it
-    /// is the address of every one of them, and it answers for as long as one of them is there. Their bytes, type and
-    /// size are the same; their names are not, and the address does not say which file it was handed out for. So it
-    /// answers with the file's name only when a single file has the BLOB, and with the BLOB's own name otherwise -
-    /// never with the name another file was given.
+    /// An address that names a BLOB names content, not one file: files kept by id that hold the same bytes share the
+    /// BLOB, so it is the address of every one of them, and it answers for as long as one of them is there and public.
+    /// Their bytes, type and size are the same; their names are not, and the address does not say which file it was
+    /// handed out for. So it answers with the file's name only when a single public file has the BLOB, and with the
+    /// BLOB's own name otherwise - never with the name another file was given. A file that is not public answers as
+    /// a missing one: whether it is there is not the visitor's to know.
     /// </para>
     /// </summary>
     protected virtual async Task<(FileDescriptor File, string Name)> GetPublicFileAsync(string containerName, string blobName)
     {
         try
         {
-            if (FileDescriptorManager.GetBlobManagementContainerConfiguration(containerName).PublicRead)
+            var saved = await FileDescriptorManager.FindAsync(containerName, blobName);
+            if (saved is { IsPublic: true })
             {
-                var saved = await FileDescriptorManager.FindAsync(containerName, blobName);
-                if (saved != null)
-                {
-                    return (saved, saved.Name);
-                }
+                return (saved, saved.Name);
+            }
 
-                // Two are enough to know whether the first is the only one.
-                var files = await FileDescriptorManager.GetListByBlobNameAsync(containerName, blobName, maxResultCount: 2);
-                if (files.Count > 0)
-                {
-                    return (files[0], files.Count == 1 ? files[0].Name : files[0].BlobName);
-                }
+            // Two are enough to know whether the first is the only one.
+            var files = await FileDescriptorManager.GetPublicListByBlobNameAsync(containerName, blobName, maxResultCount: 2);
+            if (files.Count > 0)
+            {
+                return (files[0], files.Count == 1 ? files[0].Name : files[0].BlobName);
             }
         }
         catch (BusinessException exception) when (exception.Code == BlobManagementErrorCodes.ContainerNotFound)

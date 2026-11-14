@@ -17,7 +17,7 @@ export function toBlobManagementPublicSize(pixels: number): number {
 
 /**
  * Turns the addresses Blob Management returns into ones this UI can load. A public file's `url` is relative to the host
- * that serves the Blob Management (`/api/blob-management/public/{container}/{blob}`), which need not be this UI's own.
+ * that serves the Blob Management (`/blobs/{container}/{blob}`), which need not be this UI's own.
  */
 @Injectable({
   providedIn: 'root',

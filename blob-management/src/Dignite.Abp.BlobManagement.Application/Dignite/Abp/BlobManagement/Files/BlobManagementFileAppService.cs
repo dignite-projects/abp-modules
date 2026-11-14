@@ -78,6 +78,13 @@ public class BlobManagementFileAppService : BlobManagementFileService, IBlobMana
         return Map(file);
     }
 
+    public override async Task<BlobManagementFileDto> SetPublicAsync(Guid id, SetBlobManagementFilePublicInput input)
+    {
+        var file = await GetFileForClientAsync(id);
+        await FileDescriptorManager.SetPublicAsync(file, input.IsPublic);
+        return Map(file);
+    }
+
     public override async Task DeleteAsync(Guid id)
     {
         var file = await FindFileForClientAsync(id);

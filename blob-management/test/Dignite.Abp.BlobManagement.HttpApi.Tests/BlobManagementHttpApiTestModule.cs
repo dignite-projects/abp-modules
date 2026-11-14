@@ -67,10 +67,10 @@ public class BlobManagementHttpApiTestModule : AbpModule
     /// <summary>Container with directories, whose files <see cref="AllowedClient"/> is granted.</summary>
     public const string DocumentsContainer = "documents";
 
-    /// <summary>Container whose files <see cref="AllowedClient"/> is granted, and which is read publicly.</summary>
+    /// <summary>Container whose files <see cref="AllowedClient"/> is granted, kept public by <see cref="AppPublicContainer"/>.</summary>
     public const string PublicContainer = "public";
 
-    /// <summary>The application's container, to <see cref="PublicContainer"/> over HTTP.</summary>
+    /// <summary>The application's container, to <see cref="PublicContainer"/> over HTTP, declared public.</summary>
     public const string AppPublicContainer = "app-public";
 
     /// <summary>The application's container, to <see cref="OpenContainer"/> over HTTP.</summary>
@@ -213,13 +213,17 @@ public class BlobManagementHttpApiTestModule : AbpModule
 
             options.Containers.Configure(PublicContainer, container =>
             {
-                container.UseBlobManagementContainer(managed => managed.PublicRead = true);
+                container.UseBlobManagementContainer();
                 container.UseMemory();
             });
 
             options.Containers.Configure(AppPublicContainer, container =>
             {
-                container.UseBlobManagement(provider => provider.BlobManagementContainer = PublicContainer);
+                container.UseBlobManagement(provider =>
+                {
+                    provider.BlobManagementContainer = PublicContainer;
+                    provider.IsPublic = true;
+                });
             });
 
             options.Containers.Configure(AppContainer, container =>

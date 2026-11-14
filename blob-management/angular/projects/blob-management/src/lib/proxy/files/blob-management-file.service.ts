@@ -1,4 +1,4 @@
-import type { BlobManagementFileDto, CreateBlobManagementFileInput, GetBlobManagementFilesInput, MoveBlobManagementFileInput, UpdateBlobManagementFileInput } from './models';
+import type { BlobManagementFileDto, CreateBlobManagementFileInput, GetBlobManagementFilesInput, MoveBlobManagementFileInput, SetBlobManagementFilePublicInput, UpdateBlobManagementFileInput } from './models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
@@ -69,6 +69,17 @@ export class BlobManagementFileService {
       method: 'PUT',
       headers: { Accept: 'application/json' },
       url: `/api/blob-management/files/${id}/move`,
+      body: input,
+    },
+      { apiName: this.apiName,...config });
+  
+
+  
+  setPublic = (id: string, input: SetBlobManagementFilePublicInput, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, BlobManagementFileDto>({
+      method: 'PUT',
+      headers: { Accept: 'application/json' },
+      url: `/api/blob-management/files/${id}/public`,
       body: input,
     },
       { apiName: this.apiName,...config });

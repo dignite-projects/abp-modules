@@ -12,8 +12,9 @@ namespace Dignite.Abp.BlobManagement.Presets;
 /// they have to run, with numeric parameters only. A container takes one preset; contributors added after it adjust it
 /// (calling an <c>Add…Contributor</c> again updates that contributor's configuration).
 /// <para>
-/// The allowed types come from <see cref="BlobManagementFileTypes"/>, which leaves out SVG, HTML and scripts: a container may be
-/// read publicly. <see cref="UseAnyPreset"/> allows every type, so do not combine it with <c>PublicRead</c>.
+/// The allowed types come from <see cref="BlobManagementFileTypes"/>, which leaves out SVG, HTML and scripts: a file may be
+/// marked public. <see cref="UseAnyPreset"/> allows every type; a public read serves a type outside that list as an
+/// attachment, never rendered on Blob Management's origin.
 /// </para>
 /// </summary>
 public static class BlobManagementPresetExtensions

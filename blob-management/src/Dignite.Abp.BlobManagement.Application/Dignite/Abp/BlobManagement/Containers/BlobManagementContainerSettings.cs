@@ -14,7 +14,6 @@ namespace Dignite.Abp.BlobManagement.Containers;
 /// "BlobManagement": {
 ///   "Containers": {
 ///     "media": {
-///       "PublicRead": true,
 ///       "Preset": "Images",
 ///       "PresetOptions": { "MaxSizeInMegabytes": 10, "MaxWidth": 2048 }
 ///     },
@@ -40,7 +39,7 @@ public class BlobManagementContainerSettings
 
     public const string ContainersSectionName = "Containers";
 
-    private static readonly string[] KnownKeys = { "PublicRead", "AllowDirectories", "Preset", "PresetOptions" };
+    private static readonly string[] KnownKeys = { "AllowDirectories", "Preset", "PresetOptions" };
 
     protected BlobManagementContainerSettings(string containerName, Action<BlobContainerConfiguration> apply)
     {
@@ -82,13 +81,6 @@ public class BlobManagementContainerSettings
             throw new AbpException($"{where}: unknown key '{unknownKey}'. Known keys: {string.Join(", ", KnownKeys)}.");
         }
 
-        var publicRead = false;
-        var publicReadValue = section["PublicRead"];
-        if (!publicReadValue.IsNullOrWhiteSpace() && !bool.TryParse(publicReadValue, out publicRead))
-        {
-            throw new AbpException($"{where}: PublicRead must be true or false, not '{publicReadValue}'.");
-        }
-
         var allowDirectories = false;
         var allowDirectoriesValue = section["AllowDirectories"];
         if (!allowDirectoriesValue.IsNullOrWhiteSpace() && !bool.TryParse(allowDirectoriesValue, out allowDirectories))
@@ -116,11 +108,7 @@ public class BlobManagementContainerSettings
 
         Action<BlobContainerConfiguration> apply = container =>
         {
-            container.UseBlobManagementContainer(managed =>
-            {
-                managed.PublicRead = publicRead;
-                managed.AllowDirectories = allowDirectories;
-            });
+            container.UseBlobManagementContainer(managed => managed.AllowDirectories = allowDirectories);
             applyPreset?.Invoke(container);
         };
 

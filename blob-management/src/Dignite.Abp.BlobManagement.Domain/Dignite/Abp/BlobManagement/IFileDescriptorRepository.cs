@@ -62,12 +62,12 @@ public interface IFileDescriptorRepository : IBasicRepository<FileDescriptor, Gu
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// The live descriptors of the container whose physical BLOB is <paramref name="blobName"/>, by id, at most
-    /// <paramref name="maxResultCount"/> of them - the public address of a file kept by id names its BLOB. Descriptors
-    /// that share the BLOB share its bytes, type and size, and nothing else: a caller that answers for the address
-    /// asks for two, to know whether the one it got is the only one.
+    /// The live public descriptors kept by id (no name key) of the container whose physical BLOB is
+    /// <paramref name="blobName"/>, by id, at most <paramref name="maxResultCount"/> of them - the public address of a
+    /// file kept by id names its BLOB. Descriptors that share the BLOB share its bytes, type and size, and nothing
+    /// else: a caller that answers for the address asks for two, to know whether the one it got is the only one.
     /// </summary>
-    Task<List<FileDescriptor>> GetListByBlobNameAsync(
+    Task<List<FileDescriptor>> GetPublicListByBlobNameAsync(
         string containerName,
         string blobName,
         int maxResultCount,

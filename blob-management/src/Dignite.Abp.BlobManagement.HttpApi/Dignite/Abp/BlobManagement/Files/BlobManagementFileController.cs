@@ -62,6 +62,13 @@ public class BlobManagementFileController : BlobManagementController, IBlobManag
         return FileAppService.MoveAsync(id, input);
     }
 
+    [HttpPut]
+    [Route("{id}/public")]
+    public virtual Task<BlobManagementFileDto> SetPublicAsync(Guid id, SetBlobManagementFilePublicInput input)
+    {
+        return FileAppService.SetPublicAsync(id, input);
+    }
+
     [HttpDelete]
     [Route("{id}")]
     public virtual Task DeleteAsync(Guid id)

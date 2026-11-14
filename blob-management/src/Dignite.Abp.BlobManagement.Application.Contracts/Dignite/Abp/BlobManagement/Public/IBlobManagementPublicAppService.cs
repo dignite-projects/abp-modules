@@ -4,8 +4,8 @@ using Volo.Abp.Application.Services;
 namespace Dignite.Abp.BlobManagement.Public;
 
 /// <summary>
-/// Anonymous reads of the files in a <c>PublicRead</c> container (<see cref="BlobManagementPublicUrl"/>), in the request's
-/// tenant. Any other container, a missing file and a deleted one are all simply not found.
+/// Anonymous reads of the files marked public (<see cref="BlobManagementPublicUrl"/>), in the request's tenant. A file
+/// that is not public, a missing or deleted one and a container that is not managed are all simply not found.
 /// </summary>
 public interface IBlobManagementPublicAppService : IApplicationService
 {

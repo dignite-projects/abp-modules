@@ -5,14 +5,15 @@ using System.Linq;
 namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
-/// Addresses of public reads: <c>/api/blob-management/public/{containerName}/{blobName}</c>, optionally sized
-/// (<c>?Width=&amp;Height=</c>) and naming the tenant (<c>?__tenant=</c>, which ABP's query-string tenant resolver
-/// reads - the request is anonymous, so nothing else says whose file it is). One definition for the endpoint that
-/// serves them and for every builder that hands them out.
+/// Addresses of public reads: <c>/blobs/{containerName}/{blobName}</c>, optionally sized (<c>?Width=&amp;Height=</c>)
+/// and naming the tenant (<c>?__tenant=</c>, which ABP's query-string tenant resolver reads - the request is
+/// anonymous, so nothing else says whose file it is). One definition for the endpoint that serves them and for every
+/// builder that hands them out. Not under <c>/api</c> and without the module's name: an address a page embeds and a
+/// CDN caches, not an API - a gateway routes <c>/blobs/*</c> to Blob Management beside <c>/api/blob-management/*</c>.
 /// </summary>
 public static class BlobManagementPublicUrl
 {
-    public const string RoutePrefix = "api/blob-management/public";
+    public const string RoutePrefix = "blobs";
 
     /// <summary>The query parameter ABP's query-string tenant resolver reads (<c>TenantResolverConsts.DefaultTenantKey</c>).</summary>
     public const string TenantKey = "__tenant";

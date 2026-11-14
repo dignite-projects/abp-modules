@@ -126,6 +126,15 @@ public class FileDescriptor : AggregateRoot<Guid>, ICreationAuditedObject, IModi
     /// </summary>
     public virtual string? ClientId { get; protected set; }
 
+    /// <summary>
+    /// Whether anyone may read the file at its public address, without signing in - the business system's call, not
+    /// the container's: it marks a file public when it stores it (the provider's <c>IsPublic</c> for a BLOB saved
+    /// under a name, the input's for a file kept by id) or later (<see cref="FileDescriptorManager.SetPublicAsync"/>).
+    /// Files that share a physical BLOB share an address when they are kept by id, and it answers while one of them
+    /// is public.
+    /// </summary>
+    public virtual bool IsPublic { get; protected set; }
+
     public virtual DateTime CreationTime { get; set; }
 
     /// <summary>
@@ -168,6 +177,15 @@ public class FileDescriptor : AggregateRoot<Guid>, ICreationAuditedObject, IModi
     public virtual void Rename(string name)
     {
         Name = Check.NotNullOrWhiteSpace(name, nameof(name), FileDescriptorConsts.MaxNameLength);
+    }
+
+    /// <summary>
+    /// Marks the file public or not. <see cref="FileDescriptorManager.SetPublicAsync"/> refuses a file addressed by its
+    /// name, whose application decides it at each save; never call this to bypass it.
+    /// </summary>
+    public virtual void SetPublic(bool isPublic)
+    {
+        IsPublic = isPublic;
     }
 
     /// <summary>Whether this descriptor wrote its BLOB and still holds the <see cref="DedupKey"/>.</summary>

@@ -154,6 +154,8 @@ public class FileDescriptorManager : DomainService
     /// <param name="clientId">The OAuth client writing through the BLOB API, recorded on the descriptor.</param>
     /// <param name="creatorId">The user the BLOB is counted for; <c>null</c> leaves it to ABP's auditing - the current
     /// user, if there is one.</param>
+    /// <param name="isPublic">Whether anyone may read the BLOB at its public address (<see cref="FileDescriptor.IsPublic"/>):
+    /// the application's container declares it, and each save says it again, so an overriding save sets it anew.</param>
     public virtual async Task<FileDescriptor> CreateAsync(
         string containerName,
         string name,
@@ -161,6 +163,7 @@ public class FileDescriptorManager : DomainService
         bool overrideExisting = false,
         string? clientId = null,
         Guid? creatorId = null,
+        bool isPublic = false,
         CancellationToken cancellationToken = default)
     {
         GetBlobManagementContainerConfiguration(containerName);
@@ -201,7 +204,14 @@ public class FileDescriptorManager : DomainService
             {
                 descriptor = await StoreOrShareAsync(
                     containerName, name, stream, clientId, nameIsAddress: true,
-                    creatorId.HasValue ? file => file.CreatorId = creatorId : null,
+                    file =>
+                    {
+                        file.SetPublic(isPublic);
+                        if (creatorId.HasValue)
+                        {
+                            file.CreatorId = creatorId;
+                        }
+                    },
                     cancellationToken);
             }
             catch
@@ -448,6 +458,28 @@ public class FileDescriptorManager : DomainService
     }
 
     /// <summary>
+    /// Marks a file kept by its id public or not (<see cref="FileDescriptor.IsPublic"/>). A file addressed by its name
+    /// is not changed here (<see cref="BlobManagementErrorCodes.FileAddressedByName"/>): its application's container
+    /// declares it, and each save sets it.
+    /// </summary>
+    public virtual async Task<FileDescriptor> SetPublicAsync(
+        FileDescriptor file,
+        bool isPublic,
+        CancellationToken cancellationToken = default)
+    {
+        Check.NotNull(file, nameof(file));
+        CheckNotAddressedByName(file);
+
+        if (file.IsPublic == isPublic)
+        {
+            return file;
+        }
+
+        file.SetPublic(isPublic);
+        return await FileDescriptorRepository.UpdateAsync(file, autoSave: true, cancellationToken: cancellationToken);
+    }
+
+    /// <summary>
     /// The live descriptor an application saved under <paramref name="name"/> in <paramref name="containerName"/>, or
     /// <c>null</c>.
     /// </summary>
@@ -466,12 +498,13 @@ public class FileDescriptorManager : DomainService
     }
 
     /// <summary>
-    /// The live files of <paramref name="containerName"/> whose physical BLOB is <paramref name="blobName"/>, by id, at
-    /// most <paramref name="maxResultCount"/> of them: the public address of a file kept by id names its BLOB, since
-    /// its name need not be unique. Several files have one BLOB when they hold the same bytes; they share the bytes,
-    /// the type and the size, not the name.
+    /// The live public files kept by id in <paramref name="containerName"/> whose physical BLOB is
+    /// <paramref name="blobName"/>, by id, at most <paramref name="maxResultCount"/> of them: the public address of a
+    /// file kept by id names its BLOB, since its name need not be unique, so files kept by id that hold the same bytes
+    /// share it, and it answers while one of them is public. They share the bytes, the type and the size, not the name.
+    /// A file saved under a name has its name as its address, and does not open this one.
     /// </summary>
-    public virtual async Task<List<FileDescriptor>> GetListByBlobNameAsync(
+    public virtual async Task<List<FileDescriptor>> GetPublicListByBlobNameAsync(
         string containerName,
         string blobName,
         int maxResultCount,
@@ -483,7 +516,7 @@ public class FileDescriptorManager : DomainService
             return new List<FileDescriptor>();
         }
 
-        return await FileDescriptorRepository.GetListByBlobNameAsync(containerName, blobName, maxResultCount, cancellationToken);
+        return await FileDescriptorRepository.GetPublicListByBlobNameAsync(containerName, blobName, maxResultCount, cancellationToken);
     }
 
     /// <summary>The bytes of <paramref name="file"/>, or <c>null</c> when its BLOB is missing from storage.</summary>

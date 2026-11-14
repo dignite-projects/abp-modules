@@ -33,6 +33,12 @@ public interface IBlobManagementFileService : IApplicationService
     /// <summary>Moves a file to another directory of its container, or to its top. One addressed by its name is not moved.</summary>
     Task<BlobManagementFileDto> MoveAsync(Guid id, MoveBlobManagementFileInput input);
 
+    /// <summary>
+    /// Marks a file public or not: whether anyone may read it at its public address. One addressed by its name is not
+    /// changed here - its application's container declares it, and each save sets it.
+    /// </summary>
+    Task<BlobManagementFileDto> SetPublicAsync(Guid id, SetBlobManagementFilePublicInput input);
+
     /// <summary>Deletes a file; a file that is not there is no error.</summary>
     Task DeleteAsync(Guid id);
 

@@ -53,6 +53,11 @@ public class RemoteBlobManagementFileService : IBlobManagementFileService
         return Proxy.MoveAsync(id, input);
     }
 
+    public virtual Task<BlobManagementFileDto> SetPublicAsync(Guid id, SetBlobManagementFilePublicInput input)
+    {
+        return Proxy.SetPublicAsync(id, input);
+    }
+
     public virtual Task DeleteAsync(Guid id)
     {
         return Proxy.DeleteAsync(id);

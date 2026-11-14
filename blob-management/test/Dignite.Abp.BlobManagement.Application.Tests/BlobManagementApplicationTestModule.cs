@@ -40,13 +40,22 @@ public class BlobManagementApplicationTestModule : AbpModule
             // Code runs after BlobManagementApplicationModule bound the configuration, so it wins - as a host's own code does.
             options.Containers.Configure(ConfiguredAndOverriddenContainer, container =>
             {
-                container.GetBlobManagementContainerConfiguration().PublicRead = false;
+                container.GetBlobManagementContainerConfiguration().AllowDirectories = false;
             });
 
             // The application's side: its own containers, keeping their bytes in Blob Management in this process.
             options.Containers.Configure(BlobManagementTestAppContainers.Media, container =>
             {
                 container.UseBlobManagement(provider => provider.BlobManagementContainer = BlobManagementTestContainers.Files);
+            });
+
+            options.Containers.Configure(BlobManagementTestAppContainers.PublicMedia, container =>
+            {
+                container.UseBlobManagement(provider =>
+                {
+                    provider.BlobManagementContainer = BlobManagementTestContainers.Files;
+                    provider.IsPublic = true;
+                });
             });
 
             options.Containers.Configure(BlobManagementTestAppContainers.Documents, container =>

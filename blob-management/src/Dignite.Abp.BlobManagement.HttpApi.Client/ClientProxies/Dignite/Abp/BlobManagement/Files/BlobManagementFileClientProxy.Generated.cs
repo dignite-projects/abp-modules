@@ -60,6 +60,15 @@ public partial class BlobManagementFileClientProxy : ClientProxyBase<IBlobManage
         });
     }
 
+    public virtual async Task<BlobManagementFileDto> SetPublicAsync(Guid id, SetBlobManagementFilePublicInput input)
+    {
+        return await RequestAsync<BlobManagementFileDto>(nameof(SetPublicAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(Guid), id },
+            { typeof(SetBlobManagementFilePublicInput), input }
+        });
+    }
+
     public virtual async Task DeleteAsync(Guid id)
     {
         await RequestAsync(nameof(DeleteAsync), new ClientProxyRequestTypeValue

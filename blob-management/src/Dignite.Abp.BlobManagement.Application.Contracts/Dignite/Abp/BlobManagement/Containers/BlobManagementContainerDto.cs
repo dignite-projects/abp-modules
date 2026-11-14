@@ -11,9 +11,6 @@ public class BlobManagementContainerDto : ExtensibleObject
 {
     public string Name { get; set; } = default!;
 
-    /// <summary>Whether its files are read publicly; their <c>Url</c> is then set.</summary>
-    public bool PublicRead { get; set; }
-
     /// <summary>Whether the container has a directory tree. Without one its files are one flat list.</summary>
     public bool AllowDirectories { get; set; }
 

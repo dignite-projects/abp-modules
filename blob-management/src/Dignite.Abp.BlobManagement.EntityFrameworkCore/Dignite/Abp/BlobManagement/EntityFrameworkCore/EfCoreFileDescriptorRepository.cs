@@ -123,14 +123,14 @@ public class EfCoreFileDescriptorRepository : EfCoreRepository<IBlobManagementDb
             .ToListAsync(GetCancellationToken(cancellationToken));
     }
 
-    public virtual async Task<List<FileDescriptor>> GetListByBlobNameAsync(
+    public virtual async Task<List<FileDescriptor>> GetPublicListByBlobNameAsync(
         string containerName,
         string blobName,
         int maxResultCount,
         CancellationToken cancellationToken = default)
     {
         return await (await GetDbSetAsync())
-            .Where(f => f.ContainerName == containerName && f.BlobName == blobName)
+            .Where(f => f.ContainerName == containerName && f.BlobName == blobName && f.IsPublic && f.NameKey == null)
             .OrderBy(f => f.Id)
             .Take(maxResultCount)
             .ToListAsync(GetCancellationToken(cancellationToken));

@@ -24,7 +24,9 @@ public interface IBlobManagementBlobService : IApplicationService
     /// <param name="creatorId">The user the BLOB is counted for in the usage figures; no right comes with it.
     /// <c>null</c>: the application's current user - in process as ABP's auditing records it, over HTTP as
     /// <c>Dignite.Abp.BlobManagement.HttpApi.Client</c> sends it, since the client's token carries no user.</param>
-    Task<BlobManagementBlobDto> SaveAsync(string containerName, string blobName, IRemoteStreamContent content, bool overrideExisting = false, Guid? creatorId = null);
+    /// <param name="isPublic">Whether anyone may read the BLOB at its public address, without signing in: what the
+    /// application's container declares (<c>UseBlobManagement(p =&gt; p.IsPublic = true)</c>), sent with every save.</param>
+    Task<BlobManagementBlobDto> SaveAsync(string containerName, string blobName, IRemoteStreamContent content, bool overrideExisting = false, Guid? creatorId = null, bool isPublic = false);
 
     /// <summary>The content of <paramref name="blobName"/>, or <c>null</c> when there is no such file.</summary>
     Task<IRemoteStreamContent?> GetOrNullAsync(string containerName, string blobName);

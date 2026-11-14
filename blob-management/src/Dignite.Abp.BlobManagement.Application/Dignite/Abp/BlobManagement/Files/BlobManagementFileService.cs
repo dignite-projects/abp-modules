@@ -77,6 +77,13 @@ public class BlobManagementFileService : BlobManagementAppService, IBlobManageme
         return Map(file);
     }
 
+    public virtual async Task<BlobManagementFileDto> SetPublicAsync(Guid id, SetBlobManagementFilePublicInput input)
+    {
+        var file = await GetFileAsync(id);
+        await FileDescriptorManager.SetPublicAsync(file, input.IsPublic);
+        return Map(file);
+    }
+
     public virtual async Task DeleteAsync(Guid id)
     {
         var file = await FindFileAsync(id);
@@ -112,12 +119,20 @@ public class BlobManagementFileService : BlobManagementAppService, IBlobManageme
         CheckNameLength(name, nameof(input.Name));
 
         var creatorId = input.CreatorId;
+        var isPublic = input.IsPublic;
         var file = await FileDescriptorManager.UploadAsync(
             input.ContainerName,
             name,
             content.GetStream(),
             input.DirectoryId,
-            creatorId.HasValue ? descriptor => descriptor.CreatorId = creatorId : null,
+            descriptor =>
+            {
+                descriptor.SetPublic(isPublic);
+                if (creatorId.HasValue)
+                {
+                    descriptor.CreatorId = creatorId;
+                }
+            },
             clientId);
 
         return Map(file);

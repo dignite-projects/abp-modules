@@ -130,7 +130,7 @@ public class MongoFileDescriptorRepository : MongoDbRepository<IBlobManagementMo
             .ToListAsync(token);
     }
 
-    public virtual async Task<List<FileDescriptor>> GetListByBlobNameAsync(
+    public virtual async Task<List<FileDescriptor>> GetPublicListByBlobNameAsync(
         string containerName,
         string blobName,
         int maxResultCount,
@@ -138,7 +138,7 @@ public class MongoFileDescriptorRepository : MongoDbRepository<IBlobManagementMo
     {
         var token = GetCancellationToken(cancellationToken);
         return await (await GetQueryableAsync(token))
-            .Where(f => f.ContainerName == containerName && f.BlobName == blobName)
+            .Where(f => f.ContainerName == containerName && f.BlobName == blobName && f.IsPublic && f.NameKey == null)
             .OrderBy(f => f.Id)
             .Take(maxResultCount)
             .ToListAsync(token);

@@ -77,6 +77,17 @@
                       "summary": null,
                       "description": null,
                       "displayName": null
+                    },
+                    {
+                      "name": "isPublic",
+                      "typeAsString": "System.Boolean, System.Private.CoreLib",
+                      "type": "System.Boolean",
+                      "typeSimple": "boolean",
+                      "isOptional": true,
+                      "defaultValue": false,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
                     }
                   ],
                   "returnValue": {
@@ -193,8 +204,8 @@
             }
           ],
           "actions": {
-            "SaveAsyncByContainerNameAndBlobNameAndContentAndOverrideExistingAndCreatorId": {
-              "uniqueName": "SaveAsyncByContainerNameAndBlobNameAndContentAndOverrideExistingAndCreatorId",
+            "SaveAsyncByContainerNameAndBlobNameAndContentAndOverrideExistingAndCreatorIdAndIsPublic": {
+              "uniqueName": "SaveAsyncByContainerNameAndBlobNameAndContentAndOverrideExistingAndCreatorIdAndIsPublic",
               "name": "SaveAsync",
               "httpMethod": "PUT",
               "url": "api/blob-management/blobs/{containerName}",
@@ -251,6 +262,17 @@
                   "typeSimple": "string?",
                   "isOptional": true,
                   "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "name": "isPublic",
+                  "typeAsString": "System.Boolean, System.Private.CoreLib",
+                  "type": "System.Boolean",
+                  "typeSimple": "boolean",
+                  "isOptional": true,
+                  "defaultValue": false,
                   "summary": null,
                   "description": null,
                   "displayName": null
@@ -323,6 +345,21 @@
                   "jsonName": null,
                   "type": "System.Guid?",
                   "typeSimple": "string?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Query",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "isPublic",
+                  "name": "isPublic",
+                  "jsonName": null,
+                  "type": "System.Boolean",
+                  "typeSimple": "boolean",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
@@ -1464,6 +1501,40 @@
                   }
                 },
                 {
+                  "name": "SetPublicAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "Dignite.Abp.BlobManagement.Files.SetBlobManagementFilePublicInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                      "type": "Dignite.Abp.BlobManagement.Files.SetBlobManagementFilePublicInput",
+                      "typeSimple": "Dignite.Abp.BlobManagement.Files.SetBlobManagementFilePublicInput",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                    "typeSimple": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
                   "name": "DeleteAsync",
                   "parametersOnMethod": [
                     {
@@ -1637,6 +1708,40 @@
                       "typeAsString": "Dignite.Abp.BlobManagement.Files.MoveBlobManagementFileInput, Dignite.Abp.BlobManagement.Application.Contracts",
                       "type": "Dignite.Abp.BlobManagement.Files.MoveBlobManagementFileInput",
                       "typeSimple": "Dignite.Abp.BlobManagement.Files.MoveBlobManagementFileInput",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                    "typeSimple": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "SetPublicAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "Dignite.Abp.BlobManagement.Files.SetBlobManagementFilePublicInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                      "type": "Dignite.Abp.BlobManagement.Files.SetBlobManagementFilePublicInput",
+                      "typeSimple": "Dignite.Abp.BlobManagement.Files.SetBlobManagementFilePublicInput",
                       "isOptional": false,
                       "defaultValue": null,
                       "summary": null,
@@ -1969,6 +2074,21 @@
                 },
                 {
                   "nameOnMethod": "input",
+                  "name": "IsPublic",
+                  "jsonName": null,
+                  "type": "System.Boolean",
+                  "typeSimple": "boolean",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Form",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "input",
                   "name": "File",
                   "jsonName": null,
                   "type": "Volo.Abp.Content.IRemoteStreamContent",
@@ -2135,6 +2255,87 @@
                   "jsonName": null,
                   "type": "Dignite.Abp.BlobManagement.Files.MoveBlobManagementFileInput",
                   "typeSimple": "Dignite.Abp.BlobManagement.Files.MoveBlobManagementFileInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                "typeSimple": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "SetPublicAsyncByIdAndInput": {
+              "uniqueName": "SetPublicAsyncByIdAndInput",
+              "name": "SetPublicAsync",
+              "httpMethod": "PUT",
+              "url": "api/blob-management/files/{id}/public",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "Dignite.Abp.BlobManagement.Files.SetBlobManagementFilePublicInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                  "type": "Dignite.Abp.BlobManagement.Files.SetBlobManagementFilePublicInput",
+                  "typeSimple": "Dignite.Abp.BlobManagement.Files.SetBlobManagementFilePublicInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "Dignite.Abp.BlobManagement.Files.SetBlobManagementFilePublicInput",
+                  "typeSimple": "Dignite.Abp.BlobManagement.Files.SetBlobManagementFilePublicInput",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,

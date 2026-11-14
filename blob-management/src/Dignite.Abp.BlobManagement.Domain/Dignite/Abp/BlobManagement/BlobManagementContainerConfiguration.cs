@@ -30,13 +30,6 @@ public class BlobManagementContainerConfiguration
         internal set => _containerConfiguration.SetConfiguration(BlobManagementContainerConfigurationNames.Managed, value);
     }
 
-    /// <summary>Whether anyone may read the container's files without signing in. Default: <c>false</c>.</summary>
-    public bool PublicRead
-    {
-        get => _containerConfiguration.GetConfigurationOrDefault(BlobManagementContainerConfigurationNames.PublicRead, false);
-        set => _containerConfiguration.SetConfiguration(BlobManagementContainerConfigurationNames.PublicRead, value);
-    }
-
     /// <summary>
     /// Whether the container has a directory tree for the files kept in it by id. Default: <c>false</c> - the files of the
     /// container are one flat list, and every directory operation is refused

@@ -7,7 +7,5 @@ public static class BlobManagementContainerConfigurationNames
 {
     public const string Managed = "Dignite.Abp.BlobManagement.Managed";
 
-    public const string PublicRead = "Dignite.Abp.BlobManagement.PublicRead";
-
     public const string AllowDirectories = "Dignite.Abp.BlobManagement.AllowDirectories";
 }

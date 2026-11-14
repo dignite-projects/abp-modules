@@ -77,7 +77,6 @@ public class BlobManagementContainerAppService : BlobManagementAppService, IBlob
         return new BlobManagementContainerDto
         {
             Name = name,
-            PublicRead = container.PublicRead,
             AllowDirectories = container.AllowDirectories,
             MaxFileSize = BlobStreamBuffering.GetMaxBufferedBytes(configuration),
             AllowedFileExtensions = configuration.PipelineContributors.Contains<AllowedContentTypesContributor>()

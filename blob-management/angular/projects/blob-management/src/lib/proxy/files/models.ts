@@ -10,6 +10,7 @@ export interface BlobManagementFileDto extends ExtensibleCreationAuditedEntityDt
   size?: number;
   clientId?: string | null;
   lastModificationTime?: string | null;
+  isPublic?: boolean;
   url?: string | null;
 }
 
@@ -18,6 +19,7 @@ export interface CreateBlobManagementFileInput {
   directoryId?: string | null;
   name?: string | null;
   creatorId?: string | null;
+  isPublic?: boolean;
   file: IRemoteStreamContent;
 }
 
@@ -29,6 +31,10 @@ export interface GetBlobManagementFilesInput extends PagedAndSortedResultRequest
 
 export interface MoveBlobManagementFileInput {
   directoryId?: string | null;
+}
+
+export interface SetBlobManagementFilePublicInput {
+  isPublic?: boolean;
 }
 
 export interface UpdateBlobManagementFileInput {

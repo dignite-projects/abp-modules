@@ -1,13 +1,17 @@
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobStoring.BlobManagement;
+using Dignite.Abp.BlobManagement.Files;
 using Dignite.Abp.BlobManagement.Public;
 using Shouldly;
 using Volo.Abp.AspNetCore.TestBase;
 using Volo.Abp.BlobStoring;
+using Volo.Abp.Content;
+using Volo.Abp.Http.Client;
 using Volo.Abp.MultiTenancy;
 using Xunit;
 
@@ -22,12 +26,14 @@ public class BlobManagementPublicRead_Tests : AbpWebApplicationFactoryIntegrated
     private readonly IBlobContainerFactory _blobContainerFactory;
     private readonly IBlobManagementPublicUrlBuilder _urlBuilder;
     private readonly ICurrentTenant _currentTenant;
+    private readonly BlobManagementFileClientProxy _files;
 
     public BlobManagementPublicRead_Tests()
     {
         _blobContainerFactory = GetRequiredService<IBlobContainerFactory>();
         _urlBuilder = GetRequiredService<IBlobManagementPublicUrlBuilder>();
         _currentTenant = GetRequiredService<ICurrentTenant>();
+        _files = GetRequiredService<BlobManagementFileClientProxy>();
     }
 
     [Fact]
@@ -37,7 +43,7 @@ public class BlobManagementPublicRead_Tests : AbpWebApplicationFactoryIntegrated
         await StoreAsync("2026/11/photo.png", bytes);
 
         var url = _urlBuilder.Build(BlobManagementHttpApiTestModule.AppPublicContainer, "2026/11/photo.png");
-        url.ShouldBe("/api/blob-management/public/public/2026/11/photo.png");
+        url.ShouldBe("/blobs/public/2026/11/photo.png");
 
         using var response = await Client.GetAsync(url);
 
@@ -230,7 +236,7 @@ public class BlobManagementPublicRead_Tests : AbpWebApplicationFactoryIntegrated
         url.ShouldContain("__tenant=" + BlobManagementHttpApiTestModule.TenantId);
         (await GetBytesAsync(url)).ShouldBe(bytes);
 
-        using var withoutTenant = await Client.GetAsync("/api/blob-management/public/public/tenant.png");
+        using var withoutTenant = await Client.GetAsync("/blobs/public/tenant.png");
         withoutTenant.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
@@ -246,16 +252,51 @@ public class BlobManagementPublicRead_Tests : AbpWebApplicationFactoryIntegrated
     }
 
     [Fact]
-    public async Task Only_Public_Containers_Should_Be_Read()
+    public async Task Only_Public_Files_Should_Be_Read()
     {
         using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
         {
             await _blobContainerFactory.Create(BlobManagementHttpApiTestModule.AppContainer).SaveAsync("private.pdf", BlobManagementTestFiles.Pdf("private"));
         }
 
-        (await Client.GetAsync("/api/blob-management/public/files/private.pdf")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await Client.GetAsync("/blobs/files/private.pdf")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await Client.GetAsync("/blobs/public/missing.png")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await Client.GetAsync("/blobs/undeclared/any.png")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        // The old address is gone: public reads are not under the API.
         (await Client.GetAsync("/api/blob-management/public/public/missing.png")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
-        (await Client.GetAsync("/api/blob-management/public/undeclared/any.png")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task A_Client_Should_Mark_A_File_Kept_By_Id_Public()
+    {
+        BlobManagementFileDto file;
+        using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
+        {
+            file = await _files.CreateAsync(new CreateBlobManagementFileInput
+            {
+                ContainerName = BlobManagementHttpApiTestModule.OpenContainer,
+                File = new RemoteStreamContent(new MemoryStream(BlobManagementTestFiles.Pdf("marked " + Guid.NewGuid())), "marked.pdf", "application/pdf")
+            });
+            file.Url.ShouldBeNull();
+        }
+
+        // A user's token is refused, whatever its client.
+        using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient, Guid.NewGuid()))
+        {
+            (await Should.ThrowAsync<AbpRemoteCallException>(() =>
+                    _files.SetPublicAsync(file.Id, new SetBlobManagementFilePublicInput { IsPublic = true })))
+                .HttpStatusCode.ShouldBe((int)HttpStatusCode.Forbidden);
+        }
+
+        using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
+        {
+            file = await _files.SetPublicAsync(file.Id, new SetBlobManagementFilePublicInput { IsPublic = true });
+        }
+
+        file.Url.ShouldStartWith("/blobs/" + BlobManagementHttpApiTestModule.OpenContainer + "/");
+        using var response = await Client.GetAsync(file.Url);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.Content.Headers.ContentDisposition!.FileName.ShouldBe("marked.pdf");
     }
 
     private async Task StoreAsync(string name, byte[] bytes, bool overrideExisting = false)

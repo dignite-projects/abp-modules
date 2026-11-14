@@ -12,6 +12,7 @@ using Dignite.Abp.BlobManagement.Usage;
 using Shouldly;
 using Volo.Abp;
 using Volo.Abp.Authorization;
+using Volo.Abp.BlobStoring;
 using Volo.Abp.Content;
 using Volo.Abp.Domain.Entities;
 using Volo.Abp.Features;
@@ -395,19 +396,71 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
     [Fact]
     public async Task A_Public_File_Kept_By_Id_Should_Be_Read_By_The_Physical_Blob_Name()
     {
-        var file = await StoreAsync(BlobManagementTestContainers.Public, "poster.pdf");
+        var file = await StoreAsync(BlobManagementTestContainers.Files, "poster.pdf", isPublic: true);
 
+        file.IsPublic.ShouldBeTrue();
         file.Url.ShouldNotBeNull();
         var blobName = file.Url!.Split('/').Last();
-        file.Url.ShouldBe(BlobManagementPublicUrl.Build(BlobManagementTestContainers.Public, blobName));
+        file.Url.ShouldBe(BlobManagementPublicUrl.Build(BlobManagementTestContainers.Files, blobName));
+        file.Url.ShouldStartWith("/blobs/");
 
         var publicFiles = GetRequiredService<IBlobManagementPublicAppService>();
-        (await publicFiles.ReadAsync(BlobManagementTestContainers.Public, blobName, new BlobManagementPublicReadInput(), HeadersOnly()))
+        (await publicFiles.ReadAsync(BlobManagementTestContainers.Files, blobName, new BlobManagementPublicReadInput(), HeadersOnly()))
             .File.Name.ShouldBe("poster.pdf");
 
         // The display name is not an address there: names may repeat.
         await Should.ThrowAsync<EntityNotFoundException>(() =>
-            publicFiles.ReadAsync(BlobManagementTestContainers.Public, "poster.pdf", new BlobManagementPublicReadInput(), HeadersOnly()));
+            publicFiles.ReadAsync(BlobManagementTestContainers.Files, "poster.pdf", new BlobManagementPublicReadInput(), HeadersOnly()));
+    }
+
+    [Fact]
+    public async Task A_File_Should_Be_Read_Publicly_Only_While_It_Is_Marked_Public()
+    {
+        var file = await StoreAsync(BlobManagementTestContainers.Files, "private.pdf");
+        file.IsPublic.ShouldBeFalse();
+        file.Url.ShouldBeNull();
+
+        var stored = await WithUnitOfWorkAsync(() => GetRequiredService<IFileDescriptorRepository>().GetAsync(file.Id));
+        var publicFiles = GetRequiredService<IBlobManagementPublicAppService>();
+        await Should.ThrowAsync<EntityNotFoundException>(() =>
+            publicFiles.ReadAsync(BlobManagementTestContainers.Files, stored.BlobName, new BlobManagementPublicReadInput(), HeadersOnly()));
+
+        var published = await _files.SetPublicAsync(file.Id, new SetBlobManagementFilePublicInput { IsPublic = true });
+        published.IsPublic.ShouldBeTrue();
+        published.Url.ShouldBe(BlobManagementPublicUrl.Build(BlobManagementTestContainers.Files, stored.BlobName));
+        (await publicFiles.ReadAsync(BlobManagementTestContainers.Files, stored.BlobName, new BlobManagementPublicReadInput(), HeadersOnly()))
+            .File.Name.ShouldBe("private.pdf");
+
+        (await _files.SetPublicAsync(file.Id, new SetBlobManagementFilePublicInput { IsPublic = false })).Url.ShouldBeNull();
+        await Should.ThrowAsync<EntityNotFoundException>(() =>
+            publicFiles.ReadAsync(BlobManagementTestContainers.Files, stored.BlobName, new BlobManagementPublicReadInput(), HeadersOnly()));
+    }
+
+    [Fact]
+    public async Task A_Blob_Saved_Under_A_Name_Should_Be_Public_As_Its_Container_Declares()
+    {
+        var name = "avatars/" + Guid.NewGuid().ToString("N") + ".pdf";
+        var bytes = BlobManagementTestFiles.Pdf(name);
+        var factory = GetRequiredService<IBlobContainerFactory>();
+        await factory.Create(BlobManagementTestAppContainers.Media).SaveAsync(name, bytes);
+
+        var publicFiles = GetRequiredService<IBlobManagementPublicAppService>();
+        await Should.ThrowAsync<EntityNotFoundException>(() =>
+            publicFiles.ReadAsync(BlobManagementTestContainers.Files, name, new BlobManagementPublicReadInput(), HeadersOnly()));
+
+        // Saved again through a container its application declared public: the overriding save marks it.
+        await factory.Create(BlobManagementTestAppContainers.PublicMedia).SaveAsync(name, bytes, overrideExisting: true);
+        (await publicFiles.ReadAsync(BlobManagementTestContainers.Files, name, new BlobManagementPublicReadInput(), HeadersOnly()))
+            .File.Name.ShouldBe(name);
+
+        // Its application's container decides it, at each save - not a call by id.
+        var saved = (await _files.GetListAsync(new GetBlobManagementFilesInput { ContainerName = BlobManagementTestContainers.Files, Filter = name }))
+            .Items.Single();
+        saved.IsPublic.ShouldBeTrue();
+        saved.Url.ShouldBe(BlobManagementPublicUrl.Build(BlobManagementTestContainers.Files, name));
+        (await Should.ThrowAsync<BusinessException>(() =>
+                _files.SetPublicAsync(saved.Id, new SetBlobManagementFilePublicInput { IsPublic = false })))
+            .Code.ShouldBe(BlobManagementErrorCodes.FileAddressedByName);
     }
 
     /// <summary>
@@ -418,23 +471,46 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
     public async Task A_Public_Address_Shared_By_Several_Files_Should_Answer_With_No_Files_Name()
     {
         var bytes = BlobManagementTestFiles.Pdf("shared " + Guid.NewGuid());
-        var first = await StoreAsync(BlobManagementTestContainers.Public, "contract-acme.pdf", bytes);
-        var second = await StoreAsync(BlobManagementTestContainers.Public, "doc.pdf", bytes);
+        var first = await StoreAsync(BlobManagementTestContainers.Files, "contract-acme.pdf", bytes, isPublic: true);
+        var second = await StoreAsync(BlobManagementTestContainers.Files, "doc.pdf", bytes, isPublic: true);
 
         second.Url.ShouldBe(first.Url);
         var blobName = first.Url!.Split('/').Last();
 
         var publicFiles = GetRequiredService<IBlobManagementPublicAppService>();
         var shared = await publicFiles.ReadAsync(
-            BlobManagementTestContainers.Public, blobName, new BlobManagementPublicReadInput(), new BlobManagementPublicReadRequest());
+            BlobManagementTestContainers.Files, blobName, new BlobManagementPublicReadInput(), new BlobManagementPublicReadRequest());
         shared.File.Name.ShouldBe(blobName);
         shared.Content!.FileName.ShouldBe(blobName);
         (await ReadAsync(shared.Content)).ShouldBe(bytes);
 
         // Once a single file has the BLOB, the address is that file's again - and it answered all along.
         await _files.DeleteAsync(first.Id);
-        (await publicFiles.ReadAsync(BlobManagementTestContainers.Public, blobName, new BlobManagementPublicReadInput(), HeadersOnly()))
+        (await publicFiles.ReadAsync(BlobManagementTestContainers.Files, blobName, new BlobManagementPublicReadInput(), HeadersOnly()))
             .File.Name.ShouldBe("doc.pdf");
+    }
+
+    /// <summary>
+    /// Files kept by id that hold the same bytes share one address: it answers while one of them is public, with the
+    /// public one's name, and a file that is not public does not close it - nor has an address of its own to hand out.
+    /// </summary>
+    [Fact]
+    public async Task A_Shared_Address_Should_Answer_While_One_Of_Its_Files_Is_Public()
+    {
+        var bytes = BlobManagementTestFiles.Pdf("one public " + Guid.NewGuid());
+        var hidden = await StoreAsync(BlobManagementTestContainers.Files, "internal.pdf", bytes);
+        var shown = await StoreAsync(BlobManagementTestContainers.Files, "brochure.pdf", bytes, isPublic: true);
+
+        hidden.Url.ShouldBeNull();
+        var blobName = shown.Url!.Split('/').Last();
+
+        var publicFiles = GetRequiredService<IBlobManagementPublicAppService>();
+        (await publicFiles.ReadAsync(BlobManagementTestContainers.Files, blobName, new BlobManagementPublicReadInput(), HeadersOnly()))
+            .File.Name.ShouldBe("brochure.pdf");
+
+        await _files.SetPublicAsync(shown.Id, new SetBlobManagementFilePublicInput { IsPublic = false });
+        await Should.ThrowAsync<EntityNotFoundException>(() =>
+            publicFiles.ReadAsync(BlobManagementTestContainers.Files, blobName, new BlobManagementPublicReadInput(), HeadersOnly()));
     }
 
     [Fact]
@@ -567,10 +643,11 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
     }
 
     /// <summary>Stores a file as an application in this process does, counted for <paramref name="creatorId"/>.</summary>
-    private Task<BlobManagementFileDto> StoreAsync(string containerName, string name, byte[]? bytes = null, Guid? creatorId = null)
+    private Task<BlobManagementFileDto> StoreAsync(string containerName, string name, byte[]? bytes = null, Guid? creatorId = null, bool isPublic = false)
     {
         var input = NewFile(containerName, name, bytes);
         input.CreatorId = creatorId;
+        input.IsPublic = isPublic;
         return _files.CreateAsync(input);
     }
 
