@@ -17,6 +17,15 @@ namespace Dignite.Abp.BlobManagement;
     typeof(AbpAspNetCoreMvcModule))]
 public class BlobManagementHttpApiModule : AbpModule
 {
+    // blob-storing's error codes (Dignite.Abp.BlobStoring.Pipeline, .Imaging), published contracts.
+    private const string BlobStoringContentTooLarge = "Dignite.Abp.BlobStoring:ContentTooLarge";
+    private const string BlobStoringContentTypeNotAllowed = "Dignite.Abp.BlobStoring:ContentTypeNotAllowed";
+    private const string BlobStoringContentTypeMismatch = "Dignite.Abp.BlobStoring:ContentTypeMismatch";
+    private const string BlobStoringImageTooLarge = "Dignite.Abp.BlobStoring.Imaging:ImageTooLarge";
+    private const string BlobStoringImageTooSmall = "Dignite.Abp.BlobStoring.Imaging:ImageTooSmall";
+    private const string BlobStoringImageProcessingFailed = "Dignite.Abp.BlobStoring.Imaging:ImageProcessingFailed";
+    private const string BlobStoringImageDecodeTimeout = "Dignite.Abp.BlobStoring.Imaging:ImageDecodeTimeout";
+
     public override void PreConfigureServices(ServiceConfigurationContext context)
     {
         PreConfigure<IMvcBuilder>(mvcBuilder =>
@@ -43,7 +52,8 @@ public class BlobManagementHttpApiModule : AbpModule
                 .AddBaseTypes(typeof(AbpUiResource));
         });
 
-        // A business exception is 403 by default; these are a missing thing, a conflict or a bad request.
+        // A business exception is 403 by default; these are a missing thing, a conflict, a bad request or content the
+        // module cannot keep.
         Configure<AbpExceptionHttpStatusCodeOptions>(options =>
         {
             options.Map(BlobManagementErrorCodes.ContainerNotFound, HttpStatusCode.NotFound);
@@ -61,6 +71,17 @@ public class BlobManagementHttpApiModule : AbpModule
             options.Map(BlobManagementErrorCodes.DirectoryTooDeep, HttpStatusCode.BadRequest);
             options.Map(BlobManagementErrorCodes.SortingNotSupported, HttpStatusCode.BadRequest);
             options.Map(BlobManagementErrorCodes.FileAddressedByName, HttpStatusCode.Conflict);
+            options.Map(BlobManagementErrorCodes.StorageQuotaExceeded, HttpStatusCode.InsufficientStorage);
+
+            // What the container's pipeline refuses in an upload, by the codes blob-storing publishes (this layer does
+            // not reference its packages): the request's content, not the caller's rights, so not 403.
+            options.Map(BlobStoringContentTooLarge, HttpStatusCode.RequestEntityTooLarge);
+            options.Map(BlobStoringContentTypeNotAllowed, HttpStatusCode.UnsupportedMediaType);
+            options.Map(BlobStoringContentTypeMismatch, HttpStatusCode.BadRequest);
+            options.Map(BlobStoringImageTooLarge, HttpStatusCode.BadRequest);
+            options.Map(BlobStoringImageTooSmall, HttpStatusCode.BadRequest);
+            options.Map(BlobStoringImageProcessingFailed, HttpStatusCode.UnprocessableEntity);
+            options.Map(BlobStoringImageDecodeTimeout, HttpStatusCode.UnprocessableEntity);
         });
     }
 }
