@@ -2,7 +2,7 @@ import type { PagedResultRequestDto } from '@abp/ng.core';
 
 export interface BlobManagementClientUsageDto {
   clientId?: string | null;
-  uploadedBytes?: number;
+  storedBytes?: number;
   fileCount?: number;
 }
 
@@ -22,7 +22,7 @@ export interface BlobManagementUsageDto {
 export interface BlobManagementUserUsageDto {
   userId?: string | null;
   userName?: string | null;
-  uploadedBytes?: number;
+  storedBytes?: number;
   fileCount?: number;
 }
 

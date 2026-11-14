@@ -46,14 +46,12 @@
     "Usage": "Käyttö",
     "Usage:StoredOfAllocation": "Tallennettu {0} / {1}",
     "Usage:Stored": "Tallennettu",
-    "Usage:Uploaded": "Lähetetty",
     "Usage:Files": "Tiedostot",
     "Usage:Containers": "Säilöt",
     "Usage:Users": "Käyttäjät",
     "Usage:Clients": "Asiakassovellukset",
     "Usage:NoUser": "Ei käyttäjää",
     "Usage:InProcess": "Ei asiakassovellusta (tallennettu prosessin sisällä)",
-    "Usage:Hint": "”Tallennettu” laskee jokaisen sisällön kerran. ”Lähetetty” laskee jokaisen tiedoston, joten kahdesti säilytetty sisältö lasketaan kahdesti eivätkä nämä luvut summaudu tallennettuun kokonaismäärään.",
     "PublicReadSizeNotAllowed": "Arvon {0} on oltava jokin seuraavista: {1}."
   }
 }

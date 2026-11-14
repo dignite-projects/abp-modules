@@ -146,10 +146,6 @@ namespace Dignite.Abp.BlobManagement.Host.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("CreatorId");
 
-                    b.Property<string>("DedupKey")
-                        .HasMaxLength(162)
-                        .HasColumnType("TEXT");
-
                     b.Property<Guid?>("DeleterId")
                         .HasColumnType("TEXT")
                         .HasColumnName("DeleterId");
@@ -214,9 +210,6 @@ namespace Dignite.Abp.BlobManagement.Host.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DedupKey")
-                        .IsUnique();
-
                     b.HasIndex("DirectoryId");
 
                     b.HasIndex("NameKey")
@@ -225,8 +218,6 @@ namespace Dignite.Abp.BlobManagement.Host.Migrations
                     b.HasIndex("TenantId", "ContainerName", "BlobName");
 
                     b.HasIndex("TenantId", "ContainerName", "DirectoryId");
-
-                    b.HasIndex("TenantId", "ContainerName", "Hash");
 
                     b.HasIndex("TenantId", "ContainerName", "Name");
 

@@ -42,7 +42,7 @@ public abstract class BlobManagementLocalization_Tests<TStartupModule> : BlobMan
     }
 
     [Theory]
-    [InlineData("de", "Usage:Uploaded", "Hochgeladen")]
+    [InlineData("de", "Usage:Stored", "Gespeichert")]
     [InlineData("zh-Hant", "Usage:NoUser", "無使用者")]
     [InlineData("zh-Hans", "Usage", "用量")]
     [InlineData("fr", "Permission:ManagePermissions", "Gérer les autorisations sur les conteneurs")]

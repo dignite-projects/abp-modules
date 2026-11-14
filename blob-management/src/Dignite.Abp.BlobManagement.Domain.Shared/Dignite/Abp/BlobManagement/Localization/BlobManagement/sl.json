@@ -46,14 +46,12 @@
     "Usage": "Poraba",
     "Usage:StoredOfAllocation": "Shranjeno {0} od {1}",
     "Usage:Stored": "Shranjeno",
-    "Usage:Uploaded": "Naloženo",
     "Usage:Files": "Datoteke",
     "Usage:Containers": "Vsebniki",
     "Usage:Users": "Uporabniki",
     "Usage:Clients": "Odjemalci",
     "Usage:NoUser": "Brez uporabnika",
     "Usage:InProcess": "Brez odjemalca (shranjeno v procesu)",
-    "Usage:Hint": "»Shranjeno« šteje vsako vsebino enkrat. »Naloženo« šteje vsako datoteko, zato se vsebina, shranjena dvakrat, šteje dvakrat in se te številke ne seštejejo v skupno shranjeno količino.",
     "PublicReadSizeNotAllowed": "{0} mora biti ena od vrednosti: {1}."
   }
 }

@@ -103,7 +103,7 @@ A container can do without a preset, or add contributors after one; calling an `
 
 With `StoreJpegAsWebp` on (the default), the images preset stores every JPEG as a lossy WebP at `WebpQuality` (1-100, default 85): turned upright by its EXIF orientation, so a phone's portrait photo is not shown on its side, and fitted into `MaxWidth` × `MaxHeight` in the same decode. A PNG keeps its pixels, and a GIF and a WebP are stored as they are; a PNG or WebP larger than the box is resized, upright.
 
-The physical BLOB of a converted JPEG is named `.webp`, and the file records `image/webp` with the size of the WebP. A file stored by id takes the `.webp` extension in its name too (`holiday.jpg` becomes `holiday.webp`), so a download is named for what it is. A file an application saves keeps its name, which is its address: an application that stored `covers/holiday.jpg` reads it back by that name, and gets the WebP. Uploading the same JPEG again shares the stored WebP.
+The physical BLOB of a converted JPEG is named `.webp`, and the file records `image/webp` with the size of the WebP. A file stored by id takes the `.webp` extension in its name too (`holiday.jpg` becomes `holiday.webp`), so a download is named for what it is. A file an application saves keeps its name, which is its address: an application that stored `covers/holiday.jpg` reads it back by that name, and gets the WebP.
 
 Turn it off for a container that must keep JPEGs as they are, in code or in [configuration](#declaring-containers-in-configuration):
 
@@ -174,7 +174,7 @@ How much a tenant may store is an ABP [feature](https://abp.io/docs/latest/frame
 | `BlobManagement.Enable` | `true` | Whether the tenant may store files. Turning it off stops storing, and closes the file, directory, container and usage services; it does not close reading what is already public, or a read link already handed out. |
 | `BlobManagement.StorageSize` | `0` | The most the tenant may store, in megabytes. `0` is no limit. |
 
-Usage is counted from the file descriptors: each stored BLOB once, however many files share it, across every managed container; deleted files do not count, and files uploaded with a ticket and not confirmed yet do. New bytes beyond the allocation are refused with `BlobManagement:StorageQuotaExceeded`; the same bytes stored again add nothing and are not refused. The check reads the usage and then stores, so two uploads at the same moment can both pass it: it is a soft limit, exceeded by at most an upload each. The allocation is the tenant's only: there is none for a container or a user. What is used is shown on the [Usage](usage.md) page.
+Usage is counted from the file descriptors: the size of every file, across every managed container - each file has a BLOB of its own, so the same bytes in two files count twice; deleted files do not count, and files uploaded with a ticket and not confirmed yet do. Bytes beyond the allocation are refused with `BlobManagement:StorageQuotaExceeded`. The check reads the usage and then stores, so two uploads at the same moment can both pass it: it is a soft limit, exceeded by at most an upload each. The allocation is the tenant's only: there is none for a container or a user. What is used is shown on the [Usage](usage.md) page.
 
 ## Errors
 

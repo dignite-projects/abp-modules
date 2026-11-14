@@ -16,9 +16,8 @@ namespace Dignite.Abp.BlobManagement.Usage;
 
 /// <summary>
 /// What the current tenant keeps in Blob Management, read from the descriptor table, for whoever holds the management
-/// permission. Stored bytes - the tenant's, a container's - count each physical BLOB once; uploaded bytes - a user's, a
-/// client's - are the sizes of their files, so the two measures do not add up to each other. Part of the tenant's Blob
-/// Management: with <see cref="BlobManagementFeatures.Enable"/> off it refuses every call.
+/// permission, in stored bytes: the sizes of the files. Part of the tenant's Blob Management: with
+/// <see cref="BlobManagementFeatures.Enable"/> off it refuses every call.
 /// </summary>
 [Authorize(BlobManagementPermissions.Containers.Default)]
 [RequiresFeature(BlobManagementFeatures.Enable)]
@@ -91,7 +90,7 @@ public class BlobManagementUsageAppService : BlobManagementAppService, IBlobMana
                 {
                     UserId = u.CreatorId,
                     UserName = u.CreatorId.HasValue ? userNames.GetValueOrDefault(u.CreatorId.Value) : null,
-                    UploadedBytes = u.UploadedBytes,
+                    StoredBytes = u.StoredBytes,
                     FileCount = u.FileCount
                 })
                 .ToList());
@@ -106,7 +105,7 @@ public class BlobManagementUsageAppService : BlobManagementAppService, IBlobMana
             .Select(u => new BlobManagementClientUsageDto
             {
                 ClientId = u.ClientId,
-                UploadedBytes = u.UploadedBytes,
+                StoredBytes = u.StoredBytes,
                 FileCount = u.FileCount
             })
             .ToList());

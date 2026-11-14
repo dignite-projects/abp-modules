@@ -36,24 +36,25 @@ public abstract class BlobManagementUsageManager_Tests<TStartupModule> : BlobMan
     }
 
     [Fact]
-    public async Task Usage_Should_Count_Each_Stored_Blob_Once_And_Only_Live_Ones()
+    public async Task Usage_Should_Count_Each_Live_File()
     {
         using (_currentTenant.Change(Guid.NewGuid()))
         {
-            var shared = OfSize(10 * Kilobyte, "shared");
+            var same = OfSize(10 * Kilobyte, "same");
             var other = OfSize(4 * Kilobyte, "other");
 
-            var first = await CreateAsync(BlobManagementTestContainers.Files, "first.pdf", shared);
-            await CreateAsync(BlobManagementTestContainers.Files, "first-again.pdf", shared);
+            var first = await CreateAsync(BlobManagementTestContainers.Files, "first.pdf", same);
+            await CreateAsync(BlobManagementTestContainers.Files, "first-again.pdf", same);
             var second = await CreateAsync(BlobManagementTestContainers.Limited, "second.pdf", OfSize(Kilobyte / 2, "small"));
             var third = await CreateAsync(BlobManagementTestContainers.Files, "third.pdf", other);
 
-            (await UsedBytesAsync()).ShouldBe(shared.Length + second.Size + other.Length);
+            // The same bytes in two files are stored, and counted, twice.
+            (await UsedBytesAsync()).ShouldBe(2L * same.Length + second.Size + other.Length);
 
-            // Deleting one of two sharers frees nothing; deleting the only user of a BLOB frees it.
+            // A deleted file is counted no more.
             await WithUnitOfWorkAsync(() => _fileDescriptorManager.DeleteAsync(first));
             await WithUnitOfWorkAsync(() => _fileDescriptorManager.DeleteAsync(third));
-            (await UsedBytesAsync()).ShouldBe(shared.Length + second.Size);
+            (await UsedBytesAsync()).ShouldBe(same.Length + second.Size);
         }
 
         // Usage is per tenant.
@@ -71,34 +72,35 @@ public abstract class BlobManagementUsageManager_Tests<TStartupModule> : BlobMan
 
         using (_currentTenant.Change(Guid.NewGuid()))
         {
-            var shared = OfSize(10 * Kilobyte, "shared");
+            var same = OfSize(10 * Kilobyte, "same");
             var other = OfSize(4 * Kilobyte, "other");
 
-            await CreateAsync(BlobManagementTestContainers.Files, "alice.pdf", shared, "site", alice);
-            await CreateAsync(BlobManagementTestContainers.Files, "bob.pdf", shared, "site", bob);
+            await CreateAsync(BlobManagementTestContainers.Files, "alice.pdf", same, "site", alice);
+            await CreateAsync(BlobManagementTestContainers.Files, "bob.pdf", same, "site", bob);
             await CreateAsync(BlobManagementTestContainers.Files, "bob-too.pdf", other, clientId: null, bob);
             var small = await CreateAsync(BlobManagementTestContainers.Limited, "nobody.pdf", OfSize(Kilobyte / 2, "small"));
 
-            // A container stores each BLOB once, and the containers add up to the tenant.
+            // The containers add up to the tenant.
             var containers = await WithUnitOfWorkAsync(() => _fileRepository.GetContainerUsagesAsync());
             containers.Count.ShouldBe(2);
             var files = containers.Single(c => c.ContainerName == BlobManagementTestContainers.Files);
-            files.StoredBytes.ShouldBe(shared.Length + other.Length);
+            files.StoredBytes.ShouldBe(2L * same.Length + other.Length);
             files.FileCount.ShouldBe(3);
             var limited = containers.Single(c => c.ContainerName == BlobManagementTestContainers.Limited);
             limited.StoredBytes.ShouldBe(small.Size);
             limited.FileCount.ShouldBe(1);
             containers.Sum(c => c.StoredBytes).ShouldBe(await UsedBytesAsync());
 
-            // A user is counted for every file of theirs, shared bytes too - the largest first, then the files of no user.
+            // A user is counted for every file of theirs - the largest first, then the files of no user - and the
+            // users add up to the tenant.
             var users = await WithUnitOfWorkAsync(() => _fileRepository.GetCreatorUsagesAsync(null, 0, 10));
             users.Select(u => u.CreatorId).ShouldBe(new Guid?[] { bob, alice, null });
-            users[0].UploadedBytes.ShouldBe(shared.Length + other.Length);
+            users[0].StoredBytes.ShouldBe(same.Length + other.Length);
             users[0].FileCount.ShouldBe(2);
-            users[1].UploadedBytes.ShouldBe(shared.Length);
+            users[1].StoredBytes.ShouldBe(same.Length);
             users[1].FileCount.ShouldBe(1);
-            users[2].UploadedBytes.ShouldBe(small.Size);
-            users.Sum(u => u.UploadedBytes).ShouldBeGreaterThan(await UsedBytesAsync());
+            users[2].StoredBytes.ShouldBe(small.Size);
+            users.Sum(u => u.StoredBytes).ShouldBe(await UsedBytesAsync());
 
             (await WithUnitOfWorkAsync(() => _fileRepository.GetCreatorCountAsync(null))).ShouldBe(3);
             (await WithUnitOfWorkAsync(() => _fileRepository.GetCreatorUsagesAsync(null, 1, 1)))
@@ -112,9 +114,9 @@ public abstract class BlobManagementUsageManager_Tests<TStartupModule> : BlobMan
             // A client likewise; the files stored in process are gathered under no client.
             var clients = await WithUnitOfWorkAsync(() => _fileRepository.GetClientUsagesAsync(null));
             clients.Select(c => c.ClientId).ShouldBe(new[] { "site", null });
-            clients[0].UploadedBytes.ShouldBe(2L * shared.Length);
+            clients[0].StoredBytes.ShouldBe(2L * same.Length);
             clients[0].FileCount.ShouldBe(2);
-            clients[1].UploadedBytes.ShouldBe(other.Length + small.Size);
+            clients[1].StoredBytes.ShouldBe(other.Length + small.Size);
             clients[1].FileCount.ShouldBe(2);
 
             (await WithUnitOfWorkAsync(() => _fileRepository.GetClientUsagesAsync(BlobManagementTestContainers.Limited)))
@@ -147,7 +149,7 @@ public abstract class BlobManagementUsageManager_Tests<TStartupModule> : BlobMan
     }
 
     [Fact]
-    public async Task Should_Refuse_Content_Beyond_The_Storage_Size_But_Not_A_Dedup()
+    public async Task Should_Refuse_Content_Beyond_The_Storage_Size()
     {
         var tenantId = Guid.NewGuid();
         _featureStore.SetForTenant(tenantId, BlobManagementFeatures.StorageSize, "1");
@@ -166,9 +168,10 @@ public abstract class BlobManagementUsageManager_Tests<TStartupModule> : BlobMan
             (await WithUnitOfWorkAsync(() => _fileDescriptorManager.FindAsync(BlobManagementTestContainers.Files, "second.pdf"))).ShouldBeNull();
             (await UsedBytesAsync()).ShouldBe(first.Length);
 
-            // The same bytes again add nothing, so they fit.
-            var copy = await CreateAsync(BlobManagementTestContainers.Files, "first-copy.pdf", first);
-            copy.OwnsBlob().ShouldBeFalse();
+            // The same bytes again are stored again, so they do not fit either.
+            var copy = await Should.ThrowAsync<BusinessException>(() =>
+                CreateAsync(BlobManagementTestContainers.Files, "first-copy.pdf", first));
+            copy.Code.ShouldBe(BlobManagementErrorCodes.StorageQuotaExceeded);
         }
     }
 

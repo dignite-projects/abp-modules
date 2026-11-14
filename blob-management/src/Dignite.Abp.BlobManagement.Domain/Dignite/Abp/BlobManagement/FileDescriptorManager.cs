@@ -19,7 +19,7 @@ namespace Dignite.Abp.BlobManagement;
 /// Stores files in Blob Management containers and removes them. The upload rules - size cap, allowed content types, image
 /// processing - are the container's BLOB pipeline contributors, which run inside <c>IBlobContainer.SaveAsync</c>;
 /// this class is the caller around them: it buffers and detects the upload, hashes it, names the physical BLOB,
-/// writes the descriptor, dedups by content and keeps BLOB and descriptor from drifting apart.
+/// writes the descriptor and keeps BLOB and descriptor from drifting apart.
 /// <para>
 /// It authorizes nobody: whoever calls it has been authorized by an application service, or is trusted in-process.
 /// </para>
@@ -29,15 +29,16 @@ namespace Dignite.Abp.BlobManagement;
 /// addressed by its id (<see cref="UploadAsync"/>, <see cref="MoveAsync"/>, <see cref="RenameAsync"/>).
 /// </para>
 /// <para>
-/// <b>Consistency.</b> A physical BLOB is deleted only after the unit of work that deleted its last descriptor has
-/// committed (<see cref="DeleteAsync"/>), so a rollback never brings back a row whose bytes are gone. Uploads and those
-/// deletions of the same bytes take turns on the <b>dedup lock</b> (<see cref="IAbpDistributedLock"/>, named by the
-/// dedup key), which an upload holds until its unit of work is over: a deletion that waited for it sees the
-/// uploader's row, or its absence, and never removes bytes a new row is about to share. Saves under one name take
-/// turns the same way, on the <b>name lock</b> (named by the name key, held as long): an overriding save takes the
-/// address from the descriptor it replaces before it stores the new one, and a save that looked the name up in
-/// between would find no holder. ABP's default lock is in-process; several Blob Management instances need a
-/// distributed lock provider.
+/// <b>One BLOB per file.</b> Every descriptor writes a BLOB of its own, under a new name, even when another file holds
+/// the same content: no BLOB is shared, so none is counted twice or outlives the question of who still uses it.
+/// </para>
+/// <para>
+/// <b>Consistency.</b> A physical BLOB is deleted only after the unit of work that deleted its descriptor has
+/// committed (<see cref="DeleteAsync"/>), so a rollback never brings back a row whose bytes are gone. Saves under one
+/// name take turns on the <b>name lock</b> (<see cref="IAbpDistributedLock"/>, named by the name key), which a save holds
+/// until its unit of work is over: an overriding save takes the address from the descriptor it replaces before it
+/// stores the new one, and a save that looked the name up in between would find no holder. ABP's default lock is
+/// in-process; several Blob Management instances need a distributed lock provider.
 /// </para>
 /// </summary>
 public class FileDescriptorManager : DomainService
@@ -49,14 +50,10 @@ public class FileDescriptorManager : DomainService
     protected static readonly TimeSpan CompensationTimeout = TimeSpan.FromSeconds(30);
 
     /// <summary>
-    /// How long an upload, a save under a name, or the deletion of a BLOB after commit waits for a lock. Bounded so a
-    /// stuck holder costs a missed dedup, an orphaned BLOB or a save that goes ahead on the unique keys alone, never a
-    /// hung request.
+    /// How long a save under a name waits for the name lock. Bounded so a stuck holder costs a save that goes ahead on
+    /// the unique name key alone, never a hung request.
     /// </summary>
     protected static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(30);
-
-    /// <summary>The dedup lock's name is this prefix and <see cref="FileDescriptor.CreateDedupKey"/>.</summary>
-    protected const string DedupLockName = "Dignite.Abp.BlobManagement.Dedup:";
 
     /// <summary>The name lock's name is this prefix and <see cref="FileDescriptor.CreateNameKey"/>.</summary>
     protected const string NameLockName = "Dignite.Abp.BlobManagement.Name:";
@@ -111,42 +108,16 @@ public class FileDescriptorManager : DomainService
     /// </para>
     /// <para>
     /// Saves under one name take turns on the name lock, taken before the lookup and held until the current unit of
-    /// work is over (see <see cref="StoreOrShareAsync"/> for how a lock is held): the second one finds what the first
-    /// one left. When the lock cannot be had within <see cref="LockTimeout"/> the save goes ahead without it, and the
-    /// unique name key is the arbiter that is left: it lets only one insert succeed, and the loser fails with the
-    /// database provider's exception and its BLOB is deleted again.
+    /// work is over (released when it is disposed, after commit or rollback; at the end of this method when there is
+    /// none): the second one finds what the first one left. When the lock cannot be had within
+    /// <see cref="LockTimeout"/> the save goes ahead without it, and the unique name key is the arbiter that is left:
+    /// it lets only one insert succeed, and the loser fails with the database provider's exception and its BLOB is
+    /// deleted again.
     /// </para>
     /// <para>
-    /// Sequence: the upload is copied once into memory, capped at what the container's pipeline enforces (its
-    /// <c>MaxSize</c> contributor, else <see cref="BlobStoringPipelineConsts.DefaultMaxBufferedBytes"/>), so an
-    /// oversized upload fails with <c>Dignite.Abp.BlobStoring:ContentTooLarge</c> before anything is stored. Its type
-    /// is detected from the bytes and reconciled with the extension of <paramref name="name"/>
-    /// (<c>Dignite.Abp.BlobStoring:ContentTypeMismatch</c>), and it is hashed (SHA-256, upper-case hex).
-    /// </para>
-    /// <para>
-    /// The tenant's allocation is checked first: a tenant whose Blob Management is off is refused
-    /// (<see cref="BlobManagementErrorCodes.BlobManagementDisabled"/>), and content that has to be stored - not a dedup hit, which adds
-    /// no bytes - is refused when it would take the tenant past its storage size
-    /// (<see cref="BlobManagementErrorCodes.StorageQuotaExceeded"/>, measured by the upload's length, see
-    /// <see cref="BlobManagementUsageManager"/>). A replaced descriptor's bytes still count while the check runs.
-    /// </para>
-    /// <para>
-    /// Dedup comes before any write and under the dedup lock (see <see cref="StoreOrShareAsync"/>): when a live
-    /// descriptor in the same container (and tenant) has the same hash, the new descriptor shares its BLOB and nothing
-    /// is stored. A dedup hit skips the container's contributors - the bytes passed them when they were stored.
-    /// </para>
-    /// <para>
-    /// Otherwise the BLOB is saved under a new name (<see cref="CreateBlobName"/>) without overwriting - the
-    /// contributors run here and may reject the upload - and the descriptor is written with <c>autoSave</c>, holding
-    /// the dedup key; a failed write deletes the BLOB again. The lock makes two simultaneous uploads of the same bytes
-    /// take turns, so the second shares the first one's BLOB; the unique dedup key stays the last-resort arbiter - a
-    /// loser's insert fails, its BLOB is deleted, and a retry finds the winner and shares its BLOB.
-    /// </para>
-    /// <para>
-    /// A container may store content in another format than it was uploaded in - the images preset stores a JPEG as WebP.
-    /// The physical BLOB is named for the stored type, which the container declares (<see cref="GetStoredMimeType"/>), and
-    /// the descriptor records the type and size of the stored bytes; <paramref name="name"/>, the application's address,
-    /// is kept. Dedup still compares the upload's hash, so the same upload shares the stored result.
+    /// The file is stored as <see cref="StoreAsync"/> stores: buffered, detected, hashed, checked against the tenant's
+    /// allocation, saved under a new BLOB name through the container's contributors, recorded. A replaced descriptor's
+    /// bytes still count while the allocation is checked.
     /// </para>
     /// </summary>
     /// <param name="name">The caller's name for the file: the BLOB name it reads it back by. Its extension, if any, is
@@ -202,7 +173,7 @@ public class FileDescriptorManager : DomainService
             FileDescriptor descriptor;
             try
             {
-                descriptor = await StoreOrShareAsync(
+                descriptor = await StoreAsync(
                     containerName, name, stream, clientId, nameIsAddress: true,
                     file =>
                     {
@@ -244,20 +215,18 @@ public class FileDescriptorManager : DomainService
     /// Stores <paramref name="stream"/> as a new file named <paramref name="name"/> in the container
     /// <paramref name="containerName"/>, under <paramref name="directoryId"/> (<c>null</c>: its top): how an
     /// application stores a file for its user. The name need not be unique: the file is addressed by its id, and holds no
-    /// <see cref="FileDescriptor.NameKey"/>. Otherwise it is stored as <see cref="CreateAsync"/> stores - allocation,
-    /// buffering, detection, dedup under the dedup lock, compensation. One difference: when the container stores the
-    /// upload in another format (a JPEG as WebP), the name takes that format's extension
-    /// (<see cref="GetNameForStoredType"/>), shared content included.
+    /// <see cref="FileDescriptor.NameKey"/>. Otherwise it is stored as <see cref="CreateAsync"/> stores (see
+    /// <see cref="StoreAsync"/>). One difference: when the container stores the upload in another format (a JPEG as
+    /// WebP), the name takes that format's extension (<see cref="GetNameForStoredType"/>).
     /// <para>
     /// The directory must be one of the container, which must allow directories
     /// (<see cref="BlobManagementErrorCodes.DirectoryNotFound"/>, <see cref="BlobManagementErrorCodes.DirectoriesNotAllowed"/>).
     /// The file is filed before it is inserted, so the row is written once.
     /// </para>
     /// </summary>
-    /// <param name="configureFile">Runs on the new descriptor before it is inserted, whether its bytes are stored or
-    /// shared with a descriptor that has them already: a caller that keeps fields of its own on the file (extra
-    /// properties) sets them here, so the row is written once. It runs while the dedup lock is held, so it does no I/O;
-    /// when it throws, the upload fails and nothing is stored.</param>
+    /// <param name="configureFile">Runs on the new descriptor before it is inserted: a caller that keeps fields of its
+    /// own on the file (extra properties) sets them here, so the row is written once. When it throws, the upload fails
+    /// and its BLOB is deleted again.</param>
     /// <param name="clientId">The OAuth client writing through the file API, recorded on the descriptor.</param>
     /// <param name="id">The id the file takes; <c>null</c> generates one. An upload ticket names its file's id in
     /// advance, and its second use fails on the primary key - after its bytes were stored, which are removed again
@@ -284,116 +253,30 @@ public class FileDescriptorManager : DomainService
             configureFile?.Invoke(file);
         };
 
-        return await StoreOrShareAsync(
+        return await StoreAsync(
             containerName, name, stream, clientId, nameIsAddress: false, place, cancellationToken, id);
     }
 
     /// <summary>
-    /// Buffers, detects and hashes the upload, then shares the BLOB of a live descriptor with the same content or stores
-    /// it (<see cref="StoreAsync"/>), and writes the new descriptor.
-    /// <para>
-    /// The dedup lock for the content is taken before the lookup and held until the current unit of work is over
-    /// (released when it is disposed, after commit or rollback; at the end of this method when there is none). So a
-    /// deletion of the source's last descriptor, which takes the same lock before it removes the BLOB, either ran
-    /// before the lookup - which then misses - or runs after this row is committed and sees it. A unit of work that
-    /// already holds the lock reuses it.
-    /// </para>
-    /// <para>
-    /// When the lock cannot be had within <see cref="LockTimeout"/>, the upload neither fails nor dedups: the
-    /// content is stored as a fresh BLOB that its descriptor does not claim the dedup key for - its name is new, so
-    /// nothing else references it, and it cannot collide with the key's live holder.
-    /// </para>
-    /// </summary>
-    /// <param name="nameIsAddress">Whether an application saves the file under its name, so that its descriptor holds the
-    /// <see cref="FileDescriptor.NameKey"/>.</param>
-    /// <param name="configureFile">Runs on the new descriptor before it is inserted (see <see cref="UploadAsync"/>).</param>
-    /// <param name="id">The new descriptor's id; <c>null</c> generates one.</param>
-    protected virtual async Task<FileDescriptor> StoreOrShareAsync(
-        string containerName,
-        string name,
-        Stream stream,
-        string? clientId,
-        bool nameIsAddress,
-        Action<FileDescriptor>? configureFile,
-        CancellationToken cancellationToken,
-        Guid? id = null)
-    {
-        var maxBytes = BlobStreamBuffering.GetMaxBufferedBytes(BlobContainerConfigurationProvider.Get(containerName));
-        await using var content = await BlobStreamBuffering.CopyToBufferAsync(stream, maxBytes, cancellationToken);
-
-        var mimeType = await MimeTypeDetector.DetectAsync(content, name, cancellationToken);
-        var hash = await ComputeHashAsync(content, cancellationToken);
-
-        var lockName = GetDedupLockName(CurrentTenant.Id, containerName, hash);
-        var (locked, releaseOnReturn) = await AcquireLockAsync(lockName, cancellationToken);
-        try
-        {
-            if (!locked)
-            {
-                Logger.LogWarning(
-                    "Blob Management could not take the dedup lock {LockName} within {Timeout}; the upload to {ContainerName} is stored without dedup.",
-                    lockName, LockTimeout, containerName);
-
-                return await StoreAsync(
-                    containerName, name, content, mimeType, hash, clientId, ownsBlob: false, nameIsAddress,
-                    configureFile, cancellationToken, id);
-            }
-
-            var source = await FindDedupSourceAsync(containerName, hash, cancellationToken);
-            if (source != null)
-            {
-                // The bytes already have a home: nothing is stored, the new row shares it - and its type, which an
-                // uploaded file's name follows.
-                var sharedName = nameIsAddress ? name : GetNameForStoredType(name, mimeType, source.MimeType);
-                var shared = new FileDescriptor(
-                    id ?? GuidGenerator.Create(), containerName, sharedName, source.BlobName, source.MimeType, source.Size, hash,
-                    ownsBlob: false, clientId, CurrentTenant.Id, nameIsAddress);
-                configureFile?.Invoke(shared);
-                return await FileDescriptorRepository.InsertAsync(shared, autoSave: true, cancellationToken);
-            }
-
-            return await StoreAsync(
-                containerName, name, content, mimeType, hash, clientId, ownsBlob: true, nameIsAddress,
-                configureFile, cancellationToken, id);
-        }
-        finally
-        {
-            if (releaseOnReturn != null)
-            {
-                await releaseOnReturn.DisposeAsync();
-            }
-        }
-    }
-
-    /// <summary>
     /// Deletes the descriptor (soft) in the current unit of work, then - once that unit of work has committed - its
-    /// BLOB, unless another live descriptor still names it.
+    /// BLOB.
     /// <para>
-    /// The descriptor first gives up its dedup and name keys, so the deleted row keeps neither the same bytes nor the
-    /// same name from being stored again. The BLOB step is registered with <c>IUnitOfWork.OnCompleted</c>, which runs
-    /// only after a successful commit: a rollback brings the row back with its bytes. Without a unit of work it runs
-    /// at once.
+    /// The descriptor first gives up its name key, so the deleted row does not keep the name from being saved again.
+    /// The BLOB step is registered with <c>IUnitOfWork.OnCompleted</c>, which runs only after a successful commit: a
+    /// rollback brings the row back with its bytes. Without a unit of work it runs at once.
     /// </para>
     /// <para>
-    /// That step takes the dedup lock for the content (unless the completing unit of work holds it already, as when an
-    /// override stored identical content), then asks, in a unit of work of its own, whether a live descriptor still
-    /// names the BLOB. An uploader that found this descriptor as its dedup source holds the lock until its own row is
-    /// committed or rolled back, so the check sees that row or its absence - never a row about to name bytes that are
-    /// gone.
-    /// </para>
-    /// <para>
-    /// The step is best-effort: a failure or a lock timeout is logged and leaves an unreferenced BLOB - unreachable
-    /// bytes, never lost data - and does not surface to a request whose transaction already committed. ABP's BLOB
-    /// containers cannot be enumerated, so reclaiming such orphans belongs to tooling on the concrete storage backend.
+    /// The step is best-effort: a failure is logged and leaves an unreferenced BLOB - unreachable bytes, never lost
+    /// data - and does not surface to a request whose transaction already committed. ABP's BLOB containers cannot be
+    /// enumerated, so reclaiming such orphans belongs to tooling on the concrete storage backend.
     /// </para>
     /// </summary>
     public virtual async Task DeleteAsync(FileDescriptor file, CancellationToken cancellationToken = default)
     {
-        if (file.DedupKey != null || file.NameKey != null)
+        if (file.NameKey != null)
         {
             // Saved on its own: ABP's EF Core soft delete reloads the row before it marks it deleted, which would
             // discard a change made in the same save.
-            file.ReleaseDedupKey();
             file.ReleaseNameKey();
             await FileDescriptorRepository.UpdateAsync(file, autoSave: true, cancellationToken);
         }
@@ -404,16 +287,15 @@ public class FileDescriptorManager : DomainService
         var tenantId = file.TenantId;
         var containerName = file.ContainerName;
         var blobName = file.BlobName;
-        var hash = file.Hash;
 
         var unitOfWork = UnitOfWorkManager.Current;
         if (unitOfWork == null)
         {
-            await DeleteBlobIfUnusedAsync(tenantId, containerName, blobName, hash, completingUnitOfWork: null);
+            await DeleteBlobAsync(tenantId, containerName, blobName);
             return;
         }
 
-        unitOfWork.OnCompleted(() => DeleteBlobIfUnusedAsync(tenantId, containerName, blobName, hash, unitOfWork));
+        unitOfWork.OnCompleted(() => DeleteBlobAsync(tenantId, containerName, blobName));
     }
 
     /// <summary>
@@ -521,25 +403,22 @@ public class FileDescriptorManager : DomainService
     }
 
     /// <summary>
-    /// The live public files kept by id in <paramref name="containerName"/> whose physical BLOB is
-    /// <paramref name="blobName"/>, by id, at most <paramref name="maxResultCount"/> of them: the public address of a
-    /// file kept by id names its BLOB, since its name need not be unique, so files kept by id that hold the same bytes
-    /// share it, and it answers while one of them is public. They share the bytes, the type and the size, not the name.
-    /// A file saved under a name has its name as its address, and does not open this one.
+    /// The live, confirmed public file kept by id in <paramref name="containerName"/> whose physical BLOB is
+    /// <paramref name="blobName"/>, or <c>null</c>: the public address of a file kept by id names its BLOB, since its
+    /// name need not be unique. A file saved under a name has its name as its address, and does not open this one.
     /// </summary>
-    public virtual async Task<List<FileDescriptor>> GetPublicListByBlobNameAsync(
+    public virtual async Task<FileDescriptor?> FindPublicByBlobNameAsync(
         string containerName,
         string blobName,
-        int maxResultCount,
         CancellationToken cancellationToken = default)
     {
         GetBlobManagementContainerConfiguration(containerName);
         if (blobName.IsNullOrWhiteSpace())
         {
-            return new List<FileDescriptor>();
+            return null;
         }
 
-        return await FileDescriptorRepository.GetPublicListByBlobNameAsync(containerName, blobName, maxResultCount, cancellationToken);
+        return await FileDescriptorRepository.FindPublicByBlobNameAsync(containerName, blobName, cancellationToken);
     }
 
     /// <summary>The bytes of <paramref name="file"/>, or <c>null</c> when its BLOB is missing from storage.</summary>
@@ -592,33 +471,52 @@ public class FileDescriptorManager : DomainService
         }
     }
 
-    /// <summary>A live descriptor whose bytes an upload hashing to <paramref name="hash"/> can share.</summary>
-    protected virtual Task<FileDescriptor?> FindDedupSourceAsync(
-        string containerName,
-        string hash,
-        CancellationToken cancellationToken)
-    {
-        return FileDescriptorRepository.FindByHashAsync(containerName, hash, cancellationToken);
-    }
-
     /// <summary>
-    /// Saves the content under a new BLOB name and writes the descriptor for it - holding the dedup key when
-    /// <paramref name="ownsBlob"/>, which is not the case when the dedup lock could not be taken.
-    /// <paramref name="configureFile"/> runs on the descriptor before it is inserted (see <see cref="UploadAsync"/>).
+    /// Buffers, detects and hashes the upload, saves it under a new BLOB name and writes its descriptor.
+    /// <para>
+    /// The upload is copied once into memory, capped at what the container's pipeline enforces (its <c>MaxSize</c>
+    /// contributor, else <see cref="BlobStoringPipelineConsts.DefaultMaxBufferedBytes"/>), so an oversized upload fails
+    /// with <c>Dignite.Abp.BlobStoring:ContentTooLarge</c> before anything is stored. Its type is detected from the
+    /// bytes and reconciled with the extension of <paramref name="name"/>
+    /// (<c>Dignite.Abp.BlobStoring:ContentTypeMismatch</c>), and it is hashed (SHA-256, upper-case hex).
+    /// </para>
+    /// <para>
+    /// The tenant's allocation is checked next: content is refused when it would take the tenant past its storage size
+    /// (<see cref="BlobManagementErrorCodes.StorageQuotaExceeded"/>, measured by the upload's length, see
+    /// <see cref="BlobManagementUsageManager"/>).
+    /// </para>
+    /// <para>
+    /// Then the BLOB is saved under a new name (<see cref="CreateBlobName"/>) without overwriting - the contributors run
+    /// here and may reject the upload - and the descriptor is written with <c>autoSave</c>. A failed write - a unique
+    /// key, the primary key, <paramref name="configureFile"/> throwing - deletes the BLOB again.
+    /// </para>
+    /// <para>
+    /// A container may store content in another format than it was uploaded in - the images preset stores a JPEG as
+    /// WebP. The physical BLOB is named for the stored type, which the container declares (<see cref="GetStoredMimeType"/>),
+    /// and the descriptor records the type and size of the stored bytes; for a file addressed by its name,
+    /// <paramref name="name"/> is kept.
+    /// </para>
     /// </summary>
+    /// <param name="nameIsAddress">Whether an application saves the file under its name, so that its descriptor holds the
+    /// <see cref="FileDescriptor.NameKey"/>.</param>
+    /// <param name="configureFile">Runs on the new descriptor before it is inserted (see <see cref="UploadAsync"/>).</param>
+    /// <param name="id">The new descriptor's id; <c>null</c> generates one.</param>
     protected virtual async Task<FileDescriptor> StoreAsync(
         string containerName,
         string name,
-        Stream content,
-        string mimeType,
-        string hash,
+        Stream stream,
         string? clientId,
-        bool ownsBlob,
         bool nameIsAddress,
         Action<FileDescriptor>? configureFile,
         CancellationToken cancellationToken,
         Guid? id = null)
     {
+        var maxBytes = BlobStreamBuffering.GetMaxBufferedBytes(BlobContainerConfigurationProvider.Get(containerName));
+        await using var content = await BlobStreamBuffering.CopyToBufferAsync(stream, maxBytes, cancellationToken);
+
+        var mimeType = await MimeTypeDetector.DetectAsync(content, name, cancellationToken);
+        var hash = await ComputeHashAsync(content, cancellationToken);
+
         // Taken before the save: the content belongs to the pipeline while it runs.
         var uploadLength = content.Length;
         await UsageManager.CheckCanStoreAsync(uploadLength, cancellationToken);
@@ -647,10 +545,10 @@ public class FileDescriptorManager : DomainService
 
             var descriptor = new FileDescriptor(
                 id ?? GuidGenerator.Create(), containerName, storedName, blobName, storedType, size, hash,
-                ownsBlob, clientId, CurrentTenant.Id, nameIsAddress);
+                clientId, CurrentTenant.Id, nameIsAddress);
             configureFile?.Invoke(descriptor);
 
-            // A unique-key violation (the dedup key or the name key) fails here too, and the BLOB goes with it - as it
+            // A unique-key violation (the name key, the primary key) fails here too, and the BLOB goes with it - as it
             // does when configureFile throws.
             return await FileDescriptorRepository.InsertAsync(descriptor, autoSave: true, cancellationToken);
         }
@@ -784,70 +682,26 @@ public class FileDescriptorManager : DomainService
     }
 
     /// <summary>
-    /// The step of <see cref="DeleteAsync"/> that runs after commit: deletes the BLOB when no live descriptor names it,
-    /// under the dedup lock for <paramref name="hash"/>. <paramref name="completingUnitOfWork"/> is the unit of work
-    /// whose completion runs it - when it holds the lock already, the lock is not taken again.
+    /// The step of <see cref="DeleteAsync"/> that runs after commit: deletes the deleted descriptor's BLOB, in its
+    /// tenant, on a bounded token of its own - the request's may be cancelled, or gone, by now.
     /// </summary>
-    protected virtual async Task DeleteBlobIfUnusedAsync(
-        Guid? tenantId,
-        string containerName,
-        string blobName,
-        string hash,
-        IUnitOfWork? completingUnitOfWork)
+    protected virtual async Task DeleteBlobAsync(Guid? tenantId, string containerName, string blobName)
     {
-        // Its own bounded token, as compensation has: the request's may be cancelled, or gone, by now. Long enough to
-        // wait for the lock and then delete.
-        using var cleanup = new CancellationTokenSource(LockTimeout + CompensationTimeout);
+        using var cleanup = new CancellationTokenSource(CompensationTimeout);
         try
         {
             using (CurrentTenant.Change(tenantId))
             {
-                var lockName = GetDedupLockName(tenantId, containerName, hash);
-
-                IAbpDistributedLockHandle? handle = null;
-                if (completingUnitOfWork == null || !IsLockHeldBy(completingUnitOfWork, lockName))
-                {
-                    handle = await TryAcquireLockAsync(lockName, cleanup.Token);
-                    if (handle == null)
-                    {
-                        Logger.LogWarning(
-                            "Blob Management could not take the dedup lock {LockName} within {Timeout}; the BLOB {BlobName} in {ContainerName} is left in storage.",
-                            lockName, LockTimeout, blobName, containerName);
-                        return;
-                    }
-                }
-
-                await using (handle)
-                {
-                    bool inUse;
-                    // A unit of work of its own: the completing one has committed and may not be used for more work.
-                    using (var unitOfWork = UnitOfWorkManager.Begin(requiresNew: true, isTransactional: false))
-                    {
-                        inUse = await FileDescriptorRepository.IsBlobInUseAsync(containerName, blobName, cleanup.Token);
-                        await unitOfWork.CompleteAsync(cleanup.Token);
-                    }
-
-                    if (inUse)
-                    {
-                        return;
-                    }
-
-                    await BlobContainerFactory.Create(containerName).DeleteAsync(blobName, cleanup.Token);
-                }
+                await BlobContainerFactory.Create(containerName).DeleteAsync(blobName, cleanup.Token);
             }
         }
         catch (Exception exception)
         {
             Logger.LogWarning(
                 exception,
-                "Blob Management could not delete the BLOB {BlobName} in {ContainerName} after its last descriptor was deleted; it is left in storage.",
+                "Blob Management could not delete the BLOB {BlobName} in {ContainerName} after its descriptor was deleted; it is left in storage.",
                 blobName, containerName);
         }
-    }
-
-    protected virtual string GetDedupLockName(Guid? tenantId, string containerName, string hash)
-    {
-        return DedupLockName + FileDescriptor.CreateDedupKey(tenantId, containerName, hash);
     }
 
     protected virtual string GetNameLockName(Guid? tenantId, string containerName, string name)

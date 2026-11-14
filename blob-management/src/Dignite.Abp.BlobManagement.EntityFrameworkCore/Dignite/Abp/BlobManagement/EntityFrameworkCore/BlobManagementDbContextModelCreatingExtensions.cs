@@ -21,26 +21,18 @@ public static class BlobManagementDbContextModelCreatingExtensions
             b.Property(f => f.BlobName).IsRequired().HasMaxLength(FileDescriptorConsts.MaxBlobNameLength);
             b.Property(f => f.MimeType).IsRequired().HasMaxLength(FileDescriptorConsts.MaxMimeTypeLength);
             b.Property(f => f.Hash).IsRequired().HasMaxLength(FileDescriptorConsts.MaxHashLength);
-            b.Property(f => f.DedupKey).HasMaxLength(FileDescriptorConsts.MaxDedupKeyLength);
             b.Property(f => f.ClientId).HasMaxLength(FileDescriptorConsts.MaxClientIdLength);
-
-            // Content dedup's arbiter (FileDescriptorManager.CreateAsync): one live writer per tenant, container and
-            // hash. A plain unique index on a nullable column, not a filtered one, so it works on every EF Core
-            // provider: only the live writer of a BLOB carries a key, and rows without one do not collide (EF Core adds
-            // the IS NOT NULL filter on SQL Server by itself).
-            b.HasIndex(f => f.DedupKey).IsUnique();
 
             b.Property(f => f.NameKey).HasMaxLength(FileDescriptorConsts.MaxNameKeyLength);
             // The address of a file an application saved, as an arbiter (FileDescriptorManager.CreateAsync): one live
-            // descriptor per tenant, container and name. Plain unique on a nullable column for the same reason as the
-            // dedup key: only live descriptors addressed by their name carry one.
+            // descriptor per tenant, container and name. A plain unique index on a nullable column, not a filtered one,
+            // so it works on every EF Core provider: only live descriptors addressed by their name carry a key, and rows
+            // without one do not collide (EF Core adds the IS NOT NULL filter on SQL Server by itself).
             b.HasIndex(f => f.NameKey).IsUnique();
 
             // The address of a file an application saved: the provider reads, overwrites and deletes by name.
             b.HasIndex(f => new { f.TenantId, f.ContainerName, f.Name });
-            // The dedup lookup.
-            b.HasIndex(f => new { f.TenantId, f.ContainerName, f.Hash });
-            // "Does anything still use this BLOB" - asked on every delete.
+            // The public address of a file kept by id: its BLOB.
             b.HasIndex(f => new { f.TenantId, f.ContainerName, f.BlobName });
             // The listing of one place: a container's top, or a directory.
             b.HasIndex(f => new { f.TenantId, f.ContainerName, f.DirectoryId });

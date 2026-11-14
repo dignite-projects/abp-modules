@@ -20,7 +20,7 @@ namespace Dignite.Abp.BlobManagement.Uploads;
 /// anonymous principal, in the ticket's tenant).
 /// <para>
 /// The file is stored as any file kept by id is (<see cref="FileDescriptorManager.UploadAsync"/>): the container's
-/// pipeline contributors run, the tenant's allocation is checked, the bytes are deduplicated. It is pending until its
+/// pipeline contributors run, the tenant's allocation is checked. It is pending until its
 /// business system confirms it. A ticket is used once: its file's id is given, and a second upload collides with the
 /// first one's row - deleted rows included - and is refused before anything is stored; two at the same moment are
 /// settled by the primary key, and the loser's bytes are removed again.

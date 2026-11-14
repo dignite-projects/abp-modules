@@ -19,16 +19,6 @@ public static class BlobManagementMongoDbContextExtensions
             {
                 var keys = Builders<BsonDocument>.IndexKeys;
 
-                // Content dedup's arbiter: one live writer per tenant, container and hash (the same rule as the EF
-                // Core unique index). Rows without a key - every row but the live writer - are not indexed.
-                indexes.CreateOne(new CreateIndexModel<BsonDocument>(
-                    keys.Ascending(nameof(FileDescriptor.DedupKey)),
-                    new CreateIndexOptions<BsonDocument>
-                    {
-                        Unique = true,
-                        PartialFilterExpression = Builders<BsonDocument>.Filter.Type(nameof(FileDescriptor.DedupKey), BsonType.String)
-                    }));
-
                 // The address of a file an application saved: one live descriptor per tenant, container and name (the
                 // same rule as the EF Core unique index). Uploaded files and deleted rows carry no key and are not
                 // indexed.
@@ -45,11 +35,7 @@ public static class BlobManagementMongoDbContextExtensions
                         .Ascending(nameof(FileDescriptor.ContainerName))
                         .Ascending(nameof(FileDescriptor.Name))));
 
-                indexes.CreateOne(new CreateIndexModel<BsonDocument>(
-                    keys.Ascending(nameof(FileDescriptor.TenantId))
-                        .Ascending(nameof(FileDescriptor.ContainerName))
-                        .Ascending(nameof(FileDescriptor.Hash))));
-
+                // The public address of a file kept by id: its BLOB.
                 indexes.CreateOne(new CreateIndexModel<BsonDocument>(
                     keys.Ascending(nameof(FileDescriptor.TenantId))
                         .Ascending(nameof(FileDescriptor.ContainerName))

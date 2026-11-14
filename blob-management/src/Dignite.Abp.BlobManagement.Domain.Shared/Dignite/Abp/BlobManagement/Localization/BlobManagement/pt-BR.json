@@ -46,14 +46,12 @@
     "Usage": "Uso",
     "Usage:StoredOfAllocation": "{0} de {1} armazenados",
     "Usage:Stored": "Armazenado",
-    "Usage:Uploaded": "Enviado",
     "Usage:Files": "Arquivos",
     "Usage:Containers": "Contêineres",
     "Usage:Users": "Usuários",
     "Usage:Clients": "Clientes",
     "Usage:NoUser": "Nenhum usuário",
     "Usage:InProcess": "Nenhum cliente (armazenado no processo)",
-    "Usage:Hint": "“Armazenado” conta cada conteúdo uma única vez. “Enviado” conta cada arquivo; um conteúdo guardado duas vezes é contado duas vezes, e estes números não somam o total armazenado.",
     "PublicReadSizeNotAllowed": "{0} deve ser um dos seguintes valores: {1}."
   }
 }

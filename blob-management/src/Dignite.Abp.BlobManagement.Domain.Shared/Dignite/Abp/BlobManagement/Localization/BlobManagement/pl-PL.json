@@ -46,14 +46,12 @@
     "Usage": "Wykorzystanie",
     "Usage:StoredOfAllocation": "Zapisano {0} z {1}",
     "Usage:Stored": "Zapisano",
-    "Usage:Uploaded": "Przesłano",
     "Usage:Files": "Pliki",
     "Usage:Containers": "Kontenery",
     "Usage:Users": "Użytkownicy",
     "Usage:Clients": "Klienci",
     "Usage:NoUser": "Brak użytkownika",
     "Usage:InProcess": "Brak klienta (zapisano w procesie)",
-    "Usage:Hint": "„Zapisano” liczy każdą zawartość raz. „Przesłano” liczy każdy plik, więc zawartość przechowywana dwukrotnie jest liczona dwukrotnie, a te wartości nie sumują się do łącznej zapisanej ilości.",
     "PublicReadSizeNotAllowed": "{0} musi być jedną z wartości: {1}."
   }
 }

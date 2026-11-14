@@ -44,34 +44,27 @@ public abstract class UploadedFiles_Tests<TStartupModule> : BlobManagementDomain
     }
 
     [Fact]
-    public async Task Same_Content_Should_Share_One_Blob()
+    public async Task Same_Content_Should_Be_Stored_For_Each_File()
     {
-        var content = "shared content " + Guid.NewGuid();
+        var content = "same content " + Guid.NewGuid();
 
         var first = await UploadAsync(BlobManagementTestContainers.Documents, "a.pdf", content);
         var second = await UploadAsync(BlobManagementTestContainers.Documents, "b.pdf", content);
 
-        second.BlobName.ShouldBe(first.BlobName);
-        second.OwnsBlob().ShouldBeFalse();
+        second.BlobName.ShouldNotBe(first.BlobName);
+        second.Hash.ShouldBe(first.Hash);
     }
 
     [Fact]
-    public async Task A_Callback_Should_Set_Fields_Before_The_Row_Is_Inserted_When_Storing_And_When_Sharing()
+    public async Task A_Callback_Should_Set_Fields_Before_The_Row_Is_Inserted()
     {
         var content = "configured " + Guid.NewGuid();
 
         var stored = await UploadAsync(BlobManagementTestContainers.Documents, "first.pdf", content, configureFile: file => file.SetProperty("Test:Marker", "stored"));
-        var shared = await UploadAsync(BlobManagementTestContainers.Documents, "second.pdf", content, configureFile: file => file.SetProperty("Test:Marker", "shared"));
 
-        stored.OwnsBlob().ShouldBeTrue();
-        shared.OwnsBlob().ShouldBeFalse();
-        shared.BlobName.ShouldBe(stored.BlobName);
-
-        // Read back: the values were in the inserted rows, which nothing updated.
+        // Read back: the value was in the inserted row, which nothing updated.
         (await WithUnitOfWorkAsync(() => _fileRepository.GetAsync(stored.Id))).GetProperty<string>("Test:Marker").ShouldBe("stored");
-        (await WithUnitOfWorkAsync(() => _fileRepository.GetAsync(shared.Id))).GetProperty<string>("Test:Marker").ShouldBe("shared");
         stored.LastModificationTime.ShouldBeNull();
-        shared.LastModificationTime.ShouldBeNull();
     }
 
     [Fact]

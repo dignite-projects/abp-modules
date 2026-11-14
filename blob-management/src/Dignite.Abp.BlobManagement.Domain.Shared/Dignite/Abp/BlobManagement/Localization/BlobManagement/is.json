@@ -46,14 +46,12 @@
     "Usage": "Notkun",
     "Usage:StoredOfAllocation": "{0} af {1} geymt",
     "Usage:Stored": "Geymt",
-    "Usage:Uploaded": "Hlaðið upp",
     "Usage:Files": "Skrár",
     "Usage:Containers": "Gámar",
     "Usage:Users": "Notendur",
     "Usage:Clients": "Biðlarar",
     "Usage:NoUser": "Enginn notandi",
     "Usage:InProcess": "Enginn biðlari (geymt innan ferlis)",
-    "Usage:Hint": "„Geymt“ telur hvert efni einu sinni. „Hlaðið upp“ telur hverja skrá, þannig að efni sem er geymt tvisvar er talið tvisvar og þessar tölur leggjast ekki saman í heildarmagnið sem er geymt.",
     "PublicReadSizeNotAllowed": "{0} verður að vera eitt af eftirfarandi: {1}."
   }
 }

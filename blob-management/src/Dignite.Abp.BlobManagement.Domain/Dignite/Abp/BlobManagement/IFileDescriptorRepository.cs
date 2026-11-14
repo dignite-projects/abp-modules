@@ -20,29 +20,22 @@ public interface IFileDescriptorRepository : IBasicRepository<FileDescriptor, Gu
         string name,
         CancellationToken cancellationToken = default);
 
-    /// <summary>A live descriptor whose upload hashed to <paramref name="hash"/>, if any - the source of a dedup.</summary>
-    Task<FileDescriptor?> FindByHashAsync(
-        string containerName,
-        string hash,
-        CancellationToken cancellationToken = default);
-
     /// <summary>
-    /// The bytes the current tenant stores: the <see cref="FileDescriptor.Size"/> of each physical BLOB named by a live
-    /// descriptor, counted once however many descriptors share it.
+    /// The bytes the current tenant stores: the sum of the <see cref="FileDescriptor.Size"/> of its live descriptors,
+    /// each of which has a BLOB of its own.
     /// </summary>
     Task<long> GetUsedStorageSizeAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// The stored bytes and the files of each container that holds any, in the current tenant: stored bytes as
-    /// <see cref="GetUsedStorageSizeAsync"/> counts them, so they add up to it - content is shared within a container
-    /// only.
+    /// The stored bytes and the files of each container that holds any, in the current tenant; they add up to
+    /// <see cref="GetUsedStorageSizeAsync"/>.
     /// </summary>
     Task<List<BlobManagementContainerUsage>> GetContainerUsagesAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// The uploaded bytes of each user files are counted for (<see cref="FileDescriptor.CreatorId"/>; <c>null</c>
+    /// The stored bytes of each user files are counted for (<see cref="FileDescriptor.CreatorId"/>; <c>null</c>
     /// gathers the files counted for none), the largest first, a page at a time - in one container, or with
-    /// <c>null</c> in all. Uploaded bytes are the sizes of the descriptors, shared content counted for each.
+    /// <c>null</c> in all.
     /// </summary>
     Task<List<BlobManagementCreatorUsage>> GetCreatorUsagesAsync(
         string? containerName,
@@ -54,7 +47,7 @@ public interface IFileDescriptorRepository : IBasicRepository<FileDescriptor, Gu
     Task<long> GetCreatorCountAsync(string? containerName, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// The uploaded bytes of each client (<see cref="FileDescriptor.ClientId"/>; <c>null</c> gathers the files stored
+    /// The stored bytes of each client (<see cref="FileDescriptor.ClientId"/>; <c>null</c> gathers the files stored
     /// in process), the largest first - in one container, or with <c>null</c> in all.
     /// </summary>
     Task<List<BlobManagementClientUsage>> GetClientUsagesAsync(
@@ -62,19 +55,10 @@ public interface IFileDescriptorRepository : IBasicRepository<FileDescriptor, Gu
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// The live, confirmed public descriptors kept by id (no name key) of the container whose physical BLOB is
-    /// <paramref name="blobName"/>, by id, at most <paramref name="maxResultCount"/> of them - the public address of a
-    /// file kept by id names its BLOB. Descriptors that share the BLOB share its bytes, type and size, and nothing
-    /// else: a caller that answers for the address asks for two, to know whether the one it got is the only one.
+    /// The live, confirmed public descriptor kept by id (no name key) of the container whose physical BLOB is
+    /// <paramref name="blobName"/>, if any - the public address of a file kept by id names its BLOB.
     /// </summary>
-    Task<List<FileDescriptor>> GetPublicListByBlobNameAsync(
-        string containerName,
-        string blobName,
-        int maxResultCount,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>Whether a live descriptor names <paramref name="blobName"/> as its physical BLOB.</summary>
-    Task<bool> IsBlobInUseAsync(
+    Task<FileDescriptor?> FindPublicByBlobNameAsync(
         string containerName,
         string blobName,
         CancellationToken cancellationToken = default);

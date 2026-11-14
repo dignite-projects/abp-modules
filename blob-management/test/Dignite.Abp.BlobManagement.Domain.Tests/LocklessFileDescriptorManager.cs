@@ -7,7 +7,7 @@ using Volo.Abp.DistributedLocking;
 namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
-/// A <see cref="FileDescriptorManager"/> that never gets a lock - the dedup lock, the name lock - as when another holder keeps it past the
+/// A <see cref="FileDescriptorManager"/> that never gets the name lock, as when another holder keeps it past the
 /// timeout. Registered by convention as itself only, so it does not replace the real manager.
 /// </summary>
 public class LocklessFileDescriptorManager : FileDescriptorManager

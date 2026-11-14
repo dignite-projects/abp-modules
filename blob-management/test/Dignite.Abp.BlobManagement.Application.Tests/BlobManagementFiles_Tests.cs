@@ -315,50 +315,52 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
         using (GetRequiredService<ICurrentTenant>().Change(tenantId))
         {
             await GrantAsync(_admin, BlobManagementPermissions.Containers.Default);
-            var shared = BlobManagementTestFiles.Pdf("shared " + Guid.NewGuid());
+            var same = BlobManagementTestFiles.Pdf("same " + Guid.NewGuid());
             var other = BlobManagementTestFiles.Pdf("other " + Guid.NewGuid() + new string('x', 200));
 
-            // Alice and Bob keep the same bytes in one container; Bob keeps another file in another.
-            await StoreAsync(BlobManagementTestContainers.Documents, "alice.pdf", shared, _alice);
-            await StoreAsync(BlobManagementTestContainers.Documents, "bob.pdf", shared, _bob);
+            // Alice and Bob keep the same bytes in one container, each in a file of their own; Bob keeps another file
+            // in another.
+            await StoreAsync(BlobManagementTestContainers.Documents, "alice.pdf", same, _alice);
+            await StoreAsync(BlobManagementTestContainers.Documents, "bob.pdf", same, _bob);
             await StoreAsync(BlobManagementTestContainers.Files, "bob-too.pdf", other, _bob);
 
             using (As(_admin))
             {
                 var usage = await _usage.GetAsync();
-                usage.StoredBytes.ShouldBe(shared.Length + other.Length);
+                usage.StoredBytes.ShouldBe(2L * same.Length + other.Length);
                 usage.StorageSize.ShouldBe(5L * 1024 * 1024);
                 usage.FileCount.ShouldBe(3);
 
                 // Every managed container has a row, the empty ones too, and they add up to the tenant.
                 var documents = usage.Containers.Single(c => c.ContainerName == BlobManagementTestContainers.Documents);
-                documents.StoredBytes.ShouldBe(shared.Length);
+                documents.StoredBytes.ShouldBe(2L * same.Length);
                 documents.FileCount.ShouldBe(2);
                 usage.Containers.Single(c => c.ContainerName == BlobManagementTestContainers.Files).StoredBytes.ShouldBe(other.Length);
                 usage.Containers.Single(c => c.ContainerName == BlobManagementTestContainers.Archive).StoredBytes.ShouldBe(0);
                 usage.Containers.Select(c => c.ContainerName).ShouldNotContain(BlobManagementTestContainers.NotManaged);
                 usage.Containers.Sum(c => c.StoredBytes).ShouldBe(usage.StoredBytes);
 
-                // A user is counted for each of their files: the shared bytes count for both.
+                // A user is counted for each of their files, and the users add up to the tenant.
                 var users = await _usage.GetUsersAsync(new GetBlobManagementUserUsagesInput());
                 users.TotalCount.ShouldBe(2);
                 users.Items.Select(u => u.UserId).ShouldBe(new Guid?[] { _bob, _alice });
-                users.Items[0].UploadedBytes.ShouldBe(shared.Length + other.Length);
+                users.Items[0].StoredBytes.ShouldBe(same.Length + other.Length);
                 users.Items[0].FileCount.ShouldBe(2);
-                users.Items[1].UploadedBytes.ShouldBe(shared.Length);
+                users.Items[1].StoredBytes.ShouldBe(same.Length);
+                users.Items.Sum(u => u.StoredBytes).ShouldBe(usage.StoredBytes);
                 // This host has no user lookup: a user is told by id.
                 users.Items[0].UserName.ShouldBeNull();
 
                 var inDocuments = await _usage.GetUsersAsync(
                     new GetBlobManagementUserUsagesInput { ContainerName = BlobManagementTestContainers.Documents, MaxResultCount = 1 });
                 inDocuments.TotalCount.ShouldBe(2);
-                inDocuments.Items.ShouldHaveSingleItem().UploadedBytes.ShouldBe(shared.Length);
+                inDocuments.Items.ShouldHaveSingleItem().StoredBytes.ShouldBe(same.Length);
 
                 // Stored in process: by no client.
                 var clients = await _usage.GetClientsAsync(new GetBlobManagementClientUsagesInput());
                 var inProcess = clients.Items.ShouldHaveSingleItem();
                 inProcess.ClientId.ShouldBeNull();
-                inProcess.UploadedBytes.ShouldBe(2L * shared.Length + other.Length);
+                inProcess.StoredBytes.ShouldBe(2L * same.Length + other.Length);
                 inProcess.FileCount.ShouldBe(3);
             }
         }
@@ -464,53 +466,37 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
     }
 
     /// <summary>
-    /// Files that hold the same bytes share one BLOB, and so one address. It does not say which of them it was handed
-    /// out for, so it answers with no file's name while there are several - not with the name another file was given.
+    /// Files kept by id that hold the same bytes have a BLOB each, and so an address each: it answers with its own
+    /// file's name, and only while that file is public. A file that is not public has no address to hand out.
     /// </summary>
     [Fact]
-    public async Task A_Public_Address_Shared_By_Several_Files_Should_Answer_With_No_Files_Name()
+    public async Task Each_Public_File_Should_Have_An_Address_Of_Its_Own()
     {
-        var bytes = BlobManagementTestFiles.Pdf("shared " + Guid.NewGuid());
-        var first = await StoreAsync(BlobManagementTestContainers.Files, "contract-acme.pdf", bytes, isPublic: true);
-        var second = await StoreAsync(BlobManagementTestContainers.Files, "doc.pdf", bytes, isPublic: true);
-
-        second.Url.ShouldBe(first.Url);
-        var blobName = first.Url!.Split('/').Last();
-
-        var publicFiles = GetRequiredService<IBlobManagementPublicAppService>();
-        var shared = await publicFiles.ReadAsync(
-            BlobManagementTestContainers.Files, blobName, new BlobManagementPublicReadInput(), new BlobManagementPublicReadRequest());
-        shared.File.Name.ShouldBe(blobName);
-        shared.Content!.FileName.ShouldBe(blobName);
-        (await ReadAsync(shared.Content)).ShouldBe(bytes);
-
-        // Once a single file has the BLOB, the address is that file's again - and it answered all along.
-        await _files.DeleteAsync(first.Id);
-        (await publicFiles.ReadAsync(BlobManagementTestContainers.Files, blobName, new BlobManagementPublicReadInput(), HeadersOnly()))
-            .File.Name.ShouldBe("doc.pdf");
-    }
-
-    /// <summary>
-    /// Files kept by id that hold the same bytes share one address: it answers while one of them is public, with the
-    /// public one's name, and a file that is not public does not close it - nor has an address of its own to hand out.
-    /// </summary>
-    [Fact]
-    public async Task A_Shared_Address_Should_Answer_While_One_Of_Its_Files_Is_Public()
-    {
-        var bytes = BlobManagementTestFiles.Pdf("one public " + Guid.NewGuid());
+        var bytes = BlobManagementTestFiles.Pdf("same bytes " + Guid.NewGuid());
         var hidden = await StoreAsync(BlobManagementTestContainers.Files, "internal.pdf", bytes);
-        var shown = await StoreAsync(BlobManagementTestContainers.Files, "brochure.pdf", bytes, isPublic: true);
+        var first = await StoreAsync(BlobManagementTestContainers.Files, "contract-acme.pdf", bytes, isPublic: true);
+        var second = await StoreAsync(BlobManagementTestContainers.Files, "brochure.pdf", bytes, isPublic: true);
 
         hidden.Url.ShouldBeNull();
-        var blobName = shown.Url!.Split('/').Last();
+        second.Url.ShouldNotBe(first.Url);
+        var firstBlob = first.Url!.Split('/').Last();
+        var secondBlob = second.Url!.Split('/').Last();
 
         var publicFiles = GetRequiredService<IBlobManagementPublicAppService>();
-        (await publicFiles.ReadAsync(BlobManagementTestContainers.Files, blobName, new BlobManagementPublicReadInput(), HeadersOnly()))
+        var read = await publicFiles.ReadAsync(
+            BlobManagementTestContainers.Files, firstBlob, new BlobManagementPublicReadInput(), new BlobManagementPublicReadRequest());
+        read.File.Name.ShouldBe("contract-acme.pdf");
+        read.Content!.FileName.ShouldBe("contract-acme.pdf");
+        (await ReadAsync(read.Content)).ShouldBe(bytes);
+        (await publicFiles.ReadAsync(BlobManagementTestContainers.Files, secondBlob, new BlobManagementPublicReadInput(), HeadersOnly()))
             .File.Name.ShouldBe("brochure.pdf");
 
-        await _files.SetPublicAsync(shown.Id, new SetBlobManagementFilePublicInput { IsPublic = false });
+        // Closing one file's address leaves the other's open.
+        await _files.SetPublicAsync(first.Id, new SetBlobManagementFilePublicInput { IsPublic = false });
         await Should.ThrowAsync<EntityNotFoundException>(() =>
-            publicFiles.ReadAsync(BlobManagementTestContainers.Files, blobName, new BlobManagementPublicReadInput(), HeadersOnly()));
+            publicFiles.ReadAsync(BlobManagementTestContainers.Files, firstBlob, new BlobManagementPublicReadInput(), HeadersOnly()));
+        (await publicFiles.ReadAsync(BlobManagementTestContainers.Files, secondBlob, new BlobManagementPublicReadInput(), HeadersOnly()))
+            .File.Name.ShouldBe("brochure.pdf");
     }
 
     [Fact]
@@ -628,9 +614,6 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
         var oldBytes = BlobManagementTestFiles.Png(16, 16, seed: 14);
         var newBytes = BlobManagementTestFiles.Pdf("new " + Guid.NewGuid());
         var old = await StoreSystemFileAsync(name, oldBytes);
-
-        // Shares the old file's BLOB (dedup), so its bytes outlive the overwrite and the read can still serve them.
-        await StoreSystemFileAsync(name + "-keeper", oldBytes);
 
         var reads = GetRequiredService<RacingBlobManagementPublicAppService>();
 

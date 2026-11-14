@@ -10,8 +10,8 @@ public class BlobManagementUserUsageDto
     /// <summary>The user's name, where the host has a user lookup and still knows the user; otherwise <c>null</c>.</summary>
     public string? UserName { get; set; }
 
-    /// <summary>The sizes of the user's files, whether or not they share their bytes with another file.</summary>
-    public long UploadedBytes { get; set; }
+    /// <summary>The sizes of the user's files.</summary>
+    public long StoredBytes { get; set; }
 
     public long FileCount { get; set; }
 }

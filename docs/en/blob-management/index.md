@@ -40,7 +40,6 @@ What every managed container adds to plain BLOB storing:
 
 * a **storage allocation** for each tenant, across every container ([Setting Up](setting-up.md#tenant-storage));
 * **usage figures**: what the tenant, each container, each user and each client store ([Usage](usage.md));
-* **de-duplication**: the same bytes stored twice in a container are kept once;
 * **upload rules** per container, as presets of the [BLOB Storing](../blob-storing/index.md) pipeline contributors ([Presets](setting-up.md#presets));
 * **public read** at `/blobs` with image sizing, for the files an application marks public ([Public Addresses](provider.md#public-addresses));
 * **upload tickets and read links**, so a browser sends or reads a file directly ([Keeping Files by Id](files.md#upload-tickets));
@@ -54,7 +53,7 @@ Blob Management keeps and counts the BLOBs business systems store. It is **not a
 
 Every file has a record, a *file descriptor*: the container, its name, the physical BLOB that holds the bytes, the type detected from the bytes, the size, a SHA-256 hash of what was uploaded, the directory it is in (for a file addressed by id in a container with directories), the tenant, the user it is counted for (`CreatorId`) and the OAuth client that stored it over HTTP (`ClientId`).
 
-* The **physical BLOB** is named by Blob Management - 32 random hexadecimal digits and the extension of the detected type - and several descriptors share one when they hold the same bytes; it is deleted with the last of them.
+* The **physical BLOB** is named by Blob Management - 32 random hexadecimal digits and the extension of the detected type - and is the file's own: two files never share one, even with the same bytes, and it is deleted with its file.
 * The type is **detected from the bytes**, and a name whose extension contradicts the content is refused, before anything is stored.
 * The container's pipeline contributors - its size limit, allowed types, image processing - run when the bytes are stored.
 
@@ -77,7 +76,7 @@ Every file has a record, a *file descriptor*: the container, its name, the physi
 * [Keeping Files by Id](files.md): `IBlobManagementFileService`, what a business system's file library calls, public files, upload tickets and read links, and who a file is counted for.
 * [Hosting Modes](hosting.md): one host, or Blob Management as its own service, and what the second needs - routes, Data Protection, CORS, a CDN.
 * [Directories](directories.md): containers that allow directories, the tree, and the directory API.
-* [Usage](usage.md): stored and uploaded bytes, by tenant, container, user and client.
+* [Usage](usage.md): stored bytes, by tenant, container, user and client.
 * [Permissions](permissions.md): the management permission, grants on a container, and who may do what.
 * [Angular UI](angular-ui.md): the management page and its parts.
 * [Importing a Directory Tree](importing-directories.md): filing existing files into directories by a path they carry.

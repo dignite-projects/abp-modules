@@ -29,12 +29,6 @@ public static class FileDescriptorConsts
     public static int MaxClientIdLength { get; set; } = 128;
 
     /// <summary>
-    /// The dedup key: the tenant (32 hex digits, or <c>host</c>), the container name and the hash, separated by
-    /// colons.
-    /// </summary>
-    public static int MaxDedupKeyLength { get; set; } = 32 + 1 + 64 + 1 + 64;
-
-    /// <summary>
     /// The name key: SHA-256 as upper-case hex, 64 characters. A hash of the address rather than the address itself,
     /// so the unique index stays within every provider's key size whatever the length of the name.
     /// </summary>

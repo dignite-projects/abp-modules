@@ -12,8 +12,8 @@ describe('BlobManagementUsageComponent', () => {
 
   function render(usage: object) {
     get = vi.fn(() => of(usage));
-    getUsers = vi.fn(() => of({ items: [{ userId: 'u1', uploadedBytes: 5, fileCount: 1 }], totalCount: 1 }));
-    getClients = vi.fn(() => of({ items: [{ clientId: null, uploadedBytes: 5, fileCount: 1 }] }));
+    getUsers = vi.fn(() => of({ items: [{ userId: 'u1', storedBytes: 5, fileCount: 1 }], totalCount: 1 }));
+    getClients = vi.fn(() => of({ items: [{ clientId: null, storedBytes: 5, fileCount: 1 }] }));
     TestBed.configureTestingModule({
       imports: [BlobManagementUsageComponent, CoreTestingModule.withConfig()],
       providers: [{ provide: BlobManagementUsageService, useValue: { get, getUsers, getClients } }],

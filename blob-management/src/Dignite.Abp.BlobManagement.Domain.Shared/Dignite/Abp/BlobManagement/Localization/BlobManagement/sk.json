@@ -46,14 +46,12 @@
     "Usage": "Využitie",
     "Usage:StoredOfAllocation": "Uložené {0} z {1}",
     "Usage:Stored": "Uložené",
-    "Usage:Uploaded": "Nahrané",
     "Usage:Files": "Súbory",
     "Usage:Containers": "Kontajnery",
     "Usage:Users": "Používatelia",
     "Usage:Clients": "Klienti",
     "Usage:NoUser": "Žiadny používateľ",
     "Usage:InProcess": "Žiadny klient (uložené v procese)",
-    "Usage:Hint": "„Uložené“ počíta každý obsah raz. „Nahrané“ počíta každý súbor, takže obsah uložený dvakrát sa počíta dvakrát a tieto čísla spolu nedávajú celkové uložené množstvo.",
     "PublicReadSizeNotAllowed": "{0} musí byť jedna z hodnôt: {1}."
   }
 }

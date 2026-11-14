@@ -10,6 +10,9 @@ changes here is the directories of a container, by permissions put on the contai
 process or once as its own service. It is not a cloud drive: no personal drives, no sharing a file with someone
 (ABP's File Management does that; this module does not compete with it).
 
+The module was compared with the open-source storage services in its position (Supabase Storage, Nhost, Appwrite,
+UploadThing and others) in [`dev-docs/peer-comparison.md`](dev-docs/peer-comparison.md) (2026-11-14), and changes in the
+order decided there; the first, done: every file has a BLOB of its own - content is no longer shared between files.
 How a business system integrates is in
 [`dev-docs/business-system-integration-decision.md`](dev-docs/business-system-integration-decision.md) (2026-11-14:
 three layers of credentials - the client token, upload tickets and read links, public addresses; a file, not its
@@ -24,7 +27,7 @@ edition, one kind of container, the names). What they kept of the storage tier w
 
 **What is built**
 
-- Storage: `FileDescriptor`, `FileDescriptorManager` (detect, hash, dedup, save, compensate) and
+- Storage: `FileDescriptor`, `FileDescriptorManager` (detect, hash, save, compensate) and
   `UseBlobManagementContainer`, with EF Core and MongoDB; the tenant allocation (`BlobManagementFeatures`,
   `BlobManagementUsageManager`); the container presets (`Use…Preset`; the images preset stores a JPEG as WebP,
   upright), containers declared in the `BlobManagement` configuration section (`BlobManagementContainerSettings`,
@@ -50,8 +53,8 @@ edition, one kind of container, the names). What they kept of the storage tier w
   `api/blob-management/directories`, authorized by the container (`BlobManagementAccessService`);
   `IBlobManagementContainerAppService` under `/containers`; `DirectoryPathImporter` for an application that migrates
   its own file library in.
-- Usage: `IBlobManagementUsageAppService` under `api/blob-management/usage` - the tenant and each container (stored
-  bytes), each user and each client (uploaded bytes) - on the descriptor repository's usage queries.
+- Usage: `IBlobManagementUsageAppService` under `api/blob-management/usage` - the stored bytes of the tenant, each
+  container, each user and each client - on the descriptor repository's usage queries.
 - `@dignite/ng.blob-management`: the management page (`blob-management-page`, routed by `createRoutes()` behind `BlobManagement.Containers`: usage, then one container
   at a time - its directory tree with its operations, its files read-only), its parts (`blob-usage`, `blob-browser`,
   `blob-directory-tree`, `blob-file-list`, `blob-file-preview`), the proxies, and `provideBlobManagementConfig()` in
@@ -137,13 +140,15 @@ imports the root one, so the lockstep `<Version>` applies.
 5. **Directories exist only where the container allows them** (`AllowDirectories`, default `false`): every directory
    operation elsewhere fails with `BlobManagement:DirectoriesNotAllowed`, and a file there has no directory. A file
    addressed by name is never renamed or moved (`BlobManagement:FileAddressedByName`).
-6. **Every BLOB has a `FileDescriptor`.** Dedup is descriptors sharing one physical BLOB, which is removed with its
-   last descriptor. Usage is computed from this table, in the current tenant, in two measures that are never mixed:
-   **stored bytes** (the tenant, a container: each physical BLOB once; the containers add up to the tenant, and the
-   allocation is checked against it) and **uploaded bytes** (a user, a client: the sizes of their descriptors, shared
-   content counted for each). The allocation is the tenant's only. A file's public address is its name when it is
-   addressed by name, else its physical BLOB name, so renaming or moving never breaks a published link; it answers
-   while a confirmed file that refers to it is public (`IsPublic`, the business system's mark, never the container's).
+6. **Every BLOB has one `FileDescriptor`, and every descriptor its own BLOB.** Two files never share stored bytes, even
+   when they hold the same content: no content dedup, no lock or key for it, no "is this BLOB still in use" - a BLOB is
+   removed with its descriptor, after commit ([`dev-docs/peer-comparison.md`](dev-docs/peer-comparison.md) §1: no
+   peer shares bytes between files, and sharing cost locks, two measures of usage and shared public addresses). Usage
+   is computed from this table, in the current tenant, in one measure, **stored bytes**: the sizes of the descriptors.
+   The containers, the users and the clients each add up to the tenant, and the allocation - the tenant's only - is
+   checked against it. A file's public address is its name when it is addressed by name, else its physical BLOB name,
+   so renaming or moving never breaks a published link; it is that one file's, and answers while the file is
+   confirmed and public (`IsPublic`, the business system's mark, never the container's).
 7. **One installation per deployment environment.** Never two business hosts each installing the module behind one
    gateway.
 8. **Business code depends on the provider package** (plus `Application.Contracts` if it keeps files by id through

@@ -46,14 +46,12 @@
     "Usage": "用量",
     "Usage:StoredOfAllocation": "已存储 {0}，共 {1}",
     "Usage:Stored": "已存储",
-    "Usage:Uploaded": "已上传",
     "Usage:Files": "文件数",
     "Usage:Containers": "容器",
     "Usage:Users": "用户",
     "Usage:Clients": "客户端",
     "Usage:NoUser": "无用户",
     "Usage:InProcess": "无客户端（进程内存储）",
-    "Usage:Hint": "“已存储”对相同内容只计一次。“已上传”按每个文件计，同一内容保存两次就计两次，因此这里的数字加起来不等于已存储的总量。",
     "PublicReadSizeNotAllowed": "{0} 必须是以下之一：{1}。"
   }
 }

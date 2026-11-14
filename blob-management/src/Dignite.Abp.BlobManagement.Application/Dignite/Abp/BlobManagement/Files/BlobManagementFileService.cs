@@ -19,7 +19,7 @@ namespace Dignite.Abp.BlobManagement.Files;
 /// <summary>
 /// The in-process <see cref="IBlobManagementFileService"/>: an application inside Blob Management's own host calls it,
 /// a trusted caller, so it checks no permission and no client - it goes straight to <see cref="FileDescriptorManager"/>,
-/// whose are storing, dedup and the quota. Never exposed over HTTP (<c>RemoteService(IsEnabled = false)</c>, so
+/// whose are storing and the quota. Never exposed over HTTP (<c>RemoteService(IsEnabled = false)</c>, so
 /// conventional controllers skip it); the file API authorizes its remote callers before it reaches the storage. Part of
 /// the tenant's Blob Management: with <see cref="BlobManagementFeatures.Enable"/> off it refuses every call.
 /// </summary>
