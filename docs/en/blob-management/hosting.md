@@ -45,6 +45,33 @@ The management page, the [usage](usage.md) and the [directories](directories.md)
 * **User names**, if the usage by user should show them: ABP's `IExternalUserLookupServiceProvider`, such as the Identity module's HTTP client ([Usage](usage.md#the-api)).
 * **The UI's address.** An Angular application points `apis.BlobManagement` at the service or the gateway ([Angular UI](angular-ui.md#installation)).
 
+## Rate Limits
+
+In either mode, the anonymous addresses - public reads, uploads with a ticket, reads with a link - name ASP.NET Core [rate limiting](https://learn.microsoft.com/aspnet/core/performance/rate-limit) policies, which Blob Management registers. They act where the host runs the limiter after routing:
+
+````csharp
+app.UseRouting();
+app.UseRateLimiter();
+````
+
+A client past a limit is answered `429` with `Retry-After`. The limits are per client address and minute, each address its own, in `BlobManagementRateLimitingOptions`; `0` sets no limit:
+
+| Option | Counts | Default |
+|---|---|---|
+| `RenditionsPerMinute` | Public reads that ask for a size, rendered on the request | 120 |
+| `PublicReadsPerMinute` | Public reads as stored | No limit |
+| `UploadsPerMinute` | Uploads with a ticket | 60 |
+| `ReadLinksPerMinute` | Reads with a link | No limit |
+
+````csharp
+Configure<BlobManagementRateLimitingOptions>(options =>
+{
+    options.RenditionsPerMinute = 300;
+});
+````
+
+Behind a reverse proxy or a CDN, configure ASP.NET Core's [forwarded headers](https://learn.microsoft.com/aspnet/core/host-and-deploy/proxy-load-balancer) so that the client's address is the one counted; otherwise the proxy's is, and everyone behind it shares one limit.
+
 ## Data Protection
 
 Upload tickets and read links are signed and encrypted with ASP.NET Core [Data Protection](https://learn.microsoft.com/aspnet/core/security/data-protection/introduction), and only Blob Management reads them: a business system asks for one and hands it on, and never holds the keys.

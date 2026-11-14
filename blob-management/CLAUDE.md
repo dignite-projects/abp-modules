@@ -13,7 +13,8 @@ process or once as its own service. It is not a cloud drive: no personal drives,
 The module was compared with the open-source storage services in its position (Supabase Storage, Nhost, Appwrite,
 UploadThing and others) in [`dev-docs/peer-comparison.md`](dev-docs/peer-comparison.md) (2026-11-14), and changes in the
 order decided there. Done: every file has a BLOB of its own - content is no longer shared between files; the bytes
-go out through ASP.NET Core's `FileStreamResult`, with ranges.
+go out through ASP.NET Core's `FileStreamResult`, with ranges; the anonymous addresses are rate-limited by ASP.NET
+Core's limiter.
 How a business system integrates is in
 [`dev-docs/business-system-integration-decision.md`](dev-docs/business-system-integration-decision.md) (2026-11-14:
 three layers of credentials - the client token, upload tickets and read links, public addresses; a file, not its
@@ -40,7 +41,10 @@ edition, one kind of container, the names). What they kept of the storage tier w
   (`FileDescriptor.IsPublic`; `BlobManagementPublicController`, `BlobManagementPublicAppService`,
   `IBlobManagementPublicUrlBuilder`). The public read and the read with a link share `BlobManagementFileReadController`:
   conditional and range requests are ASP.NET Core's `FileStreamResult`'s - do not answer them by hand - except a
-  matching `If-None-Match` and a `HEAD`, answered before the bytes are opened.
+  matching `If-None-Match` and a `HEAD`, answered before the bytes are opened. The anonymous addresses - public reads,
+  uploads, links - name ASP.NET Core rate limiting policies (`BlobManagementRateLimiting`,
+  `BlobManagementRateLimiterPolicy`, `BlobManagementRateLimitingOptions`), registered by the HttpApi module and applied
+  where the host runs `app.UseRateLimiter()` after routing.
 - Files by id, for a business system: `IBlobManagementFileService` (list a place, one file, bytes, store, rename,
   move, mark public, delete; upload tickets and confirmation; read links) with its trusted in-process implementation
   (`BlobManagementFileService`), the file API behind it (`IBlobManagementFileAppService`, `api/blob-management/files`:

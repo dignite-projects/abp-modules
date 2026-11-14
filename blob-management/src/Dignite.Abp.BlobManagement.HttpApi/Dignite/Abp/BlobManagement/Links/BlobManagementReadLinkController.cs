@@ -2,7 +2,9 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Dignite.Abp.BlobManagement.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Net.Http.Headers;
 using Volo.Abp;
 using Volo.Abp.Auditing;
@@ -27,6 +29,7 @@ namespace Dignite.Abp.BlobManagement.Links;
 [Route(BlobManagementReadLinkUrl.RoutePrefix)]
 [AllowAnonymous]
 [DisableAuditing]
+[EnableRateLimiting(BlobManagementRateLimiting.ReadLinks)]
 public class BlobManagementReadLinkController : BlobManagementFileReadController
 {
     protected IBlobManagementReadLinkAppService ReadLinkAppService { get; }

@@ -5,7 +5,9 @@ using Dignite.Abp.BlobManagement.Files;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
+using Dignite.Abp.BlobManagement.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Volo.Abp.Auditing;
 using Volo.Abp.Content;
 
@@ -29,6 +31,7 @@ namespace Dignite.Abp.BlobManagement.Uploads;
 [AllowAnonymous]
 [IgnoreAntiforgeryToken]
 [DisableAuditing]
+[EnableRateLimiting(BlobManagementRateLimiting.Uploads)]
 public class BlobManagementUploadController : BlobManagementController
 {
     /// <summary>What a multipart body adds to the file it carries: boundaries and part headers.</summary>
