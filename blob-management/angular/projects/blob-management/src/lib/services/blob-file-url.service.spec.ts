@@ -27,10 +27,12 @@ describe('BlobManagementFileUrlService', () => {
   });
 
   it('rounds a size up to the next one Blob Management serves', () => {
-    expect(toBlobManagementPublicSize(1)).toBe(64);
-    expect(toBlobManagementPublicSize(96)).toBe(128);
-    expect(toBlobManagementPublicSize(128)).toBe(128);
-    expect(toBlobManagementPublicSize(129)).toBe(256);
-    expect(toBlobManagementPublicSize(100000)).toBe(4096);
+    const sizes = [256, 64, 128, 4096];
+    expect(toBlobManagementPublicSize(1, sizes)).toBe(64);
+    expect(toBlobManagementPublicSize(96, sizes)).toBe(128);
+    expect(toBlobManagementPublicSize(128, sizes)).toBe(128);
+    expect(toBlobManagementPublicSize(129, sizes)).toBe(256);
+    expect(toBlobManagementPublicSize(100000, sizes)).toBe(4096);
+    expect(toBlobManagementPublicSize(64, [])).toBeUndefined();
   });
 });

@@ -26,6 +26,12 @@ public class BlobManagementContainerDto : ExtensibleObject
     /// </summary>
     public string[] AllowedFileExtensions { get; set; } = Array.Empty<string>();
 
+    /// <summary>
+    /// The widths and heights a public read of the container's pictures may ask for (<c>?Width=&amp;Height=</c>); any
+    /// other is answered 400. The container's own list, else the host's default.
+    /// </summary>
+    public int[] PublicSizes { get; set; } = Array.Empty<int>();
+
     /// <summary>The width a picture is scaled down to, when the container resizes images.</summary>
     public int? ImageMaxWidth { get; set; }
 

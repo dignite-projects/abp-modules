@@ -57,7 +57,7 @@ public class BlobManagementPublicController : BlobManagementController
         }
         catch (AbpValidationException)
         {
-            // A size outside BlobManagementPublicReadOptions.AllowedSizes, for GET and HEAD alike.
+            // A size outside the container's public sizes, for GET and HEAD alike.
             return BadRequest();
         }
         catch (EntityNotFoundException)

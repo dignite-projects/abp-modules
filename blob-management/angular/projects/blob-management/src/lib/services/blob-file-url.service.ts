@@ -5,14 +5,13 @@ import { Injectable, inject } from '@angular/core';
 export const BLOB_MANAGEMENT_API_NAME = 'BlobManagement';
 
 /**
- * The widths and heights a Blob Management host serves by default (`BlobManagementPublicReadOptions.AllowedSizes`); any other size is
- * answered 400. A host may replace the list, but the UI cannot know it, so it asks only for these.
+ * The smallest of `sizes` that is at least `pixels` (the largest one when `pixels` exceeds them all), or `undefined`
+ * when there are none. `sizes` are the container's public sizes (`BlobManagementContainerDto.publicSizes`): Blob
+ * Management answers any other width or height with 400.
  */
-export const BLOB_MANAGEMENT_PUBLIC_SIZES: readonly number[] = [64, 128, 256, 384, 512, 768, 1024, 1536, 2048, 4096];
-
-/** The smallest allowed size that is at least `pixels` (the largest one when `pixels` exceeds them all). */
-export function toBlobManagementPublicSize(pixels: number): number {
-  return BLOB_MANAGEMENT_PUBLIC_SIZES.find(size => size >= pixels) ?? BLOB_MANAGEMENT_PUBLIC_SIZES[BLOB_MANAGEMENT_PUBLIC_SIZES.length - 1];
+export function toBlobManagementPublicSize(pixels: number, sizes: readonly number[] | null | undefined): number | undefined {
+  const sorted = [...(sizes ?? [])].sort((a, b) => a - b);
+  return sorted.find(size => size >= pixels) ?? sorted[sorted.length - 1];
 }
 
 /**
@@ -42,7 +41,7 @@ export class BlobManagementFileUrlService {
   /**
    * A public picture asked for at a size, so the browser does not load the whole upload for a thumbnail: the Blob Management
    * renders `?Width=&Height=` (cropped to fill when both are set). Any other address is returned as it is.
-   * Pass sizes from `BLOB_MANAGEMENT_PUBLIC_SIZES` (see `toBlobManagementPublicSize`): Blob Management refuses others with 400.
+   * Pass sizes of the file's container (see `toBlobManagementPublicSize`): Blob Management refuses others with 400.
    */
   sized(url: string | null | undefined, width?: number, height?: number): string {
     const absolute = this.toAbsolute(url);

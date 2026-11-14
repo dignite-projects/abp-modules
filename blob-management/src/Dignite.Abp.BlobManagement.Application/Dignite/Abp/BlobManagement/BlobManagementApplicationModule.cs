@@ -41,15 +41,22 @@ public class BlobManagementApplicationModule : AbpModule
     /// </summary>
     private void ConfigureContainersFromConfiguration(ServiceConfigurationContext context)
     {
+        var configuration = context.Services.GetConfiguration();
         var presets = context.Services.ExecutePreConfiguredActions<BlobManagementPresetOptions>();
-        var containers = BlobManagementContainerSettings.Read(context.Services.GetConfiguration(), presets);
-        if (containers.Count == 0)
+        var containers = BlobManagementContainerSettings.Read(configuration, presets);
+        var defaultPublicSizes = BlobManagementContainerSettings.ReadDefaultPublicSizes(configuration);
+        if (containers.Count == 0 && defaultPublicSizes == null)
         {
             return;
         }
 
         Configure<AbpBlobStoringOptions>(options =>
         {
+            if (defaultPublicSizes != null)
+            {
+                options.Containers.ConfigureDefault(container => container.UseBlobManagementPublicSizes(defaultPublicSizes));
+            }
+
             foreach (var container in containers)
             {
                 options.Containers.Configure(container.ContainerName, container.Apply);

@@ -514,6 +514,36 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
     }
 
     [Fact]
+    public async Task A_Container_Should_Serve_Its_Own_Public_Sizes()
+    {
+        var file = await StoreAsync(BlobManagementTestContainers.Avatars, "face.png", BlobManagementTestFiles.Png(100, 100, seed: 41), isPublic: true);
+        var blobName = file.Url!.Split('/').Last();
+        var publicFiles = GetRequiredService<IBlobManagementPublicAppService>();
+
+        (await publicFiles.ReadAsync(BlobManagementTestContainers.Avatars, blobName,
+                new BlobManagementPublicReadInput { Width = 48, Height = 32 }, HeadersOnly()))
+            .File.EntityTag.ShouldEndWith("-48x32");
+
+        // The module's default ladder is not this container's.
+        var refused = await Should.ThrowAsync<AbpValidationException>(() => publicFiles.ReadAsync(
+            BlobManagementTestContainers.Avatars, blobName, new BlobManagementPublicReadInput { Width = 64 }, HeadersOnly()));
+        refused.Message.ShouldContain("32, 48");
+
+        // A container without its own list keeps the default.
+        var other = await StoreAsync(BlobManagementTestContainers.Files, "other.png", BlobManagementTestFiles.Png(100, 100, seed: 42), isPublic: true);
+        (await publicFiles.ReadAsync(BlobManagementTestContainers.Files, other.Url!.Split('/').Last(),
+                new BlobManagementPublicReadInput { Width = 64 }, HeadersOnly()))
+            .File.EntityTag.ShouldEndWith("-64x0");
+
+        using (GetRequiredService<ICurrentPrincipalAccessor>().As(Guid.NewGuid()))
+        {
+            var containers = GetRequiredService<IBlobManagementContainerAppService>();
+            (await containers.GetAsync(BlobManagementTestContainers.Avatars)).PublicSizes.ShouldBe(BlobManagementTestContainers.AvatarSizes);
+            (await containers.GetAsync(BlobManagementTestContainers.Files)).PublicSizes.ShouldBe(BlobManagementPublicUrl.DefaultSizes);
+        }
+    }
+
+    [Fact]
     public async Task A_Name_Longer_Than_A_File_Holds_Should_Be_A_Validation_Error()
     {
         var tooLong = new string('n', FileDescriptorConsts.MaxNameLength - 3) + ".pdf";

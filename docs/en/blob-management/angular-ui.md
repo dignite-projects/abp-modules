@@ -70,7 +70,7 @@ The page is made of standalone components the library exports, for an applicatio
 The library also exports:
 
 * the proxies and their DTOs by name: `BlobManagementContainerService`, `BlobManagementDirectoryService`, `BlobManagementFileService` (whose reads the page uses), `BlobManagementUsageService`, `BlobManagementContainerDto`, `BlobManagementDirectoryDto`, `BlobManagementFileDto`, `BlobManagementAccessDto` and the usage DTOs;
-* `BlobManagementFileUrlService` (`toAbsolute`, and `sized` for a public picture at one of the sizes the host serves, `BLOB_MANAGEMENT_PUBLIC_SIZES`), `ObjectUrlService`, and the `blobFileSize` pipe;
+* `BlobManagementFileUrlService` (`toAbsolute`, and `sized` for a public picture at one of the sizes its container serves, chosen with `toBlobManagementPublicSize` from the container's `publicSizes`), `ObjectUrlService`, and the `blobFileSize` pipe;
 * `eBlobManagementPolicyNames` and `eBlobManagementResourceNames`, the permission and resource names the UI uses.
 
 ## See Also

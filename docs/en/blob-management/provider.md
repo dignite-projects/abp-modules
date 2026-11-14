@@ -131,7 +131,7 @@ var url = _publicUrlBuilder.Build(
 
 * The address names the managed container and the file. When the file belongs to a tenant it carries `__tenant=`: the request is anonymous, so nothing else says whose file it is. ABP's query-string tenant resolver, on by default, reads it.
 * `Width` and `Height` resize a JPEG, PNG or WebP: with both, the picture is cropped to fill the box; with one, the other follows its proportions. A picture is never enlarged, and one larger than 4096 pixels on a side is served as stored. Other files are always served as stored.
-* **A size must be one the host allows.** The endpoint is anonymous and renders a size on every request, so an open range would let a visitor make the host render a different picture for each request. By default a `Width` or `Height` must be one of `64`, `128`, `256`, `384`, `512`, `768`, `1024`, `1536`, `2048` or `4096`; any other value is answered `400 Bad Request` (for `GET` and `HEAD` alike), before the file is read. A size is not rounded to the nearest allowed one: with both sides given the picture is cropped to the box, and rounding the sides independently would change its shape. `IBlobManagementPublicUrlBuilder` does not check the size, because Blob Management may be a remote one whose list the application cannot know. A request without a size is unaffected.
+* **A size must be one the container allows.** The endpoint is anonymous and renders a size on every request, so an open range would let a visitor make the host render a different picture for each request. By default a `Width` or `Height` must be one of `64`, `128`, `256`, `384`, `512`, `768`, `1024`, `1536`, `2048` or `4096`; any other value is answered `400 Bad Request` (for `GET` and `HEAD` alike), before the file is read. Width and height each take a value from the list, in any combination. A size is not rounded to the nearest allowed one: with both sides given the picture is cropped to the box, and rounding the sides independently would change its shape. `IBlobManagementPublicUrlBuilder` does not check the size, because Blob Management may be a remote one whose lists the application cannot know; a container's list is its `publicSizes` in the container API. A request without a size is unaffected.
 * Addresses are relative by default, which is right when Blob Management is in the application's process. When it runs on its own, set where it is reached from:
 
 ````csharp
@@ -145,15 +145,22 @@ A file kept by id has a public address too, given as the `url` of the file ([Pub
 
 The response is cacheable by anyone for a day, with an `ETag` that changes when the file is overwritten (a matching `If-None-Match` is answered `304`). It never sets a cookie, is marked `nosniff`, and serves a type outside the module's list of known types as a download. `HEAD` is answered without reading the file. A file that is not public is not found, as a missing one is; a cache that kept the response keeps it for up to a day after the file stops being public.
 
-The host sets the allowed sizes with `BlobManagementPublicReadOptions` (in `Dignite.Abp.BlobManagement.Application`); the list replaces the default, so clear it first to restrict it and add to it to extend it. A value above 4096 is never served, whatever the list says:
+The Blob Management host sets the allowed sizes on its containers with `UseBlobManagementPublicSizes`: on the default container for every container that sets none - ABP's container configuration falls back to the default container - and on a container for that one. A list replaces the one it overrides; each size is from 1 to 4096:
 
 ````csharp
-Configure<BlobManagementPublicReadOptions>(options =>
+Configure<AbpBlobStoringOptions>(options =>
 {
-    options.AllowedSizes.Clear();
-    options.AllowedSizes.AddRange(new[] { 96, 192, 480, 960 });
+    // The host's default, instead of the module's ladder.
+    options.Containers.ConfigureDefault(container =>
+        container.UseBlobManagementPublicSizes(96, 192, 480, 960));
+
+    // Avatars are shown small: a shorter list, so fewer renditions and fewer cache entries.
+    options.Containers.Configure("avatars", container =>
+        container.UseBlobManagementPublicSizes(64, 128, 256));
 });
 ````
+
+Or in configuration ([Declaring Containers in Configuration](setting-up.md#declaring-containers-in-configuration)): `BlobManagement:PublicSizes` for the default, and `PublicSizes` in a container.
 
 There is no server-side cache of renditions: a size is rendered again on each request that is not answered by an HTTP cache. A CDN, reverse proxy or rate limit in front of the host is still the host's job - with the query string in the cache key, since the tenant and the size are there; the list of sizes only bounds how many different renditions an address can ask for.
 

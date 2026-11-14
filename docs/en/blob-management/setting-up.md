@@ -132,13 +132,18 @@ A host with no code of its own for Blob Management - the module run as its own s
       "documents": {
         "AllowDirectories": true,
         "Preset": "Documents"
+      },
+      "avatars": {
+        "Preset": "Images",
+        "PublicSizes": [ 64, 128, 256 ]
       }
-    }
+    },
+    "PublicSizes": [ 128, 256, 512, 1024 ]
   }
 }
 ````
 
-Each container is applied with the same methods code uses. The keys are `AllowDirectories`, `Preset` and `PresetOptions`. `Preset` is one of `Images`, `Documents`, `BinaryAssets` and `Any`, compared without case; `PresetOptions` holds that preset's parameters. The storage provider is not declared here: the containers take the default container's provider and its settings, configured in code as above.
+Each container is applied with the same methods code uses. The keys are `AllowDirectories`, `Preset`, `PresetOptions` and `PublicSizes`. `Preset` is one of `Images`, `Documents`, `BinaryAssets` and `Any`, compared without case; `PresetOptions` holds that preset's parameters. `PublicSizes` is the list of widths and heights a [public read](provider.md#public-addresses) of the container's pictures may ask for; `PublicSizes` at the root of the section is the host's default for every container without one. The storage provider is not declared here: the containers take the default container's provider and its settings, configured in code as above.
 
 Every mistake stops the host when it starts - an unknown key or preset, a value of the wrong type, `PresetOptions` without a `Preset`, a misspelt or invalid preset parameter - rather than on the first upload. Code runs after the section is applied, so a module's or the host's own `Configure<AbpBlobStoringOptions>` overrides it.
 

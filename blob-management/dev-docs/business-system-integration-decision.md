@@ -56,7 +56,9 @@ Whether anyone may read a file is the business system's call, kept on the file (
 The public read answers while a live, confirmed file that refers to the address is public, and 404 otherwise. Files
 kept by id that hold the same bytes share one physical BLOB and so one address, and it answers while one of them is
 public; a file saved under a name has its name as its address and opens no other. A file's `url` is set only while it
-is public. The allowed sizes stay the host's (`BlobManagementPublicReadOptions`).
+is public. The sizes a public read may ask for are the host's default, which a container may override - on ABP's
+container configuration, where a container falls back to the default container (`UseBlobManagementPublicSizes`); the
+container DTO carries them, so the management page asks only for what the container serves.
 
 Public reads move from `/api/blob-management/public/{container}/{blob}` to `/blobs/{container}/{blob}`: an address a page
 embeds and a CDN caches, not an API, so it is neither under `/api` nor named after the module. The query (`__tenant`,

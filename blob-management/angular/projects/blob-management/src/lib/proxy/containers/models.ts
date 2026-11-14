@@ -6,6 +6,7 @@ export interface BlobManagementContainerDto extends ExtensibleObject {
   allowDirectories?: boolean;
   maxFileSize?: number;
   allowedFileExtensions?: string[];
+  publicSizes?: number[];
   imageMaxWidth?: number | null;
   imageMaxHeight?: number | null;
   access?: BlobManagementAccessDto;

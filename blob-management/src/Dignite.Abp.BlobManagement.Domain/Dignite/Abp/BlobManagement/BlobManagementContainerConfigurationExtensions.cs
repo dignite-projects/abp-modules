@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Volo.Abp;
 using Volo.Abp.BlobStoring;
 
@@ -41,6 +43,48 @@ public static class BlobManagementContainerConfigurationExtensions
         Check.NotNull(configurationProvider, nameof(configurationProvider));
         return !containerName.IsNullOrWhiteSpace() &&
                configurationProvider.Get(containerName).GetBlobManagementContainerConfiguration().IsManaged;
+    }
+
+    /// <summary>
+    /// The widths and heights a public read of the container's pictures may be resized to: what the container sets with
+    /// <see cref="UseBlobManagementPublicSizes"/>, else what the default container sets - ABP's container configuration
+    /// falls back to it - else <see cref="BlobManagementPublicUrl.DefaultSizes"/>. Ascending, without repeats.
+    /// </summary>
+    public static IReadOnlyList<int> GetBlobManagementPublicSizes(this BlobContainerConfiguration containerConfiguration)
+    {
+        Check.NotNull(containerConfiguration, nameof(containerConfiguration));
+        return containerConfiguration.GetConfigurationOrDefault<int[]?>(BlobManagementContainerConfigurationNames.PublicSizes, null)
+               ?? BlobManagementPublicUrl.DefaultSizes;
+    }
+
+    /// <summary>
+    /// Sets the widths and heights a public read may be resized to - on one container, or with
+    /// <c>ConfigureDefault</c> for every container that sets none. The list replaces the one it overrides; it bounds how
+    /// many renditions of a picture an anonymous visitor can make the host render. Each size is from 1 to
+    /// <see cref="BlobManagementPublicUrl.MaxDimension"/>; an empty list or a size out of range throws
+    /// <see cref="AbpException"/>.
+    /// </summary>
+    public static BlobContainerConfiguration UseBlobManagementPublicSizes(
+        this BlobContainerConfiguration containerConfiguration,
+        params int[] sizes)
+    {
+        Check.NotNull(containerConfiguration, nameof(containerConfiguration));
+        if (sizes == null || sizes.Length == 0)
+        {
+            throw new AbpException("UseBlobManagementPublicSizes needs at least one size.");
+        }
+
+        var outOfRange = sizes.Where(size => size < 1 || size > BlobManagementPublicUrl.MaxDimension).ToList();
+        if (outOfRange.Count > 0)
+        {
+            throw new AbpException(
+                $"A public read size must be from 1 to {BlobManagementPublicUrl.MaxDimension}, not {string.Join(", ", outOfRange)}.");
+        }
+
+        containerConfiguration.SetConfiguration(
+            BlobManagementContainerConfigurationNames.PublicSizes,
+            sizes.Distinct().OrderBy(size => size).ToArray());
+        return containerConfiguration;
     }
 
     /// <summary>

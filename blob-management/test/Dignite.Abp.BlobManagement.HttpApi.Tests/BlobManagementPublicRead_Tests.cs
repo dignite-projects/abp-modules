@@ -102,7 +102,7 @@ public class BlobManagementPublicRead_Tests : AbpWebApplicationFactoryIntegrated
     {
         await StoreAsync("ladder.png", BlobManagementTestFiles.Png(200, 100, seed: 8));
 
-        foreach (var size in new BlobManagementPublicReadOptions().AllowedSizes)
+        foreach (var size in BlobManagementPublicUrl.DefaultSizes)
         {
             var url = _urlBuilder.Build(BlobManagementHttpApiTestModule.AppPublicContainer, "ladder.png", width: size);
             using var get = await Client.GetAsync(url);

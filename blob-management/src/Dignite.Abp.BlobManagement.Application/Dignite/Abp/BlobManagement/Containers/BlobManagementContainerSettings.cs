@@ -20,10 +20,17 @@ namespace Dignite.Abp.BlobManagement.Containers;
 ///     "documents": {
 ///       "AllowDirectories": true,
 ///       "Preset": "Documents"
+///     },
+///     "avatars": {
+///       "Preset": "Images",
+///       "PublicSizes": [ 64, 128, 256 ]
 ///     }
-///   }
+///   },
+///   "PublicSizes": [ 128, 256, 512, 1024 ]
 /// }
 /// </code>
+/// <c>PublicSizes</c> at the root is the host's default for every container that names none
+/// (<c>UseBlobManagementPublicSizes</c> on the default container); in a container, that container's own list.
 /// Each container is applied with the same extension methods code uses (<c>UseBlobManagementContainer</c>, the presets), so
 /// the two cannot drift apart. The storage provider beneath is not declared here: a container takes the default
 /// container's provider and its settings, which the host configures in code (<c>ConfigureDefault(c =&gt;
@@ -39,7 +46,9 @@ public class BlobManagementContainerSettings
 
     public const string ContainersSectionName = "Containers";
 
-    private static readonly string[] KnownKeys = { "AllowDirectories", "Preset", "PresetOptions" };
+    public const string PublicSizesKey = "PublicSizes";
+
+    private static readonly string[] KnownKeys = { "AllowDirectories", "Preset", "PresetOptions", PublicSizesKey };
 
     protected BlobManagementContainerSettings(string containerName, Action<BlobContainerConfiguration> apply)
     {
@@ -69,6 +78,53 @@ public class BlobManagementContainerSettings
             .ToList();
     }
 
+    /// <summary>
+    /// The host's default public sizes, <c>BlobManagement:PublicSizes</c>, checked; <c>null</c> when the key is missing.
+    /// Throws <see cref="AbpException"/> on a mistake.
+    /// </summary>
+    public static int[]? ReadDefaultPublicSizes(IConfiguration configuration)
+    {
+        Check.NotNull(configuration, nameof(configuration));
+
+        var section = configuration.GetSection(SectionName).GetSection(PublicSizesKey);
+        var where = $"BlobManagement default public sizes in configuration ({section.Path})";
+        var sizes = ReadPublicSizes(section, where);
+        if (sizes != null)
+        {
+            try
+            {
+                new BlobContainerConfiguration().UseBlobManagementPublicSizes(sizes);
+            }
+            catch (AbpException exception)
+            {
+                throw new AbpException($"{where}: {exception.Message}", exception);
+            }
+        }
+
+        return sizes;
+    }
+
+    /// <summary>A list of numbers, or <c>null</c> when the section is missing.</summary>
+    protected static int[]? ReadPublicSizes(IConfigurationSection section, string where)
+    {
+        if (!section.Exists())
+        {
+            return null;
+        }
+
+        var children = section.GetChildren().ToList();
+        if (children.Count == 0)
+        {
+            throw new AbpException($"{where}: {PublicSizesKey} must be a list of numbers, not '{section.Value}'.");
+        }
+
+        return children
+            .Select(child => int.TryParse(child.Value, out var size)
+                ? size
+                : throw new AbpException($"{where}: {PublicSizesKey} must be a list of numbers, not '{child.Value}'."))
+            .ToArray();
+    }
+
     protected static BlobManagementContainerSettings ReadContainer(IConfigurationSection section, BlobManagementPresetOptions presets)
     {
         var containerName = section.Key;
@@ -87,6 +143,8 @@ public class BlobManagementContainerSettings
         {
             throw new AbpException($"{where}: AllowDirectories must be true or false, not '{allowDirectoriesValue}'.");
         }
+
+        var publicSizes = ReadPublicSizes(section.GetSection(PublicSizesKey), where);
 
         Action<BlobContainerConfiguration>? applyPreset = null;
         var presetName = section["Preset"];
@@ -110,6 +168,10 @@ public class BlobManagementContainerSettings
         {
             container.UseBlobManagementContainer(managed => managed.AllowDirectories = allowDirectories);
             applyPreset?.Invoke(container);
+            if (publicSizes != null)
+            {
+                container.UseBlobManagementPublicSizes(publicSizes);
+            }
         };
 
         // A dry run on a throwaway configuration, so that what only the extension methods check - a preset parameter

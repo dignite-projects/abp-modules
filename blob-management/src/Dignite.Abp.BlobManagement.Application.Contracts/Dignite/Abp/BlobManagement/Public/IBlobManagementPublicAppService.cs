@@ -15,7 +15,7 @@ public interface IBlobManagementPublicAppService : IApplicationService
     /// <paramref name="input"/> asks for a size. Everything in the result comes from the same lookup of the file, so a
     /// file overwritten meanwhile never mixes the old one's tag or type with the new one's bytes.
     /// <para>
-    /// A width or height must be one the Blob Management allows (<c>BlobManagementPublicReadOptions.AllowedSizes</c>), otherwise
+    /// A width or height must be one of the container's public sizes (<c>GetBlobManagementPublicSizes</c>), otherwise
     /// <see cref="Volo.Abp.Validation.AbpValidationException"/>, checked before the lookup. A missing file - or a file
     /// whose bytes are missing from storage - is <see cref="Volo.Abp.Domain.Entities.EntityNotFoundException"/>.
     /// </para>

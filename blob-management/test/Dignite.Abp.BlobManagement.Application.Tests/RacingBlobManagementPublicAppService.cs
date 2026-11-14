@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobManagement.Public;
-using Microsoft.Extensions.Options;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Entities;
 using Volo.Abp.Imaging;
@@ -18,9 +17,8 @@ public class RacingBlobManagementPublicAppService : BlobManagementPublicAppServi
 {
     public RacingBlobManagementPublicAppService(
         FileDescriptorManager fileDescriptorManager,
-        IImageResizer imageResizer,
-        IOptions<BlobManagementPublicReadOptions> options)
-        : base(fileDescriptorManager, imageResizer, options)
+        IImageResizer imageResizer)
+        : base(fileDescriptorManager, imageResizer)
     {
     }
 
