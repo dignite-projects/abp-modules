@@ -1,3 +1,5 @@
+using System;
+
 namespace Dignite.Abp.BlobManagement.Public;
 
 public class BlobManagementPublicFileDto
@@ -14,6 +16,12 @@ public class BlobManagementPublicFileDto
     /// so it is what <see cref="EntityTag"/> is made of.
     /// </summary>
     public string ContentId { get; set; } = default!;
+
+    /// <summary>
+    /// When the bytes behind the address were stored: the file's creation time, since a file's bytes never change - an
+    /// overwrite stores a new file. The HTTP endpoints send it as <c>Last-Modified</c>.
+    /// </summary>
+    public DateTime LastModified { get; set; }
 
     /// <summary>
     /// The opaque value of the read's entity tag, without quotes: <see cref="ContentId"/>, plus <c>-{W}x{H}</c> when a

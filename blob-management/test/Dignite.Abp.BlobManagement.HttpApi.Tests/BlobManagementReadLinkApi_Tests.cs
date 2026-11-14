@@ -81,6 +81,16 @@ public class BlobManagementReadLinkApi_Tests : AbpWebApplicationFactoryIntegrate
             (await head.Content.ReadAsByteArrayAsync()).ShouldBeEmpty();
         }
 
+        // A viewer reads a part, as it seeks.
+        using (var request = new HttpRequestMessage(HttpMethod.Get, link.Url))
+        {
+            request.Headers.Range = new RangeHeaderValue(5, null);
+            using var part = await Client.SendAsync(request);
+            part.StatusCode.ShouldBe(HttpStatusCode.PartialContent);
+            part.Headers.CacheControl!.Private.ShouldBeTrue();
+            (await part.Content.ReadAsByteArrayAsync()).ShouldBe(bytes[5..]);
+        }
+
         (await Client.GetAsync("/api/blob-management/links/forged")).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 

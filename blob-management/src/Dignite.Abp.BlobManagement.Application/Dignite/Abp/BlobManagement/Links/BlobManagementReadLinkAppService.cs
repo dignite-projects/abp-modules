@@ -70,6 +70,7 @@ public class BlobManagementReadLinkAppService : BlobManagementAppService, IBlobM
                     MimeType = file.MimeType,
                     Size = file.Size,
                     ContentId = file.BlobName,
+                    LastModified = file.CreationTime,
                     EntityTag = file.BlobName.Replace("\"", string.Empty).Replace("\\", string.Empty)
                 }
             };
