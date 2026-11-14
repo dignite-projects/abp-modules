@@ -85,6 +85,23 @@ public class OpenIddictDataSeedContributor : OpenIddictDataSeedContributorBase, 
             );
         }
 
+        // A business system's back end: a confidential client that calls Blob Management with client credentials, once
+        // the host's administrator grants it a container's files.
+        var businessClientId = configurationSection["Host_BusinessSystem:ClientId"];
+        if (!businessClientId.IsNullOrWhiteSpace())
+        {
+            await CreateOrUpdateApplicationAsync(
+                applicationType: OpenIddictConstants.ApplicationTypes.Web,
+                name: businessClientId,
+                type: OpenIddictConstants.ClientTypes.Confidential,
+                consentType: OpenIddictConstants.ConsentTypes.Implicit,
+                displayName: "Business System (demo)",
+                secret: configurationSection["Host_BusinessSystem:ClientSecret"],
+                grantTypes: new List<string> { OpenIddictConstants.GrantTypes.ClientCredentials },
+                scopes: new List<string> { "Host" }
+            );
+        }
+
         // Swagger Client
         var swaggerClientId = configurationSection["Host_Swagger:ClientId"];
         if (!swaggerClientId.IsNullOrWhiteSpace())
