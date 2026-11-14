@@ -143,7 +143,7 @@ imports the root one, so the lockstep `<Version>` applies.
     MCP tools, which know the record a file belongs to, and calls the file service from them.
 11. **Names are contracts once published** (nothing is yet): the package IDs, `@dignite/ng.blob-management`, the
     permission and feature group `BlobManagement`, the permission names, the remote service name, `api/blob-management`,
-    the `Blob` table prefix and the `BlobManagement` connection string name, the configuration
+    `/blobs` (the public read prefix, `BlobManagementPublicUrl.RoutePrefix`), the `Blob` table prefix and the `BlobManagement` connection string name, the configuration
     section `BlobManagement`, and the class a resource permission is granted on (its resource name is that type's
     full name: `Dignite.Abp.BlobManagement.BlobManagementContainer`). The names were weighed again on 2026-11-13 and
     stay: not File Management (ABP's module has that name, its routes and its permission group), not entities named
