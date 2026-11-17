@@ -20,7 +20,7 @@ describe('BlobManagementFileUrlService', () => {
 
   it('asks for a picture at a size, keeping the tenant in the query', () => {
     expect(service.sized('/blobs/media/a.png?__tenant=t', 128, 128)).toBe(
-      'https://blobs.example.com/blobs/media/a.png?__tenant=t&Width=128&Height=128',
+      'https://blobs.example.com/blobs/media/a.png?__tenant=t&width=128&height=128',
     );
     expect(service.sized('/blobs/media/a.png', 0, 0)).toBe('https://blobs.example.com/blobs/media/a.png');
     expect(service.sized('blob:x', 128)).toBe('blob:x');

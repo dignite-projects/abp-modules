@@ -375,6 +375,36 @@ public class BlobManagementPublicRead_Tests : AbpWebApplicationFactoryIntegrated
         asStored.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
+    /// <summary>
+    /// A repeated width or height is refused - one rendition has one address - and still counts against the rendition
+    /// limit, whichever of its values model binding would have taken. The names are read in any case.
+    /// </summary>
+    [Fact]
+    public async Task A_Repeated_Size_Should_Be_Refused_And_Counted_As_A_Rendition()
+    {
+        await StoreAsync("repeated.png", BlobManagementTestFiles.Png(80, 40, seed: 23));
+        var plain = _urlBuilder.Build(BlobManagementHttpApiTestModule.AppPublicContainer, "repeated.png");
+        plain.ShouldNotContain("?");
+
+        // Built in lowercase; read in any case.
+        _urlBuilder.Build(BlobManagementHttpApiTestModule.AppPublicContainer, "repeated.png", width: 64).ShouldEndWith("?width=64");
+        using (var upper = await Client.GetAsync(plain + "?Width=64"))
+        {
+            upper.StatusCode.ShouldBe(HttpStatusCode.OK);
+            upper.Headers.ETag!.Tag.ShouldEndWith("-64x0\"");
+        }
+
+        for (var i = 1; i < BlobManagementHttpApiTestModule.RenditionsPerMinute; i++)
+        {
+            using var repeated = await Client.GetAsync(plain + (i % 2 == 0 ? "?width=64&width=64" : "?Width=64&width=128"));
+            repeated.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        }
+
+        // The repeated ones used up the limit: the next rendition is refused.
+        using var refused = await Client.GetAsync(plain + "?width=64");
+        refused.StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
+    }
+
     private Task<HttpResponseMessage> GetRangeAsync(string url, long from, long to, EntityTagHeaderValue? ifRange = null)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, url);

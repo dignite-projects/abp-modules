@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
 
 namespace Dignite.Abp.BlobManagement.RateLimiting;
@@ -79,14 +80,26 @@ public class BlobManagementRateLimiterPolicy : IRateLimiterPolicy<string>
         }
     }
 
-    /// <summary>Whether a public read asks for a width or a height, the query its address takes.</summary>
+    /// <summary>
+    /// Whether a public read asks for a width or a height, the query its address takes (the names in any case): any
+    /// value of either that is a positive number counts, whichever one model binding would take, so no form of the
+    /// query asks for a rendition outside this limit. The controller refuses a repeated one.
+    /// </summary>
     protected virtual bool AsksForSize(HttpRequest request)
     {
-        return IsPositive(request.Query["Width"]) || IsPositive(request.Query["Height"]);
+        return AnyPositive(request.Query["width"]) || AnyPositive(request.Query["height"]);
     }
 
-    private static bool IsPositive(string? value)
+    private static bool AnyPositive(StringValues values)
     {
-        return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number) && number > 0;
+        foreach (var value in values)
+        {
+            if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number) && number > 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

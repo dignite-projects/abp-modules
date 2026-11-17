@@ -40,7 +40,7 @@ export class BlobManagementFileUrlService {
 
   /**
    * A public picture asked for at a size, so the browser does not load the whole upload for a thumbnail: the Blob Management
-   * renders `?Width=&Height=` (cropped to fill when both are set). Any other address is returned as it is.
+   * renders `?width=&height=` (cropped to fill when both are set). Any other address is returned as it is.
    * Pass sizes of the file's container (see `toBlobManagementPublicSize`): Blob Management refuses others with 400.
    */
   sized(url: string | null | undefined, width?: number, height?: number): string {
@@ -49,7 +49,7 @@ export class BlobManagementFileUrlService {
       return absolute;
     }
 
-    const query = [width ? `Width=${width}` : '', height ? `Height=${height}` : ''].filter(Boolean).join('&');
+    const query = [width ? `width=${width}` : '', height ? `height=${height}` : ''].filter(Boolean).join('&');
     return absolute + (absolute.includes('?') ? '&' : '?') + query;
   }
 }

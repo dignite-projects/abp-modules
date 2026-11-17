@@ -13,7 +13,7 @@ namespace Dignite.Abp.BlobManagement.RateLimiting;
 public class BlobManagementRateLimitingOptions
 {
     /// <summary>
-    /// Public reads that ask for a size (<c>?Width=</c>, <c>?Height=</c>): each is rendered when it is asked for, so this
+    /// Public reads that ask for a size (<c>?width=</c>, <c>?height=</c>): each is rendered when it is asked for, so this
     /// is the limit that protects the server's processor. A CDN in front of <c>/blobs</c> serves repeated reads without
     /// asking.
     /// </summary>

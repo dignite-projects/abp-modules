@@ -71,7 +71,8 @@ public class BlobManagementHttpApiModule : AbpModule
             options.Map(BlobManagementErrorCodes.DirectoryTooDeep, HttpStatusCode.BadRequest);
             options.Map(BlobManagementErrorCodes.SortingNotSupported, HttpStatusCode.BadRequest);
             options.Map(BlobManagementErrorCodes.FileAddressedByName, HttpStatusCode.Conflict);
-            options.Map(BlobManagementErrorCodes.StorageQuotaExceeded, HttpStatusCode.InsufficientStorage);
+            // StorageQuotaExceeded keeps ABP's 403, as Google Drive answers storageQuotaExceeded: a refusal by the tenant's
+            // allocation, which must not be a 5xx that HTTP clients' resilience handlers retry.
 
             // What the container's pipeline refuses in an upload, by the codes blob-storing publishes (this layer does
             // not reference its packages): the request's content, not the caller's rights, so not 403.
@@ -80,8 +81,11 @@ public class BlobManagementHttpApiModule : AbpModule
             options.Map(BlobStoringContentTypeMismatch, HttpStatusCode.BadRequest);
             options.Map(BlobStoringImageTooLarge, HttpStatusCode.BadRequest);
             options.Map(BlobStoringImageTooSmall, HttpStatusCode.BadRequest);
+            // The providers that throw on an image they cannot read (ImageSharp, Magick.NET) make this the content's fault;
+            // the provider's exception is the inner one, logged with it.
             options.Map(BlobStoringImageProcessingFailed, HttpStatusCode.UnprocessableEntity);
-            options.Map(BlobStoringImageDecodeTimeout, HttpStatusCode.UnprocessableEntity);
+            // The decode guard's timeout protects the host, and is most often its load: a transient refusal, worth a retry.
+            options.Map(BlobStoringImageDecodeTimeout, HttpStatusCode.ServiceUnavailable);
         });
     }
 }

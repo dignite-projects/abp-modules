@@ -5,7 +5,7 @@ using System.Linq;
 namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
-/// Addresses of public reads: <c>/blobs/{containerName}/{blobName}</c>, optionally sized (<c>?Width=&amp;Height=</c>)
+/// Addresses of public reads: <c>/blobs/{containerName}/{blobName}</c>, optionally sized (<c>?width=&amp;height=</c>)
 /// and naming the tenant (<c>?__tenant=</c>, which ABP's query-string tenant resolver reads - the request is
 /// anonymous, so nothing else says whose file it is). One definition for the endpoint that serves them and for every
 /// builder that hands them out. Not under <c>/api</c> and without the module's name: an address a page embeds and a
@@ -59,12 +59,12 @@ public static class BlobManagementPublicUrl
 
         if (width > 0)
         {
-            query.Add("Width=" + width.Value);
+            query.Add("width=" + width.Value);
         }
 
         if (height > 0)
         {
-            query.Add("Height=" + height.Value);
+            query.Add("height=" + height.Value);
         }
 
         return query.Count == 0 ? path : path + "?" + string.Join("&", query);

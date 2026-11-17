@@ -175,6 +175,39 @@ public abstract class BlobManagementUsageManager_Tests<TStartupModule> : BlobMan
         }
     }
 
+    /// <summary>
+    /// An overriding save is checked for the net change: the file it replaces still counts while the check runs, and its
+    /// bytes are the ones the save frees.
+    /// </summary>
+    [Fact]
+    public async Task An_Override_Should_Be_Checked_For_The_Net_Change()
+    {
+        var tenantId = Guid.NewGuid();
+        _featureStore.SetForTenant(tenantId, BlobManagementFeatures.StorageSize, "1");
+
+        using (_currentTenant.Change(tenantId))
+        {
+            var original = OfSize(600 * Kilobyte, "original");
+            await CreateAsync(BlobManagementTestContainers.Files, "logo.pdf", original);
+
+            // The same bytes again: nothing grows.
+            await CreateAsync(BlobManagementTestContainers.Files, "logo.pdf", original, overrideExisting: true);
+            (await UsedBytesAsync()).ShouldBe(original.Length);
+
+            // Larger, still within the allocation once the old one is freed (600 KB + 700 KB would not be).
+            var larger = OfSize(700 * Kilobyte, "larger");
+            await CreateAsync(BlobManagementTestContainers.Files, "logo.pdf", larger, overrideExisting: true);
+            (await UsedBytesAsync()).ShouldBe(larger.Length);
+
+            // Past the allocation even with the old one freed.
+            var tooLarge = OfSize(1100 * Kilobyte, "too large");
+            var exception = await Should.ThrowAsync<BusinessException>(() =>
+                CreateAsync(BlobManagementTestContainers.Files, "logo.pdf", tooLarge, overrideExisting: true));
+            exception.Code.ShouldBe(BlobManagementErrorCodes.StorageQuotaExceeded);
+            (await UsedBytesAsync()).ShouldBe(larger.Length);
+        }
+    }
+
     [Fact]
     public async Task No_Storage_Size_Means_No_Limit()
     {
@@ -204,12 +237,14 @@ public abstract class BlobManagementUsageManager_Tests<TStartupModule> : BlobMan
         string name,
         byte[] bytes,
         string? clientId = null,
-        Guid? creatorId = null)
+        Guid? creatorId = null,
+        bool overrideExisting = false)
     {
         return WithUnitOfWorkAsync(async () =>
         {
             using var stream = new MemoryStream(bytes);
-            return await _fileDescriptorManager.CreateAsync(containerName, name, stream, clientId: clientId, creatorId: creatorId);
+            return await _fileDescriptorManager.CreateAsync(
+                containerName, name, stream, overrideExisting, clientId: clientId, creatorId: creatorId);
         });
     }
 

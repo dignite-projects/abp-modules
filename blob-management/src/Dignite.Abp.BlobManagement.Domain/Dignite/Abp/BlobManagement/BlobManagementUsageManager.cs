@@ -61,7 +61,17 @@ public class BlobManagementUsageManager : DomainService
     /// Fails with <see cref="BlobManagementErrorCodes.StorageQuotaExceeded"/> when storing <paramref name="requiredBytes"/> more
     /// would take the tenant past its allocation.
     /// </summary>
-    public virtual async Task CheckCanStoreAsync(long requiredBytes, CancellationToken cancellationToken = default)
+    public virtual Task CheckCanStoreAsync(long requiredBytes, CancellationToken cancellationToken = default)
+    {
+        return CheckCanStoreAsync(requiredBytes, releasedBytes: 0, cancellationToken);
+    }
+
+    /// <summary>
+    /// Fails with <see cref="BlobManagementErrorCodes.StorageQuotaExceeded"/> when storing <paramref name="requiredBytes"/>
+    /// more and then freeing <paramref name="releasedBytes"/> - the bytes of a file the store replaces, still counted
+    /// while this runs - would take the tenant past its allocation: the net change is what is checked.
+    /// </summary>
+    public virtual async Task CheckCanStoreAsync(long requiredBytes, long releasedBytes, CancellationToken cancellationToken = default)
     {
         var storageSize = await GetStorageSizeAsync();
         if (storageSize == null)
@@ -70,7 +80,7 @@ public class BlobManagementUsageManager : DomainService
         }
 
         var usedBytes = await GetUsedBytesAsync(cancellationToken);
-        if (usedBytes + requiredBytes > storageSize.Value)
+        if (usedBytes - releasedBytes + requiredBytes > storageSize.Value)
         {
             throw new BusinessException(BlobManagementErrorCodes.StorageQuotaExceeded)
                 .WithData("StorageSize", storageSize.Value / BytesPerMegabyte)
