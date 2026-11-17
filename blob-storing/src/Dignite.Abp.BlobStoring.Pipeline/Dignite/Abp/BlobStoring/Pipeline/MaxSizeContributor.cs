@@ -11,16 +11,17 @@ namespace Dignite.Abp.BlobStoring.Pipeline;
 /// <see cref="BlobStoringPipelineErrorCodes.ContentTooLarge"/>. Configure it with
 /// <see cref="BlobContainerConfigurationExtensions.AddMaxSizeContributor"/>.
 /// <para>
-/// The limit binds while the content is read: a seekable stream whose remaining length already exceeds it is
-/// rejected without reading; any other stream is copied chunk by chunk - into memory, then a temporary file past
-/// <see cref="BlobStoringPipelineConsts.MemoryBufferThreshold"/> - and rejected as soon as the copy passes the limit. Nothing beyond the limit is ever buffered, and nothing is saved when it throws.
+/// The limit binds before or while the content is read: a seekable stream whose remaining length already exceeds it
+/// is rejected without reading; any other stream is copied chunk by chunk - into memory, then a temporary file past
+/// <see cref="BlobStoringPipelineConsts.MemoryBufferThreshold"/> - and rejected as soon as the copy passes the limit.
+/// Nothing beyond the limit is ever buffered, and nothing is saved when it throws.
 /// </para>
 /// <para>
-/// The copy then replaces <see cref="BlobPipelineContext.BlobStream"/>. That materialized, seekable,
-/// length-aware stream is deliberate: contributors that run after this one and need to re-read the content
-/// (content sniffing, image decoding) use it without buffering again, and storage providers that need the
-/// object size before uploading get a known <see cref="Stream.Length"/>. Configure this contributor first.
-/// Content past the threshold is held on disk, not in memory, so a large limit costs disk space, not memory.
+/// What leaves this contributor is a seekable, length-aware stream, deliberately: contributors that run after this one
+/// and need to re-read the content (content sniffing, image decoding) use it without buffering again, and storage
+/// providers that need the object size before uploading get a known <see cref="Stream.Length"/>. A stream that is
+/// already seekable and at its start is that stream, and is kept as it is; any other is replaced by the copy.
+/// Configure this contributor first.
 /// </para>
 /// <para>
 /// It does not change the content, so it can be added to or removed from a container that already has BLOBs.
@@ -33,8 +34,20 @@ public class MaxSizeContributor : IBlobPipelineContributor, ITransientDependency
         var configuration = context.Configuration.GetMaxSizeContributorConfiguration();
         configuration.Validate();
 
+        var stream = context.BlobStream;
+        if (stream.CanSeek && stream.Position == 0)
+        {
+            // Already what a copy would give the contributors after this one: nothing to buffer.
+            if (stream.Length > configuration.MaxSizeInBytes)
+            {
+                throw BlobStreamBuffering.CreateContentTooLargeException(configuration.MaxSizeInBytes);
+            }
+
+            return;
+        }
+
         context.BlobStream = await CopyToBufferAsync(
-            context.BlobStream,
+            stream,
             configuration.MaxSizeInBytes,
             context.CancellationToken);
     }

@@ -144,6 +144,53 @@ public class BlobStreamBuffering_Tests : BlobStoringPipelineTestBase
         source.IsDisposed.ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task EnsureSeekableAsync_Should_Return_A_Seekable_Source_Itself()
+    {
+        var content = RandomBytes(3 * BlobStoringPipelineConsts.MemoryBufferThreshold, seed: 4);
+        var source = new TrackingStream(content, canSeek: true);
+
+        var result = await BlobStreamBuffering.EnsureSeekableAsync(source, content.Length, default);
+
+        result.ShouldBeSameAs(source);
+        source.BytesRead.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task EnsureSeekableAsync_Should_Refuse_A_Seekable_Source_Over_The_Cap_Without_Reading_It()
+    {
+        var source = new TrackingStream(RandomBytes(1000, seed: 5), canSeek: true);
+
+        var exception = await Should.ThrowAsync<BusinessException>(() => BlobStreamBuffering.EnsureSeekableAsync(source, 999, default));
+
+        exception.Code.ShouldBe(BlobStoringPipelineErrorCodes.ContentTooLarge);
+        source.BytesRead.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task EnsureSeekableAsync_Should_Copy_A_Source_That_Cannot_Seek_Or_Is_Not_At_Its_Start()
+    {
+        var content = RandomBytes(2 * BlobStoringPipelineConsts.MemoryBufferThreshold, seed: 6);
+
+        var unseekable = new TrackingStream(content, canSeek: false);
+        await using (var copy = await BlobStreamBuffering.EnsureSeekableAsync(unseekable, content.Length, default))
+        {
+            copy.ShouldNotBeSameAs(unseekable);
+            copy.Position.ShouldBe(0);
+            ReadAll(copy).ShouldBe(content);
+        }
+
+        unseekable.IsDisposed.ShouldBeFalse();
+
+        var moved = new TrackingStream(content, canSeek: true);
+        moved.Position = 10;
+        await using (var rest = await BlobStreamBuffering.EnsureSeekableAsync(moved, content.Length, default))
+        {
+            rest.ShouldNotBeSameAs(moved);
+            ReadAll(rest).ShouldBe(content[10..]);
+        }
+    }
+
     private static byte[] RandomBytes(int length, int seed)
     {
         var bytes = new byte[length];

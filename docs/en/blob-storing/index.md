@@ -136,7 +136,7 @@ The codes are constants of the `BlobStoringPipelineErrorCodes` and `BlobStoringI
 
 ## Known Limitations
 
-* **Memory.** The size limit, the allowed content types and the image contributors hold the upload in memory, which is what makes it re-readable. A limit above about 2 GB is not supported, and concurrent large uploads multiply the cost.
+* **Memory and disk.** To re-read an upload, the size limit and the allowed content types keep a stream that is already seekable as it is, and copy any other into memory up to 64 KB and into a temporary file beyond; the image contributors hold the picture in memory. A limit above about 2 GB is not supported, and concurrent large uploads multiply the cost.
 * **The decode timeout is cooperative.** It only interrupts an imaging provider that observes the cancellation token while decoding. See [Image Decode Guard](imaging.md#image-decode-guard).
 * **Detection is signature-based.** Magic bytes are necessary, not sufficient. See [What the Detector Does Not Do](mime-type-detection.md#what-the-detector-does-not-do).
 * **A contributor is a one-to-one transformation.** It cannot produce a second BLOB, so thumbnails, deduplication and hash sidecars are not possible as contributors.

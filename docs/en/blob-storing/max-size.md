@@ -23,7 +23,7 @@ Configure<AbpBlobStoringOptions>(options =>
 });
 ````
 
-`MaxSizeInBytes` (`long`) is the limit, in bytes. It has no default, must be greater than `0`, and can be at most `Array.MaxLength` (about 2 GB), because the content is held in memory.
+`MaxSizeInBytes` (`long`) is the limit, in bytes. It has no default, must be greater than `0`, and can be at most `Array.MaxLength` (about 2 GB), because some contributors - the image ones among them - hold the content in memory.
 
 > Add the size limit **first** in every container that takes uploads. See [The Recommended Order](index.md#the-recommended-order).
 
@@ -32,9 +32,10 @@ Configure<AbpBlobStoringOptions>(options =>
 While **saving**, the limit binds while the content is read:
 
 * A seekable stream whose remaining length already exceeds the limit is rejected **without being read**.
-* Any other stream is copied into memory chunk by chunk, and rejected as soon as the copy passes the limit. Nothing beyond the limit is buffered, and nothing is saved when it throws.
+* A seekable stream at its start that fits the limit is **kept as it is**: it already has what a copy would give.
+* Any other stream is copied chunk by chunk - into memory up to 64 KB, into a temporary file beyond - and rejected as soon as the copy passes the limit. Nothing beyond the limit is buffered, and nothing is saved when it throws.
 
-The copy then replaces the content stream, so every contributor after it works on a **seekable stream with a known length**, and does not need to copy the content again. Storage providers that need the object size before uploading also get it this way.
+Either way every contributor after it works on a **seekable stream with a known length**, and does not need to copy the content again. Storage providers that need the object size before uploading also get it this way.
 
 While **reading**, the size limit does nothing.
 

@@ -136,9 +136,12 @@ Public, because contributors in other packages (Imaging, and any a consumer writ
   than `maxBytes` (a longer one fails with `ContentTooLarge` before it is read), otherwise copies it from its current
   position with `CopyToSeekableAsync` (failing beyond `maxBytes`) and assigns the copy to `context.BlobStream`, so the
   pipeline owns and disposes it.
+- `EnsureSeekableAsync(source, maxBytes, cancellationToken)` is the same rule for code outside a pipeline: it returns
+  `source` itself or a copy, and the caller disposes the result only when it is not `source`. `MaxSizeContributor`
+  applies the rule too: a stream already seekable at its start is checked and kept, not copied.
 - `CopyToSeekableAsync(source, maxBytes, cancellationToken)` copies into memory up to
   `BlobStoringPipelineConsts.MemoryBufferThreshold` (64 KB) and into a temporary file (`DeleteOnClose`) beyond it; the
-  copy `MaxSizeContributor` makes is this one. `CopyToBufferAsync(source, maxBytes, cancellationToken)` copies into
+  copy `MaxSizeContributor` makes of any other stream is this one. `CopyToBufferAsync(source, maxBytes, cancellationToken)` copies into
   memory only (a `MemoryStream`). Both fail with `ContentTooLarge` as soon as more than `maxBytes` have been read — and
   before reading anything when a seekable source already reports a larger remaining length — leave `source` open,
   dispose their own buffer on failure and return it at position 0.

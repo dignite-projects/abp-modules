@@ -45,19 +45,15 @@ public static class BlobStreamBuffering
     public static async Task<Stream> EnsureSeekableAsync(BlobPipelineContext context, long maxBytes)
     {
         var stream = context.BlobStream;
-        if (stream.CanSeek && stream.Position == 0)
+        var seekable = await EnsureSeekableAsync(stream, maxBytes, context.CancellationToken);
+        if (!ReferenceEquals(seekable, stream))
         {
-            if (stream.Length > maxBytes)
-            {
-                throw CreateContentTooLargeException(maxBytes);
-            }
-
-            return stream;
+            // A copy: assigned, so the pipeline disposes it. The received stream is never assigned back - it is the
+            // caller's.
+            context.BlobStream = seekable;
         }
 
-        var buffer = await CopyToSeekableAsync(stream, maxBytes, context.CancellationToken);
-        context.BlobStream = buffer;
-        return buffer;
+        return seekable;
     }
 
     /// <summary>
@@ -103,6 +99,32 @@ public static class BlobStreamBuffering
 
         buffer.Position = 0;
         return buffer;
+    }
+
+    /// <summary>
+    /// <paramref name="source"/> itself when it is already seekable, positioned at its start and not longer than
+    /// <paramref name="maxBytes"/> (a longer one fails with <see cref="BlobStoringPipelineErrorCodes.ContentTooLarge"/>
+    /// before anything is read); otherwise a copy from its current position, made by <see cref="CopyToSeekableAsync"/>.
+    /// For a caller outside a pipeline, which has no <see cref="BlobPipelineContext"/> to hand a copy to.
+    /// <para>
+    /// The caller keeps owning <paramref name="source"/> and owns a copy: it disposes the result when it is not
+    /// <paramref name="source"/> (<c>ReferenceEquals</c>), and a copy past
+    /// <see cref="BlobStoringPipelineConsts.MemoryBufferThreshold"/> is a temporary file that only that removes.
+    /// </para>
+    /// </summary>
+    public static async Task<Stream> EnsureSeekableAsync(Stream source, long maxBytes, CancellationToken cancellationToken)
+    {
+        if (source.CanSeek && source.Position == 0)
+        {
+            if (source.Length > maxBytes)
+            {
+                throw CreateContentTooLargeException(maxBytes);
+            }
+
+            return source;
+        }
+
+        return await CopyToSeekableAsync(source, maxBytes, cancellationToken);
     }
 
     /// <summary>

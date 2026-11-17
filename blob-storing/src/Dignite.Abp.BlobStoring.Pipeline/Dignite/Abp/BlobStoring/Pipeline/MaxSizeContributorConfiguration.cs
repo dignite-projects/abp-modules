@@ -18,7 +18,8 @@ public class MaxSizeContributorConfiguration
 
     /// <summary>
     /// The largest content, in bytes, the container accepts. Must be greater than zero and at most
-    /// <see cref="Array.MaxLength"/>, since the content is materialized in memory. 0 when not configured.
+    /// <see cref="Array.MaxLength"/>: the size contributor's own copy spills to disk, but other contributors (the image
+    /// ones) and <see cref="BlobStreamBuffering.CopyToBufferAsync"/> still hold content in memory. 0 when not configured.
     /// </summary>
     public long MaxSizeInBytes
     {
@@ -40,7 +41,7 @@ public class MaxSizeContributorConfiguration
         if (MaxSizeInBytes > Array.MaxLength)
         {
             throw new AbpException(
-                $"{nameof(MaxSizeContributor)} buffers the content in memory, so {nameof(MaxSizeInBytes)} cannot exceed {Array.MaxLength} bytes.");
+                $"{nameof(MaxSizeInBytes)} cannot exceed {Array.MaxLength} bytes: some contributors hold the content in memory.");
         }
     }
 }
