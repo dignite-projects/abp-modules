@@ -46,6 +46,10 @@ so it stays clear which part of the repository actually moved.
   files) and moves it to a temporary file beyond it, deleted when the copy is disposed (`FileOptions.DeleteOnClose`).
   The cap is unchanged: `ContentTooLarge` as soon as more than `maxBytes` have been read. `CopyToBufferAsync` still
   returns a `MemoryStream`. See [Custom Contributors](docs/en/blob-storing/custom-contributors.md#blobstreambuffering).
+- **`BlobStreamBuffering.EnsureSeekableAsync(source, maxBytes, cancellationToken)`, for code outside a pipeline.** It
+  returns `source` itself when it is already seekable, at its start and within `maxBytes`, and otherwise a
+  `CopyToSeekableAsync` copy; the caller disposes the result when it is not `source`. The pipeline overload,
+  `EnsureSeekableAsync(context, maxBytes)`, now goes through it.
 
 ### Changed
 
@@ -53,9 +57,13 @@ so it stays clear which part of the repository actually moved.
 
 - **The pipeline's own copies spill to disk.** `EnsureSeekableAsync` (the allowed content types, the image contributors)
   and `MaxSizeContributor` copy a stream with `CopyToSeekableAsync` instead of into memory, so an upload no longer holds
-  its whole size in memory while the container's contributors run, and a size limit above 2 GB is possible. The copy is
-  still seekable and still assigned to `BlobPipelineContext.BlobStream`, which the pipeline disposes after the save; a
-  contributor that took `context.BlobStream` to be a `MemoryStream` gets a `FileStream` for content past 64 KB.
+  its whole size in memory while the container's contributors run. The copy is still seekable and still assigned to
+  `BlobPipelineContext.BlobStream`, which the pipeline disposes after the save; a contributor that took
+  `context.BlobStream` to be a `MemoryStream` gets a `FileStream` for content past 64 KB. `MaxSizeInBytes` stays at most
+  `Array.MaxLength`: the image contributors and `CopyToBufferAsync` still hold content in memory.
+- **`MaxSizeContributor` keeps a stream that is already seekable at its start.** It checks the length and leaves the
+  stream as it is, the way `EnsureSeekableAsync` does, instead of copying it: the contributors after it get the same
+  seekable, length-aware stream either way. Any other stream is copied as before.
 
 ### Fixed
 

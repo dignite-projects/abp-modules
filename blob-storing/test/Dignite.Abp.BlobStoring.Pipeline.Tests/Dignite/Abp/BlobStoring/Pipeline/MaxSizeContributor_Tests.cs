@@ -30,6 +30,28 @@ public class MaxSizeContributor_Tests : BlobStoringPipelineTestBase
         source.IsDisposed.ShouldBeFalse(); // the caller keeps its stream
     }
 
+    /// <summary>
+    /// A stream already seekable at its start is what a copy would give the contributors after this one: it is kept,
+    /// not copied. Any other is replaced by a copy.
+    /// </summary>
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    public async Task Should_Keep_A_Seekable_Stream_And_Copy_Any_Other(bool canSeek, bool kept)
+    {
+        var source = new TrackingStream(CreateContent(Limit - 1), canSeek);
+        var configuration = new BlobContainerConfiguration();
+        configuration.AddMaxSizeContributor(c => c.MaxSizeInBytes = Limit);
+        var context = new BlobPipelineContext(ServiceProvider, ContainerName, "blob", configuration, null, source);
+
+        await GetRequiredService<MaxSizeContributor>().OnSavingAsync(context);
+
+        ReferenceEquals(context.BlobStream, source).ShouldBe(kept);
+        context.BlobStream.CanSeek.ShouldBeTrue();
+        context.BlobStream.Length.ShouldBe(Limit - 1);
+        source.BytesRead.ShouldBe(kept ? 0 : Limit - 1);
+    }
+
     [Fact]
     public async Task Should_Reject_A_Seekable_Stream_Over_The_Limit_Without_Reading_It()
     {

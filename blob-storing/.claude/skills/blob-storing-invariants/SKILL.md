@@ -49,10 +49,14 @@ Content is never buffered without a bound. The bound is the container's `MaxSize
 **while copying** (it rejects a seekable stream whose remaining length already exceeds it without reading, and any stream
 as soon as the copy passes it) — never check size after buffering the whole thing.
 
-- The copies the pipeline makes - `EnsureSeekableAsync`, `MaxSizeContributor` - are
-  `BlobStreamBuffering.CopyToSeekableAsync`'s: memory up to `BlobStoringPipelineConsts.MemoryBufferThreshold` (64 KB,
+- A stream already seekable at its start and within the cap is used as it is - by `EnsureSeekableAsync` (both
+  overloads) and by `MaxSizeContributor` - never copied again. Any other is copied by
+  `BlobStreamBuffering.CopyToSeekableAsync`: memory up to `BlobStoringPipelineConsts.MemoryBufferThreshold` (64 KB,
   ASP.NET Core's form threshold), a temporary file (`DeleteOnClose`) beyond it. The spill does not replace the cap: both
-  hold. Whoever owns such a copy disposes it, or the file stays until the process ends.
+  hold. Whoever owns such a copy disposes it, or the file stays until the process ends; the stream overload of
+  `EnsureSeekableAsync` returns the caller's own stream or a copy, and the caller disposes it only in the second case.
+- `MaxSizeInBytes` stays at most `Array.MaxLength`: the image contributors and `CopyToBufferAsync` hold content in
+  memory.
 - `CopyToBufferAsync` (a `MemoryStream`) stays for callers that want memory - a published signature, not to be changed.
 
 - **Every contributor that reads the content enforces the cap itself** - the container's `MaxSize`, or
@@ -62,8 +66,9 @@ as soon as the copy passes it) — never check size after buffering the whole th
   `GZipContributor` counts the bytes it reads while compressing and fails with `ContentTooLarge` as soon as the cap
   is passed.
 - A new contributor that has to re-read the content buffers through `BlobStreamBuffering`, with the same limit.
-- `MaxSizeContributor` is still recommended first in a container: it materializes the seekable, length-aware copy
-  everything after it reuses, so later contributors do not buffer again.
+- `MaxSizeContributor` is still recommended first in a container: what leaves it is a seekable, length-aware stream -
+  the received one when it already was, else its copy - that everything after it reuses, so later contributors do not
+  buffer again.
 - Hosts still enforce a request-body limit at the HTTP layer.
 
 ## 4. The content decides the type — never the uploader's claim
