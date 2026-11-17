@@ -95,7 +95,7 @@ Whether anyone may read a file at its public address, without signing in, is the
 * `CreateBlobManagementFileInput.IsPublic` marks a file when it is stored, and `SetPublicAsync(id, new SetBlobManagementFilePublicInput { IsPublic = … })` changes it later.
 * A BLOB an application saves by name takes it from the application's container ([Public Addresses](provider.md#public-addresses)), at each save; `SetPublicAsync` does not change it (`BlobManagement:FileAddressedByName`).
 
-A public file has a `url`: `/blobs/{container}/{blob}`, with `?Width=&Height=` for pictures ([Public Addresses](provider.md#public-addresses)). For a file kept by id the address names the file's **physical BLOB** - 32 random hexadecimal digits and an extension - rather than its name, which need not be unique; renaming or moving the file leaves the address as it was.
+A public file has a `url`: `/blobs/{container}/{blob}`, with `?width=&height=` for pictures ([Public Addresses](provider.md#public-addresses)). For a file kept by id the address names the file's **physical BLOB** - 32 random hexadecimal digits and an extension - rather than its name, which need not be unique; renaming or moving the file leaves the address as it was.
 
 Every file has a physical BLOB of its own, so an address is **one file's**, also when another file holds the same bytes: it answers while that file is public, and a download from it is named after that file. A file that is not public, or not confirmed yet, has no `url`, and its address answers 404. A cache that kept a response keeps it for up to a day after the file stops being public.
 

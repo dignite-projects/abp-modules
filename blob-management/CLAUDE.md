@@ -178,5 +178,5 @@ imports the root one, so the lockstep `<Version>` applies.
     section `BlobManagement`, and the class a resource permission is granted on (its resource name is that type's
     full name: `Dignite.Abp.BlobManagement.BlobManagementContainer`). The names were weighed again on 2026-11-13 and
     stay: not File Management (ABP's module has that name, its routes and its permission group), not entities named
-    after BLOBs (a descriptor is not the BLOB - several share one), not the `Abp` table prefix (ABP reserves it for
+    after BLOBs (a descriptor describes its BLOB, it is not the BLOB), not the `Abp` table prefix (ABP reserves it for
     its core modules).

@@ -116,8 +116,9 @@ public class FileDescriptorManager : DomainService
     /// </para>
     /// <para>
     /// The file is stored as <see cref="StoreAsync"/> stores: buffered, detected, hashed, checked against the tenant's
-    /// allocation, saved under a new BLOB name through the container's contributors, recorded. A replaced descriptor's
-    /// bytes still count while the allocation is checked.
+    /// allocation, saved under a new BLOB name through the container's contributors, recorded. The allocation is checked
+    /// for the net change: the replaced descriptor's bytes, still counted while the check runs, are the ones the save
+    /// frees.
     /// </para>
     /// </summary>
     /// <param name="name">The caller's name for the file: the BLOB name it reads it back by. Its extension, if any, is
@@ -183,7 +184,8 @@ public class FileDescriptorManager : DomainService
                             file.CreatorId = creatorId;
                         }
                     },
-                    cancellationToken);
+                    cancellationToken,
+                    releasedBytes: existing?.Size ?? 0);
             }
             catch
             {
@@ -474,9 +476,10 @@ public class FileDescriptorManager : DomainService
     /// <summary>
     /// Buffers, detects and hashes the upload, saves it under a new BLOB name and writes its descriptor.
     /// <para>
-    /// The upload is copied once into a seekable buffer - memory, or a temporary file past
-    /// <see cref="BlobStoringPipelineConsts.MemoryBufferThreshold"/> (<see cref="BlobStreamBuffering.CopyToSeekableAsync"/>)
-    /// - capped at what the container's pipeline enforces (its <c>MaxSize</c> contributor, else
+    /// The upload is used as it is when it is already seekable at its start, and otherwise copied once into a seekable
+    /// buffer - memory, or a temporary file past <see cref="BlobStoringPipelineConsts.MemoryBufferThreshold"/>
+    /// (<see cref="BlobStreamBuffering.EnsureSeekableAsync(Stream, long, CancellationToken)"/>); either way it is capped at
+    /// what the container's pipeline enforces (its <c>MaxSize</c> contributor, else
     /// <see cref="BlobStoringPipelineConsts.DefaultMaxBufferedBytes"/>), so an oversized upload fails with
     /// <c>Dignite.Abp.BlobStoring:ContentTooLarge</c> before anything is stored. Its type is detected from the
     /// bytes and reconciled with the extension of <paramref name="name"/>
@@ -484,8 +487,8 @@ public class FileDescriptorManager : DomainService
     /// </para>
     /// <para>
     /// The tenant's allocation is checked next: content is refused when it would take the tenant past its storage size
-    /// (<see cref="BlobManagementErrorCodes.StorageQuotaExceeded"/>, measured by the upload's length, see
-    /// <see cref="BlobManagementUsageManager"/>).
+    /// (<see cref="BlobManagementErrorCodes.StorageQuotaExceeded"/>, measured by the upload's length less
+    /// <paramref name="releasedBytes"/>, see <see cref="BlobManagementUsageManager"/>).
     /// </para>
     /// <para>
     /// Then the BLOB is saved under a new name (<see cref="CreateBlobName"/>) without overwriting - the contributors run
@@ -503,6 +506,8 @@ public class FileDescriptorManager : DomainService
     /// <see cref="FileDescriptor.NameKey"/>.</param>
     /// <param name="configureFile">Runs on the new descriptor before it is inserted (see <see cref="UploadAsync"/>).</param>
     /// <param name="id">The new descriptor's id; <c>null</c> generates one.</param>
+    /// <param name="releasedBytes">The bytes the save frees once it is done - those of the descriptor an overriding save
+    /// replaces - which still count while the allocation is checked.</param>
     protected virtual async Task<FileDescriptor> StoreAsync(
         string containerName,
         string name,
@@ -511,17 +516,20 @@ public class FileDescriptorManager : DomainService
         bool nameIsAddress,
         Action<FileDescriptor>? configureFile,
         CancellationToken cancellationToken,
-        Guid? id = null)
+        Guid? id = null,
+        long releasedBytes = 0)
     {
         var maxBytes = BlobStreamBuffering.GetMaxBufferedBytes(BlobContainerConfigurationProvider.Get(containerName));
-        await using var content = await BlobStreamBuffering.CopyToSeekableAsync(stream, maxBytes, cancellationToken);
+        var content = await BlobStreamBuffering.EnsureSeekableAsync(stream, maxBytes, cancellationToken);
+        // A copy is this method's to dispose; the caller's own stream, used as it is, stays the caller's.
+        await using var ownedCopy = ReferenceEquals(content, stream) ? null : content;
 
         var mimeType = await MimeTypeDetector.DetectAsync(content, name, cancellationToken);
         var hash = await ComputeHashAsync(content, cancellationToken);
 
         // Taken before the save: the content belongs to the pipeline while it runs.
         var uploadLength = content.Length;
-        await UsageManager.CheckCanStoreAsync(uploadLength, cancellationToken);
+        await UsageManager.CheckCanStoreAsync(uploadLength, releasedBytes, cancellationToken);
 
         // Named for what the container stores: a JPEG it stores as WebP gets a .webp BLOB.
         var blobName = CreateBlobName(GetStoredMimeType(containerName, mimeType));

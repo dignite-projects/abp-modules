@@ -84,8 +84,11 @@ public class BlobManagementUploadAppService : BlobManagementAppService, IBlobMan
             var name = !content.FileName.IsNullOrWhiteSpace() ? content.FileName!.Trim() : "file";
             CheckNameLength(name, nameof(IRemoteStreamContent.FileName));
 
-            // Capped at the ticket's size whatever the request said its length was.
-            await using var buffer = await BlobStreamBuffering.CopyToSeekableAsync(content.GetStream(), upload.MaxSize, default);
+            // Capped at the ticket's size whatever the request said its length was. A form file ASP.NET Core buffered is
+            // seekable already and used as it is; a raw body is copied once, and the copy is this method's to dispose.
+            var body = content.GetStream();
+            var buffer = await BlobStreamBuffering.EnsureSeekableAsync(body, upload.MaxSize, default);
+            await using var ownedCopy = ReferenceEquals(buffer, body) ? null : buffer;
             var contentType = await MimeTypeDetector.DetectAsync(buffer, name);
             if (!upload.Allows(contentType))
             {

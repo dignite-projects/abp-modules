@@ -191,8 +191,10 @@ public class BlobManagementUploadApi_Tests : AbpWebApplicationFactoryIntegratedT
         mappings[Dignite.Abp.BlobStoring.Imaging.BlobStoringImagingErrorCodes.ImageTooLarge].ShouldBe(HttpStatusCode.BadRequest);
         mappings[Dignite.Abp.BlobStoring.Imaging.BlobStoringImagingErrorCodes.ImageTooSmall].ShouldBe(HttpStatusCode.BadRequest);
         mappings[Dignite.Abp.BlobStoring.Imaging.BlobStoringImagingErrorCodes.ImageProcessingFailed].ShouldBe(HttpStatusCode.UnprocessableEntity);
-        mappings[Dignite.Abp.BlobStoring.Imaging.BlobStoringImagingErrorCodes.ImageDecodeTimeout].ShouldBe(HttpStatusCode.UnprocessableEntity);
-        mappings[BlobManagementErrorCodes.StorageQuotaExceeded].ShouldBe(HttpStatusCode.InsufficientStorage);
+        mappings[Dignite.Abp.BlobStoring.Imaging.BlobStoringImagingErrorCodes.ImageDecodeTimeout].ShouldBe(HttpStatusCode.ServiceUnavailable);
+
+        // Over the allocation keeps ABP's 403: a 5xx would be retried by HTTP clients' resilience handlers.
+        mappings.ShouldNotContainKey(BlobManagementErrorCodes.StorageQuotaExceeded);
     }
 
     private async Task<HttpResponseMessage> PostFileAsync(string url, string name, byte[] bytes)

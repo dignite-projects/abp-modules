@@ -184,7 +184,7 @@ Usage is counted from the file descriptors: the size of every file, across every
 | `BlobManagement:BlobAlreadyExists` | The name is taken and overwriting was not asked for (HTTP 409); the provider turns it into ABP's `BlobAlreadyExistsException`. |
 | `BlobManagement:BlobNotFound` | No file of that name (HTTP 404). |
 | `BlobManagement:BlobManagementDisabled` | The tenant's `BlobManagement.Enable` is off. |
-| `BlobManagement:StorageQuotaExceeded` | The tenant's `BlobManagement.StorageSize` would be exceeded (HTTP 507). |
+| `BlobManagement:StorageQuotaExceeded` | The tenant's `BlobManagement.StorageSize` would be exceeded (HTTP 403). An overriding save is checked for the net change: the bytes of the file it replaces count as freed. |
 | `BlobManagement:FileAddressedByName` | The file was saved by an application under its name, and is not renamed, moved or marked public by id (HTTP 409). |
 | `BlobManagement:UploadTicketInvalid` | An upload ticket that is expired, altered or not this Blob Management's (HTTP 403). |
 | `BlobManagement:UploadTicketUsed` | The ticket's file was stored already: a ticket stores one file, once (HTTP 409). |
@@ -200,7 +200,8 @@ The container's contributors add their own, which Blob Management's HTTP API ans
 | `Dignite.Abp.BlobStoring:ContentTypeNotAllowed` | 415 |
 | `Dignite.Abp.BlobStoring:ContentTypeMismatch` | 400 |
 | `Dignite.Abp.BlobStoring.Imaging:ImageTooLarge`, `ImageTooSmall` | 400 |
-| `Dignite.Abp.BlobStoring.Imaging:ImageProcessingFailed`, `ImageDecodeTimeout` | 422 |
+| `Dignite.Abp.BlobStoring.Imaging:ImageProcessingFailed` | 422 |
+| `Dignite.Abp.BlobStoring.Imaging:ImageDecodeTimeout` | 503 |
 
 ## See Also
 

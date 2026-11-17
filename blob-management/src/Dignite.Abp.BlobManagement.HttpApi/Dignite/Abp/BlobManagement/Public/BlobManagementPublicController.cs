@@ -11,7 +11,7 @@ using Volo.Abp.Validation;
 namespace Dignite.Abp.BlobManagement.Public;
 
 /// <summary>
-/// Public reads: <c>GET|HEAD /blobs/{containerName}/{blobName}</c>, optionally <c>?Width=&amp;Height=</c>, and
+/// Public reads: <c>GET|HEAD /blobs/{containerName}/{blobName}</c>, optionally <c>?width=&amp;height=</c>, and
 /// <c>?__tenant=</c> to name the tenant of an anonymous request (see <see cref="BlobManagementPublicUrl"/>). An address, not an
 /// API: it is left out of ABP's API definition, so no client proxy is generated for it. Conditional and range requests
 /// and the safety headers are <see cref="BlobManagementFileReadController"/>'s.
@@ -51,6 +51,10 @@ public class BlobManagementPublicController : BlobManagementFileReadController
     public virtual async Task<IActionResult> GetAsync(string containerName, string blobName, [FromQuery] BlobManagementPublicReadInput input)
     {
         var isHead = HttpMethods.IsHead(Request.Method);
+        if (HasRepeatedSize())
+        {
+            return BadRequest();
+        }
 
         BlobManagementPublicReadResult result;
         try
@@ -73,6 +77,16 @@ public class BlobManagementPublicController : BlobManagementFileReadController
         // A HEAD announces the stored length; a size asked is rendered, and its length is not known without rendering.
         var sized = (input.Width ?? 0) > 0 || (input.Height ?? 0) > 0;
         return CreateFileResult(result, isHead, sized ? null : result.File.Size);
+    }
+
+    /// <summary>
+    /// Whether the query names a width or a height more than once (the names in any case). Model binding would take the
+    /// first, while the address, and so a CDN's cache key, would differ from the one with a single value: one rendition
+    /// would have many addresses. Refused, so it has one.
+    /// </summary>
+    protected virtual bool HasRepeatedSize()
+    {
+        return Request.Query["width"].Count > 1 || Request.Query["height"].Count > 1;
     }
 
     protected virtual void SetCacheHeaders()
