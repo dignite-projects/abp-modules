@@ -18,6 +18,9 @@ so it stays clear which part of the repository actually moved.
 
 ### Added
 
+- **blob-management:** pre-releases now carry the Blob Management packages, so this org's projects can build against them
+  from GitHub Packages (first: `10.7.7-preview.1`). A stable release still leaves them out until the module is complete.
+
 #### blob-storing
 
 - **New package `Dignite.Abp.BlobStoring.Imaging.SkiaSharp`: JPEGs stored as WebP, and photos turned upright.**
