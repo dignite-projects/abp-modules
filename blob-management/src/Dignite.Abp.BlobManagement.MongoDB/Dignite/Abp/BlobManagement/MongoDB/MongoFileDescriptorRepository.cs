@@ -82,6 +82,36 @@ public class MongoFileDescriptorRepository : MongoDbRepository<IBlobManagementMo
             .LongCountAsync(token);
     }
 
+    public virtual async Task<List<BlobManagementTenantUsage>> GetTenantUsagesAsync(
+        int skipCount,
+        int maxResultCount,
+        CancellationToken cancellationToken = default)
+    {
+        var token = GetCancellationToken(cancellationToken);
+        return await (await GetQueryableAsync(token))
+            .GroupBy(f => f.TenantId)
+            .Select(g => new BlobManagementTenantUsage
+            {
+                TenantId = g.Key,
+                StoredBytes = g.Sum(f => f.Size),
+                FileCount = g.LongCount()
+            })
+            // The id ends the order, so two pages never share or miss a tenant.
+            .OrderByDescending(u => u.StoredBytes)
+            .ThenBy(u => u.TenantId)
+            .PageBy(skipCount, maxResultCount)
+            .ToListAsync(token);
+    }
+
+    public virtual async Task<long> GetTenantCountAsync(CancellationToken cancellationToken = default)
+    {
+        var token = GetCancellationToken(cancellationToken);
+        return await (await GetQueryableAsync(token))
+            .Select(f => f.TenantId)
+            .Distinct()
+            .LongCountAsync(token);
+    }
+
     public virtual async Task<List<BlobManagementClientUsage>> GetClientUsagesAsync(
         string? containerName,
         CancellationToken cancellationToken = default)

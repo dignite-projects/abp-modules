@@ -1,10 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { CoreTestingModule } from '@abp/ng.core/testing';
-import { BlobManagementComponent } from './blob-management.component';
+import { BlobManagementFilesComponent } from './blob-management-files.component';
 import { BlobManagementContainerService } from '../proxy/containers';
 
-describe('BlobManagementComponent', () => {
+describe('BlobManagementFilesComponent', () => {
   let getList: ReturnType<typeof vi.fn>;
 
   function container(name: string, createDirectories = false) {
@@ -15,12 +15,12 @@ describe('BlobManagementComponent', () => {
     getList = vi.fn();
     answers.forEach(items => getList.mockReturnValueOnce(of({ items })));
     TestBed.configureTestingModule({
-      imports: [BlobManagementComponent, CoreTestingModule.withConfig()],
+      imports: [BlobManagementFilesComponent, CoreTestingModule.withConfig()],
       providers: [{ provide: BlobManagementContainerService, useValue: { getList } }],
     });
     // The page's parts have their own tests; here only what the page itself decides is run.
-    TestBed.overrideComponent(BlobManagementComponent, { set: { template: '', imports: [] } });
-    return TestBed.createComponent(BlobManagementComponent).componentInstance;
+    TestBed.overrideComponent(BlobManagementFilesComponent, { set: { template: '', imports: [] } });
+    return TestBed.createComponent(BlobManagementFilesComponent).componentInstance;
   }
 
   it('shows the first container', () => {

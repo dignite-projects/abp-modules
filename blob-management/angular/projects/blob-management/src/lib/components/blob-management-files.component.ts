@@ -4,23 +4,17 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { eBlobManagementPolicyNames, eBlobManagementResourceNames } from '../blob-management-permissions';
 import { BlobManagementContainerDto, BlobManagementContainerService } from '../proxy/containers';
 import { BlobManagementBrowserComponent } from './blob-browser/blob-browser.component';
-import { BlobManagementUsageComponent } from './blob-usage/blob-usage.component';
 
 /**
- * The management page, for whoever holds `BlobManagement.Containers`: what the tenant stores - by container, by user
- * and by client - and, one container at a time, its directories and the files in them. The files are read here and
- * nothing more: a file is stored, renamed, moved and deleted by the business system that keeps it. Directories are
- * kept here, by the permissions on the container, which a user who manages grants opens from here.
+ * The files page, for whoever holds `BlobManagement.Containers`: one container at a time, its directories and the files
+ * in them. What the tenant stores is the usage page's. The files are read here and nothing more: a file is stored,
+ * renamed, moved and deleted by the business system that keeps it. Directories are kept here, by the permissions on the
+ * container, which a user who manages grants opens from here.
  */
 @Component({
-  selector: 'blob-management-page',
+  selector: 'blob-management-files',
   changeDetection: ChangeDetectionStrategy.Eager,
   template: `
-    <div class="card mb-3">
-      <div class="card-body">
-        <blob-usage />
-      </div>
-    </div>
     <div class="card">
       <div class="card-body">
         @if (loaded() && containers().length === 0) {
@@ -64,9 +58,9 @@ import { BlobManagementUsageComponent } from './blob-usage/blob-usage.component'
       </div>
     </div>
   `,
-  imports: [CoreModule, BlobManagementBrowserComponent, BlobManagementUsageComponent, ResourcePermissionManagementComponent],
+  imports: [CoreModule, BlobManagementBrowserComponent, ResourcePermissionManagementComponent],
 })
-export class BlobManagementComponent {
+export class BlobManagementFilesComponent {
   private readonly containerService = inject(BlobManagementContainerService);
   private readonly permissionService = inject(PermissionService);
 

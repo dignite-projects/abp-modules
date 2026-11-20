@@ -7,13 +7,16 @@ import {
 } from '@abp/ng.core';
 import { Routes } from '@angular/router';
 import { eBlobManagementPolicyNames } from './blob-management-permissions';
-import { BlobManagementComponent } from './components/blob-management.component';
+import { BlobManagementFilesComponent } from './components/blob-management-files.component';
+import { BlobManagementUsageComponent } from './components/blob-usage/blob-usage.component';
 import { eBlobManagementComponents } from './enums/components';
 
 /**
- * The management page, for holders of `BlobManagement.Containers`:
+ * The management pages, for holders of `BlobManagement.Containers`:
  * `{ path: 'blob-management', loadChildren: () => import('@dignite/ng.blob-management').then(m => m.createRoutes()) }`.
- * An application replaces the page by registering its own component under `eBlobManagementComponents.BlobManagement`.
+ * `/blob-management/usage` is what the tenant stores and `/blob-management/files` its containers' directories and files;
+ * `/blob-management` opens the first. An application replaces a page by registering its own component under
+ * `eBlobManagementComponents.Usage` or `eBlobManagementComponents.Files`.
  */
 export const createRoutes = (): Routes => [
   {
@@ -22,16 +25,28 @@ export const createRoutes = (): Routes => [
     canActivate: [authGuard, permissionGuard],
     data: { requiredPolicy: eBlobManagementPolicyNames.Containers },
     children: [
+      { path: '', pathMatch: 'full', redirectTo: 'usage' },
       {
-        path: '',
+        path: 'usage',
         component: ReplaceableRouteContainerComponent,
         data: {
           replaceableComponent: {
-            key: eBlobManagementComponents.BlobManagement,
-            defaultComponent: BlobManagementComponent,
-          } as ReplaceableComponents.RouteData<BlobManagementComponent>,
+            key: eBlobManagementComponents.Usage,
+            defaultComponent: BlobManagementUsageComponent,
+          } as ReplaceableComponents.RouteData<BlobManagementUsageComponent>,
         },
-        title: 'BlobManagement::Menu:BlobManagement',
+        title: 'BlobManagement::Usage',
+      },
+      {
+        path: 'files',
+        component: ReplaceableRouteContainerComponent,
+        data: {
+          replaceableComponent: {
+            key: eBlobManagementComponents.Files,
+            defaultComponent: BlobManagementFilesComponent,
+          } as ReplaceableComponents.RouteData<BlobManagementFilesComponent>,
+        },
+        title: 'BlobManagement::Menu:Files',
       },
     ],
   },

@@ -39,7 +39,7 @@ An application reaches a managed container in two ways, and both end in the same
 What every managed container adds to plain BLOB storing:
 
 * a **storage allocation** for each tenant, across every container ([Setting Up](setting-up.md#tenant-storage));
-* **usage figures**: what the tenant, each container, each user and each client store ([Usage](usage.md));
+* **usage figures**: what the tenant, each container, each user and each client store, and, for the host, each tenant ([Usage](usage.md));
 * **upload rules** per container, as presets of the [BLOB Storing](../blob-storing/index.md) pipeline contributors ([Presets](setting-up.md#presets));
 * **public read** at `/blobs` with image sizing, for the files an application marks public ([Public Addresses](provider.md#public-addresses));
 * **upload tickets and read links**, so a browser sends or reads a file directly ([Keeping Files by Id](files.md#upload-tickets));

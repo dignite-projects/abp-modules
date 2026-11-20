@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.Features;
+using Volo.Abp.MultiTenancy;
 using Volo.Abp.Users;
 
 namespace Dignite.Abp.BlobManagement.Usage;
@@ -29,14 +30,18 @@ public class BlobManagementUsageAppService : BlobManagementAppService, IBlobMana
 
     protected AbpBlobStoringOptions BlobStoringOptions { get; }
 
+    protected ITenantStore TenantStore { get; }
+
     public BlobManagementUsageAppService(
         IFileDescriptorRepository fileRepository,
         BlobManagementUsageManager usageManager,
-        IOptions<AbpBlobStoringOptions> blobStoringOptions)
+        IOptions<AbpBlobStoringOptions> blobStoringOptions,
+        ITenantStore tenantStore)
     {
         FileRepository = fileRepository;
         UsageManager = usageManager;
         BlobStoringOptions = blobStoringOptions.Value;
+        TenantStore = tenantStore;
     }
 
     public virtual async Task<BlobManagementUsageDto> GetAsync()
@@ -109,6 +114,49 @@ public class BlobManagementUsageAppService : BlobManagementAppService, IBlobMana
                 FileCount = u.FileCount
             })
             .ToList());
+    }
+
+    /// <summary>
+    /// Across tenants: what ABP's multi-tenant filter hides from every other method here. Authorized by the permission
+    /// that is defined for the host side only, so a tenant is refused whatever it is granted.
+    /// </summary>
+    [Authorize(BlobManagementPermissions.Containers.TenantUsages)]
+    public virtual async Task<PagedResultDto<BlobManagementTenantUsageDto>> GetTenantsAsync(GetBlobManagementTenantUsagesInput input)
+    {
+        GetUserId();
+
+        var count = await UsageManager.GetTenantCountAsync();
+        var usages = await UsageManager.GetTenantUsagesAsync(input.SkipCount, input.MaxResultCount);
+
+        var items = new List<BlobManagementTenantUsageDto>(usages.Count);
+        foreach (var usage in usages)
+        {
+            items.Add(new BlobManagementTenantUsageDto
+            {
+                TenantId = usage.TenantId,
+                TenantName = await FindTenantNameAsync(usage.TenantId),
+                StoredBytes = usage.StoredBytes,
+                FileCount = usage.FileCount,
+                StorageSize = await UsageManager.GetStorageSizeAsync(usage.TenantId)
+            });
+        }
+
+        return new PagedResultDto<BlobManagementTenantUsageDto>(count, items);
+    }
+
+    /// <summary>
+    /// The name of a tenant, from ABP's tenant store (which Tenant Management implements); <c>null</c> for the host, and for
+    /// a tenant the store does not know.
+    /// </summary>
+    protected virtual async Task<string?> FindTenantNameAsync(Guid? tenantId)
+    {
+        if (!tenantId.HasValue)
+        {
+            return null;
+        }
+
+        var tenant = await TenantStore.FindAsync(tenantId.Value);
+        return tenant?.Name;
     }
 
     protected virtual string? NormalizeContainerName(string? containerName)

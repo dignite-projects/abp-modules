@@ -2,6 +2,8 @@
 export const eBlobManagementPolicyNames = {
   /** The management permission: the management page, and everything it reads. */
   Containers: 'BlobManagement.Containers',
+  /** Usage by tenant: defined for the host side only, so it is never granted in a tenant. */
+  TenantUsages: 'BlobManagement.Containers.TenantUsages',
   /** Manages the grants on containers. */
   ManagePermissions: 'BlobManagement.ManagePermissions',
 } as const;

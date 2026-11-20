@@ -182,7 +182,7 @@ Configure<BlobManagementReadLinkOptions>(options =>
 The file service over HTTP is `IBlobManagementFileAppService`, at `api/blob-management/files`. It admits two callers:
 
 * **an OAuth client granted the files of the file's container**, with a token that carries no user - for everything. A file in a container the client is not granted is not found;
-* **a user who holds `BlobManagement.Containers`** - for the reads only: the listing, one file and its bytes. This is what the [management page](angular-ui.md#the-management-page) reads with.
+* **a user who holds `BlobManagement.Containers`** - for the reads only: the listing, one file and its bytes. This is what the [management page](angular-ui.md#the-pages) reads with.
 
 No user stores, renames, moves or deletes a file here, and no user gets a ticket or a link.
 

@@ -37,4 +37,12 @@ public partial class BlobManagementUsageClientProxy : ClientProxyBase<IBlobManag
             { typeof(GetBlobManagementClientUsagesInput), input }
         });
     }
+
+    public virtual async Task<PagedResultDto<BlobManagementTenantUsageDto>> GetTenantsAsync(GetBlobManagementTenantUsagesInput input)
+    {
+        return await RequestAsync<PagedResultDto<BlobManagementTenantUsageDto>>(nameof(GetTenantsAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(GetBlobManagementTenantUsagesInput), input }
+        });
+    }
 }

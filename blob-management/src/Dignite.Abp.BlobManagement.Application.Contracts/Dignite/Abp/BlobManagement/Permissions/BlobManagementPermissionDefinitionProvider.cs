@@ -17,7 +17,13 @@ public class BlobManagementPermissionDefinitionProvider : PermissionDefinitionPr
     {
         var group = context.AddGroup(BlobManagementPermissions.GroupName, L("Permission:BlobManagement"));
 
-        group.AddPermission(BlobManagementPermissions.Containers.Default, L("Permission:Containers"));
+        var containers = group.AddPermission(BlobManagementPermissions.Containers.Default, L("Permission:Containers"));
+
+        // The reading that crosses tenants: on the host side only, as ABP's Tenant Management defines its own.
+        containers.AddChild(
+            BlobManagementPermissions.Containers.TenantUsages,
+            L("Permission:TenantUsages"),
+            MultiTenancySides.Host);
 
         group.AddPermission(BlobManagementPermissions.ManagePermissions, L("Permission:ManagePermissions"));
 

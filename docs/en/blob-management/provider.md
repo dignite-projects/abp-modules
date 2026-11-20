@@ -83,7 +83,7 @@ A browser does not reach a remote Blob Management for a file that is not public:
 * **Tenants.** A multi-tenant application container stores in the current tenant, one that is not multi-tenant stores for the host - as with any provider - and the tenant's [storage allocation](setting-up.md#tenant-storage) applies.
 * **The user it is counted for.** Each file records the user it is counted for in the [usage figures](usage.md), and nothing else comes with it. In the same process it is the application's current user, as ABP's auditing records it. Remotely the client's token carries no user, so `Dignite.Abp.BlobManagement.HttpApi.Client` sends the application's current user with the save; a file stored over HTTP also records the OAuth client that stored it.
 
-The files an application saves are listed, read-only, on the [management page](angular-ui.md#the-management-page) beside the files it keeps by id.
+The files an application saves are listed, read-only, on the [management page](angular-ui.md#the-pages) beside the files it keeps by id.
 
 ## Calling the BLOB Service Directly
 

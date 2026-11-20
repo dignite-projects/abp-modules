@@ -55,6 +55,20 @@ public interface IFileDescriptorRepository : IBasicRepository<FileDescriptor, Gu
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// The stored bytes of each tenant of the deployment (<see cref="FileDescriptor.TenantId"/>; <c>null</c> gathers
+    /// the host's own files), the largest first, a page at a time. <b>Across tenants by contract</b>: unlike every other
+    /// query here it does not stop at the current tenant, so it is the caller's to run it with ABP's multi-tenant
+    /// filter disabled (<c>DataFilter.Disable&lt;IMultiTenant&gt;()</c>) and to authorize it for the host only.
+    /// </summary>
+    Task<List<BlobManagementTenantUsage>> GetTenantUsagesAsync(
+        int skipCount,
+        int maxResultCount,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>How many rows <see cref="GetTenantUsagesAsync"/> finds without paging; across tenants likewise.</summary>
+    Task<long> GetTenantCountAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// The live, confirmed public descriptor kept by id (no name key) of the container whose physical BLOB is
     /// <paramref name="blobName"/>, if any - the public address of a file kept by id names its BLOB.
     /// </summary>

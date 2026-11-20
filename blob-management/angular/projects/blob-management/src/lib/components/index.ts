@@ -1,4 +1,4 @@
-export * from './blob-management.component';
+export * from './blob-management-files.component';
 export * from './blob-browser/blob-browser.component';
 export * from './blob-directory-tree/blob-directory-tree.component';
 export * from './blob-file-list/blob-file-list.component';

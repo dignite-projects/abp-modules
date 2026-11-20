@@ -37,4 +37,11 @@ public class BlobManagementUsageController : BlobManagementController, IBlobMana
     {
         return UsageAppService.GetClientsAsync(input);
     }
+
+    [HttpGet]
+    [Route("tenants")]
+    public virtual Task<PagedResultDto<BlobManagementTenantUsageDto>> GetTenantsAsync(GetBlobManagementTenantUsagesInput input)
+    {
+        return UsageAppService.GetTenantsAsync(input);
+    }
 }

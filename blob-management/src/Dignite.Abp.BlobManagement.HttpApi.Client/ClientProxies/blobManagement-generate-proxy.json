@@ -2997,6 +2997,29 @@
                     "contentTypes": null,
                     "isRemoteStream": false
                   }
+                },
+                {
+                  "name": "GetTenantsAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "Dignite.Abp.BlobManagement.Usage.GetBlobManagementTenantUsagesInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                      "type": "Dignite.Abp.BlobManagement.Usage.GetBlobManagementTenantUsagesInput",
+                      "typeSimple": "Dignite.Abp.BlobManagement.Usage.GetBlobManagementTenantUsagesInput",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<Dignite.Abp.BlobManagement.Usage.BlobManagementTenantUsageDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<Dignite.Abp.BlobManagement.Usage.BlobManagementTenantUsageDto>",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
                 }
               ]
             }
@@ -3153,6 +3176,76 @@
               "returnValue": {
                 "type": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.Abp.BlobManagement.Usage.BlobManagementClientUsageDto>",
                 "typeSimple": "Volo.Abp.Application.Dtos.ListResultDto<Dignite.Abp.BlobManagement.Usage.BlobManagementClientUsageDto>",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Abp.BlobManagement.Usage.IBlobManagementUsageAppService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "GetTenantsAsyncByInput": {
+              "uniqueName": "GetTenantsAsyncByInput",
+              "name": "GetTenantsAsync",
+              "httpMethod": "GET",
+              "url": "api/blob-management/usage/tenants",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "Dignite.Abp.BlobManagement.Usage.GetBlobManagementTenantUsagesInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                  "type": "Dignite.Abp.BlobManagement.Usage.GetBlobManagementTenantUsagesInput",
+                  "typeSimple": "Dignite.Abp.BlobManagement.Usage.GetBlobManagementTenantUsagesInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "SkipCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MaxResultCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<Dignite.Abp.BlobManagement.Usage.BlobManagementTenantUsageDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<Dignite.Abp.BlobManagement.Usage.BlobManagementTenantUsageDto>",
                 "summary": null,
                 "contentTypes": [
                   "text/plain",

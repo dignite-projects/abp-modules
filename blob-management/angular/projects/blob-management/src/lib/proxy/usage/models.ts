@@ -12,6 +12,14 @@ export interface BlobManagementContainerUsageDto {
   fileCount?: number;
 }
 
+export interface BlobManagementTenantUsageDto {
+  tenantId?: string | null;
+  tenantName?: string | null;
+  storedBytes?: number;
+  fileCount?: number;
+  storageSize?: number | null;
+}
+
 export interface BlobManagementUsageDto {
   storedBytes?: number;
   storageSize?: number | null;
@@ -28,6 +36,9 @@ export interface BlobManagementUserUsageDto {
 
 export interface GetBlobManagementClientUsagesInput {
   containerName?: string | null;
+}
+
+export interface GetBlobManagementTenantUsagesInput extends PagedResultRequestDto {
 }
 
 export interface GetBlobManagementUserUsagesInput extends PagedResultRequestDto {

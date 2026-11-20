@@ -19,4 +19,11 @@ public interface IBlobManagementUsageAppService : IApplicationService
 
     /// <summary>The stored bytes of each client, the largest first.</summary>
     Task<ListResultDto<BlobManagementClientUsageDto>> GetClientsAsync(GetBlobManagementClientUsagesInput input);
+
+    /// <summary>
+    /// The stored bytes of each tenant of the deployment and of the host itself, the largest first, a page at a time -
+    /// the one breakdown that is not the current tenant's. For the host only: it needs
+    /// <see cref="Permissions.BlobManagementPermissions.Containers.TenantUsages"/>, which is defined for the host side.
+    /// </summary>
+    Task<PagedResultDto<BlobManagementTenantUsageDto>> GetTenantsAsync(GetBlobManagementTenantUsagesInput input);
 }

@@ -1,4 +1,4 @@
-import type { BlobManagementClientUsageDto, BlobManagementUsageDto, BlobManagementUserUsageDto, GetBlobManagementClientUsagesInput, GetBlobManagementUserUsagesInput } from './models';
+import type { BlobManagementClientUsageDto, BlobManagementTenantUsageDto, BlobManagementUsageDto, BlobManagementUserUsageDto, GetBlobManagementClientUsagesInput, GetBlobManagementTenantUsagesInput, GetBlobManagementUserUsagesInput } from './models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { ListResultDto, PagedResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
@@ -33,6 +33,17 @@ export class BlobManagementUsageService {
   
 
   
+  getTenants = (input: GetBlobManagementTenantUsagesInput, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, PagedResultDto<BlobManagementTenantUsageDto>>({
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      url: '/api/blob-management/usage/tenants',
+      params: { skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+    },
+      { apiName: this.apiName,...config });
+
+
+
   getUsers = (input: GetBlobManagementUserUsagesInput, config?: Partial<Rest.Config>) =>
     this.restService.request<any, PagedResultDto<BlobManagementUserUsageDto>>({
       method: 'GET',
