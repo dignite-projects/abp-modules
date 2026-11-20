@@ -26,7 +26,12 @@ public interface IBlobManagementBlobService : IApplicationService
     /// <c>Dignite.Abp.BlobManagement.HttpApi.Client</c> sends it, since the client's token carries no user.</param>
     /// <param name="isPublic">Whether anyone may read the BLOB at its public address, without signing in: what the
     /// application's container declares (<c>UseBlobManagement(p =&gt; p.IsPublic = true)</c>), sent with every save.</param>
-    Task<BlobManagementBlobDto> SaveAsync(string containerName, string blobName, IRemoteStreamContent content, bool overrideExisting = false, Guid? creatorId = null, bool isPublic = false);
+    /// <param name="sha256">The SHA-256 of the bytes, as base64, when the caller wants the upload verified: a different one
+    /// fails with <see cref="BlobManagementErrorCodes.ChecksumMismatch"/> and nothing is stored; one that is not base64 of
+    /// 32 bytes fails with <see cref="BlobManagementErrorCodes.ChecksumInvalid"/>. <c>null</c> asks for no check, and no
+    /// hash is computed. A caller that stores through ABP's <c>IBlobContainer</c> has no way to send one: the provider
+    /// path is not checked (<c>dev-docs/upload-checksum-decision.md</c>).</param>
+    Task<BlobManagementBlobDto> SaveAsync(string containerName, string blobName, IRemoteStreamContent content, bool overrideExisting = false, Guid? creatorId = null, bool isPublic = false, string? sha256 = null);
 
     /// <summary>The content of <paramref name="blobName"/>, or <c>null</c> when there is no such file.</summary>
     Task<IRemoteStreamContent?> GetOrNullAsync(string containerName, string blobName);

@@ -22,7 +22,8 @@ public interface IBlobManagementUploadAppService : IApplicationService
     /// <summary>
     /// Stores the file the ticket allows, under the id it names, pending until its business system confirms it. The
     /// ticket's limits and the container's rules both apply. A ticket is used once: a second upload fails with
-    /// <see cref="BlobManagementErrorCodes.UploadTicketUsed"/>.
+    /// <see cref="BlobManagementErrorCodes.UploadTicketUsed"/>. <paramref name="sha256"/> (base64) asks for the upload to be
+    /// verified, as in <see cref="Blobs.IBlobManagementBlobService.SaveAsync"/>.
     /// </summary>
-    Task<BlobManagementFileDto> UploadAsync(string ticket, IRemoteStreamContent file);
+    Task<BlobManagementFileDto> UploadAsync(string ticket, IRemoteStreamContent file, string? sha256 = null);
 }

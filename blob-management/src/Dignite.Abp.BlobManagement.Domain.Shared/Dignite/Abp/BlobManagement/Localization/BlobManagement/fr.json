@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "Le conteneur « {ContainerName} » ne contient aucun fichier nommé « {BlobName} ».",
     "BlobManagement:BlobManagementDisabled": "La gestion des blobs n’est pas activée pour ce locataire.",
     "BlobManagement:StorageQuotaExceeded": "L’enregistrement de ce fichier dépasserait le stockage de {StorageSize} Mo.",
+    "BlobManagement:ChecksumMismatch": "Le SHA-256 du fichier ne correspond pas à la somme de contrôle envoyée avec le téléversement. Rien n’a été enregistré.",
+    "BlobManagement:ChecksumInvalid": "La somme de contrôle envoyée avec le téléversement ne peut pas être vérifiée : ce doit être le SHA-256 du fichier, en base64.",
     "BlobManagement:DirectoriesNotAllowed": "Le conteneur « {ContainerName} » n’a pas de dossiers.",
     "BlobManagement:DirectoryNotFound": "Le dossier n’existe pas.",
     "BlobManagement:DirectoryNameAlreadyExists": "Un dossier nommé « {Name} » existe déjà ici.",

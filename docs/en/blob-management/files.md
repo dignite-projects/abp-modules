@@ -88,6 +88,22 @@ A file (`BlobManagementFileDto`) has its `id`, `containerName`, `directoryId`, `
 
 A file stored over HTTP also records the client that stored it (`clientId`).
 
+## Verifying an Upload
+
+A business system that holds the SHA-256 of a file can have the upload checked against it. Send the value as **base64 of the 32 bytes** - the spelling of [RFC 9530](https://www.rfc-editor.org/rfc/rfc9530.html)'s `Content-Digest` - and Blob Management compares it with the bytes that arrive, before anything is stored: a different one fails with `BlobManagement:ChecksumMismatch` (HTTP 400) and leaves no file, no BLOB and nothing counted. A value that is not base64 of 32 bytes is `BlobManagement:ChecksumInvalid` (400) too.
+
+| Way in | Where the value goes |
+|---|---|
+| `IBlobManagementFileService.CreateAsync` and `POST api/blob-management/files` | `Sha256` of the input; the form field `sha256` |
+| `IBlobManagementBlobService.SaveAsync` and `PUT api/blob-management/blobs/{containerName}` | the `sha256` argument; the query string `sha256` |
+| `POST api/blob-management/uploads/{ticket}` (the browser) | the form field `sha256`, or, when the body is the raw file, the header `Content-Digest: sha-256=:<base64>:` |
+
+The check is optional and costs nothing when it is not asked for: without a value no hash is computed, and the file's `Hash` is empty. With one, the hash is taken while the bytes are read in, so the upload does not wait for it afterwards. The value that was verified is kept as the file's hash, and the BLOB API's `BlobManagementBlobDto.Hash` returns it, exactly as it was sent. It is the hash of the bytes the business system sent, before the container's [pipeline](setting-up.md) changed them - a JPEG stored as WebP still carries the hash of the JPEG.
+
+A `Content-Digest` that names no `sha-256` (for example only `md5`) is refused rather than ignored: the check it asked for cannot be made. A browser cannot hash a large file in a single call (`SubtleCrypto.digest` takes a whole buffer), so a direct upload from a browser sends a value for small files, or none.
+
+A file stored through ABP's `IBlobContainer` is not checked: the BLOB storing provider has nowhere to carry the value. A business system that wants the check calls `IBlobManagementBlobService` itself, as [Calling the BLOB Service Directly](provider.md#calling-the-blob-service-directly) shows.
+
 ## Public Files
 
 Whether anyone may read a file at its public address, without signing in, is the business system's call, kept on the file (`isPublic`):
@@ -191,7 +207,7 @@ No user stores, renames, moves or deletes a file here, and no user gets a ticket
 | `GET api/blob-management/files?containerName=&directoryId=` | The files of a place, a page at a time. |
 | `GET api/blob-management/files/{id}` | One file. |
 | `GET api/blob-management/files/{id}/content` | Its bytes, always as an attachment - a file may be HTML, and is never rendered on the host's address. |
-| `POST api/blob-management/files` | Stores a file: a form with `containerName`, an optional `directoryId`, `name`, `creatorId` and `isPublic`, and the file in `file`. |
+| `POST api/blob-management/files` | Stores a file: a form with `containerName`, an optional `directoryId`, `name`, `creatorId`, `isPublic` and [`sha256`](#verifying-an-upload), and the file in `file`. |
 | `PUT api/blob-management/files/{id}` | Renames it: `name`. |
 | `PUT api/blob-management/files/{id}/move` | Moves it to `directoryId` of the same container; none for the top. |
 | `PUT api/blob-management/files/{id}/public` | Marks it public or not: `isPublic`. |

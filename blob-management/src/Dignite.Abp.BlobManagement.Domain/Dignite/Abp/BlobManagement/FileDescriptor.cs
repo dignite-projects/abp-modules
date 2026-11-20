@@ -41,7 +41,7 @@ public class FileDescriptor : AggregateRoot<Guid>, ICreationAuditedObject, IModi
         string blobName,
         string mimeType,
         long size,
-        string hash,
+        string? hash,
         string? clientId = null,
         Guid? tenantId = null,
         bool nameIsAddress = false)
@@ -52,7 +52,7 @@ public class FileDescriptor : AggregateRoot<Guid>, ICreationAuditedObject, IModi
         BlobName = Check.NotNullOrWhiteSpace(blobName, nameof(blobName), FileDescriptorConsts.MaxBlobNameLength);
         MimeType = Check.NotNullOrWhiteSpace(mimeType, nameof(mimeType), FileDescriptorConsts.MaxMimeTypeLength);
         Size = size;
-        Hash = Check.NotNullOrWhiteSpace(hash, nameof(hash), FileDescriptorConsts.MaxHashLength);
+        Hash = Check.Length(hash, nameof(hash), FileDescriptorConsts.MaxHashLength);
         ClientId = Check.Length(clientId, nameof(clientId), FileDescriptorConsts.MaxClientIdLength);
         TenantId = tenantId;
         NameKey = nameIsAddress ? CreateNameKey(tenantId, containerName, name) : null;
@@ -77,10 +77,11 @@ public class FileDescriptor : AggregateRoot<Guid>, ICreationAuditedObject, IModi
     public virtual string MimeType { get; protected set; } = default!;
 
     /// <summary>
-    /// SHA-256 of the uploaded bytes (upper-case hex), before the container's contributors transformed them: what a
-    /// business system compares to find a file it already keeps.
+    /// The SHA-256 (base64) of the uploaded bytes, before the container's contributors transformed them, that the caller
+    /// sent with the upload and the module verified; <c>null</c> for a file stored without one, which costs no hash
+    /// (<c>dev-docs/upload-checksum-decision.md</c>).
     /// </summary>
-    public virtual string Hash { get; protected set; } = default!;
+    public virtual string? Hash { get; protected set; }
 
     /// <summary>The size of the stored bytes, after the container's pipeline contributors ran.</summary>
     public virtual long Size { get; protected set; }

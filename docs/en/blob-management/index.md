@@ -51,7 +51,7 @@ Blob Management keeps and counts the BLOBs business systems store. It is **not a
 
 ## How a File Is Stored
 
-Every file has a record, a *file descriptor*: the container, its name, the physical BLOB that holds the bytes, the type detected from the bytes, the size, a SHA-256 hash of what was uploaded, the directory it is in (for a file addressed by id in a container with directories), the tenant, the user it is counted for (`CreatorId`) and the OAuth client that stored it over HTTP (`ClientId`).
+Every file has a record, a *file descriptor*: the container, its name, the physical BLOB that holds the bytes, the type detected from the bytes, the size, the SHA-256 of what was uploaded when the caller sent one to be [verified](files.md#verifying-an-upload), the directory it is in (for a file addressed by id in a container with directories), the tenant, the user it is counted for (`CreatorId`) and the OAuth client that stored it over HTTP (`ClientId`).
 
 * The **physical BLOB** is named by Blob Management - 32 random hexadecimal digits and the extension of the detected type - and is the file's own: two files never share one, even with the same bytes, and it is deleted with its file.
 * The type is **detected from the bytes**, and a name whose extension contradicts the content is refused, before anything is stored.

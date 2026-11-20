@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "Bộ chứa '{ContainerName}' không có tệp nào tên '{BlobName}'.",
     "BlobManagement:BlobManagementDisabled": "Quản lý Blob chưa được bật cho đối tượng thuê này.",
     "BlobManagement:StorageQuotaExceeded": "Lưu tệp này sẽ vượt quá dung lượng lưu trữ {StorageSize} MB.",
+    "BlobManagement:ChecksumMismatch": "SHA-256 của tệp không khớp với mã kiểm tra được gửi cùng lần tải lên. Không có gì được lưu.",
+    "BlobManagement:ChecksumInvalid": "Không thể kiểm tra mã kiểm tra được gửi cùng lần tải lên: phải là SHA-256 của tệp, ở dạng base64.",
     "BlobManagement:DirectoriesNotAllowed": "Bộ chứa '{ContainerName}' không có thư mục.",
     "BlobManagement:DirectoryNotFound": "Thư mục không tồn tại.",
     "BlobManagement:DirectoryNameAlreadyExists": "Ở đây đã có một thư mục tên “{Name}”.",

@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "Il contenitore '{ContainerName}' non contiene alcun file denominato '{BlobName}'.",
     "BlobManagement:BlobManagementDisabled": "La gestione dei BLOB non è abilitata per questo tenant.",
     "BlobManagement:StorageQuotaExceeded": "Il salvataggio di questo file supererebbe lo spazio di archiviazione di {StorageSize} MB.",
+    "BlobManagement:ChecksumMismatch": "Lo SHA-256 del file non corrisponde al checksum inviato con il caricamento. Non è stato salvato nulla.",
+    "BlobManagement:ChecksumInvalid": "Il checksum inviato con il caricamento non può essere verificato: deve essere lo SHA-256 del file, in base64.",
     "BlobManagement:DirectoriesNotAllowed": "Il contenitore '{ContainerName}' non ha cartelle.",
     "BlobManagement:DirectoryNotFound": "La cartella non esiste.",
     "BlobManagement:DirectoryNameAlreadyExists": "Esiste già una cartella denominata «{Name}».",

@@ -20,7 +20,8 @@ public static class BlobManagementDbContextModelCreatingExtensions
             b.Property(f => f.Name).IsRequired().HasMaxLength(FileDescriptorConsts.MaxNameLength);
             b.Property(f => f.BlobName).IsRequired().HasMaxLength(FileDescriptorConsts.MaxBlobNameLength);
             b.Property(f => f.MimeType).IsRequired().HasMaxLength(FileDescriptorConsts.MaxMimeTypeLength);
-            b.Property(f => f.Hash).IsRequired().HasMaxLength(FileDescriptorConsts.MaxHashLength);
+            // Only a file stored with a checksum to verify has one.
+            b.Property(f => f.Hash).HasMaxLength(FileDescriptorConsts.MaxHashLength);
             b.Property(f => f.ClientId).HasMaxLength(FileDescriptorConsts.MaxClientIdLength);
 
             b.Property(f => f.NameKey).HasMaxLength(FileDescriptorConsts.MaxNameKeyLength);

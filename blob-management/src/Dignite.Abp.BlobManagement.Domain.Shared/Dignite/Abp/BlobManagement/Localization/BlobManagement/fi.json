@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "Säilössä '{ContainerName}' ei ole tiedostoa nimeltä '{BlobName}'.",
     "BlobManagement:BlobManagementDisabled": "Blob-hallinta ei ole käytössä tälle vuokraajalle.",
     "BlobManagement:StorageQuotaExceeded": "Tämän tiedoston tallentaminen ylittäisi {StorageSize} Mt:n tallennustilan.",
+    "BlobManagement:ChecksumMismatch": "Tiedoston SHA-256 ei vastaa latauksen mukana lähetettyä tarkistussummaa. Mitään ei tallennettu.",
+    "BlobManagement:ChecksumInvalid": "Latauksen mukana lähetettyä tarkistussummaa ei voi tarkistaa: sen on oltava tiedoston SHA-256 base64-muodossa.",
     "BlobManagement:DirectoriesNotAllowed": "Säilössä '{ContainerName}' ei ole kansioita.",
     "BlobManagement:DirectoryNotFound": "Kansiota ei ole.",
     "BlobManagement:DirectoryNameAlreadyExists": "Täällä on jo kansio nimeltä ”{Name}”.",

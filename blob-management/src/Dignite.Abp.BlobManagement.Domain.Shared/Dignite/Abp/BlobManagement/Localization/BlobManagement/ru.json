@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "В контейнере «{ContainerName}» нет файла с именем «{BlobName}».",
     "BlobManagement:BlobManagementDisabled": "Управление BLOB-объектами не включено для этого арендатора.",
     "BlobManagement:StorageQuotaExceeded": "Сохранение этого файла превысит объём хранилища {StorageSize} МБ.",
+    "BlobManagement:ChecksumMismatch": "SHA-256 файла не совпадает с контрольной суммой, отправленной при загрузке. Ничего не сохранено.",
+    "BlobManagement:ChecksumInvalid": "Контрольную сумму, отправленную при загрузке, невозможно проверить: это должен быть SHA-256 файла в формате base64.",
     "BlobManagement:DirectoriesNotAllowed": "В контейнере «{ContainerName}» нет папок.",
     "BlobManagement:DirectoryNotFound": "Папка не существует.",
     "BlobManagement:DirectoryNameAlreadyExists": "Здесь уже есть папка с именем «{Name}».",

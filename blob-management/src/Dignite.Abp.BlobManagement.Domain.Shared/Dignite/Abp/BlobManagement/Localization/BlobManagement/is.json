@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "Gámurinn '{ContainerName}' inniheldur enga skrá með heitið '{BlobName}'.",
     "BlobManagement:BlobManagementDisabled": "Blob-umsýsla er ekki virk fyrir þennan leigjanda.",
     "BlobManagement:StorageQuotaExceeded": "Ef þessi skrá er vistuð fer geymslan yfir {StorageSize} MB.",
+    "BlobManagement:ChecksumMismatch": "SHA-256 skrárinnar passar ekki við sannprófunarsummuna sem var send með upphleðslunni. Ekkert var vistað.",
+    "BlobManagement:ChecksumInvalid": "Ekki er hægt að athuga sannprófunarsummuna sem var send með upphleðslunni: hún verður að vera SHA-256 skrárinnar á base64-sniði.",
     "BlobManagement:DirectoriesNotAllowed": "Gámurinn '{ContainerName}' hefur engar möppur.",
     "BlobManagement:DirectoryNotFound": "Mappan er ekki til.",
     "BlobManagement:DirectoryNameAlreadyExists": "Hér er þegar til mappa sem heitir „{Name}“.",

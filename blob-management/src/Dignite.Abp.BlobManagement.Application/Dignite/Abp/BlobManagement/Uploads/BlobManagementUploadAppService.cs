@@ -67,7 +67,7 @@ public class BlobManagementUploadAppService : BlobManagementAppService, IBlobMan
     }
 
     [UnitOfWork(IsDisabled = true)]
-    public virtual async Task<BlobManagementFileDto> UploadAsync(string ticket, IRemoteStreamContent file)
+    public virtual async Task<BlobManagementFileDto> UploadAsync(string ticket, IRemoteStreamContent file, string? sha256 = null)
     {
         Check.NotNull(file, nameof(file));
 
@@ -107,7 +107,8 @@ public class BlobManagementUploadAppService : BlobManagementAppService, IBlobMan
                     descriptor.CreatorId = upload.UploaderId;
                 },
                 upload.ClientId,
-                upload.FileId);
+                upload.FileId,
+                expectedSha256: sha256);
 
             await unitOfWork.CompleteAsync();
             return Map(stored);

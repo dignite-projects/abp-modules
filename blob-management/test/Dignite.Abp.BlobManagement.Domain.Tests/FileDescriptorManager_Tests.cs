@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobStoring.Pipeline;
@@ -54,7 +55,8 @@ public abstract class FileDescriptorManager_Tests<TStartupModule> : BlobManageme
             Regex.IsMatch(descriptor.BlobName, "^[0-9a-f]{32}\\.pdf$").ShouldBeTrue();
             descriptor.MimeType.ShouldBe("application/pdf");
             descriptor.Size.ShouldBe(bytes.Length);
-            descriptor.Hash.Length.ShouldBe(64);
+            // No checksum was sent to verify, so no hash was computed.
+            descriptor.Hash.ShouldBeNull();
 
             var found = await FindAsync(BlobManagementTestContainers.Files, "2026/11/notes.pdf");
             found.ShouldNotBeNull();
@@ -215,7 +217,7 @@ public abstract class FileDescriptorManager_Tests<TStartupModule> : BlobManageme
 
     /// <summary>
     /// The same bytes under two names are stored twice, a BLOB for each file, in one tenant as across tenants; deleting
-    /// one file removes its BLOB and leaves the other's. The deleted row keeps its hash for the audit trail.
+    /// one file removes its BLOB and leaves the other's.
     /// </summary>
     [Fact]
     public async Task The_Same_Bytes_Should_Be_Stored_For_Each_File()
@@ -226,7 +228,6 @@ public abstract class FileDescriptorManager_Tests<TStartupModule> : BlobManageme
         var second = await CreateAsync(BlobManagementTestContainers.Files, "second-" + Guid.NewGuid().ToString("N") + ".pdf", bytes);
 
         second.BlobName.ShouldNotBe(first.BlobName);
-        second.Hash.ShouldBe(first.Hash);
         (await BlobExistsAsync(BlobManagementTestContainers.Files, first.BlobName)).ShouldBeTrue();
         (await ReadAsync(second)).ShouldBe(bytes);
 
@@ -238,7 +239,6 @@ public abstract class FileDescriptorManager_Tests<TStartupModule> : BlobManageme
         {
             var deleted = await WithUnitOfWorkAsync(() => _fileDescriptorRepository.GetAsync(first.Id));
             deleted.IsDeleted.ShouldBeTrue();
-            deleted.Hash.ShouldBe(first.Hash);
         }
 
         using (_currentTenant.Change(Guid.NewGuid()))
@@ -307,6 +307,183 @@ public abstract class FileDescriptorManager_Tests<TStartupModule> : BlobManageme
 
         descriptor.MimeType.ShouldBe("application/pdf");
         descriptor.BlobName.ShouldEndWith(".pdf");
+    }
+
+    [Fact]
+    public async Task A_File_Stored_Without_A_Checksum_Should_Have_No_Hash()
+    {
+        var descriptor = await CreateAsync(BlobManagementTestContainers.Files, "unchecked-" + Guid.NewGuid().ToString("N") + ".pdf", BlobManagementTestFiles.Pdf("unchecked"));
+
+        descriptor.Hash.ShouldBeNull();
+        (await FindAsync(BlobManagementTestContainers.Files, descriptor.Name))!.Hash.ShouldBeNull();
+    }
+
+    /// <summary>
+    /// The checksum the caller sent is verified against the bytes that arrived - taken while they are copied in when the
+    /// upload is not seekable, in a pass over them when it is - and kept as the file's hash, as it was sent.
+    /// </summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task A_Matching_Checksum_Should_Be_Verified_And_Kept(bool seekable)
+    {
+        var bytes = BlobManagementTestFiles.Pdf("verified " + Guid.NewGuid());
+        var checksum = Sha256(bytes);
+        var name = "verified-" + Guid.NewGuid().ToString("N") + ".pdf";
+
+        var descriptor = await CreateWithChecksumAsync(BlobManagementTestContainers.Files, name, bytes, checksum, seekable);
+
+        descriptor.Hash.ShouldBe(checksum);
+        (await ReadAsync(descriptor)).ShouldBe(bytes);
+        (await FindAsync(BlobManagementTestContainers.Files, name))!.Hash.ShouldBe(checksum);
+    }
+
+    [Fact]
+    public async Task A_Matching_Checksum_Should_Be_Verified_For_A_File_Kept_By_Id_Too()
+    {
+        var bytes = BlobManagementTestFiles.Pdf("by id " + Guid.NewGuid());
+        var checksum = Sha256(bytes);
+
+        var descriptor = await WithUnitOfWorkAsync(async () =>
+        {
+            using var stream = new NonSeekableStream(bytes);
+            return await _fileDescriptorManager.UploadAsync(
+                BlobManagementTestContainers.Files, "by-id.pdf", stream, expectedSha256: checksum);
+        });
+
+        descriptor.Hash.ShouldBe(checksum);
+        (await ReadAsync(descriptor)).ShouldBe(bytes);
+    }
+
+    /// <summary>A checksum the bytes do not have fails before anything is stored: no BLOB, no row.</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task A_Different_Checksum_Should_Fail_And_Store_Nothing(bool seekable)
+    {
+        var bytes = BlobManagementTestFiles.Pdf("tampered " + Guid.NewGuid());
+        var other = Sha256(BlobManagementTestFiles.Pdf("what the caller hashed " + Guid.NewGuid()));
+        var name = "tampered-" + Guid.NewGuid().ToString("N") + ".pdf";
+
+        var recording = GetRequiredService<RecordingFileDescriptorManager>();
+        var exception = await Should.ThrowAsync<BusinessException>(() => WithUnitOfWorkAsync(async () =>
+        {
+            using Stream stream = seekable ? new MemoryStream(bytes) : new NonSeekableStream(bytes);
+            return await recording.CreateAsync(BlobManagementTestContainers.Files, name, stream, expectedSha256: other);
+        }));
+
+        exception.Code.ShouldBe(BlobManagementErrorCodes.ChecksumMismatch);
+        exception.Data["Expected"].ShouldBe(other);
+        exception.Data["Actual"].ShouldBe(Sha256(bytes));
+        recording.GeneratedBlobNames.ShouldBeEmpty();
+        (await FindAsync(BlobManagementTestContainers.Files, name)).ShouldBeNull();
+    }
+
+    /// <summary>
+    /// A value that is not base64 of 32 bytes cannot be checked, and is refused without reading a byte of the upload.
+    /// </summary>
+    [Theory]
+    [InlineData("this is not base64!")]
+    [InlineData("AAAA")]
+    public async Task A_Checksum_That_Is_Not_A_Sha256_Should_Be_Refused_Before_The_Upload_Is_Read(string checksum)
+    {
+        using var stream = new NonSeekableStream(BlobManagementTestFiles.Pdf("never read"));
+
+        var exception = await Should.ThrowAsync<BusinessException>(() => WithUnitOfWorkAsync(() =>
+            _fileDescriptorManager.CreateAsync(
+                BlobManagementTestContainers.Files, "invalid-" + Guid.NewGuid().ToString("N") + ".pdf", stream, expectedSha256: checksum)));
+
+        exception.Code.ShouldBe(BlobManagementErrorCodes.ChecksumInvalid);
+        stream.BytesRead.ShouldBe(0);
+    }
+
+    /// <summary>
+    /// An overriding save releases the old file's name before it stores the new bytes; when the check fails, the old
+    /// file takes the name back and is as it was.
+    /// </summary>
+    [Fact]
+    public async Task A_Failed_Check_On_An_Overriding_Save_Should_Leave_The_Old_File()
+    {
+        var name = "override-" + Guid.NewGuid().ToString("N") + ".pdf";
+        var oldBytes = BlobManagementTestFiles.Pdf("old " + Guid.NewGuid());
+        var first = await CreateAsync(BlobManagementTestContainers.Files, name, oldBytes);
+
+        var exception = await Should.ThrowAsync<BusinessException>(() => CreateWithChecksumAsync(
+            BlobManagementTestContainers.Files, name, BlobManagementTestFiles.Pdf("new " + Guid.NewGuid()),
+            Sha256(BlobManagementTestFiles.Pdf("elsewhere")), seekable: true, overrideExisting: true));
+        exception.Code.ShouldBe(BlobManagementErrorCodes.ChecksumMismatch);
+
+        var found = await FindAsync(BlobManagementTestContainers.Files, name);
+        found.ShouldNotBeNull();
+        found!.Id.ShouldBe(first.Id);
+        (await ReadAsync(found)).ShouldBe(oldBytes);
+    }
+
+    private static string Sha256(byte[] bytes) => Convert.ToBase64String(SHA256.HashData(bytes));
+
+    private Task<FileDescriptor> CreateWithChecksumAsync(
+        string containerName, string name, byte[] bytes, string checksum, bool seekable, bool overrideExisting = false)
+    {
+        return WithUnitOfWorkAsync(async () =>
+        {
+            using Stream stream = seekable ? new MemoryStream(bytes) : new NonSeekableStream(bytes);
+            return await _fileDescriptorManager.CreateAsync(
+                containerName, name, stream, overrideExisting, expectedSha256: checksum);
+        });
+    }
+
+    /// <summary>A request body: forward-only, as ASP.NET Core's is. Counts what is read from it.</summary>
+    private sealed class NonSeekableStream : Stream
+    {
+        private readonly MemoryStream _inner;
+
+        public NonSeekableStream(byte[] bytes)
+        {
+            _inner = new MemoryStream(bytes);
+        }
+
+        public long BytesRead { get; private set; }
+
+        public override bool CanRead => true;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => false;
+
+        public override long Length => throw new NotSupportedException();
+
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            var read = _inner.Read(buffer, offset, count);
+            BytesRead += read;
+            return read;
+        }
+
+        public override void Flush()
+        {
+        }
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _inner.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
     }
 
     private Task<FileDescriptor> CreateAsync(string containerName, string name, byte[] bytes, bool overrideExisting = false)

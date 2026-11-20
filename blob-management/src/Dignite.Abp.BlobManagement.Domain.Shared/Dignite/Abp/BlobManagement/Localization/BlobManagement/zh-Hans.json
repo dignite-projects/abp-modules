@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "容器“{ContainerName}”中没有名为“{BlobName}”的文件。",
     "BlobManagement:BlobManagementDisabled": "此租户未启用 Blob 管理。",
     "BlobManagement:StorageQuotaExceeded": "保存此文件将超出 {StorageSize} MB 的存储空间。",
+    "BlobManagement:ChecksumMismatch": "文件的 SHA-256 与上传时发送的校验值不一致，未保存任何内容。",
+    "BlobManagement:ChecksumInvalid": "无法检查上传时发送的校验值：它必须是文件的 SHA-256，格式为 base64。",
     "BlobManagement:DirectoriesNotAllowed": "容器“{ContainerName}”没有目录。",
     "BlobManagement:DirectoryNotFound": "目录不存在。",
     "BlobManagement:DirectoryNameAlreadyExists": "此处已有名为“{Name}”的目录。",

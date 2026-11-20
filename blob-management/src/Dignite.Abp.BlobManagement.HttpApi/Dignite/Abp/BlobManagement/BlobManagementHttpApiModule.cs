@@ -71,6 +71,9 @@ public class BlobManagementHttpApiModule : AbpModule
             options.Map(BlobManagementErrorCodes.DirectoryTooDeep, HttpStatusCode.BadRequest);
             options.Map(BlobManagementErrorCodes.SortingNotSupported, HttpStatusCode.BadRequest);
             options.Map(BlobManagementErrorCodes.FileAddressedByName, HttpStatusCode.Conflict);
+            // A checksum the bytes do not match, or one that cannot be read: S3, Azure and Google Cloud Storage answer 400.
+            options.Map(BlobManagementErrorCodes.ChecksumMismatch, HttpStatusCode.BadRequest);
+            options.Map(BlobManagementErrorCodes.ChecksumInvalid, HttpStatusCode.BadRequest);
             // StorageQuotaExceeded keeps ABP's 403, as Google Drive answers storageQuotaExceeded: a refusal by the tenant's
             // allocation, which must not be a 5xx that HTTP clients' resilience handlers retry.
 

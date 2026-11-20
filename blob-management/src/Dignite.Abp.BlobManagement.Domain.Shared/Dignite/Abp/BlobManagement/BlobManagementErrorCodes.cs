@@ -38,6 +38,18 @@ public static class BlobManagementErrorCodes
     public const string StorageQuotaExceeded = Namespace + ":StorageQuotaExceeded";
 
     /// <summary>
+    /// The SHA-256 the caller sent with an upload is not the SHA-256 of the bytes that arrived. Nothing was stored.
+    /// Data: <c>Expected</c> and <c>Actual</c> (base64).
+    /// </summary>
+    public const string ChecksumMismatch = Namespace + ":ChecksumMismatch";
+
+    /// <summary>
+    /// The checksum the caller sent with an upload cannot be checked: it is not base64 of 32 bytes, or a
+    /// <c>Content-Digest</c> names no SHA-256 (the only algorithm this module checks). Nothing was stored.
+    /// </summary>
+    public const string ChecksumInvalid = Namespace + ":ChecksumInvalid";
+
+    /// <summary>
     /// The container does not allow directories (<c>AllowDirectories</c>, off by default). Data: <c>ContainerName</c>.
     /// </summary>
     public const string DirectoriesNotAllowed = Namespace + ":DirectoriesNotAllowed";

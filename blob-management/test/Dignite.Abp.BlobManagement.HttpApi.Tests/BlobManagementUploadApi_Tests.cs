@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobManagement.Files;
@@ -197,12 +198,94 @@ public class BlobManagementUploadApi_Tests : AbpWebApplicationFactoryIntegratedT
         mappings.ShouldNotContainKey(BlobManagementErrorCodes.StorageQuotaExceeded);
     }
 
-    private async Task<HttpResponseMessage> PostFileAsync(string url, string name, byte[] bytes)
+    /// <summary>
+    /// The browser sends the SHA-256 of the file with the upload and the module checks it before it stores anything: a
+    /// different one is a 400 that leaves the ticket unused, so the same ticket takes the right one next.
+    /// </summary>
+    [Fact]
+    public async Task A_Checksum_Sent_As_A_Form_Field_Should_Be_Verified_Before_The_Ticket_Is_Used()
+    {
+        var ticket = await IssueTicketAsync();
+        var bytes = BlobManagementTestFiles.Pdf("form checksum " + Guid.NewGuid());
+
+        using (var wrong = await PostFileAsync(ticket.UploadUrl, "a.pdf", bytes, Sha256(BlobManagementTestFiles.Pdf("another file"))))
+        {
+            wrong.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+            (await wrong.Content.ReadAsStringAsync()).ShouldContain(BlobManagementErrorCodes.ChecksumMismatch);
+        }
+
+        using (var unreadable = await PostFileAsync(ticket.UploadUrl, "a.pdf", bytes, "not base64!"))
+        {
+            unreadable.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+            (await unreadable.Content.ReadAsStringAsync()).ShouldContain(BlobManagementErrorCodes.ChecksumInvalid);
+        }
+
+        using (var right = await PostFileAsync(ticket.UploadUrl, "a.pdf", bytes, Sha256(bytes)))
+        {
+            right.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+    }
+
+    /// <summary>
+    /// A raw body is the file, so RFC 9530's <c>Content-Digest</c> is its checksum; a multipart body is not, so the
+    /// header is not read there.
+    /// </summary>
+    [Fact]
+    public async Task A_Content_Digest_Header_Should_Be_Verified_For_A_Raw_Body()
+    {
+        var ticket = await IssueTicketAsync();
+        var bytes = BlobManagementTestFiles.Pdf("raw digest " + Guid.NewGuid());
+
+        using (var wrong = await PostRawAsync(ticket.UploadUrl, bytes, "sha-256=:" + Sha256(BlobManagementTestFiles.Pdf("another file")) + ":"))
+        {
+            wrong.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+            (await wrong.Content.ReadAsStringAsync()).ShouldContain(BlobManagementErrorCodes.ChecksumMismatch);
+        }
+
+        // Only an algorithm this module does not check: refused, not ignored.
+        using (var md5 = await PostRawAsync(ticket.UploadUrl, bytes, "md5=:" + Convert.ToBase64String(MD5.HashData(bytes)) + ":"))
+        {
+            md5.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+            (await md5.Content.ReadAsStringAsync()).ShouldContain(BlobManagementErrorCodes.ChecksumInvalid);
+        }
+
+        // Other members of the dictionary are ignored; the sha-256 one decides.
+        using (var right = await PostRawAsync(ticket.UploadUrl, bytes, "sha-512=:" + Convert.ToBase64String(SHA512.HashData(bytes)) + ":, sha-256=:" + Sha256(bytes) + ":"))
+        {
+            right.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+    }
+
+    private async Task<BlobManagementUploadTicketDto> IssueTicketAsync()
+    {
+        using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
+        using (AsApplicationUser(_appUser))
+        {
+            return await _appFiles.CreateUploadTicketAsync(new CreateBlobManagementUploadTicketInput { ContainerName = Container });
+        }
+    }
+
+    private static string Sha256(byte[] bytes) => Convert.ToBase64String(SHA256.HashData(bytes));
+
+    private async Task<HttpResponseMessage> PostRawAsync(string url, byte[] bytes, string contentDigest)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, url + "?name=raw.pdf") { Content = new ByteArrayContent(bytes) };
+        request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+        request.Headers.TryAddWithoutValidation("Content-Digest", contentDigest);
+        return await Client.SendAsync(request);
+    }
+
+    private async Task<HttpResponseMessage> PostFileAsync(string url, string name, byte[] bytes, string? sha256 = null)
     {
         using var form = new MultipartFormDataContent();
         var file = new ByteArrayContent(bytes);
         file.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
         form.Add(file, "file", name);
+        if (sha256 != null)
+        {
+            form.Add(new StringContent(sha256), "sha256");
+        }
+
         return await Client.PostAsync(url, form);
     }
 

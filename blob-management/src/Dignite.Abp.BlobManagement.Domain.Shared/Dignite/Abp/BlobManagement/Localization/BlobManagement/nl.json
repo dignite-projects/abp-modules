@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "De container '{ContainerName}' bevat geen bestand met de naam '{BlobName}'.",
     "BlobManagement:BlobManagementDisabled": "Blobbeheer is niet ingeschakeld voor deze tenant.",
     "BlobManagement:StorageQuotaExceeded": "Door dit bestand op te slaan zou de opslag van {StorageSize} MB worden overschreden.",
+    "BlobManagement:ChecksumMismatch": "De SHA-256 van het bestand komt niet overeen met het controlegetal dat met de upload is meegestuurd. Er is niets opgeslagen.",
+    "BlobManagement:ChecksumInvalid": "Het controlegetal dat met de upload is meegestuurd kan niet worden gecontroleerd: het moet de SHA-256 van het bestand zijn, in base64.",
     "BlobManagement:DirectoriesNotAllowed": "De container '{ContainerName}' heeft geen mappen.",
     "BlobManagement:DirectoryNotFound": "De map bestaat niet.",
     "BlobManagement:DirectoryNameAlreadyExists": "Er bestaat hier al een map met de naam '{Name}'.",

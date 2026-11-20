@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "Kontajner „{ContainerName}“ neobsahuje žiadny súbor s názvom „{BlobName}“.",
     "BlobManagement:BlobManagementDisabled": "Správa objektov BLOB nie je pre tohto tenanta povolená.",
     "BlobManagement:StorageQuotaExceeded": "Uložením tohto súboru by sa prekročilo úložisko {StorageSize} MB.",
+    "BlobManagement:ChecksumMismatch": "SHA-256 súboru nezodpovedá kontrolnému súčtu odoslanému s nahraním. Nič sa neuložilo.",
+    "BlobManagement:ChecksumInvalid": "Kontrolný súčet odoslaný s nahraním sa nedá overiť: musí to byť SHA-256 súboru vo formáte base64.",
     "BlobManagement:DirectoriesNotAllowed": "Kontajner „{ContainerName}“ nemá žiadne priečinky.",
     "BlobManagement:DirectoryNotFound": "Priečinok neexistuje.",
     "BlobManagement:DirectoryNameAlreadyExists": "Priečinok s názvom „{Name}“ tu už existuje.",

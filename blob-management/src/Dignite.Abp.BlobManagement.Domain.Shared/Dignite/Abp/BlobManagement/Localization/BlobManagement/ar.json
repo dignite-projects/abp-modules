@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "الحاوية '{ContainerName}' لا تحتوي على ملف باسم '{BlobName}'.",
     "BlobManagement:BlobManagementDisabled": "إدارة كائنات Blob غير مفعّلة لهذا المستأجر.",
     "BlobManagement:StorageQuotaExceeded": "حفظ هذا الملف سيتجاوز مساحة التخزين البالغة {StorageSize} ميغابايت.",
+    "BlobManagement:ChecksumMismatch": "لا يتطابق SHA-256 للملف مع المجموع الاختباري المرسل مع الرفع. لم يتم تخزين أي شيء.",
+    "BlobManagement:ChecksumInvalid": "لا يمكن التحقق من المجموع الاختباري المرسل مع الرفع: يجب أن يكون SHA-256 للملف بترميز base64.",
     "BlobManagement:DirectoriesNotAllowed": "الحاوية '{ContainerName}' ليس لها مجلدات.",
     "BlobManagement:DirectoryNotFound": "المجلد غير موجود.",
     "BlobManagement:DirectoryNameAlreadyExists": "يوجد هنا مجلد باسم «{Name}» بالفعل.",

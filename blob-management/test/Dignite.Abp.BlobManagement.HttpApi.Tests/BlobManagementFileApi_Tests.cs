@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobManagement.Blobs;
 using Dignite.Abp.BlobManagement.Containers;
@@ -289,6 +290,32 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
         using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
         {
             await ShouldFailAsync(HttpStatusCode.Forbidden, () => _usage.GetTenantsAsync(input));
+        }
+    }
+
+    /// <summary>
+    /// The SHA-256 of the file travels as the form field <c>sha256</c> of the file API: a different one is a 400 and
+    /// leaves no file, the right one stores it.
+    /// </summary>
+    [Fact]
+    public async Task A_Checksum_Sent_With_A_File_Should_Be_Verified_Over_Http()
+    {
+        var bytes = BlobManagementTestFiles.Pdf("file checksum " + Guid.NewGuid());
+        var checksum = Convert.ToBase64String(SHA256.HashData(bytes));
+
+        using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
+        using (AsApplicationUser(_appUser))
+        {
+            var wrongInput = NewFile(Container, "checked.pdf", bytes);
+            wrongInput.Sha256 = Convert.ToBase64String(SHA256.HashData(BlobManagementTestFiles.Pdf("another file")));
+            var wrong = await Should.ThrowAsync<AbpRemoteCallException>(() => _appFiles.CreateAsync(wrongInput));
+            wrong.HttpStatusCode.ShouldBe((int)HttpStatusCode.BadRequest);
+            wrong.Error.Code.ShouldBe(BlobManagementErrorCodes.ChecksumMismatch);
+
+            var rightInput = NewFile(Container, "checked.pdf", bytes);
+            rightInput.Sha256 = checksum;
+            var file = await _appFiles.CreateAsync(rightInput);
+            file.Name.ShouldBe("checked.pdf");
         }
     }
 

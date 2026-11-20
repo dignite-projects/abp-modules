@@ -163,7 +163,6 @@ namespace Dignite.Abp.BlobManagement.Host.Migrations
                         .HasColumnName("ExtraProperties");
 
                     b.Property<string>("Hash")
-                        .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("TEXT");
 

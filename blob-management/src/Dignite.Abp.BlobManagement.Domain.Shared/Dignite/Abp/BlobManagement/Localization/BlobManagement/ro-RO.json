@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "Containerul „{ContainerName}” nu conține niciun fișier cu numele „{BlobName}”.",
     "BlobManagement:BlobManagementDisabled": "Gestionarea bloburilor nu este activată pentru acest chiriaș.",
     "BlobManagement:StorageQuotaExceeded": "Salvarea acestui fișier ar depăși spațiul de stocare de {StorageSize} MB.",
+    "BlobManagement:ChecksumMismatch": "SHA-256 al fișierului nu corespunde sumei de control trimise cu încărcarea. Nu s-a salvat nimic.",
+    "BlobManagement:ChecksumInvalid": "Suma de control trimisă cu încărcarea nu poate fi verificată: trebuie să fie SHA-256 al fișierului, în base64.",
     "BlobManagement:DirectoriesNotAllowed": "Containerul „{ContainerName}” nu are foldere.",
     "BlobManagement:DirectoryNotFound": "Folderul nu există.",
     "BlobManagement:DirectoryNameAlreadyExists": "Aici există deja un folder numit „{Name}”.",
