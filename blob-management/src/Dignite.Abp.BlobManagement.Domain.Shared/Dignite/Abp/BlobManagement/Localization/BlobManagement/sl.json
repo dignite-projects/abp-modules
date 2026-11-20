@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "Vsebnik '{ContainerName}' ne vsebuje datoteke z imenom '{BlobName}'.",
     "BlobManagement:BlobManagementDisabled": "Upravljanje objektov BLOB za tega najemnika ni omogočeno.",
     "BlobManagement:StorageQuotaExceeded": "Shranjevanje te datoteke bi preseglo shrambo {StorageSize} MB.",
+    "BlobManagement:ChecksumMismatch": "SHA-256 datoteke se ne ujema s kontrolno vsoto, poslano z nalaganjem. Nič ni bilo shranjeno.",
+    "BlobManagement:ChecksumInvalid": "Kontrolne vsote, poslane z nalaganjem, ni mogoče preveriti: biti mora SHA-256 datoteke v zapisu base64.",
     "BlobManagement:DirectoriesNotAllowed": "Vsebnik '{ContainerName}' nima map.",
     "BlobManagement:DirectoryNotFound": "Mapa ne obstaja.",
     "BlobManagement:DirectoryNameAlreadyExists": "Mapa z imenom »{Name}« tukaj že obstaja.",

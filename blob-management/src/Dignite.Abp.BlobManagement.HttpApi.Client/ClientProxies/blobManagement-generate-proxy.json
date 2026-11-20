@@ -88,6 +88,17 @@
                       "summary": null,
                       "description": null,
                       "displayName": null
+                    },
+                    {
+                      "name": "sha256",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": true,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
                     }
                   ],
                   "returnValue": {
@@ -204,8 +215,8 @@
             }
           ],
           "actions": {
-            "SaveAsyncByContainerNameAndBlobNameAndContentAndOverrideExistingAndCreatorIdAndIsPublic": {
-              "uniqueName": "SaveAsyncByContainerNameAndBlobNameAndContentAndOverrideExistingAndCreatorIdAndIsPublic",
+            "SaveAsyncByContainerNameAndBlobNameAndContentAndOverrideExistingAndCreatorIdAndIsPublicAndSha256": {
+              "uniqueName": "SaveAsyncByContainerNameAndBlobNameAndContentAndOverrideExistingAndCreatorIdAndIsPublicAndSha256",
               "name": "SaveAsync",
               "httpMethod": "PUT",
               "url": "api/blob-management/blobs/{containerName}",
@@ -273,6 +284,17 @@
                   "typeSimple": "boolean",
                   "isOptional": true,
                   "defaultValue": false,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "name": "sha256",
+                  "typeAsString": "System.String, System.Private.CoreLib",
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": true,
+                  "defaultValue": null,
                   "summary": null,
                   "description": null,
                   "displayName": null
@@ -360,6 +382,21 @@
                   "jsonName": null,
                   "type": "System.Boolean",
                   "typeSimple": "boolean",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Query",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "sha256",
+                  "name": "sha256",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
@@ -2284,6 +2321,21 @@
                   "jsonName": null,
                   "type": "System.Boolean",
                   "typeSimple": "boolean",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Form",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Sha256",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,

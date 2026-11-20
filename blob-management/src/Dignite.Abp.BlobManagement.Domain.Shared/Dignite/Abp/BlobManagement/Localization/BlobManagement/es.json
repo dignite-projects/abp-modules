@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "El contenedor '{ContainerName}' no tiene ningún archivo llamado '{BlobName}'.",
     "BlobManagement:BlobManagementDisabled": "La gestión de blobs no está habilitada para este inquilino.",
     "BlobManagement:StorageQuotaExceeded": "Guardar este archivo superaría el almacenamiento de {StorageSize} MB.",
+    "BlobManagement:ChecksumMismatch": "El SHA-256 del archivo no coincide con la suma de comprobación enviada con la carga. No se guardó nada.",
+    "BlobManagement:ChecksumInvalid": "No se puede comprobar la suma de comprobación enviada con la carga: debe ser el SHA-256 del archivo en base64.",
     "BlobManagement:DirectoriesNotAllowed": "El contenedor '{ContainerName}' no tiene carpetas.",
     "BlobManagement:DirectoryNotFound": "La carpeta no existe.",
     "BlobManagement:DirectoryNameAlreadyExists": "Ya existe aquí una carpeta llamada «{Name}».",

@@ -128,6 +128,8 @@ public class FileDescriptorManager : DomainService
     /// user, if there is one.</param>
     /// <param name="isPublic">Whether anyone may read the BLOB at its public address (<see cref="FileDescriptor.IsPublic"/>):
     /// the application's container declares it, and each save says it again, so an overriding save sets it anew.</param>
+    /// <param name="expectedSha256">The SHA-256 (base64) the caller says the bytes have; <c>null</c> asks for no check
+    /// (see <see cref="StoreAsync"/>).</param>
     public virtual async Task<FileDescriptor> CreateAsync(
         string containerName,
         string name,
@@ -136,6 +138,7 @@ public class FileDescriptorManager : DomainService
         string? clientId = null,
         Guid? creatorId = null,
         bool isPublic = false,
+        string? expectedSha256 = null,
         CancellationToken cancellationToken = default)
     {
         GetBlobManagementContainerConfiguration(containerName);
@@ -185,7 +188,8 @@ public class FileDescriptorManager : DomainService
                         }
                     },
                     cancellationToken,
-                    releasedBytes: existing?.Size ?? 0);
+                    releasedBytes: existing?.Size ?? 0,
+                    expectedSha256: expectedSha256);
             }
             catch
             {
@@ -233,6 +237,8 @@ public class FileDescriptorManager : DomainService
     /// <param name="id">The id the file takes; <c>null</c> generates one. An upload ticket names its file's id in
     /// advance, and its second use fails on the primary key - after its bytes were stored, which are removed again
     /// as for any insert that fails.</param>
+    /// <param name="expectedSha256">The SHA-256 (base64) the caller says the bytes have; <c>null</c> asks for no check
+    /// (see <see cref="StoreAsync"/>).</param>
     public virtual async Task<FileDescriptor> UploadAsync(
         string containerName,
         string name,
@@ -241,6 +247,7 @@ public class FileDescriptorManager : DomainService
         Action<FileDescriptor>? configureFile = null,
         string? clientId = null,
         Guid? id = null,
+        string? expectedSha256 = null,
         CancellationToken cancellationToken = default)
     {
         GetBlobManagementContainerConfiguration(containerName);
@@ -256,7 +263,8 @@ public class FileDescriptorManager : DomainService
         };
 
         return await StoreAsync(
-            containerName, name, stream, clientId, nameIsAddress: false, place, cancellationToken, id);
+            containerName, name, stream, clientId, nameIsAddress: false, place, cancellationToken, id,
+            expectedSha256: expectedSha256);
     }
 
     /// <summary>
@@ -483,7 +491,16 @@ public class FileDescriptorManager : DomainService
     /// <see cref="BlobStoringPipelineConsts.DefaultMaxBufferedBytes"/>), so an oversized upload fails with
     /// <c>Dignite.Abp.BlobStoring:ContentTooLarge</c> before anything is stored. Its type is detected from the
     /// bytes and reconciled with the extension of <paramref name="name"/>
-    /// (<c>Dignite.Abp.BlobStoring:ContentTypeMismatch</c>), and it is hashed (SHA-256, upper-case hex).
+    /// (<c>Dignite.Abp.BlobStoring:ContentTypeMismatch</c>).
+    /// </para>
+    /// <para>
+    /// It is hashed only when the caller sent a checksum to verify (<paramref name="expectedSha256"/>): SHA-256, taken
+    /// while the bytes are buffered when the upload is not seekable, so it adds nothing after the last byte, and
+    /// otherwise in one pass over the seekable content. A hash that differs fails with
+    /// <see cref="BlobManagementErrorCodes.ChecksumMismatch"/> before anything is stored; one that is not base64 of 32
+    /// bytes, with <see cref="BlobManagementErrorCodes.ChecksumInvalid"/> before the upload is read. The verified value
+    /// is the descriptor's <see cref="FileDescriptor.Hash"/>; without one it is <c>null</c>, and no hash is computed.
+    /// It is the hash of the bytes the caller sent, before the container's contributors transformed them.
     /// </para>
     /// <para>
     /// The tenant's allocation is checked next: content is refused when it would take the tenant past its storage size
@@ -508,6 +525,7 @@ public class FileDescriptorManager : DomainService
     /// <param name="id">The new descriptor's id; <c>null</c> generates one.</param>
     /// <param name="releasedBytes">The bytes the save frees once it is done - those of the descriptor an overriding save
     /// replaces - which still count while the allocation is checked.</param>
+    /// <param name="expectedSha256">The SHA-256 (base64) the caller says the bytes have; <c>null</c> asks for no check.</param>
     protected virtual async Task<FileDescriptor> StoreAsync(
         string containerName,
         string name,
@@ -517,15 +535,36 @@ public class FileDescriptorManager : DomainService
         Action<FileDescriptor>? configureFile,
         CancellationToken cancellationToken,
         Guid? id = null,
-        long releasedBytes = 0)
+        long releasedBytes = 0,
+        string? expectedSha256 = null)
     {
+        // Read before the upload is: a value that cannot be checked fails without a byte buffered.
+        var expectedHash = expectedSha256 == null ? null : BlobManagementChecksum.ParseSha256(expectedSha256);
+
+        // A stream that is not seekable is copied below, and hashed on the way; a seekable one is used as it is and
+        // hashed in a pass of its own after.
+        using var hashing = expectedHash != null && !stream.CanSeek ? new BlobManagementHashingStream(stream) : null;
+        Stream source = hashing ?? stream;
+
         var maxBytes = BlobStreamBuffering.GetMaxBufferedBytes(BlobContainerConfigurationProvider.Get(containerName));
-        var content = await BlobStreamBuffering.EnsureSeekableAsync(stream, maxBytes, cancellationToken);
+        var content = await BlobStreamBuffering.EnsureSeekableAsync(source, maxBytes, cancellationToken);
         // A copy is this method's to dispose; the caller's own stream, used as it is, stays the caller's.
-        await using var ownedCopy = ReferenceEquals(content, stream) ? null : content;
+        await using var ownedCopy = ReferenceEquals(content, source) ? null : content;
+
+        string? hash = null;
+        if (expectedHash != null)
+        {
+            var actualHash = hashing?.GetHash() ?? await ComputeHashAsync(content, cancellationToken);
+            hash = Convert.ToBase64String(actualHash);
+            if (!CryptographicOperations.FixedTimeEquals(actualHash, expectedHash))
+            {
+                throw new BusinessException(BlobManagementErrorCodes.ChecksumMismatch)
+                    .WithData("Expected", Convert.ToBase64String(expectedHash))
+                    .WithData("Actual", hash);
+            }
+        }
 
         var mimeType = await MimeTypeDetector.DetectAsync(content, name, cancellationToken);
-        var hash = await ComputeHashAsync(content, cancellationToken);
 
         // Taken before the save: the content belongs to the pipeline while it runs.
         var uploadLength = content.Length;
@@ -620,13 +659,13 @@ public class FileDescriptorManager : DomainService
         return (stem.Length <= maxStem ? stem : stem[..maxStem]) + extension;
     }
 
-    /// <summary>SHA-256 of the content as upper-case hex; the stream is rewound afterwards.</summary>
-    protected virtual async Task<string> ComputeHashAsync(Stream content, CancellationToken cancellationToken)
+    /// <summary>SHA-256 of the content; the stream is rewound afterwards. Called only when a checksum is to be verified.</summary>
+    protected virtual async Task<byte[]> ComputeHashAsync(Stream content, CancellationToken cancellationToken)
     {
         content.Position = 0;
         var hash = await SHA256.HashDataAsync(content, cancellationToken);
         content.Position = 0;
-        return Convert.ToHexString(hash);
+        return hash;
     }
 
     /// <summary>

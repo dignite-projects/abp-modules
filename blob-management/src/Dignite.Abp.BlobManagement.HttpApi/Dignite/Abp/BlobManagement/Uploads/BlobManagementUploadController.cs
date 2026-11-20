@@ -60,13 +60,22 @@ public class BlobManagementUploadController : BlobManagementController
                 throw new Volo.Abp.UserFriendlyException("The form carries no file.");
             }
 
+            // The file's checksum is a form field of its own: Content-Digest covers the whole multipart body.
+            var formChecksum = form["sha256"].ToString();
             await using var stream = file.OpenReadStream();
             return await UploadAppService.UploadAsync(
-                ticket, new RemoteStreamContent(stream, file.FileName, file.ContentType, file.Length, disposeStream: false));
+                ticket,
+                new RemoteStreamContent(stream, file.FileName, file.ContentType, file.Length, disposeStream: false),
+                string.IsNullOrWhiteSpace(formChecksum) ? null : formChecksum);
         }
 
+        // A raw body is the file, so RFC 9530's Content-Digest is its checksum.
+        var digest = BlobManagementChecksum.ReadContentDigest(
+            Request.Headers.TryGetValue("Content-Digest", out var values) ? values.ToArray()! : null);
         return await UploadAppService.UploadAsync(
-            ticket, new RemoteStreamContent(Request.Body, name, Request.ContentType, Request.ContentLength, disposeStream: false));
+            ticket,
+            new RemoteStreamContent(Request.Body, name, Request.ContentType, Request.ContentLength, disposeStream: false),
+            digest);
     }
 
     /// <summary>The server's own limit on the body, where it lets an action set one before the body is read.</summary>

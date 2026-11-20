@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "A(z) „{ContainerName}” tárolóban nincs „{BlobName}” nevű fájl.",
     "BlobManagement:BlobManagementDisabled": "A blobkezelés nincs engedélyezve ennél a bérlőnél.",
     "BlobManagement:StorageQuotaExceeded": "A fájl mentése túllépné a {StorageSize} MB-os tárhelyet.",
+    "BlobManagement:ChecksumMismatch": "A fájl SHA-256 értéke nem egyezik a feltöltéssel küldött ellenőrző összeggel. Semmi sem lett mentve.",
+    "BlobManagement:ChecksumInvalid": "A feltöltéssel küldött ellenőrző összeg nem ellenőrizhető: a fájl SHA-256 értékének kell lennie base64 formátumban.",
     "BlobManagement:DirectoriesNotAllowed": "A(z) „{ContainerName}” tárolónak nincsenek mappái.",
     "BlobManagement:DirectoryNotFound": "A mappa nem létezik.",
     "BlobManagement:DirectoryNameAlreadyExists": "Itt már van „{Name}” nevű mappa.",

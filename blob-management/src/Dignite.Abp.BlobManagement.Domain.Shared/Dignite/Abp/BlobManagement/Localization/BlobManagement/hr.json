@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "Spremnik '{ContainerName}' ne sadrži datoteku s nazivom '{BlobName}'.",
     "BlobManagement:BlobManagementDisabled": "Upravljanje BLOB-ovima nije omogućeno za ovog zakupca.",
     "BlobManagement:StorageQuotaExceeded": "Spremanjem ove datoteke premašila bi se pohrana od {StorageSize} MB.",
+    "BlobManagement:ChecksumMismatch": "SHA-256 datoteke ne odgovara kontrolnom zbroju poslanom s prijenosom. Ništa nije spremljeno.",
+    "BlobManagement:ChecksumInvalid": "Kontrolni zbroj poslan s prijenosom ne može se provjeriti: mora biti SHA-256 datoteke u formatu base64.",
     "BlobManagement:DirectoriesNotAllowed": "Spremnik '{ContainerName}' nema mapa.",
     "BlobManagement:DirectoryNotFound": "Mapa ne postoji.",
     "BlobManagement:DirectoryNameAlreadyExists": "Mapa s nazivom „{Name}” ovdje već postoji.",

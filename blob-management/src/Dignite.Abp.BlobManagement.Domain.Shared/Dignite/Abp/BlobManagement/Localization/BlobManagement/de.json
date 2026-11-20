@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "Der Container „{ContainerName}“ enthält keine Datei namens „{BlobName}“.",
     "BlobManagement:BlobManagementDisabled": "Die Blob-Verwaltung ist für diesen Mandanten nicht aktiviert.",
     "BlobManagement:StorageQuotaExceeded": "Das Speichern dieser Datei würde den Speicher von {StorageSize} MB überschreiten.",
+    "BlobManagement:ChecksumMismatch": "Der SHA-256 der Datei stimmt nicht mit der beim Hochladen gesendeten Prüfsumme überein. Es wurde nichts gespeichert.",
+    "BlobManagement:ChecksumInvalid": "Die beim Hochladen gesendete Prüfsumme kann nicht geprüft werden: Sie muss der SHA-256 der Datei als Base64 sein.",
     "BlobManagement:DirectoriesNotAllowed": "Der Container „{ContainerName}“ hat keine Ordner.",
     "BlobManagement:DirectoryNotFound": "Der Ordner existiert nicht.",
     "BlobManagement:DirectoryNameAlreadyExists": "Hier gibt es bereits einen Ordner namens „{Name}“.",

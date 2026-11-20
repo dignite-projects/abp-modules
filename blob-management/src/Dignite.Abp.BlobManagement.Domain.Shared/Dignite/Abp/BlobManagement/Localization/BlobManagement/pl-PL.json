@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "Kontener „{ContainerName}” nie zawiera pliku o nazwie „{BlobName}”.",
     "BlobManagement:BlobManagementDisabled": "Zarządzanie obiektami BLOB nie jest włączone dla tej dzierżawy.",
     "BlobManagement:StorageQuotaExceeded": "Zapisanie tego pliku przekroczyłoby magazyn o rozmiarze {StorageSize} MB.",
+    "BlobManagement:ChecksumMismatch": "SHA-256 pliku nie zgadza się z sumą kontrolną wysłaną wraz z przesłaniem. Nic nie zostało zapisane.",
+    "BlobManagement:ChecksumInvalid": "Nie można sprawdzić sumy kontrolnej wysłanej wraz z przesłaniem: musi to być SHA-256 pliku w formacie base64.",
     "BlobManagement:DirectoriesNotAllowed": "Kontener „{ContainerName}” nie ma folderów.",
     "BlobManagement:DirectoryNotFound": "Folder nie istnieje.",
     "BlobManagement:DirectoryNameAlreadyExists": "Folder o nazwie „{Name}” już tu istnieje.",

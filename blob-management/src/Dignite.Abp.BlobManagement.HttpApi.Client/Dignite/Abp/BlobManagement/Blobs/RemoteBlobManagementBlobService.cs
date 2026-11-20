@@ -28,9 +28,9 @@ public class RemoteBlobManagementBlobService : IBlobManagementBlobService
         CurrentUser = currentUser;
     }
 
-    public virtual Task<BlobManagementBlobDto> SaveAsync(string containerName, string blobName, IRemoteStreamContent content, bool overrideExisting = false, Guid? creatorId = null, bool isPublic = false)
+    public virtual Task<BlobManagementBlobDto> SaveAsync(string containerName, string blobName, IRemoteStreamContent content, bool overrideExisting = false, Guid? creatorId = null, bool isPublic = false, string? sha256 = null)
     {
-        return Proxy.SaveAsync(containerName, blobName, content, overrideExisting, creatorId ?? CurrentUser.Id, isPublic);
+        return Proxy.SaveAsync(containerName, blobName, content, overrideExisting, creatorId ?? CurrentUser.Id, isPublic, sha256);
     }
 
     public virtual async Task<IRemoteStreamContent?> GetOrNullAsync(string containerName, string blobName)

@@ -100,6 +100,8 @@ await _blobService.SaveAsync(
 
 It also has `GetOrNullAsync`, `ExistsAsync` and `DeleteAsync`, by container and name. Over HTTP it is `api/blob-management/blobs/{containerName}`, with the name in `blobName`.
 
+`SaveAsync` takes an optional `sha256` - base64 of the file's SHA-256 - and then [verifies the upload](files.md#verifying-an-upload) against it. Saving through `IBlobContainer` carries no such value and is not checked.
+
 ## Public Addresses
 
 A file the application marks public can be served to anyone, without signing in. For the BLOBs it saves by name, the application declares it on its own container, and the provider sends it with every save:

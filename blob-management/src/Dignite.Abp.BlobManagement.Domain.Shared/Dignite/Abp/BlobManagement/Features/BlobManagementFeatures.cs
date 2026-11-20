@@ -12,7 +12,7 @@ public static class BlobManagementFeatures
     public const string Enable = GroupName + ".Enable";
 
     /// <summary>
-    /// The most the tenant may store, in megabytes, counting each stored BLOB once however many descriptors share it.
+    /// The most the tenant may store, in megabytes: the sizes of its files added up, each file with a BLOB of its own.
     /// <c>0</c>, the default, is no limit.
     /// </summary>
     public const string StorageSize = GroupName + ".StorageSize";

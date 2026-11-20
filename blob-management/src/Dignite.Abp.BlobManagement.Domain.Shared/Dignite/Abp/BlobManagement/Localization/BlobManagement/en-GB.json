@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "The container '{ContainerName}' has no file named '{BlobName}'.",
     "BlobManagement:BlobManagementDisabled": "Blob Management is not enabled for this tenant.",
     "BlobManagement:StorageQuotaExceeded": "Storing this file would exceed the storage of {StorageSize} MB.",
+    "BlobManagement:ChecksumMismatch": "The file's SHA-256 does not match the checksum sent with the upload. Nothing was stored.",
+    "BlobManagement:ChecksumInvalid": "The checksum sent with the upload cannot be checked: it must be the SHA-256 of the file, as base64.",
     "BlobManagement:DirectoriesNotAllowed": "The container '{ContainerName}' has no directories.",
     "BlobManagement:DirectoryNotFound": "The directory does not exist.",
     "BlobManagement:DirectoryNameAlreadyExists": "A directory named '{Name}' already exists here.",

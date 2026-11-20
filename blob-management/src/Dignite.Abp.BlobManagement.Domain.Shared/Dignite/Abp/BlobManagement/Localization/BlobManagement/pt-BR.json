@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "O contêiner '{ContainerName}' não tem nenhum arquivo chamado '{BlobName}'.",
     "BlobManagement:BlobManagementDisabled": "O gerenciamento de blobs não está habilitado para este locatário.",
     "BlobManagement:StorageQuotaExceeded": "Salvar este arquivo excederia o armazenamento de {StorageSize} MB.",
+    "BlobManagement:ChecksumMismatch": "O SHA-256 do arquivo não corresponde à soma de verificação enviada com o upload. Nada foi armazenado.",
+    "BlobManagement:ChecksumInvalid": "Não é possível verificar a soma de verificação enviada com o upload: ela deve ser o SHA-256 do arquivo, em base64.",
     "BlobManagement:DirectoriesNotAllowed": "O contêiner '{ContainerName}' não tem pastas.",
     "BlobManagement:DirectoryNotFound": "A pasta não existe.",
     "BlobManagement:DirectoryNameAlreadyExists": "Já existe uma pasta chamada “{Name}” aqui.",

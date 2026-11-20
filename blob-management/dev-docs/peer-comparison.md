@@ -1,5 +1,9 @@
 # Blob Management against its peers (2026-11-14)
 
+> Partly replaced by [`upload-checksum-decision.md`](upload-checksum-decision.md) (2026-11-20): the SHA-256 is no longer
+> computed on every upload but when the caller sends one to be verified. What is written below about keeping the hash
+> on every file, for an `ETag` or a duplicate check, is history.
+
 It compares Blob Management with the open-source projects that hold the same position - storage that applications call,
 not a drive people use - and lists what the module builds itself where .NET, ASP.NET Core or ABP already has the piece.
 

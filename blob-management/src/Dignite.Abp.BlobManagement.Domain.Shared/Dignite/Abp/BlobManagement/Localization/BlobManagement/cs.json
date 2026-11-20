@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "Kontejner „{ContainerName}“ neobsahuje žádný soubor s názvem „{BlobName}“.",
     "BlobManagement:BlobManagementDisabled": "Správa objektů BLOB není pro tohoto tenanta povolena.",
     "BlobManagement:StorageQuotaExceeded": "Uložením tohoto souboru by se překročilo úložiště {StorageSize} MB.",
+    "BlobManagement:ChecksumMismatch": "SHA-256 souboru neodpovídá kontrolnímu součtu odeslanému s nahráním. Nic nebylo uloženo.",
+    "BlobManagement:ChecksumInvalid": "Kontrolní součet odeslaný s nahráním nelze ověřit: musí to být SHA-256 souboru ve formátu base64.",
     "BlobManagement:DirectoriesNotAllowed": "Kontejner „{ContainerName}“ nemá žádné složky.",
     "BlobManagement:DirectoryNotFound": "Složka neexistuje.",
     "BlobManagement:DirectoryNameAlreadyExists": "Složka s názvem „{Name}“ zde již existuje.",

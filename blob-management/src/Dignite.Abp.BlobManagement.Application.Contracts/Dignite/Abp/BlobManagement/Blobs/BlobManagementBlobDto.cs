@@ -14,6 +14,9 @@ public class BlobManagementBlobDto
     /// <summary>The size of the stored bytes, after the Blob Management container's contributors ran.</summary>
     public long Size { get; set; }
 
-    /// <summary>SHA-256 of the uploaded bytes, upper-case hex.</summary>
-    public string Hash { get; set; } = default!;
+    /// <summary>
+    /// The SHA-256 (base64) of the uploaded bytes that the caller sent and the module verified; <c>null</c> when the
+    /// file was stored without one.
+    /// </summary>
+    public string? Hash { get; set; }
 }

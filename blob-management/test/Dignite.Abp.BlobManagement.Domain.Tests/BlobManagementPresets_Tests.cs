@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobStoring.Imaging;
 using Dignite.Abp.BlobStoring.Pipeline;
@@ -161,8 +162,7 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
     }
 
     /// <summary>
-    /// The same JPEG uploaded again is converted again, into a WebP of its own, and its name takes that extension too;
-    /// the two files have the hash of what was uploaded in common.
+    /// The same JPEG uploaded again is converted again, into a WebP of its own, and its name takes that extension too.
     /// </summary>
     [Fact]
     public async Task The_Same_Jpeg_Uploaded_Again_Should_Be_Stored_As_A_Webp_Of_Its_Own()
@@ -174,7 +174,6 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
 
         second.BlobName.ShouldNotBe(first.BlobName);
         second.BlobName.ShouldEndWith(".webp");
-        second.Hash.ShouldBe(first.Hash);
         second.MimeType.ShouldBe("image/webp");
         second.Name.ShouldBe("b.webp");
     }
@@ -205,6 +204,27 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
         descriptor.MimeType.ShouldBe("image/png");
         descriptor.Name.ShouldBe("drawing.png");
         descriptor.BlobName.ShouldEndWith(".png");
+    }
+
+    /// <summary>
+    /// The checksum is of the bytes the caller sent, taken before the container's contributors converted them: the
+    /// hash of the JPEG, though a WebP is stored.
+    /// </summary>
+    [Fact]
+    public async Task The_Checksum_Of_A_Converted_Picture_Should_Be_That_Of_What_The_Caller_Sent()
+    {
+        var jpeg = BlobManagementTestFiles.Jpeg(40, 40, seed: 11);
+        var checksum = System.Convert.ToBase64String(SHA256.HashData(jpeg));
+
+        var descriptor = await WithUnitOfWorkAsync(async () =>
+        {
+            using var stream = new MemoryStream(jpeg);
+            return await _fileDescriptorManager.UploadAsync(
+                BlobManagementTestContainers.UserImages, "checked.jpg", stream, expectedSha256: checksum);
+        });
+
+        descriptor.MimeType.ShouldBe("image/webp");
+        descriptor.Hash.ShouldBe(checksum);
     }
 
     private Task<FileDescriptor> UploadAsync(string containerName, string name, byte[] content)

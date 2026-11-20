@@ -1,10 +1,14 @@
 using System;
 using System.Net;
+using System.IO;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Dignite.Abp.BlobManagement.Blobs;
 using Shouldly;
 using Volo.Abp.AspNetCore.TestBase;
 using Volo.Abp.BlobStoring;
+using Volo.Abp.Content;
 using Volo.Abp.Http.Client;
 using Volo.Abp.MultiTenancy;
 using Volo.Abp.Uow;
@@ -133,6 +137,38 @@ public class BlobManagementBlobApi_Tests : AbpWebApplicationFactoryIntegratedTes
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await response.Content.ReadAsStringAsync()).ShouldContain(BlobManagementErrorCodes.BlobNotFound);
+    }
+
+    /// <summary>
+    /// A business system that calls the BLOB service itself can send the SHA-256 of the bytes: the module verifies it
+    /// before it stores anything, answers 400 when it differs, and returns the verified value. A save without one
+    /// computes and keeps no hash.
+    /// </summary>
+    [Fact]
+    public async Task A_Checksum_Sent_To_The_Blob_Service_Should_Be_Verified_Over_Http()
+    {
+        var blobs = GetRequiredService<IBlobManagementBlobService>();
+        var bytes = BlobManagementTestFiles.Pdf("checksum " + Guid.NewGuid());
+        var checksum = Convert.ToBase64String(SHA256.HashData(bytes));
+        var name = Guid.NewGuid().ToString("N") + ".pdf";
+
+        using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
+        {
+            var wrong = await Should.ThrowAsync<AbpRemoteCallException>(() => blobs.SaveAsync(
+                BlobManagementHttpApiTestModule.OpenContainer, name, new RemoteStreamContent(new MemoryStream(bytes), name),
+                sha256: Convert.ToBase64String(SHA256.HashData(BlobManagementTestFiles.Pdf("another file")))));
+            wrong.HttpStatusCode.ShouldBe((int)HttpStatusCode.BadRequest);
+            wrong.Error.Code.ShouldBe(BlobManagementErrorCodes.ChecksumMismatch);
+            (await blobs.ExistsAsync(BlobManagementHttpApiTestModule.OpenContainer, name)).ShouldBeFalse();
+
+            var saved = await blobs.SaveAsync(
+                BlobManagementHttpApiTestModule.OpenContainer, name, new RemoteStreamContent(new MemoryStream(bytes), name), sha256: checksum);
+            saved.Hash.ShouldBe(checksum);
+
+            var withoutOne = await blobs.SaveAsync(
+                BlobManagementHttpApiTestModule.OpenContainer, "no-checksum-" + name, new RemoteStreamContent(new MemoryStream(bytes), name));
+            withoutOne.Hash.ShouldBeNull();
+        }
     }
 
     private async Task<HttpStatusCode> GetExistsAsync(string containerName, string? clientId, Guid? userId = null)

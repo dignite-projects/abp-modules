@@ -181,7 +181,8 @@ public class BlobManagementFileService : BlobManagementAppService, IBlobManageme
                     descriptor.CreatorId = creatorId;
                 }
             },
-            clientId);
+            clientId,
+            expectedSha256: input.Sha256);
 
         return Map(file);
     }

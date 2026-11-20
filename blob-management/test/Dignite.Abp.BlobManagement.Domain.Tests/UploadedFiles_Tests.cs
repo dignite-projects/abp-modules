@@ -52,7 +52,6 @@ public abstract class UploadedFiles_Tests<TStartupModule> : BlobManagementDomain
         var second = await UploadAsync(BlobManagementTestContainers.Documents, "b.pdf", content);
 
         second.BlobName.ShouldNotBe(first.BlobName);
-        second.Hash.ShouldBe(first.Hash);
     }
 
     [Fact]

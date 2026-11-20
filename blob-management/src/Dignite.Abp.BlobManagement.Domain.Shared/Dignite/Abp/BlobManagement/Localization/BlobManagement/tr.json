@@ -6,6 +6,8 @@
     "BlobManagement:BlobNotFound": "'{ContainerName}' kapsayıcısında '{BlobName}' adında bir dosya yok.",
     "BlobManagement:BlobManagementDisabled": "Blob Yönetimi bu kiracı için etkin değil.",
     "BlobManagement:StorageQuotaExceeded": "Bu dosyanın kaydedilmesi {StorageSize} MB'lık depolama alanını aşar.",
+    "BlobManagement:ChecksumMismatch": "Dosyanın SHA-256 değeri, yüklemeyle gönderilen sağlama toplamıyla eşleşmiyor. Hiçbir şey kaydedilmedi.",
+    "BlobManagement:ChecksumInvalid": "Yüklemeyle gönderilen sağlama toplamı doğrulanamıyor: dosyanın base64 biçimindeki SHA-256 değeri olmalıdır.",
     "BlobManagement:DirectoriesNotAllowed": "'{ContainerName}' kapsayıcısında klasör yok.",
     "BlobManagement:DirectoryNotFound": "Klasör mevcut değil.",
     "BlobManagement:DirectoryNameAlreadyExists": "Burada “{Name}” adlı bir klasör zaten var.",

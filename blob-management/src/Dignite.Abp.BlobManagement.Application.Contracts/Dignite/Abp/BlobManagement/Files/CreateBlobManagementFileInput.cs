@@ -30,6 +30,14 @@ public class CreateBlobManagementFileInput
     /// </summary>
     public bool IsPublic { get; set; }
 
+    /// <summary>
+    /// The SHA-256 of the file as base64, when the caller wants the upload verified: a different one fails with
+    /// <see cref="BlobManagementErrorCodes.ChecksumMismatch"/> and nothing is stored. <c>null</c> asks for no check, and
+    /// no hash is computed.
+    /// </summary>
+    [DynamicStringLength(typeof(FileDescriptorConsts), nameof(FileDescriptorConsts.MaxHashLength))]
+    public string? Sha256 { get; set; }
+
     [Required]
     public IRemoteStreamContent File { get; set; } = default!;
 }
