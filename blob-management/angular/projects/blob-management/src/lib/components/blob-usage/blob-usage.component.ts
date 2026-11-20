@@ -1,4 +1,5 @@
 import { CoreModule, ListService, PagedResultDto, PermissionService } from '@abp/ng.core';
+import { PageComponent, PageToolbarContainerComponent } from '@abp/ng.components/page';
 import { ThemeSharedModule } from '@abp/ng.theme.shared';
 import { ChangeDetectionStrategy, Component, InjectionToken, OnInit, computed, inject, signal } from '@angular/core';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
@@ -32,7 +33,7 @@ const TENANT_USAGE_LIST = new InjectionToken<ListService>('BlobManagementTenantU
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './blob-usage.component.html',
   providers: [ListService, { provide: TENANT_USAGE_LIST, useClass: ListService }],
-  imports: [CoreModule, ThemeSharedModule, NgxDatatableModule, FormatFileSizePipe],
+  imports: [CoreModule, ThemeSharedModule, NgxDatatableModule, PageComponent, PageToolbarContainerComponent, FormatFileSizePipe],
 })
 export class BlobManagementUsageComponent implements OnInit {
   /** The paging of the users' breakdown. */
