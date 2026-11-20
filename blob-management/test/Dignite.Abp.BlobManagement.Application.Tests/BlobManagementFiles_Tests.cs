@@ -294,6 +294,72 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
         }
     }
 
+    /// <summary>
+    /// Usage by tenant crosses tenants, so it is the host's: the permission is defined for the host side only, and ABP
+    /// neither grants it in a tenant nor lets a tenant's holder of the management permission through.
+    /// </summary>
+    [Fact]
+    public async Task Usage_By_Tenant_Should_Be_Read_Only_By_The_Host()
+    {
+        var tenantId = Guid.NewGuid();
+        GetRequiredService<FakeFeatureStore>().SetForTenant(tenantId, BlobManagementFeatures.StorageSize, "5");
+        var bytes = BlobManagementTestFiles.Pdf("tenant " + Guid.NewGuid());
+        var currentTenant = GetRequiredService<ICurrentTenant>();
+
+        using (currentTenant.Change(tenantId))
+        {
+            await StoreAsync(BlobManagementTestContainers.Documents, "a.pdf", bytes, _alice);
+        }
+
+        var input = new GetBlobManagementTenantUsagesInput { MaxResultCount = 1000 };
+
+        // In the host: the management permission alone is not enough, and nobody else reads it.
+        await GrantAsync(_admin, BlobManagementPermissions.Containers.Default);
+        using (As(_admin))
+        {
+            await Should.ThrowAsync<AbpAuthorizationException>(() => _usage.GetTenantsAsync(input));
+        }
+
+        using (As(_bob))
+        {
+            await Should.ThrowAsync<AbpAuthorizationException>(() => _usage.GetTenantsAsync(input));
+        }
+
+        using (AsClient(Client))
+        {
+            await Should.ThrowAsync<AbpAuthorizationException>(() => _usage.GetTenantsAsync(input));
+        }
+
+        await GrantAsync(_admin, BlobManagementPermissions.Containers.TenantUsages);
+        using (As(_admin))
+        {
+            var tenants = await _usage.GetTenantsAsync(input);
+            var row = tenants.Items.Single(t => t.TenantId == tenantId);
+            row.StoredBytes.ShouldBe(bytes.Length);
+            row.FileCount.ShouldBe(1);
+            row.StorageSize.ShouldBe(5L * 1024 * 1024);
+            // This host has no tenant store that knows the tenant: it is told by id.
+            row.TenantName.ShouldBeNull();
+            tenants.TotalCount.ShouldBe(tenants.Items.Count);
+
+            // What the other breakdowns show of the host is still the host's own.
+            (await _usage.GetAsync()).StoredBytes.ShouldBe(tenants.Items.Where(t => t.TenantId == null).Sum(t => t.StoredBytes));
+        }
+
+        // In a tenant, ABP does not grant a host-side permission, and the management permission is not enough.
+        using (currentTenant.Change(tenantId))
+        {
+            await Should.ThrowAsync<ApplicationException>(() =>
+                GrantAsync(_alice, BlobManagementPermissions.Containers.TenantUsages));
+
+            await GrantAsync(_alice, BlobManagementPermissions.Containers.Default);
+            using (As(_alice))
+            {
+                await Should.ThrowAsync<AbpAuthorizationException>(() => _usage.GetTenantsAsync(input));
+            }
+        }
+    }
+
     [Fact]
     public async Task Usage_Should_Be_Read_With_The_Management_Permission()
     {

@@ -9,7 +9,7 @@
 
 > Blob Management has not been released yet; see the [overview](index.md).
 
-Blob Management's permissions authorize **users** for the two things a user does here - read what the tenant stores (the [management page](angular-ui.md#the-management-page), the [usage](usage.md)) and keep the [directories](directories.md) of a container - and **applications** for the one thing an application does: keep the files of a container.
+Blob Management's permissions authorize **users** for the two things a user does here - read what the tenant stores (the [management page](angular-ui.md#the-pages), the [usage](usage.md)) and keep the [directories](directories.md) of a container - and **applications** for the one thing an application does: keep the files of a container.
 
 Files are an application's. An application that calls from another process, through the [provider](provider.md) or the [file service](files.md), is an OAuth client granted the container's files; in the same process it is trusted. Its own rules run before it calls. No permission lets a user store, rename, move or delete a file: a user's browser stores or reads one only with an [upload ticket or a read link](files.md#upload-tickets) the application asked for.
 
@@ -22,6 +22,7 @@ In the `BlobManagement` group of ABP's permission management:
 | Permission | |
 |---|---|
 | `BlobManagement.Containers` | The management permission: enter the management page and read everything there - the usage, every container, its directories, its files and their bytes. It changes nothing. |
+| `BlobManagement.Containers.TenantUsages` | A child of the management permission, offered on the **host side only**: read the usage of every tenant, and of the host's own files ([Usage](usage.md#by-tenant)). It reads and changes nothing; ABP does not grant it in a tenant. |
 | `BlobManagement.ManagePermissions` | Manage the grants on containers. An administrator's permission: whoever holds it can grant themselves anything. |
 
 ## Grants on a Container
@@ -43,6 +44,7 @@ A role keeps the directories of a container by the grants above alone: `BlobMana
 | | Allowed with |
 |---|---|
 | Read the usage, and list and read files | `BlobManagement.Containers` |
+| Read the usage of every tenant | The host, holding `BlobManagement.Containers` and `BlobManagement.Containers.TenantUsages` |
 | See a container's directory tree | `BlobManagement.Containers`, or `BlobManagement.Container.View` on it |
 | Create, rename and move, delete directories | Seeing the tree, and the permission for it granted on the container |
 | Read, store, rename, move, mark public and delete files over HTTP; ask for upload tickets and read links | An OAuth client with a token that carries no user, granted `BlobManagement.Container.Files` on the container |
@@ -59,7 +61,7 @@ Each request asks the grant store once for each container it answers about, neve
 
 An application that calls Blob Management from another process authenticates as an OAuth client of your authorization server ([A Remote Blob Management](provider.md#a-remote-blob-management)). Grant that client `BlobManagement.Container.Files` on each container it uses; a container granted to no client is used in process only. A grant to a client is the deployment's, not a tenant's - a client is - so `BlobManagement.Container.Files` is offered on the host side only, and a grant holds in every tenant. The client then reaches every tenant's files in that container, naming the tenant of each call: its token belongs in the application's back end and nowhere else.
 
-* **In ABP's resource permission dialog**, the container's *Permissions* on the [management page](angular-ui.md#the-management-page), signed in on the host side: choose *Application* (the client provider), find the client and tick *Files*. A tenant's administrator does not see *Files* in the dialog. The dialog offers clients where ABP's `Volo.Abp.PermissionManagement.Domain.OpenIddict` is installed next to the OpenIddict domain (the open-source `Volo.Abp.OpenIddict.Domain`, which looks clients up) - the authorization server's host, or a Blob Management installed in it.
+* **In ABP's resource permission dialog**, the container's *Permissions* on the [management page](angular-ui.md#the-pages), signed in on the host side: choose *Application* (the client provider), find the client and tick *Files*. A tenant's administrator does not see *Files* in the dialog. The dialog offers clients where ABP's `Volo.Abp.PermissionManagement.Domain.OpenIddict` is installed next to the OpenIddict domain (the open-source `Volo.Abp.OpenIddict.Domain`, which looks clients up) - the authorization server's host, or a Blob Management installed in it.
 * **In a data seed contributor**, for a deployment that should start with its grants:
 
 ````csharp

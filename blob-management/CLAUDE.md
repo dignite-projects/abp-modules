@@ -62,11 +62,14 @@ edition, one kind of container, the names). What they kept of the storage tier w
   `IBlobManagementContainerAppService` under `/containers`; `DirectoryPathImporter` for an application that migrates
   its own file library in.
 - Usage: `IBlobManagementUsageAppService` under `api/blob-management/usage` - the stored bytes of the tenant, each
-  container, each user and each client - on the descriptor repository's usage queries.
-- `@dignite/ng.blob-management`: the management page (`blob-management-page`, routed by `createRoutes()` behind `BlobManagement.Containers`: usage, then one container
-  at a time - its directory tree with its operations, its files read-only), its parts (`blob-usage`, `blob-browser`,
-  `blob-directory-tree`, `blob-file-list`, `blob-file-preview`), the proxies, and `provideBlobManagementConfig()` in
-  the `/config` entry point.
+  container, each user and each client - on the descriptor repository's usage queries; and, for the host only, each
+  tenant (`GetTenantsAsync`, `BlobManagement.Containers.TenantUsages` defined for `MultiTenancySides.Host`), the one
+  reading that crosses tenants ([`dev-docs/tenant-usage-decision.md`](dev-docs/tenant-usage-decision.md), 2026-11-20).
+- `@dignite/ng.blob-management`: two pages behind `BlobManagement.Containers`, routed by `createRoutes()` and listed
+  by `provideBlobManagementConfig()` as Blob Management > Usage and Files: the usage page (`blob-usage`: by container,
+  user, client and, in the host, tenant, each read when asked for and again by its Refresh button) and the files page
+  (`blob-management-files`: one container at a time - its directory tree with its operations, its files read-only).
+  The parts are `blob-browser`, `blob-directory-tree`, `blob-file-list` and `blob-file-preview`; the proxies.
 - The texts are in 25 cultures; the user documentation is in `docs/en/blob-management/`.
 
 Nothing is published: the packages are not packable by default (`Directory.Build.props`, until the owner releases the
@@ -142,6 +145,9 @@ imports the root one, so the lockstep `<Version>` applies.
    file is counted for and gives nothing. A directory's visibility cannot be the module's to enforce: file listings
    are an application's call, which names no user. ABP's resource permissions answer one question about one
    resource, by design - do not build anything that needs them in bulk.
+   Every usage query is the current tenant's (ABP's tenant filter), with one exception: usage by tenant, which
+   `BlobManagementUsageManager` runs with `DataFilter.Disable<IMultiTenant>()` and which only the host may call -
+   authorized by the host-side permission alone, never by a `CurrentTenant.Id == null` check beside another permission.
 4. **Authorization lives in application services only** (`[Authorize]` on the class, `BlobManagementAccessService` and
    `BlobManagementClientChecker` in methods); domain services never check. The in-process `IBlobManagementBlobService`
    and `IBlobManagementFileService` are trusted and never exposed over HTTP.

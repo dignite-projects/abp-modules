@@ -23,6 +23,17 @@ public class BlobManagementCreatorUsage
     public long FileCount { get; set; }
 }
 
+/// <summary>What one tenant of the deployment stores: the sizes of its files, in every container.</summary>
+public class BlobManagementTenantUsage
+{
+    /// <summary><c>null</c> gathers the host's own files.</summary>
+    public Guid? TenantId { get; set; }
+
+    public long StoredBytes { get; set; }
+
+    public long FileCount { get; set; }
+}
+
 /// <summary>What one client stored over HTTP: the sizes of its files.</summary>
 public class BlobManagementClientUsage
 {

@@ -21,7 +21,8 @@ Kept close to his words.
 - **A directory is only the hierarchy of files.**
 - **The concepts "system container" and "user drive" are removed.**
 - **Permissions are configured on directories**: the roles and users that have them create, edit, delete and view
-  subdirectories.
+  subdirectories. *(Superseded 2026-11-13 by [`positioning-decision.md`](positioning-decision.md): permissions are
+  granted on the container only, never on a directory.)*
 - **What a user may do with files - upload, delete, rename and the like - is the BLOB container's permission.** ABP
   has no permission on a container (checked: `Volo.Abp.BlobStoring` 10.7.0 has no authorization at all), so the
   module defines it; how is under "Proposed" below.
@@ -88,6 +89,21 @@ object extension. A container without `AllowDirectories` refuses every directory
 
 ### Authorization
 
+> **Superseded on 2026-11-13 by [`positioning-decision.md`](positioning-decision.md); kept as history, not as the
+> design.** What was removed from this section:
+>
+> - the **directory-level** permissions - the `DirectoryDescriptor` resource, `BlobManagement.Directory.*`,
+>   `DirectoryDescriptor.IsRestricted` and the place/scope table below (the `Removed_Directory_Restriction`
+>   migration drops the column). A restricted directory could hide the directory but not the files in it, since a file
+>   listing is a business system's call and names no user;
+> - the **file** permissions (`UploadFiles`, `UpdateFiles`, `DeleteFiles`, module-wide and on a container) and the
+>   uploader's right to delete their own file: a user no longer stores, renames, moves or deletes a file through the
+>   module.
+>
+> What stands: the module-wide `BlobManagement.Containers` and `ManagePermissions`, and the grant on one container
+> (resource `Dignite.Abp.BlobManagement.BlobManagementContainer`) for what a user does with its directories. Current
+> rules: `blob-management/CLAUDE.md`, "What a change must not break", item 3.
+
 ABP's resource permissions answer one question about one resource. The design asks them only that: per request, one
 check on the container and one per directory that has permissions of its own - never one per file.
 
@@ -147,16 +163,32 @@ plumbing and the replaced MongoDB model source, the trash and share links that w
 
 ### Surface
 
+> **Superseded on 2026-11-13 by [`positioning-decision.md`](positioning-decision.md) ("What is removed", "Surface"),
+> and in part again on 2026-11-14 by
+> [`business-system-integration-decision.md`](business-system-integration-decision.md). Kept as history; the notes
+> below say what became of each item.**
+
 - `IBlobManagementContainerAppService`: the containers the caller may see, one container with its limits and what
-  the caller may do at its top.
+  the caller may do at its top. *(Kept, narrowed: the containers the caller has something to do in, and one container
+  with its limits. There is no "what the caller may do at its top" since the place and its scope are gone.)*
 - `IBlobManagementFileAppService`: list by container and directory, one file, its bytes, upload (into a directory or
-  the top), an upload link, rename, move, delete.
+  the top), an upload link, rename, move, delete. *(Removed as a user-facing API. A user no longer uploads, renames,
+  moves or deletes a file through the module. The contract remains as `IBlobManagementFileService` for a business
+  system, behind `api/blob-management/files` for granted clients; a holder of the management permission may read.)*
 - `IBlobManagementDirectoryAppService`: list a level, one directory, create, rename, move, delete, restrict.
-- The BLOB API, client tickets, ticket redemption and public reads, on any managed container.
+  *(Kept without **restrict**: no directory has permissions of its own.)*
+- The BLOB API, client tickets, ticket redemption and public reads, on any managed container. *(The BLOB API stays.
+  The tickets of 2026-11-12 and their redemption were removed on 2026-11-13; on 2026-11-14 upload tickets and read
+  links came back in a different form, signed by the module with Data Protection and asked for by a granted client.
+  Public reads stay, with sizing at `/blobs`, but a file is public (`FileDescriptor.IsPublic`), not its container.)*
 - MCP module `blob`: `blob_list_containers`, `blob_list_directories`, `blob_create_directory`, `blob_list_files`,
-  `blob_get_file`, `blob_create_upload_url`, `blob_upload_file`, `blob_update_file`, `blob_delete_file`.
+  `blob_get_file`, `blob_create_upload_url`, `blob_upload_file`, `blob_update_file`, `blob_delete_file`. *(Removed,
+  the whole `Dignite.Abp.BlobManagement.Mcp` package: the writing tools first, then the reading ones. A business
+  system contributes its own MCP tools, which know the record a file belongs to.)*
 - `@dignite/ng.blob-management`: the management page (route guarded by `BlobManagement.Containers`), the explorer and
-  the file picker a business system opens, and the file input, which uploads and picks.
+  the file picker a business system opens, and the file input, which uploads and picks. *(Only the management page
+  stays - usage, containers, the directory tree with its operations, the files of a place read-only. The explorer, the
+  file picker and the file input were removed.)*
 - `DirectoryPathImporter` stays, for an application that migrates its own file library in.
 
 ## Still open

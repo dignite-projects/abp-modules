@@ -265,6 +265,33 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
         }
     }
 
+    [Fact]
+    public async Task The_Host_Should_Read_The_Usage_By_Tenant_Over_HTTP()
+    {
+        var reader = Guid.NewGuid();
+        await GrantAsync(reader, BlobManagementPermissions.Containers.Default);
+        var input = new GetBlobManagementTenantUsagesInput { MaxResultCount = 1000 };
+
+        // The management permission is not enough: the breakdown crosses tenants.
+        using (TestCaller.As(UiClient, reader))
+        {
+            await ShouldFailAsync(HttpStatusCode.Forbidden, () => _usage.GetTenantsAsync(input));
+        }
+
+        await GrantAsync(reader, BlobManagementPermissions.Containers.TenantUsages);
+        using (TestCaller.As(UiClient, reader))
+        {
+            var tenants = await _usage.GetTenantsAsync(input);
+            tenants.TotalCount.ShouldBe(tenants.Items.Count);
+            tenants.Items.Select(t => t.StoredBytes).ShouldBe(tenants.Items.Select(t => t.StoredBytes).OrderByDescending(bytes => bytes));
+        }
+
+        using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
+        {
+            await ShouldFailAsync(HttpStatusCode.Forbidden, () => _usage.GetTenantsAsync(input));
+        }
+    }
+
     private static CreateBlobManagementFileInput NewFile(string containerName, string name, byte[]? bytes = null)
     {
         return new CreateBlobManagementFileInput

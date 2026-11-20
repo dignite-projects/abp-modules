@@ -1,7 +1,7 @@
 ```json
 //[doc-seo]
 {
-    "Description": "The Dignite Blob Management Angular UI (@dignite/ng.blob-management): the management page for administrators - the tenant's usage, and one container at a time with its directory tree and its files, read-only."
+    "Description": "The Dignite Blob Management Angular UI (@dignite/ng.blob-management): the management pages for administrators - the tenant's usage (by tenant, for the host), and one container at a time with its directory tree and its files, read-only."
 }
 ```
 
@@ -40,26 +40,32 @@ export const APP_ROUTES: Routes = [
 
 The proxies call the API named `BlobManagement`. Without an `apis.BlobManagement` entry in the environment, ABP uses `apis.default`, which is right when Blob Management is installed in the application's own host; when it runs as [its own service](hosting.md#blob-management-as-its-own-service), point `apis.BlobManagement.url` at it (or at the gateway). Public file addresses are completed with the same URL.
 
-## The Management Page
+## The Pages
 
-The page, at `/blob-management`, is for holders of `BlobManagement.Containers` ([Permissions](permissions.md)): `provideBlobManagementConfig()` adds its menu item under Administration (`eBlobManagementRouteNames.BlobManagement`), and the route is guarded by the same permission.
+There are two pages, for holders of `BlobManagement.Containers` ([Permissions](permissions.md)): `provideBlobManagementConfig()` adds a **Blob Management** menu item under Administration (`eBlobManagementRouteNames.BlobManagement`) with **Usage** (`/blob-management/usage`) and **Files** (`/blob-management/files`) below it, and `createRoutes()` guards both by the same permission. `/blob-management` opens Usage.
 
-* **Usage** comes first: the tenant's stored bytes against its allocation, then by container, by user or by client ([Usage](usage.md)).
-* Below it, the managed containers, **one at a time** as tabs. A container that [allows directories](directories.md) shows its **directory tree** beside the **files** of the directory chosen; one without them shows its files as one list.
+**Usage** is what the tenant stores ([Usage](usage.md)): its stored bytes against its allocation, then by container, by user or by client, and - for the host - **by tenant**.
+
+* Every breakdown is read when it is asked for, never on its own: the containers' with the totals when the page opens, the others the first time their tab is selected, and each again when its **Refresh** button is pressed.
+* The **Tenants** tab is there only for a caller who holds `BlobManagement.Containers.TenantUsages`, which is defined for the host side only. It lists each tenant - and the host's own files - with its stored bytes, files and allocation, and shows the share of the allocation in red from 90%.
+
+**Files** is the managed containers, **one at a time** as tabs.
+
+* A container that [allows directories](directories.md) shows its **directory tree** beside the **files** of the directory chosen; one without them shows its files as one list.
 * The tree loads a level when it is opened. Directories are created, renamed and deleted from a node's menu, and moved by dragging, each offered only where the container's `access` allows it.
-* The file list pages and searches the files, and downloads one. A public picture is shown as a thumbnail; a file uploaded with a ticket and not confirmed yet is not listed. Nothing else is done to a file here: it belongs to the business record that refers to it.
+* The file list pages and searches the files by name, and downloads one. The search matches a part of the name, whatever its case, among the files of the container or directory shown - not those of its subdirectories. A public picture is shown as a thumbnail; a file uploaded with a ticket and not confirmed yet is not listed. Nothing else is done to a file here: it belongs to the business record that refers to it.
 * A holder of `BlobManagement.ManagePermissions` opens ABP's resource permission dialog for the container shown.
 
-The page is a [replaceable component](https://abp.io/docs/latest/framework/ui/angular/component-replacement) under `eBlobManagementComponents.BlobManagement` (`'BlobManagement.BlobManagementComponent'`). Leave out `provideBlobManagementConfig()` to place the page elsewhere.
+Each page is a [replaceable component](https://abp.io/docs/latest/framework/ui/angular/component-replacement): Usage under `eBlobManagementComponents.Usage` (`'BlobManagement.BlobManagementUsageComponent'`), Files under `eBlobManagementComponents.Files` (`'BlobManagement.BlobManagementFilesComponent'`). Leave out `provideBlobManagementConfig()` to place the pages elsewhere.
 
 ## Its Parts
 
-The page is made of standalone components the library exports, for an application that composes its own page:
+The pages are made of standalone components the library exports, for an application that composes its own page:
 
 | Selector | |
 |---|---|
-| `blob-management-page` | The whole page. |
-| `blob-usage` | The usage: the tenant against its allocation, then by container, by user or by client. |
+| `blob-management-files` | The whole Files page: the container tabs, and the permissions dialog. |
+| `blob-usage` | The whole Usage page: the tenant against its allocation, then by container, by user, by client or - in the host - by tenant. |
 | `blob-browser` | One container (`[container]`): its directory tree beside its files, or one flat list. |
 | `blob-directory-tree` | A container's directories (`[container]`), emitting the directory chosen (`(selectionChange)`). With `[manage]="false"` it only chooses - no menu, no dragging. |
 | `blob-file-list` | The files of a container (`[container]`) or of one of its directories (`[directory]`), read-only, with download. |

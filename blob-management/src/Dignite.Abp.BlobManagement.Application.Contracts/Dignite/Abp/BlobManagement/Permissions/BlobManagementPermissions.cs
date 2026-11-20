@@ -21,6 +21,12 @@ public static class BlobManagementPermissions
         /// container, its directories and its files. It changes nothing.
         /// </summary>
         public const string Default = GroupName + ".Containers";
+
+        /// <summary>
+        /// Read the stored bytes of each tenant of the deployment - the one reading that crosses tenants. Defined for the
+        /// host side only (ABP's <c>MultiTenancySides.Host</c>), so a tenant never holds it, whatever is granted.
+        /// </summary>
+        public const string TenantUsages = Default + ".TenantUsages";
     }
 
     /// <summary>Manage the grants on containers (the management permission of the resource permissions below).</summary>
@@ -59,6 +65,7 @@ public static class BlobManagementPermissions
         return new[]
         {
             Containers.Default,
+            Containers.TenantUsages,
             ManagePermissions
         };
     }

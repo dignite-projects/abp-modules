@@ -133,6 +133,69 @@ public abstract class BlobManagementUsageManager_Tests<TStartupModule> : BlobMan
     }
 
     [Fact]
+    public async Task Usage_Should_Be_Told_By_Tenant_Across_Tenants()
+    {
+        var first = Guid.NewGuid();
+        var second = Guid.NewGuid();
+        var large = OfSize(10 * Kilobyte, "large");
+        var small = OfSize(Kilobyte, "small");
+
+        using (_currentTenant.Change(first))
+        {
+            await CreateAsync(BlobManagementTestContainers.Files, "large.pdf", large);
+            await CreateAsync(BlobManagementTestContainers.Limited, "small.pdf", small);
+        }
+
+        using (_currentTenant.Change(second))
+        {
+            await CreateAsync(BlobManagementTestContainers.Files, "small.pdf", small);
+        }
+
+        using (_currentTenant.Change(null))
+        {
+            await CreateAsync(BlobManagementTestContainers.Files, "host.pdf", small);
+        }
+
+        // Asked in the host, through the manager, which reads across tenants: every tenant has a row, and the host's
+        // own files - the files of no tenant - are one more, under no tenant.
+        var usages = await WithUnitOfWorkAsync(() => _usageManager.GetTenantUsagesAsync(0, 1000));
+        var count = await WithUnitOfWorkAsync(() => _usageManager.GetTenantCountAsync());
+        count.ShouldBe(usages.Count);
+
+        var ofFirst = usages.Single(u => u.TenantId == first);
+        ofFirst.StoredBytes.ShouldBe(large.Length + small.Length);
+        ofFirst.FileCount.ShouldBe(2);
+        usages.Single(u => u.TenantId == second).StoredBytes.ShouldBe(small.Length);
+        usages.Single(u => u.TenantId == null).StoredBytes.ShouldBeGreaterThanOrEqualTo(small.Length);
+
+        // The largest first, a page at a time, and the pages are the rows in order.
+        usages.Select(u => u.StoredBytes).ShouldBe(usages.Select(u => u.StoredBytes).OrderByDescending(bytes => bytes));
+        var secondPage = await WithUnitOfWorkAsync(() => _usageManager.GetTenantUsagesAsync(1, 1));
+        secondPage.ShouldHaveSingleItem().TenantId.ShouldBe(usages[1].TenantId);
+
+        // The filter is the manager's to lift: the repository alone, in a tenant, sees that tenant and no other. Every
+        // other query is the current tenant's, and stays so.
+        using (_currentTenant.Change(first))
+        {
+            (await WithUnitOfWorkAsync(() => _fileRepository.GetTenantUsagesAsync(0, 10))).ShouldHaveSingleItem().TenantId.ShouldBe(first);
+            (await UsedBytesAsync()).ShouldBe(large.Length + small.Length);
+        }
+    }
+
+    [Fact]
+    public async Task A_Tenants_Allocation_Should_Be_Read_In_That_Tenant()
+    {
+        var tenantId = Guid.NewGuid();
+        _featureStore.SetForTenant(tenantId, BlobManagementFeatures.StorageSize, "5");
+
+        // From the host, which has no limit of its own here, and without leaving it.
+        (await _usageManager.GetStorageSizeAsync(tenantId)).ShouldBe(5L * 1024 * 1024);
+        (await _usageManager.GetStorageSizeAsync((Guid?)null)).ShouldBeNull();
+        (await _usageManager.GetStorageSizeAsync(Guid.NewGuid())).ShouldBeNull();
+        _currentTenant.Id.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task A_Tenant_Whose_BlobManagement_Is_Off_Should_Store_Nothing()
     {
         var tenantId = Guid.NewGuid();

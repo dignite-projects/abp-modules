@@ -1,9 +1,14 @@
+using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobManagement.Features;
+using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp;
+using Volo.Abp.Data;
 using Volo.Abp.Domain.Services;
 using Volo.Abp.Features;
+using Volo.Abp.MultiTenancy;
 
 namespace Dignite.Abp.BlobManagement;
 
@@ -23,6 +28,8 @@ public class BlobManagementUsageManager : DomainService
     protected IFileDescriptorRepository FileDescriptorRepository { get; }
 
     protected IFeatureChecker FeatureChecker { get; }
+
+    protected IDataFilter DataFilter => LazyServiceProvider.LazyGetRequiredService<IDataFilter>();
 
     public BlobManagementUsageManager(
         IFileDescriptorRepository fileDescriptorRepository,
@@ -46,6 +53,42 @@ public class BlobManagementUsageManager : DomainService
     {
         var megabytes = await FeatureChecker.GetAsync(BlobManagementFeatures.StorageSize, 0);
         return megabytes > 0 ? megabytes * BytesPerMegabyte : null;
+    }
+
+    /// <summary>
+    /// What each tenant of the deployment stores, and the host itself, the largest first, a page at a time - across
+    /// tenants, with ABP's multi-tenant filter disabled around the read. The caller authorizes it for the host.
+    /// </summary>
+    public virtual async Task<List<BlobManagementTenantUsage>> GetTenantUsagesAsync(
+        int skipCount,
+        int maxResultCount,
+        CancellationToken cancellationToken = default)
+    {
+        using (DataFilter.Disable<IMultiTenant>())
+        {
+            return await FileDescriptorRepository.GetTenantUsagesAsync(skipCount, maxResultCount, cancellationToken);
+        }
+    }
+
+    /// <summary>How many rows <see cref="GetTenantUsagesAsync"/> finds without paging.</summary>
+    public virtual async Task<long> GetTenantCountAsync(CancellationToken cancellationToken = default)
+    {
+        using (DataFilter.Disable<IMultiTenant>())
+        {
+            return await FileDescriptorRepository.GetTenantCountAsync(cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// The allocation in bytes of <paramref name="tenantId"/> - <c>null</c> for the host - or <c>null</c> when it has no
+    /// limit: <see cref="GetStorageSizeAsync"/>, read in that tenant.
+    /// </summary>
+    public virtual async Task<long?> GetStorageSizeAsync(Guid? tenantId)
+    {
+        using (CurrentTenant.Change(tenantId))
+        {
+            return await GetStorageSizeAsync();
+        }
     }
 
     /// <summary>Fails with <see cref="BlobManagementErrorCodes.BlobManagementDisabled"/> when the tenant's Blob Management is off.</summary>
