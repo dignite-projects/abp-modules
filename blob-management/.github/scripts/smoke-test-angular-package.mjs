@@ -81,7 +81,7 @@ try {
     join(tempRoot, 'smoke.ts'),
     `import {
   BlobManagementBrowserComponent,
-  BlobManagementComponent,
+  BlobManagementFilesComponent,
   BlobManagementContainerService,
   BlobManagementDirectoryService,
   BlobManagementDirectoryTreeComponent,
@@ -99,7 +99,7 @@ import { provideBlobManagementConfig } from '@dignite/ng.blob-management/config'
 
 export const packageSurface = {
   BlobManagementBrowserComponent,
-  BlobManagementComponent,
+  BlobManagementFilesComponent,
   BlobManagementContainerService,
   BlobManagementDirectoryService,
   BlobManagementDirectoryTreeComponent,
@@ -111,7 +111,8 @@ export const packageSurface = {
   FormatFileSizePipe,
   createRoutes,
   provideBlobManagementConfig,
-  pageKey: eBlobManagementComponents.BlobManagement,
+  usagePageKey: eBlobManagementComponents.Usage,
+  filesPageKey: eBlobManagementComponents.Files,
   managementPolicy: eBlobManagementPolicyNames.Containers,
 };
 `,
