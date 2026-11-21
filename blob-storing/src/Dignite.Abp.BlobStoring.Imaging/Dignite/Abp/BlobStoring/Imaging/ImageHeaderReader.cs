@@ -23,6 +23,8 @@ public static class ImageHeaderReader
     private const int MaxJpegSegments = 1024;
     private const int MaxTiffEntries = 4096;
     private const int MaxWebpChunks = 1024;
+    private const int MaxPngChunks = 1024;
+    private const int MaxGifBlocks = 65536;
 
     /// <summary>
     /// The dimensions declared by the header of the image in <paramref name="stream"/>, which must be seekable; it is
@@ -51,6 +53,165 @@ public static class ImageHeaderReader
         {
             stream.Position = originalPosition;
         }
+    }
+
+    /// <summary>
+    /// Whether the image in <paramref name="stream"/> is animated, read from its structure without decoding it: a PNG with
+    /// an <c>acTL</c> chunk before its first <c>IDAT</c> (an APNG), a WebP whose <c>VP8X</c> chunk sets the animation flag,
+    /// a GIF with more than one image. <paramref name="stream"/> must be seekable; it is read from position 0 and its
+    /// position is restored afterwards. <c>false</c> for any other format and for a structure it cannot make sense of.
+    /// <para>
+    /// Re-encoding a picture through a still bitmap - as SkiaSharp's resizer and the WebP contributors do - keeps one frame
+    /// of an animated one, so such code asks this first and keeps an animated picture as it is.
+    /// </para>
+    /// </summary>
+    public static bool IsAnimated(Stream stream)
+    {
+        if (!stream.CanSeek)
+        {
+            throw new ArgumentException("The stream must be seekable so its header can be read.", nameof(stream));
+        }
+
+        var originalPosition = stream.Position;
+        try
+        {
+            stream.Position = 0;
+            Span<byte> header = stackalloc byte[32];
+            var length = stream.ReadAtLeast(header, header.Length, throwOnEndOfStream: false);
+            header = header[..length];
+
+            if (header.StartsWith((ReadOnlySpan<byte>)[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]))
+            {
+                return IsAnimatedPng(stream);
+            }
+
+            if (header.Length >= 21 && header.StartsWith("RIFF"u8) && header.Slice(8, 4).SequenceEqual("WEBP"u8))
+            {
+                // The extended format's flags: ICC (0x20), alpha (0x10), EXIF (0x08), XMP (0x04), animation (0x02).
+                return header.Slice(12, 4).SequenceEqual("VP8X"u8) && (header[20] & 0x02) != 0;
+            }
+
+            if (header.StartsWith("GIF87a"u8) || header.StartsWith("GIF89a"u8))
+            {
+                return IsAnimatedGif(stream, header);
+            }
+
+            return false;
+        }
+        catch (EndOfStreamException)
+        {
+            return false;
+        }
+        finally
+        {
+            stream.Position = originalPosition;
+        }
+    }
+
+    private static bool IsAnimatedPng(Stream stream)
+    {
+        // Chunks after the signature: length (4, big-endian), type (4), data, CRC (4). An APNG's acTL comes before the
+        // first IDAT; one after it does not make the picture animated.
+        Span<byte> buffer = stackalloc byte[8];
+        long position = 8;
+
+        for (var chunk = 0; chunk < MaxPngChunks; chunk++)
+        {
+            stream.Position = position;
+            stream.ReadExactly(buffer);
+            var type = buffer[4..];
+            if (type.SequenceEqual("acTL"u8))
+            {
+                return true;
+            }
+
+            if (type.SequenceEqual("IDAT"u8) || type.SequenceEqual("IEND"u8))
+            {
+                return false;
+            }
+
+            position += 12L + BinaryPrimitives.ReadUInt32BigEndian(buffer);
+        }
+
+        return false;
+    }
+
+    private static bool IsAnimatedGif(Stream stream, ReadOnlySpan<byte> header)
+    {
+        // The logical screen descriptor ends at 13; its packed byte says whether a global colour table of
+        // 3 * 2^(n + 1) bytes follows. Then blocks: images (0x2C), extensions (0x21), the trailer (0x3B).
+        if (header.Length < 13)
+        {
+            return false;
+        }
+
+        long position = 13 + ColorTableLength(header[10]);
+        Span<byte> descriptor = stackalloc byte[9];
+        var budget = MaxGifBlocks;
+        var images = 0;
+
+        while (budget-- > 0)
+        {
+            stream.Position = position;
+            switch (stream.ReadByte())
+            {
+                case 0x2C:
+                    if (++images > 1)
+                    {
+                        return true;
+                    }
+
+                    // Left, top, width, height (2 each), packed; a local colour table; the LZW minimum code size; the
+                    // image data in sub-blocks.
+                    stream.ReadExactly(descriptor);
+                    position = stream.Position + ColorTableLength(descriptor[8]) + 1;
+                    break;
+
+                case 0x21:
+                    // The label, then sub-blocks.
+                    position = stream.Position + 1;
+                    break;
+
+                default:
+                    // The trailer, or not a block: no second image.
+                    return false;
+            }
+
+            position = SkipGifSubBlocks(stream, position, ref budget);
+            if (position < 0)
+            {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>The position after the sub-blocks at <paramref name="position"/>, or -1 when the budget runs out.</summary>
+    private static long SkipGifSubBlocks(Stream stream, long position, ref int budget)
+    {
+        while (budget-- > 0)
+        {
+            stream.Position = position;
+            var size = stream.ReadByte();
+            if (size < 0)
+            {
+                throw new EndOfStreamException();
+            }
+
+            position += 1 + size;
+            if (size == 0)
+            {
+                return position;
+            }
+        }
+
+        return -1;
+    }
+
+    private static long ColorTableLength(byte packed)
+    {
+        return (packed & 0x80) == 0 ? 0 : 3L << ((packed & 0x07) + 1);
     }
 
     private static (int Width, int Height)? ReadFromStart(Stream stream)

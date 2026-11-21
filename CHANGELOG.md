@@ -24,23 +24,36 @@ so it stays clear which part of the repository actually moved.
 #### blob-storing
 
 - **New package `Dignite.Abp.BlobStoring.Imaging.SkiaSharp`: JPEGs stored as WebP, and photos turned upright.**
-  `container.StoreJpegAsWebp(quality: 85)`, after `AddImageMetadataStripContributor` and before
-  `AddImageResizeContributor`, stores every JPEG as a lossy WebP: turned upright by its EXIF orientation and, when the
+  `container.StoreJpegAsWebp(quality: 85)`, after `AddAllowedContentTypesContributor` and before
+  `AddImageResizeContributor`, stores a JPEG as a lossy WebP: turned upright by its EXIF orientation and, when the
   container's resize box fits pictures inside it (mode `Max`), shrunk into that box in the same decode, so a photo is
-  encoded once. PNG, GIF and WebP pass through. It runs behind the Imaging package's decode guard and fails with its
+  encoded once. A JPEG that would still exceed WebP's 16383 pixels on a side, or whose header gives no size, is stored
+  as a JPEG. GIF and WebP pass through. It runs behind the Imaging package's decode guard and fails with its
   `ImageProcessingFailed`. The module, `AbpBlobStoringImagingSkiaSharpModule`, brings ABP's SkiaSharp provider and
   changes it for the whole application: ABP 10.7.0's `SkiaSharpImageResizerContributor`, which ignores the EXIF
   orientation and stores a shrunk portrait photo on its side, is replaced by `UprightSkiaSharpImageResizerContributor`
-  (ABP has fixed it on `rel-10.7` for a later release; the replacement goes then), and `SkiaSharpResizerOptions` default
+  (ABP has fixed it on `rel-10.7` for a later release; the orientation part goes then), which also leaves an animated
+  picture - an APNG, an animated WebP - as it is instead of keeping one frame, and `SkiaSharpResizerOptions` default
   to linear sampling between mipmap levels and quality 85 instead of nearest neighbour and 75 (your own `Configure`
   still wins). `ImageOrientation` turns a decoded picture upright for code that renders stored pictures. On Linux, also
   reference `SkiaSharp.NativeAssets.Linux`. `Dignite.Abp.BlobStoring.Imaging` itself still references no image library.
   See [SkiaSharp Image Contributors](docs/en/blob-storing/imaging-skiasharp.md).
-- **A container can declare the type it stores content as.** `BlobContainerConfiguration.GetStoredContentType(mimeType)`
+- **PNGs stored as lossless WebP.** `container.StorePngAsWebp(minSizeInBytes: 16384)` (SkiaSharp package), after the
+  allowed content types and before the metadata and resize contributors, stores a PNG as a lossless WebP - transparency
+  and every visible pixel kept - turned upright and fitted into the resize box as a JPEG is. A PNG smaller than
+  `minSizeInBytes`, with 16 bits per channel, or animated (an APNG) is stored as it is. 16 KB: lossless WebP is about 26%
+  smaller than PNG, and below about 4 KB of saving Chrome DevTools does not suggest a modern format. See
+  [Storing PNGs as WebP](docs/en/blob-storing/imaging-skiasharp.md#storing-pngs-as-webp).
+- **A container can declare the type it stores content as.** `BlobContainerConfiguration.GetStoredContentType(mimeType, content)`
   (Pipeline package) returns what a converting contributor declared with `SetStoredContentType` - `image/webp` for
-  `image/jpeg` once `StoreJpegAsWebp` is added - and the type itself otherwise, so an application that names its blobs
-  or records their type can do it before the save. A declaration from the configuration, not a result of the save. See
+  `image/jpeg` once `StoreJpegAsWebp` is added, and for a PNG the rules of `StorePngAsWebp` convert - and the type itself
+  otherwise, so an application that names its blobs or records their type can do it before the save. A contributor that
+  converts only some content declares its rule as a condition, `SetStoredContentType(type, storedType, (configuration, content) => bool)`,
+  over the header and length of the content about to be saved, and converts by the same declaration. A declaration from
+  the configuration, not a result of the save. See
   [Saving Uploaded Files](docs/en/blob-storing/saving-uploaded-files.md#when-the-container-converts-the-content).
+- **`ImageHeaderReader.IsAnimated(stream)`** says whether a picture is animated - an APNG, an animated WebP, a GIF of
+  more than one image - from its structure, without decoding it.
 - **`ImageHeaderReader.ReadExifOrientation(stream)`** returns a JPEG's, WebP's or TIFF's EXIF orientation (1-8) from the
   header, read where SkiaSharp reads it, and `ImageHeaderReader.SwapsSides(orientation)` says whether it is a quarter
   turn.

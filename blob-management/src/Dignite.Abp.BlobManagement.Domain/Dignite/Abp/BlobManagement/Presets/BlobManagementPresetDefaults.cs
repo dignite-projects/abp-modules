@@ -1,3 +1,5 @@
+using Dignite.Abp.BlobStoring.Imaging;
+
 namespace Dignite.Abp.BlobManagement.Presets;
 
 /// <summary>
@@ -12,6 +14,9 @@ public static class BlobManagementPresetDefaults
     public const int ImagesMaxHeight = 4096;
 
     public const int ImagesWebpQuality = 85;
+
+    /// <summary>The PNG converter's own default (16 KB): from about there lossless WebP saves 4 KB or more.</summary>
+    public const long ImagesPngWebpMinSizeInBytes = PngToWebpContributorConfiguration.DefaultMinSizeInBytes;
 
     public const long DocumentsMaxSizeInMegabytes = 20;
 

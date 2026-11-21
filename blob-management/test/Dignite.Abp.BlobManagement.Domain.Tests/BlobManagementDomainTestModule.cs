@@ -58,6 +58,7 @@ public class BlobManagementDomainTestModule : AbpModule
                     preset.MaxWidth = BlobManagementTestContainers.ImagesMaxWidth;
                     preset.MaxHeight = BlobManagementTestContainers.ImagesMaxWidth;
                     preset.StoreJpegAsWebp = false;
+                    preset.StorePngAsWebp = false;
                 });
             });
 

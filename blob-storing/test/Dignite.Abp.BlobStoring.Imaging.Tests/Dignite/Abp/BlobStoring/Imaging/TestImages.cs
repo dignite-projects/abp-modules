@@ -174,9 +174,48 @@ public static class TestHeaders
         return Riff("VP8L", chunk);
     }
 
-    public static byte[] WebpExtended(int width, int height)
+    /// <summary>
+    /// <paramref name="png"/> with an <c>acTL</c> chunk (two frames, looping) - what makes a PNG an APNG - right after
+    /// <c>IHDR</c>, or, when <paramref name="beforeImageData"/> is <c>false</c>, just before <c>IEND</c>, where it does not
+    /// count. The CRC is computed, so a decoder that checks it accepts the chunk.
+    /// </summary>
+    public static byte[] WithAnimationControl(byte[] png, bool beforeImageData = true)
     {
-        var chunk = new List<byte> { 0x10, 0x00, 0x00, 0x00 };  // flags (alpha), reserved
+        var data = new List<byte>(BigEndian32(2));
+        data.AddRange(BigEndian32(0));
+        var chunk = PngChunk("acTL", data.ToArray());
+
+        // Signature (8) + IHDR (25); IEND is the last 12 bytes.
+        var at = beforeImageData ? 33 : png.Length - 12;
+        var bytes = new List<byte>(png[..at]);
+        bytes.AddRange(chunk);
+        bytes.AddRange(png[at..]);
+        return bytes.ToArray();
+    }
+
+    /// <summary>
+    /// A GIF of two 1 x 1 images, each behind a graphic control extension: the smallest animation; with
+    /// <paramref name="frames"/> 1, a still GIF of the same structure.
+    /// </summary>
+    public static byte[] AnimatedGif(int frames = 2)
+    {
+        var bytes = new List<byte>("GIF89a"u8.ToArray());
+        bytes.AddRange([0x01, 0x00, 0x01, 0x00, 0x80, 0x00, 0x00]);        // 1 x 1, a global table of 2 colours
+        bytes.AddRange([0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00]);
+        for (var frame = 0; frame < frames; frame++)
+        {
+            bytes.AddRange([0x21, 0xF9, 0x04, 0x04, 0x0A, 0x00, 0x00, 0x00]);                  // graphic control, 0.1 s
+            bytes.AddRange([0x2C, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00]);    // image descriptor
+            bytes.AddRange([0x02, 0x02, 0x44, 0x01, 0x00]);                                  // LZW data
+        }
+
+        bytes.Add(0x3B);
+        return bytes.ToArray();
+    }
+
+    public static byte[] WebpExtended(int width, int height, bool animated = false)
+    {
+        var chunk = new List<byte> { animated ? (byte)0x12 : (byte)0x10, 0x00, 0x00, 0x00 };  // flags (alpha, animation), reserved
         chunk.AddRange(LittleEndian32((uint)(width - 1))[..3]);
         chunk.AddRange(LittleEndian32((uint)(height - 1))[..3]);
         return Riff("VP8X", chunk);
@@ -242,6 +281,31 @@ public static class TestHeaders
         bytes.AddRange(LittleEndian32((uint)chunk.Count));
         bytes.AddRange(chunk);
         return bytes.ToArray();
+    }
+
+    private static byte[] PngChunk(string type, byte[] data)
+    {
+        var typeAndData = new List<byte>(Encoding.ASCII.GetBytes(type));
+        typeAndData.AddRange(data);
+        var bytes = new List<byte>(BigEndian32((uint)data.Length));
+        bytes.AddRange(typeAndData);
+        bytes.AddRange(BigEndian32(Crc32(typeAndData.ToArray())));
+        return bytes.ToArray();
+    }
+
+    private static uint Crc32(byte[] bytes)
+    {
+        var crc = 0xFFFFFFFFu;
+        foreach (var value in bytes)
+        {
+            crc ^= value;
+            for (var bit = 0; bit < 8; bit++)
+            {
+                crc = (crc & 1) != 0 ? (crc >> 1) ^ 0xEDB88320u : crc >> 1;
+            }
+        }
+
+        return ~crc;
     }
 
     private static byte[] UInt16(ushort value, bool littleEndian) => littleEndian ? LittleEndian16(value) : BigEndian16(value);

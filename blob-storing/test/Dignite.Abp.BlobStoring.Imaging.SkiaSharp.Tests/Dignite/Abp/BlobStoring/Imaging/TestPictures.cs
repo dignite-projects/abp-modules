@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.IO.Compression;
 using SkiaSharp;
 
 namespace Dignite.Abp.BlobStoring.Imaging;
@@ -20,6 +22,107 @@ public static class TestPictures
         }
 
         return Encode(info, pixels, format);
+    }
+
+    /// <summary>
+    /// A PNG of noise in which every pixel is partly transparent (alpha 1-255, unpremultiplied), so a conversion that
+    /// lost the transparency or the colour under it shows.
+    /// </summary>
+    public static byte[] TransparentNoisePng(int width, int height, int seed = 42)
+    {
+        var info = new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
+        var pixels = new byte[info.BytesSize];
+        new Random(seed).NextBytes(pixels);
+        for (var alpha = 3; alpha < pixels.Length; alpha += 4)
+        {
+            pixels[alpha] = (byte)Math.Max((byte)1, pixels[alpha]);
+        }
+
+        return Encode(info, pixels, SKEncodedImageFormat.Png);
+    }
+
+    /// <summary>
+    /// An RGB PNG of noise with 16 bits per channel, written by hand: SkiaSharp does not encode 16-bit PNGs. Each row is
+    /// a filter byte (none) and the samples, compressed with zlib into one <c>IDAT</c>.
+    /// </summary>
+    public static byte[] SixteenBitNoisePng(int width, int height, int seed = 42)
+    {
+        var random = new Random(seed);
+        var rowLength = 1 + width * 6;
+        var raw = new byte[rowLength * height];
+        for (var row = 0; row < height; row++)
+        {
+            random.NextBytes(raw.AsSpan(row * rowLength + 1, rowLength - 1));
+        }
+
+        using var compressed = new MemoryStream();
+        using (var zlib = new ZLibStream(compressed, CompressionLevel.Optimal, leaveOpen: true))
+        {
+            zlib.Write(raw);
+        }
+
+        byte[] header =
+        [
+            (byte)(width >> 24), (byte)(width >> 16), (byte)(width >> 8), (byte)width,
+            (byte)(height >> 24), (byte)(height >> 16), (byte)(height >> 8), (byte)height,
+            16, 2, 0, 0, 0   // bit depth, colour type (RGB), compression, filter, interlace
+        ];
+
+        return [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, .. PngChunk("IHDR"u8, header), .. PngChunk("IDAT"u8, compressed.ToArray()), .. PngChunk("IEND"u8, [])];
+    }
+
+    /// <summary>The bits per channel a PNG's <c>IHDR</c> declares.</summary>
+    public static int PngBitDepth(byte[] png) => png[24];
+
+    /// <summary>
+    /// <paramref name="png"/> with an <c>acTL</c> chunk (two frames, looping) right after <c>IHDR</c>: what makes a PNG an
+    /// APNG. Its CRC is computed, so a decoder that checks it accepts the chunk.
+    /// </summary>
+    public static byte[] WithAnimationControl(byte[] png)
+    {
+        // Signature (8) + IHDR (25).
+        return [.. png[..33], .. PngChunk("acTL"u8, [0, 0, 0, 2, 0, 0, 0, 0]), .. png[33..]];
+    }
+
+    /// <summary>A PNG chunk: length, type, data and the CRC of type and data.</summary>
+    private static byte[] PngChunk(ReadOnlySpan<byte> type, byte[] data)
+    {
+        byte[] typeAndData = [.. type, .. data];
+        var crc = Crc32(typeAndData);
+        var length = data.Length;
+        return
+        [
+            (byte)(length >> 24), (byte)(length >> 16), (byte)(length >> 8), (byte)length,
+            .. typeAndData,
+            (byte)(crc >> 24), (byte)(crc >> 16), (byte)(crc >> 8), (byte)crc
+        ];
+    }
+
+    /// <summary>
+    /// The pixels of <paramref name="picture"/>, decoded as stored into unpremultiplied RGBA, 8 bits per channel: two
+    /// pictures that show the same pixels give the same bytes.
+    /// </summary>
+    public static byte[] Pixels(byte[] picture)
+    {
+        using var data = SKData.CreateCopy(picture);
+        using var codec = SKCodec.Create(data) ?? throw new InvalidOperationException("Not a picture SkiaSharp can read.");
+        var info = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
+        using var bitmap = new SKBitmap(info);
+        var result = codec.GetPixels(info, bitmap.GetPixels());
+        if (result != SKCodecResult.Success)
+        {
+            throw new InvalidOperationException($"The picture could not be decoded: {result}.");
+        }
+
+        return bitmap.Bytes;
+    }
+
+    /// <summary>Whether <paramref name="picture"/> has transparency, as its decoder reports it.</summary>
+    public static bool HasAlpha(byte[] picture)
+    {
+        using var data = SKData.CreateCopy(picture);
+        using var codec = SKCodec.Create(data) ?? throw new InvalidOperationException("Not a picture SkiaSharp can read.");
+        return codec.Info.AlphaType != SKAlphaType.Opaque;
     }
 
     /// <summary>
@@ -107,5 +210,20 @@ public static class TestPictures
         using var image = SKImage.FromPixelCopy(info, pixels, info.RowBytes);
         using var data = image.Encode(format, 90);
         return data.ToArray();
+    }
+
+    private static uint Crc32(byte[] bytes)
+    {
+        var crc = 0xFFFFFFFFu;
+        foreach (var value in bytes)
+        {
+            crc ^= value;
+            for (var bit = 0; bit < 8; bit++)
+            {
+                crc = (crc & 1) != 0 ? (crc >> 1) ^ 0xEDB88320u : crc >> 1;
+            }
+        }
+
+        return ~crc;
     }
 }

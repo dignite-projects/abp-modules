@@ -182,3 +182,58 @@ So it is a static declaration and within this decision. Had it needed a value co
 
 **Second batch.** `ImageFormatConvert` is done for JPEG to WebP; a general one (any format to any, by rule) is still a
 candidate.
+
+## Amendment, 2026-11-21: PNG to WebP, and a declaration with a rule
+
+**Why now.** Blob Management's images preset stored a JPEG as WebP and left a PNG as uploaded. The owner asked for PNGs
+too, as lossless WebP (WebP keeps an alpha channel in both its modes, so transparency is no reason to leave one out),
+except where converting would lose something or save nothing: an animated PNG, a 16-bit one, a small one. Purposes that
+need a PNG kept (a favicon, a picture sent by email) cannot be read from the bytes; the owner left them to a container
+that turns the conversion off.
+
+**The conflict.** The 2026-11-11 amendment let only a contributor that converts *every* such content declare its stored
+type: the caller names the BLOB `.webp` before the save, and the contributor must then convert. A PNG converter that
+skips some PNGs could not declare - and without the declaration, Blob Management would name a converted PNG `.png`.
+
+**Decided:** the declaration carries the rule. `SetStoredContentType(contentType, storedContentType, condition)` stores a
+`(configuration, content) => bool`, and `GetStoredContentType(contentType, content)` applies it to the content the caller
+is about to save; the overload without a condition is the old declaration. The contributor converts by reading the same
+declaration on the content it receives, so caller and contributor apply one rule by construction - not two copies kept
+in step. Re-read against "what stays out":
+
+- *No blob naming*, *no return object*: unchanged. The rule is evaluated before the save on content the caller already
+  holds; nothing flows back from the save.
+- The cost: a rule may read only what the contributors before it leave unchanged, since the caller evaluates it on the
+  upload and the contributor on what it receives. The header qualifies (the metadata contributor keeps the IHDR and the
+  EXIF orientation); the length qualifies only when nothing before it changes the bytes - so `StorePngAsWebp` goes before
+  `AddImageMetadataStripContributor`, and the images preset now runs size, types, JPEG to WebP, PNG to WebP, metadata
+  removal, resize. A rule can never be "only when smaller": that is known after the conversion.
+- `GetStoredContentType(contentType)` without the content is removed rather than kept beside it: with a conditional
+  declaration it could only guess. The API was unreleased (`[Unreleased]` in the CHANGELOG).
+
+**The rules** (`WebpConversion`, internal to the SkiaSharp package), read from the header and the length only:
+
+- Both formats: the picture's size, turned by its EXIF orientation and fitted into the container's `Max` box as the
+  contributor fits it, must be within WebP's 16383 pixels on a side; a picture whose header gives no size is not
+  converted. Before this, a JPEG beyond the limit would have failed the upload, the encoder being unable to write it
+  (not reproduced); it only happens
+  without a box, or with one side unconstrained, and with the decode guard raised above its default 8192.
+- PNG: at least `MinSizeInBytes` (default 16 KB), 8 bits per channel or fewer, not an APNG (`acTL` before the first
+  `IDAT`).
+
+**The default size, 16 KB, is derived, not borrowed.** No product that converts on store was surveyed for a threshold of
+its own; two published figures give it: Google states lossless WebP is about 26% smaller than PNG
+(developers.google.com/speed/webp), and Chrome DevTools' image delivery insight (`ImageDelivery.ts`,
+`BYTE_SAVINGS_THRESHOLD = 4096`; BSD-3-Clause) does not suggest a modern format for a saving under 4 KB - Lighthouse's
+retired `modern-image-formats` audit used 8 KB (Apache-2.0). 4 KB / 26% is about 16 KB.
+
+**Encoding.** Lossless at effort 75, libwebp's own `cwebp` default; the PNG is decoded unpremultiplied, so a
+semi-transparent pixel keeps its colour exactly (libwebp may still rewrite the colour of a fully transparent pixel,
+which shows nothing).
+
+**Animated pictures.** A still bitmap keeps one frame, and `UprightSkiaSharpImageResizerContributor` resized an APNG or
+an animated WebP larger than the box into one frame - a defect found while doing this, fixed with it.
+`ImageHeaderReader.IsAnimated` (APNG, animated WebP, a GIF of more than one image) lets the resizer report
+`Unsupported`, so the resize contributor stores the picture as uploaded; the converters and Blob Management's public
+sizing ask it too. ABP's own SkiaSharp resizer has the same defect; the check stays when the orientation part of the
+replacement goes.

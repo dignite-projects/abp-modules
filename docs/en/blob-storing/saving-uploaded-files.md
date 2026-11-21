@@ -83,16 +83,16 @@ In an [application service](https://abp.io/docs/latest/framework/architecture/do
 
 ## When the Container Converts the Content
 
-A container can store content in another format than it was uploaded in: [`StoreJpegAsWebp`](imaging-skiasharp.md#storing-jpegs-as-webp) stores every JPEG as WebP. A contributor that always converts declares it on the container, so your application can name the BLOB and record the type for what will be stored, before the save:
+A container can store content in another format than it was uploaded in: [`StoreJpegAsWebp`](imaging-skiasharp.md#storing-jpegs-as-webp) stores a JPEG as WebP, and [`StorePngAsWebp`](imaging-skiasharp.md#storing-pngs-as-webp) most PNGs. A converting contributor declares it on the container, with the rule it converts by, so your application can name the BLOB and record the type for what will be stored, before the save:
 
 ````csharp
 // "image/webp" for a JPEG in a container that stores JPEGs as WebP; otherwise mimeType itself
 var storedType = _blobContainerConfigurationProvider
     .Get(BlobContainerNameAttribute.GetContainerName<AttachmentContainer>())
-    .GetStoredContentType(mimeType);
+    .GetStoredContentType(mimeType, content);
 ````
 
-`GetStoredContentType` comes from the Pipeline package (`Dignite.Abp.BlobStoring.Pipeline` namespace), and a contributor of your own that converts every piece of content of a type declares it with `SetStoredContentType(contentType, storedContentType)`. It is a declaration read from the configuration, not a result of the save: if the row must describe the stored bytes exactly, read the BLOB back and detect them, as described above. Deduplicating by the hash of the upload still works, since the same upload is converted the same way.
+`content` is the seekable copy you are about to save (a rule reads its header and length; its position is restored). `GetStoredContentType` comes from the Pipeline package (`Dignite.Abp.BlobStoring.Pipeline` namespace). A contributor of your own that converts every piece of content of a type declares it with `SetStoredContentType(contentType, storedContentType)`; one that converts only some of it passes its rule as a third argument, `(configuration, content) => bool`, and converts by reading the declaration itself. Such a rule reads only what the contributors before it leave unchanged - the header, and the length when nothing before it changes the bytes - and never whether the result came out smaller, which is known only after converting. It is a declaration read from the configuration, not a result of the save: if the row must describe the stored bytes exactly, read the BLOB back and detect them, as described above. Deduplicating by the hash of the upload still works, since the same upload is converted the same way.
 
 ## What Stays in Your Application
 
