@@ -22,12 +22,15 @@ public static class BlobManagementPresetExtensions
     private const long BytesPerMegabyte = 1024L * 1024L;
 
     /// <summary>
-    /// Raster pictures (<see cref="BlobManagementFileTypes.Images"/>), in this order: a size cap, the allowed types, removal of
-    /// the editing metadata a design tool piles into a JPEG or PNG (EXIF, and so the orientation, is kept), a JPEG stored
-    /// as WebP (<see cref="BlobManagementImagesPresetOptions.StoreJpegAsWebp"/>, on by default: turned upright and fitted into the
-    /// box in the same decode), and a resize into <see cref="BlobManagementImagesPresetOptions.MaxWidth"/> ×
-    /// <see cref="BlobManagementImagesPresetOptions.MaxHeight"/> of what is still larger (a PNG, a WebP), turned upright first.
-    /// Both run on SkiaSharp, which the Blob Management brings (<c>Dignite.Abp.BlobStoring.Imaging.SkiaSharp</c>).
+    /// Raster pictures (<see cref="BlobManagementFileTypes.Images"/>), in this order: a size cap, the allowed types, a JPEG
+    /// stored as lossy WebP (<see cref="BlobManagementImagesPresetOptions.StoreJpegAsWebp"/>) and a PNG as lossless WebP
+    /// (<see cref="BlobManagementImagesPresetOptions.StorePngAsWebp"/>), both on by default, turned upright and fitted into
+    /// the box in the same decode; removal of the editing metadata a design tool piles into a JPEG or PNG still stored as
+    /// one (EXIF, and so the orientation, is kept); and a resize into <see cref="BlobManagementImagesPresetOptions.MaxWidth"/>
+    /// × <see cref="BlobManagementImagesPresetOptions.MaxHeight"/> of what is still larger (a WebP, a PNG left as one),
+    /// turned upright first - an animated picture is kept as it is. The conversions come first because the PNG's rule reads
+    /// the length of the upload, which the metadata removal would change. All of it runs on SkiaSharp, which Blob
+    /// Management brings (<c>Dignite.Abp.BlobStoring.Imaging.SkiaSharp</c>).
     /// </summary>
     public static BlobContainerConfiguration UseImagesPreset(
         this BlobContainerConfiguration containerConfiguration,
@@ -42,22 +45,35 @@ public static class BlobManagementPresetExtensions
             throw new AbpException($"The images preset's {nameof(options.MaxWidth)} and {nameof(options.MaxHeight)} cannot be negative.");
         }
 
-        // Checked whether or not JPEGs are converted, so a value out of range never waits for the switch to be turned on.
+        // Checked whether or not the switches are on, so a value out of range never waits for one to be turned on.
         if (options.WebpQuality is < 1 or > 100)
         {
             throw new AbpException($"The images preset's {nameof(options.WebpQuality)} must be between 1 and 100, not {options.WebpQuality}.");
         }
 
+        if (options.PngWebpMinSizeInBytes < 0)
+        {
+            throw new AbpException($"The images preset's {nameof(options.PngWebpMinSizeInBytes)} cannot be negative.");
+        }
+
         AddSizeCap(containerConfiguration, options);
         containerConfiguration.AddAllowedContentTypesContributor(c =>
             c.AllowedContentTypes = BlobManagementFileTypes.GetMimeTypes(BlobManagementFileTypes.Images));
-        containerConfiguration.AddImageMetadataStripContributor();
+
+        // Before the resize, whose box they apply: a picture is decoded, turned and fitted once, and the resize then finds
+        // a WebP that fits. Before the metadata removal, which would change the length the PNG's rule reads - and which
+        // a picture stored as WebP does not need.
         if (options.StoreJpegAsWebp)
         {
-            // Before the resize, whose box it applies: a JPEG is decoded, turned and fitted once, and the resize then
-            // finds a WebP that fits.
             containerConfiguration.StoreJpegAsWebp(options.WebpQuality);
         }
+
+        if (options.StorePngAsWebp)
+        {
+            containerConfiguration.StorePngAsWebp(options.PngWebpMinSizeInBytes);
+        }
+
+        containerConfiguration.AddImageMetadataStripContributor();
 
         if (options.MaxWidth > 0 || options.MaxHeight > 0)
         {

@@ -29,9 +29,9 @@ public static class BlobStoringPipelineConfigurationNames
     public const string GZipCompressionLevel = Prefix + "GZip.CompressionLevel";
 
     /// <summary>
-    /// The types a container stores content of another type as (<see cref="System.Collections.Generic.IReadOnlyDictionary{TKey,TValue}"/>
-    /// of <see cref="string"/> to <see cref="string"/>), declared by whoever adds a contributor that converts it. Read and
-    /// write it with <c>GetStoredContentType</c> / <c>SetStoredContentType</c>.
+    /// The types a container stores content of another type as, each with the condition under which it is converted when
+    /// not all of it is, declared by whoever adds a contributor that converts it. Its value is internal: read and write it
+    /// with <c>GetStoredContentType</c> / <c>SetStoredContentType</c>.
     /// </summary>
     public const string StoredContentTypes = Prefix + "StoredContentTypes";
 }

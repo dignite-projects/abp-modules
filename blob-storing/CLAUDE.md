@@ -4,7 +4,7 @@ Everyday `IBlobPipelineContributor` implementations for **ABP BlobStoring** (LGP
 BLOB content pipeline — `IBlobPipelineContributor`, per-container `BlobContainerConfiguration.PipelineContributors`,
 run inside `IBlobContainer.SaveAsync` / `GetAsync` — but no contributors. This module is those: a size cap, a
 content-type allow-list based on the real bytes, GZip, image metadata removal, resize and compress, and the MIME
-detector they share; and, on SkiaSharp, JPEGs stored as WebP and photos turned upright.
+detector they share; and, on SkiaSharp, JPEGs and PNGs stored as WebP and photos turned upright.
 Published: `src/Dignite.Abp.BlobStoring.Pipeline`, `src/Dignite.Abp.BlobStoring.Imaging` and
 `src/Dignite.Abp.BlobStoring.Imaging.SkiaSharp`. Nothing else lives here.
 
@@ -22,9 +22,11 @@ change that adds one is a design change, not a feature — re-read the decision 
 - **No upload entry point.** No `IFileStorer`-style service in front of `IBlobContainer`; callers use the container.
 - **No return object.** Nothing like `StoredFileInfo` — a contributor cannot report values back to the caller.
 - **No blob naming.** The caller names its blobs. A container may *declare* the type it stores content as
-  (`SetStoredContentType` / `GetStoredContentType`, set by `StoreJpegAsWebp`): a static fact of the configuration a
-  caller reads before the save, as it reads the `MaxSize` cap. It names nothing and reports nothing back; a caller that
-  must know what was stored detects the stored bytes (`pipeline-contributors-decision.md`, amendment 2026-11-11).
+  (`SetStoredContentType` / `GetStoredContentType`, set by `StoreJpegAsWebp` and `StorePngAsWebp`): a fact of the
+  configuration - with a rule over the content's header and length when not every such content is converted - a caller
+  reads before the save, as it reads the `MaxSize` cap, and the contributor converts by. It names nothing and reports
+  nothing back; a caller that must know what was stored detects the stored bytes (`pipeline-contributors-decision.md`,
+  amendments 2026-11-11 and 2026-11-21).
 - **No metadata, persistence, directories, dedup records.** A caller that wants the detected MIME type or a hash for
   its own row calls `IMimeTypeDetector` and hashes itself.
 - **No HTTP API, no UI, no permissions.** Who may read or write a container is the application's.
@@ -46,13 +48,15 @@ One solution, `Dignite.Abp.BlobStoring.slnx`, central package management (versio
   `ImageContributorBase`), `ImageMetadataStripContributor` (a plain contributor: it walks JPEG segments and PNG chunks in
   managed code through the internal `ImageMetadataStripper`, decodes nothing, so no decode guard), their
   configurations, `ImageDecodeGuardConfiguration`, `ImageHeaderReader` (public since 10.7.5; also the EXIF orientation,
-  which the resize contributor uses to measure a picture as displayed),
+  which the resize contributor uses to measure a picture as displayed, and `IsAnimated`),
   `ImagingBlobContainerConfigurationExtensions`, `BlobStoringImagingErrorCodes`, localization. Depends on the Pipeline
   package and `Volo.Abp.Imaging.Abstractions` — **no image library**; the application picks one of ABP's providers.
 - **`src/Dignite.Abp.BlobStoring.Imaging.SkiaSharp`** — the provider-specific package, so `.Imaging` can keep its rule:
-  `JpegToWebpContributor` (on `ImageContributorBase`) with `JpegToWebpContributorConfiguration`,
-  `SkiaSharpImagingBlobContainerConfigurationExtensions.StoreJpegAsWebp` (which also declares `image/jpeg` stored as
-  `image/webp`), `UprightSkiaSharpImageResizerContributor`, `ImageOrientation`, `BlobStoringImagingSkiaSharpConfigurationNames`
+  `JpegToWebpContributor` (lossy) and `PngToWebpContributor` (lossless) on `WebpContributorBase` (on
+  `ImageContributorBase`), with their `*Configuration`s, the internal `WebpConversion` (the rules both declare and
+  convert by), `SkiaSharpImagingBlobContainerConfigurationExtensions.StoreJpegAsWebp` / `StorePngAsWebp` (which also
+  declare `image/jpeg` / `image/png` stored as `image/webp` under those rules), `UprightSkiaSharpImageResizerContributor`
+  (which also leaves animated pictures alone), `ImageOrientation`, `BlobStoringImagingSkiaSharpConfigurationNames`
   and `AbpBlobStoringImagingSkiaSharpModule`, which removes ABP's `SkiaSharpImageResizerContributor` and defaults
   `SkiaSharpResizerOptions` to linear + mipmap sampling, quality 85. Types in the `Dignite.Abp.BlobStoring.Imaging`
   namespace, as ABP keeps its SkiaSharp provider in `Volo.Abp.Imaging`. No error codes or resource of its own: a

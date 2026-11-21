@@ -35,7 +35,7 @@ those.
 **[Read the documentation](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/blob-management/index.md)**:
 
 * [Setting Up Blob Management](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/blob-management/setting-up.md) -
-  installing it in a host, declaring its containers in code or in configuration, the tenant allocation.
+  installing it in a host, declaring its containers, the tenant allocation.
 * [Using Blob Management From an Application](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/blob-management/provider.md) -
   `UseBlobManagement`, Blob Management in the same process or remote, public addresses.
 * [Keeping Files by Id](https://github.com/dignite-projects/abp-modules/blob/main/docs/en/blob-management/files.md) -

@@ -25,6 +25,9 @@ public class BlobStoringImagingSkiaSharpTestModule : AbpModule
     public const string StretchContainer = "webp-stretch";
     public const string ResizeContainer = "resize";
     public const string WideResizeContainer = "resize-wide";
+    public const string PngWebpContainer = "png-webp";
+    public const string AnyPngWebpContainer = "png-webp-any-size";
+    public const string UnboxedWebpContainer = "webp-unboxed";
 
     public const int LowQuality = 30;
     public const int Box = 256;
@@ -53,13 +56,26 @@ public class BlobStoringImagingSkiaSharpTestModule : AbpModule
             {
                 container.AddMaxSizeContributor(c => c.MaxSizeInBytes = 4 * 1024 * 1024);
                 container.AddAllowedContentTypesContributor(c => c.AllowedContentTypes = ["image/*"]);
-                container.AddImageMetadataStripContributor();
                 container.StoreJpegAsWebp();
+                container.StorePngAsWebp();
+                container.AddImageMetadataStripContributor();
                 container.AddImageResizeContributor(c =>
                 {
                     c.MaxWidth = Box;
                     c.MaxHeight = Box;
                 });
+            });
+
+            options.Containers.Configure(PngWebpContainer, container => container.StorePngAsWebp());
+
+            options.Containers.Configure(AnyPngWebpContainer, container => container.StorePngAsWebp(minSizeInBytes: 0));
+
+            // No box, and a decode guard that lets a picture wider than WebP's 16383 pixels through.
+            options.Containers.Configure(UnboxedWebpContainer, container =>
+            {
+                container.ConfigureImageDecodeGuard(guard => guard.MaxSourceWidth = 20000);
+                container.StoreJpegAsWebp();
+                container.StorePngAsWebp(minSizeInBytes: 0);
             });
 
             options.Containers.Configure(StretchContainer, container =>

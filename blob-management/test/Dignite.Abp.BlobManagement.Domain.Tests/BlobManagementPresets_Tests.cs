@@ -29,6 +29,7 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
         _fileDescriptorManager = GetRequiredService<FileDescriptorManager>();
     }
 
+    /// <summary>A PNG left as one - here with the conversions off - is resized and stays a PNG.</summary>
     [Fact]
     public async Task The_Images_Preset_Should_Store_A_Resized_Picture_And_Record_It()
     {
@@ -37,19 +38,55 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
         var descriptor = await WithUnitOfWorkAsync(async () =>
         {
             using var stream = new MemoryStream(upload);
-            return await _fileDescriptorManager.CreateAsync(BlobManagementTestContainers.Images, "wide.png", stream);
+            return await _fileDescriptorManager.CreateAsync(BlobManagementTestContainers.ImagesAsUploaded, "wide.png", stream);
         });
 
-        var stored = await WithUnitOfWorkAsync(async () =>
-        {
-            await using var stream = await _fileDescriptorManager.GetStreamOrNullAsync(descriptor);
-            return BlobManagementTestFiles.ReadAll(stream!);
-        });
+        var stored = await ReadStoredAsync(descriptor);
 
         BlobManagementTestFiles.Measure(stored).ShouldBe((BlobManagementTestContainers.ImagesMaxWidth, BlobManagementTestContainers.ImagesMaxWidth / 2));
+        BlobManagementTestFiles.Format(stored).ShouldBe(SkiaSharp.SKEncodedImageFormat.Png);
         descriptor.MimeType.ShouldBe("image/png");
+        descriptor.BlobName.ShouldEndWith(".png");
         descriptor.Size.ShouldBe(stored.Length);
         descriptor.Size.ShouldBeLessThan(upload.Length);
+    }
+
+    /// <summary>
+    /// A PNG of 16 KB or more is stored as a lossless WebP, fitted into the box: the physical BLOB is named <c>.webp</c>,
+    /// the descriptor records the WebP, and an uploaded file's name takes the extension.
+    /// </summary>
+    [Fact]
+    public async Task A_Png_Uploaded_To_A_User_BlobManagement_Should_Be_Stored_And_Named_As_Webp()
+    {
+        var upload = BlobManagementTestFiles.Png(256, 128, seed: 3);
+        upload.Length.ShouldBeGreaterThanOrEqualTo((int)BlobManagementPresetDefaults.ImagesPngWebpMinSizeInBytes);
+
+        var descriptor = await UploadAsync(BlobManagementTestContainers.UserImages, "diagram.png", upload);
+
+        var stored = await ReadStoredAsync(descriptor);
+        BlobManagementTestFiles.Format(stored).ShouldBe(SkiaSharp.SKEncodedImageFormat.Webp);
+        BlobManagementTestFiles.Measure(stored).ShouldBe((BlobManagementTestContainers.ImagesMaxWidth, BlobManagementTestContainers.ImagesMaxWidth / 2));
+        descriptor.BlobName.ShouldEndWith(".webp");
+        descriptor.MimeType.ShouldBe("image/webp");
+        descriptor.Name.ShouldBe("diagram.webp");
+        descriptor.Size.ShouldBe(stored.Length);
+    }
+
+    /// <summary>
+    /// An APNG keeps its frames: it is neither converted nor resized, and its BLOB is named for what is stored - the
+    /// declaration read before the save agrees with the contributors.
+    /// </summary>
+    [Fact]
+    public async Task An_Animated_Png_Should_Be_Stored_As_Uploaded()
+    {
+        var upload = BlobManagementTestFiles.WithAnimationControl(BlobManagementTestFiles.Png(256, 128, seed: 4));
+
+        var descriptor = await UploadAsync(BlobManagementTestContainers.UserImages, "spinner.png", upload);
+
+        (await ReadStoredAsync(descriptor)).ShouldBe(upload);
+        descriptor.BlobName.ShouldEndWith(".png");
+        descriptor.MimeType.ShouldBe("image/png");
+        descriptor.Name.ShouldBe("spinner.png");
     }
 
     [Fact]
@@ -73,12 +110,17 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
         {
             typeof(MaxSizeContributor),
             typeof(AllowedContentTypesContributor),
-            typeof(ImageMetadataStripContributor),
             typeof(JpegToWebpContributor),
+            typeof(PngToWebpContributor),
+            typeof(ImageMetadataStripContributor),
             typeof(ImageResizeContributor)
         });
         container.GetJpegToWebpContributorConfiguration().Quality.ShouldBe(BlobManagementPresetDefaults.ImagesWebpQuality);
-        container.GetStoredContentType("image/jpeg").ShouldBe("image/webp");
+        container.GetPngToWebpContributorConfiguration().MinSizeInBytes.ShouldBe(BlobManagementPresetDefaults.ImagesPngWebpMinSizeInBytes);
+        using (var jpeg = new MemoryStream(BlobManagementTestFiles.Jpeg(40, 40)))
+        {
+            container.GetStoredContentType("image/jpeg", jpeg).ShouldBe("image/webp");
+        }
         container.GetMaxSizeContributorConfiguration().MaxSizeInBytes.ShouldBe(BlobManagementPresetDefaults.ImagesMaxSizeInMegabytes * Megabyte);
         container.GetAllowedContentTypesContributorConfiguration().AllowedContentTypes
             .ShouldBe(BlobManagementFileTypes.GetMimeTypes(BlobManagementFileTypes.Images), ignoreOrder: true);
@@ -103,10 +145,24 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
     {
         var asUploaded = new BlobContainerConfiguration().UseImagesPreset(o => o.StoreJpegAsWebp = false);
         asUploaded.PipelineContributors.ShouldNotContain(typeof(JpegToWebpContributor));
-        asUploaded.GetStoredContentType("image/jpeg").ShouldBe("image/jpeg");
+        using var jpeg = new MemoryStream(BlobManagementTestFiles.Jpeg(40, 40));
+        asUploaded.GetStoredContentType("image/jpeg", jpeg).ShouldBe("image/jpeg");
 
         var lower = new BlobContainerConfiguration().UseImagesPreset(o => o.WebpQuality = 60);
         lower.GetJpegToWebpContributorConfiguration().Quality.ShouldBe(60);
+    }
+
+    [Fact]
+    public void The_Images_Preset_Can_Store_Pngs_As_Uploaded_Or_From_Another_Size()
+    {
+        var asUploaded = new BlobContainerConfiguration().UseImagesPreset(o => o.StorePngAsWebp = false);
+        asUploaded.PipelineContributors.ShouldNotContain(typeof(PngToWebpContributor));
+        using var png = new MemoryStream(BlobManagementTestFiles.Png(256, 128));
+        asUploaded.GetStoredContentType("image/png", png).ShouldBe("image/png");
+
+        var larger = new BlobContainerConfiguration().UseImagesPreset(o => o.PngWebpMinSizeInBytes = 1024 * 1024);
+        larger.GetPngToWebpContributorConfiguration().MinSizeInBytes.ShouldBe(1024 * 1024);
+        larger.GetStoredContentType("image/png", png).ShouldBe("image/png");
     }
 
     [Theory]
@@ -118,6 +174,18 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
         {
             o.StoreJpegAsWebp = storeJpegAsWebp;
             o.WebpQuality = quality;
+        }));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void The_Images_Preset_Should_Refuse_A_Negative_Png_Size(bool storePngAsWebp)
+    {
+        Should.Throw<AbpException>(() => new BlobContainerConfiguration().UseImagesPreset(o =>
+        {
+            o.StorePngAsWebp = storePngAsWebp;
+            o.PngWebpMinSizeInBytes = -1;
         }));
     }
 
@@ -195,11 +263,14 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
         descriptor.Name.ShouldBe("holiday.jpg");
     }
 
-    /// <summary>An uploaded PNG keeps its type and its name.</summary>
+    /// <summary>An uploaded PNG under 16 KB, too small to convert, keeps its type and its name.</summary>
     [Fact]
-    public async Task A_Png_Uploaded_To_A_User_BlobManagement_Should_Keep_Its_Name()
+    public async Task A_Small_Png_Uploaded_To_A_User_BlobManagement_Should_Keep_Its_Name()
     {
-        var descriptor = await UploadAsync(BlobManagementTestContainers.UserImages, "drawing.png", BlobManagementTestFiles.Png(32, 32, seed: 9));
+        var upload = BlobManagementTestFiles.Png(32, 32, seed: 9);
+        upload.Length.ShouldBeLessThan((int)BlobManagementPresetDefaults.ImagesPngWebpMinSizeInBytes);
+
+        var descriptor = await UploadAsync(BlobManagementTestContainers.UserImages, "drawing.png", upload);
 
         descriptor.MimeType.ShouldBe("image/png");
         descriptor.Name.ShouldBe("drawing.png");

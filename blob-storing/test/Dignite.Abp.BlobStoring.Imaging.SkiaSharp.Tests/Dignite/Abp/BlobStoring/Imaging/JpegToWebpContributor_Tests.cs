@@ -61,8 +61,8 @@ public class JpegToWebpContributor_Tests : AbpIntegratedTest<BlobStoringImagingS
     }
 
     /// <summary>
-    /// In the order Blob Management's images preset uses - size, types, metadata removal (which keeps the orientation), WebP,
-    /// resize - a sideways photo larger than the box is turned, then fitted with its long side, in one encode.
+    /// In the order Blob Management's images preset uses - size, types, WebP, metadata removal, resize - a sideways photo
+    /// larger than the box is turned, then fitted with its long side, in one encode.
     /// </summary>
     [Fact]
     public async Task A_Sideways_Jpeg_Larger_Than_The_Box_Should_Be_Fitted_Upright()
@@ -148,17 +148,22 @@ public class JpegToWebpContributor_Tests : AbpIntegratedTest<BlobStoringImagingS
     }
 
     /// <summary>
-    /// What a caller that names its blobs before the save reads: a JPEG is stored as WebP, anything else as it is.
+    /// What a caller that names its blobs before the save reads: a JPEG is stored as WebP, anything else as it is - and a
+    /// JPEG wider than WebP allows as a JPEG.
     /// </summary>
     [Fact]
     public void Storing_Jpeg_As_Webp_Should_Declare_The_Stored_Type()
     {
         var container = GetContainerConfiguration(BlobStoringImagingSkiaSharpTestModule.WebpContainer);
+        using var jpeg = new MemoryStream(TestPictures.Noise(300, 200, SKEncodedImageFormat.Jpeg));
+        using var png = new MemoryStream(TestPictures.Noise(300, 200, SKEncodedImageFormat.Png));
+        using var panorama = new MemoryStream(TestPictures.Noise(16400, 2, SKEncodedImageFormat.Jpeg));
 
-        container.GetStoredContentType("image/jpeg").ShouldBe("image/webp");
-        container.GetStoredContentType("image/png").ShouldBe("image/png");
+        container.GetStoredContentType("image/jpeg", jpeg).ShouldBe("image/webp");
+        container.GetStoredContentType("image/png", png).ShouldBe("image/png");
+        container.GetStoredContentType("image/jpeg", panorama).ShouldBe("image/jpeg");
         GetContainerConfiguration(BlobStoringImagingSkiaSharpTestModule.ResizeContainer)
-            .GetStoredContentType("image/jpeg").ShouldBe("image/jpeg");
+            .GetStoredContentType("image/jpeg", jpeg).ShouldBe("image/jpeg");
     }
 
     /// <summary>

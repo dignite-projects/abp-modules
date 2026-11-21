@@ -1,7 +1,7 @@
 ```json
 //[doc-seo]
 {
-    "Description": "Install Dignite Blob Management in an ABP host: its modules and database, managed containers declared in code or in appsettings.json, directories, upload presets and the tenant storage allocation."
+    "Description": "Install Dignite Blob Management in an ABP host: its modules and database, managed containers, directories, upload presets and the tenant storage allocation."
 }
 ```
 
@@ -41,7 +41,7 @@ protected override void OnModelCreating(ModelBuilder builder)
 
 With MongoDB, `BlobManagementMongoDbModule` keeps the files and directories in the `BlobFileDescriptors` and `BlobDirectoryDescriptors` collections.
 
-Blob Management processes pictures with SkiaSharp, which comes with it: the [images preset](#presets) stores a JPEG as WebP and resizes through ABP's [image manipulation](https://abp.io/docs/latest/framework/infrastructure/image-manipulation) SkiaSharp provider, and public reads resize on request with it. The domain module depends on the [SkiaSharp image contributors](../blob-storing/imaging-skiasharp.md) module, which also makes ABP's SkiaSharp resizer turn photos upright and changes its default sampling and quality for the whole host. SkiaSharp brings its native libraries for Windows and macOS only: **on Linux, reference `SkiaSharp.NativeAssets.Linux`** in this host, or every picture fails to process.
+Blob Management processes pictures with SkiaSharp, which comes with it: the [images preset](#presets) stores a JPEG, and most PNGs, as WebP and resizes through ABP's [image manipulation](https://abp.io/docs/latest/framework/infrastructure/image-manipulation) SkiaSharp provider, and public reads resize on request with it. The domain module depends on the [SkiaSharp image contributors](../blob-storing/imaging-skiasharp.md) module, which also makes ABP's SkiaSharp resizer turn photos upright and changes its default sampling and quality for the whole host. SkiaSharp brings its native libraries for Windows and macOS only: **on Linux, reference `SkiaSharp.NativeAssets.Linux`** in this host, or every picture fails to process.
 
 ## Managed Containers
 
@@ -86,7 +86,7 @@ A preset adds the [BLOB Storing](../blob-storing/index.md) contributors a kind o
 
 | Preset | What it adds | Defaults |
 |---|---|---|
-| `UseImagesPreset` | [Size limit](../blob-storing/max-size.md), [allowed types](../blob-storing/allowed-content-types.md) (JPEG, PNG, GIF, WebP), [metadata removal](../blob-storing/imaging.md#image-metadata), [a JPEG stored as WebP](../blob-storing/imaging-skiasharp.md#storing-jpegs-as-webp) (`StoreJpegAsWebp`, at `WebpQuality`) and a [resize](../blob-storing/imaging.md#image-resize) into `MaxWidth` × `MaxHeight` (both `0`: no resize) | 25 MB, 2560 × 4096, WebP on at quality 85 |
+| `UseImagesPreset` | [Size limit](../blob-storing/max-size.md), [allowed types](../blob-storing/allowed-content-types.md) (JPEG, PNG, GIF, WebP), [a JPEG stored as WebP](../blob-storing/imaging-skiasharp.md#storing-jpegs-as-webp) (`StoreJpegAsWebp`, at `WebpQuality`), [a PNG stored as lossless WebP](../blob-storing/imaging-skiasharp.md#storing-pngs-as-webp) (`StorePngAsWebp`, from `PngWebpMinSizeInBytes`), [metadata removal](../blob-storing/imaging.md#image-metadata) and a [resize](../blob-storing/imaging.md#image-resize) into `MaxWidth` × `MaxHeight` (both `0`: no resize) | 25 MB, 2560 × 4096, JPEG to WebP on at quality 85, PNG to WebP on from 16 KB |
 | `UseDocumentsPreset` | Size limit, allowed types: PDF, Office documents, plain text, CSV and ZIP | 20 MB |
 | `UseBinaryAssetsPreset` | Size limit, allowed types: icons and web fonts | 5 MB |
 | `UseAnyPreset` | Size limit only: every type is accepted | 20 MB |
@@ -101,65 +101,21 @@ A container can do without a preset, or add contributors after one; calling an `
 
 #### Pictures Stored as WebP
 
-With `StoreJpegAsWebp` on (the default), the images preset stores every JPEG as a lossy WebP at `WebpQuality` (1-100, default 85): turned upright by its EXIF orientation, so a phone's portrait photo is not shown on its side, and fitted into `MaxWidth` × `MaxHeight` in the same decode. A PNG keeps its pixels, and a GIF and a WebP are stored as they are; a PNG or WebP larger than the box is resized, upright.
+With `StoreJpegAsWebp` on (the default), the images preset stores every JPEG as a lossy WebP at `WebpQuality` (1-100, default 85): turned upright by its EXIF orientation, so a phone's portrait photo is not shown on its side, and fitted into `MaxWidth` × `MaxHeight` in the same decode.
 
-The physical BLOB of a converted JPEG is named `.webp`, and the file records `image/webp` with the size of the WebP. A file stored by id takes the `.webp` extension in its name too (`holiday.jpg` becomes `holiday.webp`), so a download is named for what it is. A file an application saves keeps its name, which is its address: an application that stored `covers/holiday.jpg` reads it back by that name, and gets the WebP.
+With `StorePngAsWebp` on (the default), it stores a PNG as a **lossless** WebP, fitted into the box the same way: a PNG that already fits keeps every visible pixel, transparency included. A PNG is stored as a PNG when it is smaller than `PngWebpMinSizeInBytes` (default 16 KB, below which the saving is a few KB at most), has 16 bits per channel (WebP has 8), or is animated (an APNG would keep one frame). [Storing PNGs as WebP](../blob-storing/imaging-skiasharp.md#storing-pngs-as-webp) gives the reasons.
 
-Turn it off for a container that must keep JPEGs as they are, in code or in [configuration](#declaring-containers-in-configuration):
+A GIF and a WebP are stored as they are; a picture still larger than the box - a WebP, a PNG left as one - is resized, upright, unless it is animated. A JPEG or PNG that would still exceed WebP's 16383 pixels once fitted into the box - possible only when `MaxWidth` or `MaxHeight` is `0` and the container's [decode guard](../blob-storing/imaging.md#image-decode-guard) is raised above its default of 8192 pixels - is stored as it was uploaded.
 
-````csharp
-container.UseImagesPreset(preset => preset.StoreJpegAsWebp = false);
-````
+The physical BLOB of a converted picture is named `.webp`, and the file records `image/webp` with the size of the WebP. A file stored by id takes the `.webp` extension in its name too (`holiday.jpg` becomes `holiday.webp`), so a download is named for what it is. A file an application saves keeps its name, which is its address: an application that stored `covers/holiday.jpg` reads it back by that name, and gets the WebP.
 
-````json
-"PresetOptions": { "StoreJpegAsWebp": false }
-````
-
-Changing it does not touch what is stored: JPEGs stored as WebP stay WebP, and with it off, new JPEGs are stored as JPEGs.
-
-### Declaring Containers in Configuration
-
-A host with no code of its own for Blob Management - the module run as its own service - declares its containers in the root-level `BlobManagement` section of `appsettings.json`:
-
-````json
-{
-  "BlobManagement": {
-    "Containers": {
-      "media": {
-        "Preset": "Images",
-        "PresetOptions": { "MaxSizeInMegabytes": 10, "MaxWidth": 2048 }
-      },
-      "documents": {
-        "AllowDirectories": true,
-        "Preset": "Documents"
-      },
-      "avatars": {
-        "Preset": "Images",
-        "PublicSizes": [ 64, 128, 256 ]
-      }
-    },
-    "PublicSizes": [ 128, 256, 512, 1024 ]
-  }
-}
-````
-
-Each container is applied with the same methods code uses. The keys are `AllowDirectories`, `Preset`, `PresetOptions` and `PublicSizes`. `Preset` is one of `Images`, `Documents`, `BinaryAssets` and `Any`, compared without case; `PresetOptions` holds that preset's parameters. `PublicSizes` is the list of widths and heights a [public read](provider.md#public-addresses) of the container's pictures may ask for; `PublicSizes` at the root of the section is the host's default for every container without one. The storage provider is not declared here: the containers take the default container's provider and its settings, configured in code as above.
-
-Every mistake stops the host when it starts - an unknown key or preset, a value of the wrong type, `PresetOptions` without a `Preset`, a misspelt or invalid preset parameter - rather than on the first upload. Code runs after the section is applied, so a module's or the host's own `Configure<AbpBlobStoringOptions>` overrides it.
-
-To make a preset of your own available by name, add it in a module's `PreConfigureServices`:
+Turn either off for a container that must keep those pictures as they are - one whose PNGs are favicons or are sent by email, say:
 
 ````csharp
-PreConfigure<BlobManagementPresetOptions>(options =>
-{
-    options.Presets["Avatars"] = (container, parameters) => container.UseImagesPreset(preset =>
-    {
-        preset.MaxWidth = 256;
-        preset.MaxHeight = 256;
-        BlobManagementPresetOptions.Bind(parameters, preset); // PresetOptions from the configuration, if any
-    });
-});
+container.UseImagesPreset(preset => preset.StorePngAsWebp = false);
 ````
+
+Changing it does not touch what is stored: pictures stored as WebP stay WebP, and with it off, new ones are stored as uploaded.
 
 ### Startup Checks
 

@@ -21,11 +21,17 @@ namespace Dignite.Abp.BlobStoring.Imaging;
 /// picture without an orientation is decoded, resized and encoded as ABP does.
 /// </para>
 /// <para>
+/// An animated picture - an APNG, an animated WebP (<see cref="ImageHeaderReader.IsAnimated"/>) - is
+/// <see cref="ImageProcessState.Unsupported"/>: decoded into a still bitmap it would keep one frame, so it is left to
+/// another provider or kept as it is (the resize contributor stores it as uploaded). ABP 10.7's contributor decodes it
+/// with <c>SKBitmap.Decode</c> into one frame.
+/// </para>
+/// <para>
 /// <see cref="AbpBlobStoringImagingSkiaSharpModule"/> removes ABP's contributor from the
 /// <see cref="IImageResizerContributor"/> registrations, so <see cref="IImageResizer"/> runs this one in its place - for
 /// every caller in the application, not only the BLOB pipeline. ABP fixed the same defect on its <c>rel-10.7</c> branch
 /// after 10.7.1 (it decodes upright in the resizer and the compressor); once this repository is on a release that has
-/// it, this class and the removal can go.
+/// it, the orientation part can go - the animation check stays, unless ABP's contributor has one by then.
 /// </para>
 /// </summary>
 [ExposeServices(typeof(IImageResizerContributor), typeof(SkiaSharpImageResizerContributor), IncludeSelf = true)]
@@ -55,9 +61,15 @@ public class UprightSkiaSharpImageResizerContributor : SkiaSharpImageResizerCont
             stream.Position = position;
         }
 
+        if (ImageHeaderReader.IsAnimated(source))
+        {
+            // A still bitmap would keep one frame: the picture is left to another provider, or as it is.
+            return new ImageResizeResult<Stream>(stream, ImageProcessState.Unsupported);
+        }
+
         using var data = SKData.CreateCopy(source.GetBuffer().AsSpan(0, (int)source.Length));
         using var codec = SKCodec.Create(data);
-        if (codec == null || !CanEncodeFormat(codec.EncodedFormat))
+        if (codec == null || codec.FrameCount > 1 || !CanEncodeFormat(codec.EncodedFormat))
         {
             return new ImageResizeResult<Stream>(stream, ImageProcessState.Unsupported);
         }

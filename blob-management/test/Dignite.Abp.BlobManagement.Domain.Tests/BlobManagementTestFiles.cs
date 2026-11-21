@@ -42,6 +42,30 @@ public static class BlobManagementTestFiles
         return data.ToArray();
     }
 
+    /// <summary>
+    /// <paramref name="png"/> with an <c>acTL</c> chunk (two frames, looping) right after <c>IHDR</c>: what makes a PNG an
+    /// APNG. Its CRC is computed, so a decoder that checks it accepts the chunk.
+    /// </summary>
+    public static byte[] WithAnimationControl(byte[] png)
+    {
+        byte[] typeAndData = [.. "acTL"u8, 0, 0, 0, 2, 0, 0, 0, 0];
+        var crc = 0xFFFFFFFFu;
+        foreach (var value in typeAndData)
+        {
+            crc ^= value;
+            for (var bit = 0; bit < 8; bit++)
+            {
+                crc = (crc & 1) != 0 ? (crc >> 1) ^ 0xEDB88320u : crc >> 1;
+            }
+        }
+
+        crc = ~crc;
+        byte[] chunk = [0, 0, 0, 8, .. typeAndData, (byte)(crc >> 24), (byte)(crc >> 16), (byte)(crc >> 8), (byte)crc];
+
+        // Signature (8) + IHDR (25).
+        return [.. png[..33], .. chunk, .. png[33..]];
+    }
+
     /// <summary>A JPEG of noise, for the same reason as <see cref="Png"/>.</summary>
     public static byte[] Jpeg(int width, int height, int seed = 42)
     {

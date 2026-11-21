@@ -16,7 +16,7 @@ public static class BlobManagementTestContainers
 
     public const int ImagesMaxWidth = 64;
 
-    /// <summary>A container on the images preset with JPEGs stored as uploaded.</summary>
+    /// <summary>A container on the images preset with JPEGs and PNGs stored as uploaded.</summary>
     public const string ImagesAsUploaded = "images-as-uploaded";
 
     /// <summary>Another container on the images preset, scaling pictures into <see cref="ImagesMaxWidth"/> square.</summary>

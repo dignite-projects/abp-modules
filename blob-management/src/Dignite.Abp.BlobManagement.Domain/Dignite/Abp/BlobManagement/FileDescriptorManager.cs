@@ -513,8 +513,8 @@ public class FileDescriptorManager : DomainService
     /// key, the primary key, <paramref name="configureFile"/> throwing - deletes the BLOB again.
     /// </para>
     /// <para>
-    /// A container may store content in another format than it was uploaded in - the images preset stores a JPEG as
-    /// WebP. The physical BLOB is named for the stored type, which the container declares (<see cref="GetStoredMimeType"/>),
+    /// A container may store content in another format than it was uploaded in - the images preset stores a JPEG, and
+    /// most PNGs, as WebP. The physical BLOB is named for the stored type, which the container declares (<see cref="GetStoredMimeType"/>),
     /// and the descriptor records the type and size of the stored bytes; for a file addressed by its name,
     /// <paramref name="name"/> is kept.
     /// </para>
@@ -571,7 +571,8 @@ public class FileDescriptorManager : DomainService
         await UsageManager.CheckCanStoreAsync(uploadLength, releasedBytes, cancellationToken);
 
         // Named for what the container stores: a JPEG it stores as WebP gets a .webp BLOB.
-        var blobName = CreateBlobName(GetStoredMimeType(containerName, mimeType));
+        var storedMimeType = GetStoredMimeType(containerName, mimeType, content);
+        var blobName = CreateBlobName(storedMimeType);
         var container = BlobContainerFactory.Create(containerName);
         try
         {
@@ -589,7 +590,7 @@ public class FileDescriptorManager : DomainService
         try
         {
             var (size, storedType) = await GetStoredSizeAndTypeAsync(
-                container, blobName, GetStoredMimeType(containerName, mimeType), uploadLength, cancellationToken);
+                container, blobName, storedMimeType, uploadLength, cancellationToken);
             var storedName = nameIsAddress ? name : GetNameForStoredType(name, mimeType, storedType);
 
             var descriptor = new FileDescriptor(
@@ -623,14 +624,16 @@ public class FileDescriptorManager : DomainService
     }
 
     /// <summary>
-    /// The type the container <paramref name="containerName"/> stores an upload detected as <paramref name="mimeType"/>
-    /// as: what its contributors declared (<c>GetStoredContentType</c> - a JPEG is stored as WebP on the images preset),
-    /// else <paramref name="mimeType"/>. Known before the save, so the BLOB can be named after it; the descriptor still
-    /// records the type detected from the stored bytes (<see cref="GetStoredSizeAndTypeAsync"/>).
+    /// The type the container <paramref name="containerName"/> stores <paramref name="content"/>, an upload detected as
+    /// <paramref name="mimeType"/>, as: what its contributors declared for it (<c>GetStoredContentType</c> - on the images
+    /// preset a JPEG is stored as WebP, and a PNG unless it is small, 16-bit or animated), else <paramref name="mimeType"/>.
+    /// Known before the save - the declaration reads the content's header and length, as the contributor in the save
+    /// does - so the BLOB can be named after it; the descriptor still records the type detected from the stored bytes
+    /// (<see cref="GetStoredSizeAndTypeAsync"/>). <paramref name="content"/> is seekable; its position is restored.
     /// </summary>
-    protected virtual string GetStoredMimeType(string containerName, string mimeType)
+    protected virtual string GetStoredMimeType(string containerName, string mimeType, Stream content)
     {
-        return BlobContainerConfigurationProvider.Get(containerName).GetStoredContentType(mimeType);
+        return BlobContainerConfigurationProvider.Get(containerName).GetStoredContentType(mimeType, content);
     }
 
     /// <summary>

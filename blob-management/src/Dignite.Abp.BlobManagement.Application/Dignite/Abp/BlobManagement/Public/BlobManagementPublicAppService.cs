@@ -237,7 +237,10 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
         throw new EntityNotFoundException(typeof(FileDescriptor), $"{containerName}/{blobName}");
     }
 
-    /// <summary>JPEG, PNG and WebP; a GIF would lose its animation, anything else is not a picture.</summary>
+    /// <summary>
+    /// JPEG, PNG and WebP, unless animated (<see cref="TryResizeAsync"/>); a GIF would lose its animation, anything else is
+    /// not a picture.
+    /// </summary>
     protected virtual bool IsResizable(string mimeType)
     {
         return mimeType is "image/jpeg" or "image/png" or "image/webp";
@@ -245,11 +248,17 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
 
     /// <summary>
     /// The picture at the size asked, or <c>null</c> to serve it as stored: it is no larger than asked (nothing to
-    /// shrink), it is too large or unreadable to decode safely, or no imaging provider handles it.
+    /// shrink), it is animated (an APNG, an animated WebP: resized, it would keep one frame), it is too large or unreadable
+    /// to decode safely, or no imaging provider handles it.
     /// </summary>
     protected virtual async Task<byte[]?> TryResizeAsync(byte[] bytes, string mimeType, int? width, int? height)
     {
         using var probe = new MemoryStream(bytes, writable: false);
+        if (ImageHeaderReader.IsAnimated(probe))
+        {
+            return null;
+        }
+
         var dimensions = ImageHeaderReader.Read(probe);
         if (dimensions == null ||
             dimensions.Value.Width > BlobManagementPublicUrl.MaxDimension ||

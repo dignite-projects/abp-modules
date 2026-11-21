@@ -197,6 +197,73 @@ public class ImageHeaderReader_Tests
     public void Quarter_Turns_Should_Swap_The_Sides(int? orientation, bool swaps) =>
         ImageHeaderReader.SwapsSides(orientation).ShouldBe(swaps);
 
+    [Fact]
+    public void Should_Find_An_Apng() =>
+        IsAnimated(TestHeaders.WithAnimationControl(TestImages.Noise(40, 20, SKEncodedImageFormat.Png))).ShouldBeTrue();
+
+    /// <summary>An <c>acTL</c> counts only before the image data, where a decoder looks for it.</summary>
+    [Fact]
+    public void An_Animation_Control_After_The_Image_Data_Should_Not_Make_A_Png_Animated() =>
+        IsAnimated(TestHeaders.WithAnimationControl(TestImages.Noise(40, 20, SKEncodedImageFormat.Png), beforeImageData: false))
+            .ShouldBeFalse();
+
+    [Fact]
+    public void Should_Find_An_Animated_Webp()
+    {
+        IsAnimated(TestHeaders.WebpExtended(40, 20, animated: true)).ShouldBeTrue();
+        IsAnimated(TestHeaders.WebpExtended(40, 20)).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Should_Find_A_Gif_Of_More_Than_One_Image()
+    {
+        IsAnimated(TestHeaders.AnimatedGif()).ShouldBeTrue();
+        IsAnimated(TestHeaders.AnimatedGif(frames: 1)).ShouldBeFalse();
+    }
+
+    /// <summary>The GIF the reader walks has to be one a decoder reads as two frames.</summary>
+    [Fact]
+    public void The_Animated_Gif_Should_Have_Two_Frames_For_SkiaSharp_Too()
+    {
+        using var data = SKData.CreateCopy(TestHeaders.AnimatedGif());
+        using var codec = SKCodec.Create(data);
+        codec.ShouldNotBeNull();
+        codec.FrameCount.ShouldBe(2);
+    }
+
+    [Theory]
+    [InlineData(SKEncodedImageFormat.Png)]
+    [InlineData(SKEncodedImageFormat.Jpeg)]
+    [InlineData(SKEncodedImageFormat.Webp)]
+    public void A_Still_Picture_Should_Not_Be_Animated(SKEncodedImageFormat format) =>
+        IsAnimated(TestImages.Noise(40, 20, format)).ShouldBeFalse();
+
+    [Fact]
+    public void What_Cannot_Be_Read_Should_Not_Be_Animated()
+    {
+        IsAnimated(TestHeaders.Text).ShouldBeFalse();
+        IsAnimated([]).ShouldBeFalse();
+        IsAnimated(TestHeaders.AnimatedGif().Take(30).ToArray()).ShouldBeFalse();
+        IsAnimated(TestHeaders.Png(40, 20).Take(20).ToArray()).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Should_Restore_The_Stream_Position_After_Looking_For_An_Animation()
+    {
+        using var stream = new MemoryStream(TestHeaders.AnimatedGif());
+        stream.Position = 3;
+
+        ImageHeaderReader.IsAnimated(stream).ShouldBeTrue();
+
+        stream.Position.ShouldBe(3);
+    }
+
+    private static bool IsAnimated(byte[] content)
+    {
+        using var stream = new MemoryStream(content);
+        return ImageHeaderReader.IsAnimated(stream);
+    }
+
     private static (int Width, int Height)? Read(byte[] content)
     {
         using var stream = new MemoryStream(content);

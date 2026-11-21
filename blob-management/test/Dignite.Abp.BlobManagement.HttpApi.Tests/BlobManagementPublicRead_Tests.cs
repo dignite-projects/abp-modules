@@ -77,6 +77,17 @@ public class BlobManagementPublicRead_Tests : AbpWebApplicationFactoryIntegrated
         BlobManagementTestFiles.Measure(larger).ShouldBe((200, 100));
     }
 
+    /// <summary>An APNG is served as stored at any size asked: resized, it would keep one frame.</summary>
+    [Fact]
+    public async Task An_Animated_Picture_Should_Be_Served_As_Stored_At_A_Size()
+    {
+        var bytes = BlobManagementTestFiles.WithAnimationControl(BlobManagementTestFiles.Png(200, 100, seed: 24));
+        await StoreAsync("spinner.png", bytes);
+
+        (await GetBytesAsync(_urlBuilder.Build(BlobManagementHttpApiTestModule.AppPublicContainer, "spinner.png", width: 64)))
+            .ShouldBe(bytes);
+    }
+
     [Theory]
     [InlineData(100, null)]
     [InlineData(null, 100)]

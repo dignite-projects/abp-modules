@@ -111,11 +111,17 @@ always carries a signature, with content that has none, is rejected. Unknown con
 - `Dignite.Abp.BlobStoring.Imaging` references **`Volo.Abp.Imaging.Abstractions` only**. The application picks a provider
   (SkiaSharp, ImageSharp or Magick.NET). Never reference a provider or an image library from the package; only the test
   project does. What has to decode a picture itself goes in a provider-specific package, as
-  `Dignite.Abp.BlobStoring.Imaging.SkiaSharp` does (JPEG to WebP, upright resizing); it still derives from
+  `Dignite.Abp.BlobStoring.Imaging.SkiaSharp` does (JPEG and PNG to WebP, upright resizing); it still derives from
   `ImageContributorBase`, so the guard runs before it decodes, and it throws the Imaging package's codes only.
-- A contributor that **always** converts a type declares it with `SetStoredContentType` (as `StoreJpegAsWebp` does), so a
-  caller can name the blob and record the type before the save. One that converts only sometimes (only when smaller,
-  only above a size) must not declare it: the declaration is read as a promise.
+- A converting contributor **declares** what it stores a type as with `SetStoredContentType`, so a caller can name the
+  blob and record the type before the save. One that converts every such content declares it plainly; one that converts
+  only some passes its rule as the condition (`StoreJpegAsWebp`, `StorePngAsWebp`) and **converts by reading the
+  declaration** (`GetStoredContentType(type, stream)`), so caller and contributor cannot disagree. The rule reads only
+  what the contributors before it leave unchanged - the header; the length only when nothing before it changes the bytes,
+  which is why `StorePngAsWebp` goes before the metadata contributor - and never a result of the conversion ("only when
+  smaller" cannot be declared: it is known after the save).
+- A contributor that re-encodes through a still bitmap keeps one frame of an animated picture: it leaves one alone
+  (`ImageHeaderReader.IsAnimated`, plus `SKCodec.FrameCount` in the SkiaSharp resizer).
 - Content that is not `image/*`, and an image the provider reports `Unsupported`, passes through unchanged. With known dimensions a
   resize never upscales and leaves an image that already fits byte for byte.
 - The resize contributor measures the **displayed** size (sides swapped for a quarter-turn EXIF orientation,
@@ -143,8 +149,8 @@ always carries a signature, with content that has none, is rejected. Unknown con
 Deliberately kept out; don't add them without a real, in-repo need and a new decision document:
 
 - **No upload entry point, no return object, no blob naming** — no `IFileStorer`, no `StoredFileInfo`, no
-  `IBlobNameGenerator`. (`GetStoredContentType` is none of these: a static declaration on the container's configuration,
-  read before the save, that names nothing and reports nothing back.) Applications call `IBlobContainer`; one that wants the detected MIME type or a hash calls
+  `IBlobNameGenerator`. (`GetStoredContentType` is none of these: a declaration on the container's configuration, read
+  before the save from the content about to be saved, that names nothing and reports nothing back.) Applications call `IBlobContainer`; one that wants the detected MIME type or a hash calls
   `IMimeTypeDetector` and hashes itself; it names the blob, saves with `overrideExisting: false`, and deletes the blob if
   its metadata write fails. Option B (a thin wrapper in front of the container) was weighed and rejected.
 - **No metadata, persistence, HTTP API, UI or permissions.** They belong to the application that owns the files.

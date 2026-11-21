@@ -300,6 +300,45 @@ jobs:
         shell: bash
         run: node ./build/verify-npm-single-copy.mjs packed ./artifacts/npm
 
+      # --- blob-management Angular (pre-releases only) ---
+      # Like its NuGet packages (-p:PackBlobManagement above), @dignite/ng.blob-management goes out with pre-releases
+      # only, to GitHub Packages, so this org's hosts can install it before the module's first stable release. Packed
+      # under artifacts/npm-prerelease/, not artifacts/npm/: the single-copy check above and the npmjs publish below
+      # cover the stable set, and the package depends on no sibling, so there is no copy of anything to duplicate.
+      # ci.yml lints and tests it on every pull request.
+      - name: Install blob-management Angular dependencies
+        if: steps.channel.outputs.channel == 'prerelease'
+        working-directory: blob-management/angular
+        run: yarn install --frozen-lockfile
+
+      - name: Build blob-management Angular library
+        if: steps.channel.outputs.channel == 'prerelease'
+        working-directory: blob-management/angular
+        run: yarn build:lib
+
+      - name: Check blob-management Angular package dependencies
+        if: steps.channel.outputs.channel == 'prerelease'
+        run: node ./build/check-angular-package-deps.mjs blob-management/angular/dist/blob-management
+
+      - name: Pack blob-management Angular library
+        if: steps.channel.outputs.channel == 'prerelease'
+        shell: pwsh
+        working-directory: blob-management/angular
+        run: |
+          New-Item -ItemType Directory -Force ../../artifacts/npm-prerelease/blob-management | Out-Null
+          npm pack ./dist/blob-management --pack-destination ../../artifacts/npm-prerelease/blob-management
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Smoke-test blob-management Angular package
+        if: steps.channel.outputs.channel == 'prerelease'
+        shell: pwsh
+        run: |
+          $tarballs = @(Get-ChildItem ./artifacts/npm-prerelease/blob-management/*.tgz)
+          if ($tarballs.Count -ne 1) {
+            throw "Expected one blob-management Angular package tarball, found $($tarballs.Count)."
+          }
+          node ./blob-management/.github/scripts/smoke-test-angular-package.mjs $tarballs[0].FullName '${{ steps.version.outputs.version }}'
+
       - name: Upload release packages
         uses: actions/upload-artifact@v7
         with:
@@ -308,6 +347,7 @@ jobs:
             artifacts/*.nupkg
             artifacts/*.snupkg
             artifacts/npm/**/*.tgz
+            artifacts/npm-prerelease/**/*.tgz
           if-no-files-found: error
 
       # registry-url lives here, not on the earlier Setup Node.js step - see the comment there. No
@@ -350,8 +390,9 @@ jobs:
           gh_packages_npmrc="$(mktemp)"
           echo "@dignite-projects:registry=https://npm.pkg.github.com" >> "$gh_packages_npmrc"
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> "$gh_packages_npmrc"
-          for dir in notifications flex-fields flex-fields-ckeditor; do
-            tarball=$(ls ./artifacts/npm/"$dir"/*.tgz)
+          # blob-management last: it is packed for pre-releases only, under npm-prerelease/.
+          for dir in npm/notifications npm/flex-fields npm/flex-fields-ckeditor npm-prerelease/blob-management; do
+            tarball=$(ls ./artifacts/"$dir"/*.tgz)
             workdir=$(mktemp -d)
             tar -xzf "$tarball" -C "$workdir"
             # Renames the package to @dignite-projects/* and turns each @dignite/* dependency into
@@ -488,3 +529,4 @@ jobs:
             artifacts/*.nupkg
             artifacts/*.snupkg
             artifacts/npm/**/*.tgz
+            artifacts/npm-prerelease/**/*.tgz

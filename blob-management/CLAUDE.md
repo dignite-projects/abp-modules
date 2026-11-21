@@ -32,9 +32,11 @@ edition, one kind of container, the names). What they kept of the storage tier w
 
 - Storage: `FileDescriptor`, `FileDescriptorManager` (detect, hash, save, compensate) and
   `UseBlobManagementContainer`, with EF Core and MongoDB; the tenant allocation (`BlobManagementFeatures`,
-  `BlobManagementUsageManager`); the container presets (`Use…Preset`; the images preset stores a JPEG as WebP,
-  upright), containers declared in the `BlobManagement` configuration section (`BlobManagementContainerSettings`,
-  presets by name from `BlobManagementPresetOptions`) and the startup checks (`BlobManagementContainerValidator`);
+  `BlobManagementUsageManager`); the container presets (`Use…Preset`; the images preset stores a JPEG as lossy
+  WebP and a PNG as lossless WebP, upright, unless the PNG is small, 16-bit or animated - each by the container's
+  declaration, which `FileDescriptorManager` reads on the upload to name the BLOB), and the startup checks (`BlobManagementContainerValidator`); containers are declared in code only, with
+  `UseBlobManagementContainer` beside the storage provider, never in `appsettings.json` (removed 2026-11-21: a host
+  cannot be without code anyway, since the provider is configured in code);
   `IBlobManagementBlobService` with its in-process implementation, and the provider (`BlobManagementBlobProvider`,
   `UseBlobManagement`); the BLOB API (`BlobManagementBlobController`, `BlobManagementBlobAppService`,
   `BlobManagementClientChecker`) and its C# client proxies
@@ -85,7 +87,7 @@ One `.slnx` — `Dignite.Abp.BlobManagement.slnx`:
   |---|---|---|
   | `Dignite.Abp.BlobStoring.BlobManagement` | The `IBlobProvider`: `BlobManagementBlobProvider`, `UseBlobManagement(...)`, `IBlobManagementPublicUrlBuilder` | `Volo.Abp.BlobStoring`, `Application.Contracts` |
   | `Dignite.Abp.BlobManagement.Domain.Shared` | Constants, error codes, resource names, the file type table, localization | ABP |
-  | `Dignite.Abp.BlobManagement.Domain` | `FileDescriptor` and `DirectoryDescriptor`, their managers and repositories, the container configuration, presets, features, usage, the directory importer | `Domain.Shared`, `blob-storing/` (`Dignite.Abp.BlobStoring.Pipeline`, `.Imaging`, `.Imaging.SkiaSharp` - so SkiaSharp is a dependency of the module: the images preset stores a JPEG as WebP) |
+  | `Dignite.Abp.BlobManagement.Domain` | `FileDescriptor` and `DirectoryDescriptor`, their managers and repositories, the container configuration, presets, features, usage, the directory importer | `Domain.Shared`, `blob-storing/` (`Dignite.Abp.BlobStoring.Pipeline`, `.Imaging`, `.Imaging.SkiaSharp` - so SkiaSharp is a dependency of the module: the images preset stores JPEGs and PNGs as WebP) |
   | `Dignite.Abp.BlobManagement.Application.Contracts` | `IBlobManagementBlobService` (what the provider calls) and `IBlobManagementFileService` (what a business system's file library calls), the container, directory and usage service interfaces, DTOs, permission names | `Domain.Shared` |
   | `Dignite.Abp.BlobManagement.Application` | The in-process `IBlobManagementBlobService` and `IBlobManagementFileService`, the application services and their authorization, usage, public reads | `Domain`, `Application.Contracts`, `Volo.Abp.Users.Abstractions` (only for `IExternalUserLookupServiceProvider`, resolved optionally to name the users of the usage figures) |
   | `Dignite.Abp.BlobManagement.HttpApi` / `.HttpApi.Client` | BLOB API, file API, container, directory and usage APIs, public read / static proxies, incl. the remote `IBlobManagementBlobService` and `IBlobManagementFileService` | `Application.Contracts` |
@@ -100,7 +102,7 @@ One `.slnx` — `Dignite.Abp.BlobManagement.slnx`:
 - **`host/`** — demo host (`Dignite.Abp.BlobManagement.Host`), local development only, never packed:
   `dotnet run --project host/Dignite.Abp.BlobManagement.Host`. Its own `Directory.Build.props` /
   `Directory.Packages.props` opt it out of the repo-root central package management. It installs the module in-process
-  (Application, HttpApi, EF Core; its containers are in `appsettings.json`); its migrations are in `Migrations/`. It is
+  (Application, HttpApi, EF Core; its containers are declared in `HostModule.ConfigureBlobStoring`); its migrations are in `Migrations/`. It is
   also where the C# client proxies come from: with the host running (`abp install-libs` in its folder first), run
   `abp generate-proxy -t csharp -u https://localhost:44352 -m blobManagement --without-contracts` in
   `src/Dignite.Abp.BlobManagement.HttpApi.Client`.
@@ -180,8 +182,8 @@ imports the root one, so the lockstep `<Version>` applies.
 11. **Names are contracts once published** (nothing is yet): the package IDs, `@dignite/ng.blob-management`, the
     permission and feature group `BlobManagement`, the permission names, the remote service name, `api/blob-management`,
     `/blobs` (the public read prefix, `BlobManagementPublicUrl.RoutePrefix`), the `Blob` table prefix and the
-    `BlobManagement` connection string name, the Data Protection purposes of tickets and links, the configuration
-    section `BlobManagement`, and the class a resource permission is granted on (its resource name is that type's
+    `BlobManagement` connection string name, the Data Protection purposes of tickets and links, and the class a
+    resource permission is granted on (its resource name is that type's
     full name: `Dignite.Abp.BlobManagement.BlobManagementContainer`). The names were weighed again on 2026-11-13 and
     stay: not File Management (ABP's module has that name, its routes and its permission group), not entities named
     after BLOBs (a descriptor describes its BLOB, it is not the BLOB), not the `Abp` table prefix (ABP reserves it for

@@ -15,9 +15,6 @@ namespace Dignite.Abp.BlobManagement;
     )]
 public class BlobManagementApplicationTestModule : AbpModule
 {
-    /// <summary>A container <c>BlobManagementContainerSettings_Tests</c> declares in configuration and this module overrides in code.</summary>
-    public const string ConfiguredAndOverriddenContainer = "config-media";
-
     /// <summary>The OAuth client the tests grant the files of a container to (provider <c>C</c>).</summary>
     public const string AllowedClient = "site-app";
 
@@ -37,12 +34,6 @@ public class BlobManagementApplicationTestModule : AbpModule
 
         Configure<AbpBlobStoringOptions>(options =>
         {
-            // Code runs after BlobManagementApplicationModule bound the configuration, so it wins - as a host's own code does.
-            options.Containers.Configure(ConfiguredAndOverriddenContainer, container =>
-            {
-                container.GetBlobManagementContainerConfiguration().AllowDirectories = false;
-            });
-
             // The application's side: its own containers, keeping their bytes in Blob Management in this process.
             options.Containers.Configure(BlobManagementTestAppContainers.Media, container =>
             {
