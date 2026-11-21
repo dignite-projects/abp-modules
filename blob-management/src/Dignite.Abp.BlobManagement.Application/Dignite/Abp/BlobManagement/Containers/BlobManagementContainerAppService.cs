@@ -19,6 +19,12 @@ namespace Dignite.Abp.BlobManagement.Containers;
 /// size cap, the allowed types, the image limits - read from the containers' own pipeline contributors rather than
 /// restated, and what the caller may do with the directories of each. Part of the tenant's Blob Management: with
 /// <see cref="BlobManagementFeatures.Enable"/> off it refuses every call.
+/// <para>
+/// The list serves users. One container's limits are any authenticated caller's: a user's, and an application's
+/// client's - its back end builds the file input, and its MCP tools tell an assistant what an upload may be - whose
+/// <c>access</c> is none, since directories are users' (<see cref="BlobManagementAccessService"/>). A client reads them
+/// here rather than from a copy of the presets in its own host, which would drift from the declaration here.
+/// </para>
 /// </summary>
 [Authorize]
 [RequiresFeature(BlobManagementFeatures.Enable)]
@@ -60,7 +66,6 @@ public class BlobManagementContainerAppService : BlobManagementAppService, IBlob
 
     public virtual async Task<BlobManagementContainerDto> GetAsync(string name)
     {
-        GetUserId();
         GetContainer(name);
         return await MapAsync(await AccessService.BeginAsync(), name);
     }
