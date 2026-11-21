@@ -20,6 +20,8 @@ so it stays clear which part of the repository actually moved.
 
 - **blob-management:** pre-releases now carry the Blob Management packages, so this org's projects can build against them
   from GitHub Packages (first: `10.7.7-preview.1`). A stable release still leaves them out until the module is complete.
+  From `10.7.7-preview.2` this includes the Angular package, as `@dignite-projects/ng.blob-management` on GitHub
+  Packages' npm registry.
 
 #### blob-storing
 
