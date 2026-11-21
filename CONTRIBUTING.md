@@ -196,6 +196,17 @@ alias in exactly that form: an identical spec is one Yarn Classic lockfile entry
 copy, which is what issue #211 needs. Switching to the stable release is replacing each alias with the
 plain version (`"@dignite/ng.flex-fields": "10.8.0"`).
 
+**With Yarn Classic, an alias downloads with no credential.** Yarn 1 picks a tarball's registry, and
+so its token, by the name it installs the package under: for `"@dignite/ng.x": "npm:@dignite-projects/ng.x@…"`
+that is `@dignite`, mapped to npmjs, so the GitHub Packages tarball is requested without the token and
+answered `401`. It shows only on a cold cache (a CI runner), never on a machine that has the tarball
+cached. A Yarn Classic consumer of a package with no `@dignite/*` sibling dependency - such as
+`@dignite-projects/ng.blob-management`, which pre-releases carry while Blob Management has no stable
+release - depends on it under its own name (`"@dignite-projects/ng.blob-management": "10.7.7-preview.2"`)
+and imports it by that name until the stable release. Put the token in the user-level `.npmrc`
+(`//npm.pkg.github.com/:_authToken=…`), not in a committed one: Yarn Classic fails every command when a
+`${VAR}` placeholder in a project `.npmrc` is unset.
+
 **A downstream project's public release never depends on a pre-release.** Its own stable packages
 must reference a stable version of these packages, or its consumers cannot restore it from NuGet.org.
 That includes the cross-repository `ProjectReference` case under [Cutting a release](#cutting-a-release):
