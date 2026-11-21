@@ -52,7 +52,7 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
     }
 
     /// <summary>
-    /// A PNG of 16 KB or more is stored as a lossless WebP, fitted into the box: the physical BLOB is named <c>.webp</c>,
+    /// A PNG of 64 KB or more is stored as a lossless WebP, fitted into the box: the physical BLOB is named <c>.webp</c>,
     /// the descriptor records the WebP, and an uploaded file's name takes the extension.
     /// </summary>
     [Fact]
@@ -263,7 +263,7 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
         descriptor.Name.ShouldBe("holiday.jpg");
     }
 
-    /// <summary>An uploaded PNG under 16 KB, too small to convert, keeps its type and its name.</summary>
+    /// <summary>An uploaded PNG under 64 KB, too small to convert, keeps its type and its name.</summary>
     [Fact]
     public async Task A_Small_Png_Uploaded_To_A_User_BlobManagement_Should_Keep_Its_Name()
     {

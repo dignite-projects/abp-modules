@@ -21,14 +21,14 @@ public class PngToWebpContributor_Tests : AbpIntegratedTest<BlobStoringImagingSk
     public async Task A_Png_Should_Be_Stored_As_A_Lossless_Webp()
     {
         const string containerName = BlobStoringImagingSkiaSharpTestModule.PngWebpContainer;
-        var upload = TestPictures.Noise(120, 90, SKEncodedImageFormat.Png);
+        var upload = TestPictures.Noise(200, 150, SKEncodedImageFormat.Png);
         upload.Length.ShouldBeGreaterThanOrEqualTo((int)PngToWebpContributorConfiguration.DefaultMinSizeInBytes);
         using var source = new MemoryStream(upload);
 
         await Container(containerName).SaveAsync("drawing.png", source);
 
         var stored = await GetStoredBytesAsync(containerName, "drawing.png");
-        TestPictures.Inspect(stored).ShouldBe((SKEncodedImageFormat.Webp, 120, 90, SKEncodedOrigin.TopLeft));
+        TestPictures.Inspect(stored).ShouldBe((SKEncodedImageFormat.Webp, 200, 150, SKEncodedOrigin.TopLeft));
         TestPictures.Pixels(stored).ShouldBe(TestPictures.Pixels(upload));
         source.CanRead.ShouldBeTrue();
     }
@@ -38,7 +38,7 @@ public class PngToWebpContributor_Tests : AbpIntegratedTest<BlobStoringImagingSk
     public async Task A_Transparent_Png_Should_Keep_Every_Pixel()
     {
         const string containerName = BlobStoringImagingSkiaSharpTestModule.PngWebpContainer;
-        var upload = TestPictures.TransparentNoisePng(120, 90);
+        var upload = TestPictures.TransparentNoisePng(200, 150);
 
         await Container(containerName).SaveAsync("overlay.png", upload);
 
@@ -98,7 +98,7 @@ public class PngToWebpContributor_Tests : AbpIntegratedTest<BlobStoringImagingSk
     public async Task An_Animated_Png_Should_Be_Stored_As_Uploaded()
     {
         const string containerName = BlobStoringImagingSkiaSharpTestModule.AnyPngWebpContainer;
-        var upload = TestPictures.WithAnimationControl(TestPictures.Noise(120, 90, SKEncodedImageFormat.Png));
+        var upload = TestPictures.WithAnimationControl(TestPictures.Noise(200, 150, SKEncodedImageFormat.Png));
 
         await Container(containerName).SaveAsync("spinner.png", upload);
 
@@ -164,11 +164,11 @@ public class PngToWebpContributor_Tests : AbpIntegratedTest<BlobStoringImagingSk
         const string containerName = BlobStoringImagingSkiaSharpTestModule.PngWebpContainer;
         var upload = sample switch
         {
-            "large" => TestPictures.Noise(120, 90, SKEncodedImageFormat.Png),
+            "large" => TestPictures.Noise(200, 150, SKEncodedImageFormat.Png),
             "small" => TestPictures.Noise(20, 20, SKEncodedImageFormat.Png),
-            "sixteen-bit" => TestPictures.SixteenBitNoisePng(120, 90),
-            "animated" => TestPictures.WithAnimationControl(TestPictures.Noise(120, 90, SKEncodedImageFormat.Png)),
-            _ => TestPictures.TransparentNoisePng(120, 90)
+            "sixteen-bit" => TestPictures.SixteenBitNoisePng(200, 150),
+            "animated" => TestPictures.WithAnimationControl(TestPictures.Noise(200, 150, SKEncodedImageFormat.Png)),
+            _ => TestPictures.TransparentNoisePng(200, 150)
         };
 
         string declared;

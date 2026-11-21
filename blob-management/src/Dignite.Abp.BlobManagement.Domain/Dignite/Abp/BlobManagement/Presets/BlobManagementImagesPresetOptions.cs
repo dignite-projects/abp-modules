@@ -41,7 +41,7 @@ public class BlobManagementImagesPresetOptions : BlobManagementSizePresetOptions
 
     /// <summary>
     /// The size, in bytes, from which a PNG is stored as WebP; below it the saving is too small to be worth it. 0
-    /// converts every PNG the other rules allow. Default: 16 KB.
+    /// converts every PNG the other rules allow. Default: 64 KB.
     /// </summary>
     public long PngWebpMinSizeInBytes { get; set; } = BlobManagementPresetDefaults.ImagesPngWebpMinSizeInBytes;
 }
