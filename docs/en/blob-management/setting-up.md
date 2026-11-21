@@ -1,7 +1,7 @@
 ```json
 //[doc-seo]
 {
-    "Description": "Install Dignite Blob Management in an ABP host: its modules and database, managed containers declared in code or in appsettings.json, directories, upload presets and the tenant storage allocation."
+    "Description": "Install Dignite Blob Management in an ABP host: its modules and database, managed containers, directories, upload presets and the tenant storage allocation."
 }
 ```
 
@@ -105,61 +105,13 @@ With `StoreJpegAsWebp` on (the default), the images preset stores every JPEG as 
 
 The physical BLOB of a converted JPEG is named `.webp`, and the file records `image/webp` with the size of the WebP. A file stored by id takes the `.webp` extension in its name too (`holiday.jpg` becomes `holiday.webp`), so a download is named for what it is. A file an application saves keeps its name, which is its address: an application that stored `covers/holiday.jpg` reads it back by that name, and gets the WebP.
 
-Turn it off for a container that must keep JPEGs as they are, in code or in [configuration](#declaring-containers-in-configuration):
+Turn it off for a container that must keep JPEGs as they are:
 
 ````csharp
 container.UseImagesPreset(preset => preset.StoreJpegAsWebp = false);
 ````
 
-````json
-"PresetOptions": { "StoreJpegAsWebp": false }
-````
-
 Changing it does not touch what is stored: JPEGs stored as WebP stay WebP, and with it off, new JPEGs are stored as JPEGs.
-
-### Declaring Containers in Configuration
-
-A host with no code of its own for Blob Management - the module run as its own service - declares its containers in the root-level `BlobManagement` section of `appsettings.json`:
-
-````json
-{
-  "BlobManagement": {
-    "Containers": {
-      "media": {
-        "Preset": "Images",
-        "PresetOptions": { "MaxSizeInMegabytes": 10, "MaxWidth": 2048 }
-      },
-      "documents": {
-        "AllowDirectories": true,
-        "Preset": "Documents"
-      },
-      "avatars": {
-        "Preset": "Images",
-        "PublicSizes": [ 64, 128, 256 ]
-      }
-    },
-    "PublicSizes": [ 128, 256, 512, 1024 ]
-  }
-}
-````
-
-Each container is applied with the same methods code uses. The keys are `AllowDirectories`, `Preset`, `PresetOptions` and `PublicSizes`. `Preset` is one of `Images`, `Documents`, `BinaryAssets` and `Any`, compared without case; `PresetOptions` holds that preset's parameters. `PublicSizes` is the list of widths and heights a [public read](provider.md#public-addresses) of the container's pictures may ask for; `PublicSizes` at the root of the section is the host's default for every container without one. The storage provider is not declared here: the containers take the default container's provider and its settings, configured in code as above.
-
-Every mistake stops the host when it starts - an unknown key or preset, a value of the wrong type, `PresetOptions` without a `Preset`, a misspelt or invalid preset parameter - rather than on the first upload. Code runs after the section is applied, so a module's or the host's own `Configure<AbpBlobStoringOptions>` overrides it.
-
-To make a preset of your own available by name, add it in a module's `PreConfigureServices`:
-
-````csharp
-PreConfigure<BlobManagementPresetOptions>(options =>
-{
-    options.Presets["Avatars"] = (container, parameters) => container.UseImagesPreset(preset =>
-    {
-        preset.MaxWidth = 256;
-        preset.MaxHeight = 256;
-        BlobManagementPresetOptions.Bind(parameters, preset); // PresetOptions from the configuration, if any
-    });
-});
-````
 
 ### Startup Checks
 

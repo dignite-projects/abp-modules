@@ -63,6 +63,7 @@ using Volo.Abp.Studio.Client.AspNetCore;
 using Microsoft.Extensions.Hosting;
 using Dignite.Abp.BlobManagement;
 using Dignite.Abp.BlobManagement.EntityFrameworkCore;
+using Dignite.Abp.BlobManagement.Presets;
 
 namespace Dignite.Abp.BlobManagement.Host;
 
@@ -119,8 +120,8 @@ namespace Dignite.Abp.BlobManagement.Host;
     typeof(AbpBlobStoringFileSystemModule),
     typeof(AbpEntityFrameworkCoreSqliteModule),
 
-    // Dignite Blob Management (this repository), in this host's process. Its containers are declared in appsettings.json
-    // ("BlobManagement" section) and take the default container's file-system provider below.
+    // Dignite Blob Management (this repository), in this host's process. Its containers are declared in ConfigureBlobStoring
+    // below and take the default container's file-system provider.
     typeof(BlobManagementApplicationModule),
     typeof(BlobManagementHttpApiModule),
     typeof(BlobManagementEntityFrameworkCoreModule)
@@ -218,6 +219,30 @@ public class HostModule : AbpModule
                 {
                     fileSystem.BasePath = "./BlobStoring";
                 });
+            });
+
+            options.Containers.Configure("media", container =>
+            {
+                container.UseBlobManagementContainer();
+                container.UseImagesPreset();
+            });
+
+            options.Containers.Configure("attachments", container =>
+            {
+                container.UseBlobManagementContainer();
+                container.UseDocumentsPreset();
+            });
+
+            options.Containers.Configure("documents", container =>
+            {
+                container.UseBlobManagementContainer(managed => managed.AllowDirectories = true);
+                container.UseAnyPreset();
+            });
+
+            options.Containers.Configure("shared", container =>
+            {
+                container.UseBlobManagementContainer(managed => managed.AllowDirectories = true);
+                container.UseAnyPreset();
             });
         });
     }

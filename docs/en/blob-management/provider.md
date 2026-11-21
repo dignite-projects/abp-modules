@@ -162,8 +162,6 @@ Configure<AbpBlobStoringOptions>(options =>
 });
 ````
 
-Or in configuration ([Declaring Containers in Configuration](setting-up.md#declaring-containers-in-configuration)): `BlobManagement:PublicSizes` for the default, and `PublicSizes` in a container.
-
 There is no server-side cache of renditions: a size is rendered again on each request that is not answered by an HTTP cache. A CDN, reverse proxy or rate limit in front of the host is still the host's job - with the query string in the cache key, since the tenant and the size are there; the list of sizes only bounds how many different renditions an address can ask for.
 
 A file that is not public is read in the application and handed on, or by the browser with a [read link](files.md#read-links) the application asks for.

@@ -71,7 +71,7 @@ Every file has a record, a *file descriptor*: the container, its name, the physi
 
 ## Pages
 
-* [Setting Up](setting-up.md): install the module in a host, declare its containers in code or in configuration, presets, the tenant allocation.
+* [Setting Up](setting-up.md): install the module in a host, declare its containers, presets, the tenant allocation.
 * [Using It From an Application](provider.md): `UseBlobManagement`, Blob Management in the same process or remote, public addresses.
 * [Keeping Files by Id](files.md): `IBlobManagementFileService`, what a business system's file library calls, public files, upload tickets and read links, and who a file is counted for.
 * [Hosting Modes](hosting.md): one host, or Blob Management as its own service, and what the second needs - routes, Data Protection, CORS, a CDN.

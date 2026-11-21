@@ -23,7 +23,7 @@ This is the simplest mode, and the one to start with.
 
 ## Blob Management as Its Own Service
 
-One service installs Blob Management; the applications install the provider and `Dignite.Abp.BlobManagement.HttpApi.Client` ([A Remote Blob Management](provider.md#a-remote-blob-management)), whose proxies serve both the provider and the file service. The service can declare its containers in `appsettings.json` ([Declaring Containers in Configuration](setting-up.md#declaring-containers-in-configuration)), so it needs no code of its own beyond its host module.
+One service installs Blob Management; the applications install the provider and `Dignite.Abp.BlobManagement.HttpApi.Client` ([A Remote Blob Management](provider.md#a-remote-blob-management)), whose proxies serve both the provider and the file service. Its containers are declared in code, in the service's host module, beside the storage provider they keep their bytes with ([Managed Containers](setting-up.md#managed-containers)).
 
 A business system joins in three steps: the authorization server registers its OAuth client; Blob Management declares the containers it uses and is deployed; the host's administrator grants the client those containers' files ([Granting an Application](permissions.md#granting-an-application)).
 
