@@ -20,7 +20,7 @@ namespace Dignite.Abp.BlobManagement;
 /// </para>
 /// <para>
 /// The sibling-name check is check-then-act, with the unique <see cref="DirectoryDescriptor.NameKey"/> as the arbiter:
-/// of two simultaneous requests that would leave two live siblings of one name, one fails with the database provider's
+/// of two simultaneous requests that would leave two siblings of one name, one fails with the database provider's
 /// exception.
 /// </para>
 /// </summary>
@@ -103,8 +103,7 @@ public class DirectoryManager : DomainService
     /// container) at <paramref name="order"/>, shifting the siblings at or after that position down by one. The parent
     /// must be in the same container, and not the directory itself or one below it; the deepest directory of the moved
     /// subtree stays within <see cref="DirectoryDescriptorConsts.MaxDepth"/>. The <see cref="DirectoryDescriptor.Path"/>
-    /// of every live directory below it moves along; a deleted one keeps the path it was deleted with and is not
-    /// counted.
+    /// of every directory below it moves along.
     /// <para>
     /// The check against moving a directory into itself reads the parent once: two simultaneous moves of two
     /// directories into each other can both pass it. A host that expects such traffic serializes directory moves.
@@ -132,9 +131,6 @@ public class DirectoryManager : DomainService
         var descendants = new List<DirectoryDescriptor>();
         if (parentId != directory.ParentId)
         {
-            // Live ones only. A deleted subdirectory keeps the path it was deleted with: nothing restores it (the
-            // module has no trash), and counting it would refuse the move of a directory that looks empty for a depth
-            // nobody can see or undo.
             descendants = await DirectoryRepository.GetDescendantsAsync(directory.Path, cancellationToken);
 
             var depth = (parent?.GetDepth() ?? 0) + 1;
@@ -173,13 +169,10 @@ public class DirectoryManager : DomainService
     }
 
     /// <summary>
-    /// Deletes an empty directory (soft); one with a live subdirectory or file is refused with
+    /// Deletes an empty directory - the row is removed, not marked; one with a subdirectory or a file is refused with
     /// <see cref="BlobManagementErrorCodes.DirectoryNotEmpty"/>. The check and the delete are check-then-act: a file
-    /// uploaded into the directory, or a subdirectory created in it, between the two is left in a deleted directory.
-    /// <para>
-    /// The directory first gives up its name key, saved on its own: ABP's EF Core soft delete reloads the row before it
-    /// marks it deleted, which would discard a change made in the same save.
-    /// </para>
+    /// stored in the directory, or a subdirectory created in it, between the two is left naming a directory that is
+    /// gone.
     /// </summary>
     public virtual async Task DeleteAsync(DirectoryDescriptor directory, CancellationToken cancellationToken = default)
     {
@@ -191,19 +184,12 @@ public class DirectoryManager : DomainService
             throw new BusinessException(BlobManagementErrorCodes.DirectoryNotEmpty);
         }
 
-        if (directory.NameKey != null)
-        {
-            directory.ReleaseNameKey();
-            await DirectoryRepository.UpdateAsync(directory, autoSave: true, cancellationToken: cancellationToken);
-        }
-
         await DirectoryRepository.DeleteAsync(directory, autoSave: true, cancellationToken: cancellationToken);
     }
 
     /// <summary>
     /// The directories above <paramref name="directory"/>, nearest first, ending at the top of its tree. They are the
-    /// ids in its <see cref="DirectoryDescriptor.Path"/>, read in one query; one that does not exist (or is deleted) is
-    /// simply absent.
+    /// ids in its <see cref="DirectoryDescriptor.Path"/>, read in one query; one that does not exist is simply absent.
     /// </summary>
     public virtual async Task<List<DirectoryDescriptor>> GetAncestorsAsync(
         DirectoryDescriptor directory,

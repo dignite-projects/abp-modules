@@ -35,7 +35,7 @@
     "Permission:ManagePermissions": "Spravovať oprávnenia ku kontajnerom",
     "Permission:TenantUsages": "Zobraziť využitie podľa nájomcov (iba hostiteľ)",
     "Menu:BlobManagement": "Správa objektov BLOB",
-    "Menu:Files": "Súbory",
+    "Files": "Súbory",
     "NoContainers": "Nie je k dispozícii žiadny kontajner.",
     "NewDirectory": "Nový priečinok",
     "Rename": "Premenovať",

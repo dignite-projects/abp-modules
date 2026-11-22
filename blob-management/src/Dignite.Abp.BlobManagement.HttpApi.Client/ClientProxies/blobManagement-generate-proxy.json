@@ -4,18 +4,215 @@
       "rootPath": "blobManagement",
       "remoteServiceName": "BlobManagement",
       "controllers": {
-        "Dignite.Abp.BlobManagement.Blobs.BlobManagementBlobController": {
-          "controllerName": "BlobManagementBlob",
-          "controllerGroupName": "BlobManagementBlob",
+        "Dignite.Abp.BlobManagement.Blobs.BlobManagementBlobIntegrationController": {
+          "controllerName": "BlobManagementBlobIntegration",
+          "controllerGroupName": "BlobManagementBlobIntegration",
           "isRemoteService": true,
-          "isIntegrationService": false,
+          "isIntegrationService": true,
           "apiVersion": null,
-          "type": "Dignite.Abp.BlobManagement.Blobs.BlobManagementBlobController",
+          "type": "Dignite.Abp.BlobManagement.Blobs.BlobManagementBlobIntegrationController",
           "summary": null,
           "remarks": null,
           "description": null,
           "displayName": null,
           "interfaces": [
+            {
+              "type": "Dignite.Abp.BlobManagement.Blobs.IBlobManagementBlobIntegrationService",
+              "name": "IBlobManagementBlobIntegrationService",
+              "methods": [
+                {
+                  "name": "SaveAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "containerName",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "blobName",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "content",
+                      "typeAsString": "Volo.Abp.Content.IRemoteStreamContent, Volo.Abp.Core",
+                      "type": "Volo.Abp.Content.IRemoteStreamContent",
+                      "typeSimple": "Volo.Abp.Content.IRemoteStreamContent",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "overrideExisting",
+                      "typeAsString": "System.Boolean, System.Private.CoreLib",
+                      "type": "System.Boolean",
+                      "typeSimple": "boolean",
+                      "isOptional": true,
+                      "defaultValue": false,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "creatorId",
+                      "typeAsString": "System.Nullable`1[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib",
+                      "type": "System.Guid?",
+                      "typeSimple": "string?",
+                      "isOptional": true,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "isPublic",
+                      "typeAsString": "System.Boolean, System.Private.CoreLib",
+                      "type": "System.Boolean",
+                      "typeSimple": "boolean",
+                      "isOptional": true,
+                      "defaultValue": false,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "sha256",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": true,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Dignite.Abp.BlobManagement.Blobs.BlobManagementBlobDto",
+                    "typeSimple": "Dignite.Abp.BlobManagement.Blobs.BlobManagementBlobDto",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "GetOrNullAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "containerName",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "blobName",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Content.IRemoteStreamContent",
+                    "typeSimple": "Volo.Abp.Content.IRemoteStreamContent",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": true
+                  }
+                },
+                {
+                  "name": "ExistsAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "containerName",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "blobName",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Boolean",
+                    "typeSimple": "boolean",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "DeleteAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "containerName",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    },
+                    {
+                      "name": "blobName",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Boolean",
+                    "typeSimple": "boolean",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                }
+              ]
+            },
             {
               "type": "Dignite.Abp.BlobManagement.Blobs.IBlobManagementBlobService",
               "name": "IBlobManagementBlobService",
@@ -219,7 +416,7 @@
               "uniqueName": "SaveAsyncByContainerNameAndBlobNameAndContentAndOverrideExistingAndCreatorIdAndIsPublicAndSha256",
               "name": "SaveAsync",
               "httpMethod": "PUT",
-              "url": "api/blob-management/blobs/{containerName}",
+              "url": "integration-api/blob-management/blobs/{containerName}",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -430,7 +627,7 @@
               "uniqueName": "GetOrNullAsyncByContainerNameAndBlobName",
               "name": "GetOrNullAsync",
               "httpMethod": "GET",
-              "url": "api/blob-management/blobs/{containerName}",
+              "url": "integration-api/blob-management/blobs/{containerName}",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -511,7 +708,7 @@
               "uniqueName": "ExistsAsyncByContainerNameAndBlobName",
               "name": "ExistsAsync",
               "httpMethod": "GET",
-              "url": "api/blob-management/blobs/{containerName}/exists",
+              "url": "integration-api/blob-management/blobs/{containerName}/exists",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -592,7 +789,7 @@
               "uniqueName": "DeleteAsyncByContainerNameAndBlobName",
               "name": "DeleteAsync",
               "httpMethod": "DELETE",
-              "url": "api/blob-management/blobs/{containerName}",
+              "url": "integration-api/blob-management/blobs/{containerName}",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -1447,6 +1644,337 @@
                   }
                 },
                 {
+                  "name": "GetContentAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Content.IRemoteStreamContent",
+                    "typeSimple": "Volo.Abp.Content.IRemoteStreamContent",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": true
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "GetAsyncById": {
+              "uniqueName": "GetAsyncById",
+              "name": "GetAsync",
+              "httpMethod": "GET",
+              "url": "api/blob-management/files/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                "typeSimple": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileAppService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "GetListAsyncByInput": {
+              "uniqueName": "GetListAsyncByInput",
+              "name": "GetListAsync",
+              "httpMethod": "GET",
+              "url": "api/blob-management/files",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "Dignite.Abp.BlobManagement.Files.GetBlobManagementFilesInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                  "type": "Dignite.Abp.BlobManagement.Files.GetBlobManagementFilesInput",
+                  "typeSimple": "Dignite.Abp.BlobManagement.Files.GetBlobManagementFilesInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "ContainerName",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "DirectoryId",
+                  "jsonName": null,
+                  "type": "System.Guid?",
+                  "typeSimple": "string?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Filter",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Sorting",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "SkipCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MaxResultCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<Dignite.Abp.BlobManagement.Files.BlobManagementFileDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<Dignite.Abp.BlobManagement.Files.BlobManagementFileDto>",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileAppService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "GetContentAsyncById": {
+              "uniqueName": "GetContentAsyncById",
+              "name": "GetContentAsync",
+              "httpMethod": "GET",
+              "url": "api/blob-management/files/{id}/content",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Content.IRemoteStreamContent",
+                "typeSimple": "Volo.Abp.Content.IRemoteStreamContent",
+                "summary": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
+                "isRemoteStream": true
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileAppService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            }
+          }
+        },
+        "Dignite.Abp.BlobManagement.Files.BlobManagementFileIntegrationController": {
+          "controllerName": "BlobManagementFileIntegration",
+          "controllerGroupName": "BlobManagementFileIntegration",
+          "isRemoteService": true,
+          "isIntegrationService": true,
+          "apiVersion": null,
+          "type": "Dignite.Abp.BlobManagement.Files.BlobManagementFileIntegrationController",
+          "summary": null,
+          "remarks": null,
+          "description": null,
+          "displayName": null,
+          "interfaces": [
+            {
+              "type": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileIntegrationService",
+              "name": "IBlobManagementFileIntegrationService",
+              "methods": [
+                {
+                  "name": "GetAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                    "typeSimple": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "GetListAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "Dignite.Abp.BlobManagement.Files.GetBlobManagementFilesInput, Dignite.Abp.BlobManagement.Application.Contracts",
+                      "type": "Dignite.Abp.BlobManagement.Files.GetBlobManagementFilesInput",
+                      "typeSimple": "Dignite.Abp.BlobManagement.Files.GetBlobManagementFilesInput",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<Dignite.Abp.BlobManagement.Files.BlobManagementFileDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<Dignite.Abp.BlobManagement.Files.BlobManagementFileDto>",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
                   "name": "CreateAsync",
                   "parametersOnMethod": [
                     {
@@ -2054,7 +2582,7 @@
               "uniqueName": "GetAsyncById",
               "name": "GetAsync",
               "httpMethod": "GET",
-              "url": "api/blob-management/files/{id}",
+              "url": "integration-api/blob-management/files/{id}",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -2109,7 +2637,7 @@
               "uniqueName": "GetListAsyncByInput",
               "name": "GetListAsync",
               "httpMethod": "GET",
-              "url": "api/blob-management/files",
+              "url": "integration-api/blob-management/files",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -2239,7 +2767,7 @@
               "uniqueName": "CreateAsyncByInput",
               "name": "CreateAsync",
               "httpMethod": "POST",
-              "url": "api/blob-management/files",
+              "url": "integration-api/blob-management/files",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -2384,7 +2912,7 @@
               "uniqueName": "UpdateAsyncByIdAndInput",
               "name": "UpdateAsync",
               "httpMethod": "PUT",
-              "url": "api/blob-management/files/{id}",
+              "url": "integration-api/blob-management/files/{id}",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -2465,7 +2993,7 @@
               "uniqueName": "MoveAsyncByIdAndInput",
               "name": "MoveAsync",
               "httpMethod": "PUT",
-              "url": "api/blob-management/files/{id}/move",
+              "url": "integration-api/blob-management/files/{id}/move",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -2546,7 +3074,7 @@
               "uniqueName": "SetPublicAsyncByIdAndInput",
               "name": "SetPublicAsync",
               "httpMethod": "PUT",
-              "url": "api/blob-management/files/{id}/public",
+              "url": "integration-api/blob-management/files/{id}/public",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -2627,7 +3155,7 @@
               "uniqueName": "CreateUploadTicketAsyncByInput",
               "name": "CreateUploadTicketAsync",
               "httpMethod": "POST",
-              "url": "api/blob-management/files/upload-tickets",
+              "url": "integration-api/blob-management/files/upload-tickets",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -2682,7 +3210,7 @@
               "uniqueName": "ConfirmAsyncById",
               "name": "ConfirmAsync",
               "httpMethod": "POST",
-              "url": "api/blob-management/files/{id}/confirm",
+              "url": "integration-api/blob-management/files/{id}/confirm",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -2737,7 +3265,7 @@
               "uniqueName": "CreateReadLinkAsyncByIdAndInput",
               "name": "CreateReadLinkAsync",
               "httpMethod": "POST",
-              "url": "api/blob-management/files/{id}/read-link",
+              "url": "integration-api/blob-management/files/{id}/read-link",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -2818,7 +3346,7 @@
               "uniqueName": "CreateReadLinksAsyncByInput",
               "name": "CreateReadLinksAsync",
               "httpMethod": "POST",
-              "url": "api/blob-management/files/read-links",
+              "url": "integration-api/blob-management/files/read-links",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -2873,7 +3401,7 @@
               "uniqueName": "DeleteAsyncById",
               "name": "DeleteAsync",
               "httpMethod": "DELETE",
-              "url": "api/blob-management/files/{id}",
+              "url": "integration-api/blob-management/files/{id}",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -2924,7 +3452,7 @@
               "uniqueName": "GetContentAsyncById",
               "name": "GetContentAsync",
               "httpMethod": "GET",
-              "url": "api/blob-management/files/{id}/content",
+              "url": "integration-api/blob-management/files/{id}/content",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {

@@ -19,9 +19,9 @@ public static class FileDescriptorConsts
     public static int MaxMimeTypeLength { get; set; } = 128;
 
     /// <summary>
-    /// SHA-256 as upper-case hex is 64 characters.
+    /// A SHA-256 as base64 is 44 characters.
     /// </summary>
-    public static int MaxHashLength { get; set; } = 64;
+    public static int MaxHashLength { get; set; } = 44;
 
     /// <summary>
     /// The longest OAuth client id Blob Management records as the writer of a descriptor.

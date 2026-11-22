@@ -35,7 +35,7 @@
     "Permission:ManagePermissions": "Gerenciar permissões de contêineres",
     "Permission:TenantUsages": "Ver o uso por locatário (somente host)",
     "Menu:BlobManagement": "Gerenciamento de blobs",
-    "Menu:Files": "Arquivos",
+    "Files": "Arquivos",
     "NoContainers": "Não há nenhum contêiner para mostrar.",
     "NewDirectory": "Nova pasta",
     "Rename": "Renomear",

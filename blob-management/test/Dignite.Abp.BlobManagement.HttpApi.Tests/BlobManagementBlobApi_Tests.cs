@@ -18,11 +18,12 @@ namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
 /// The BLOB API end to end over HTTP: an application's container on the remote provider (the generated C# client
-/// proxies), and the API's authorization of its callers.
+/// proxies of the integration service, at <c>integration-api/blob-management/blobs</c>), and the API's authorization of
+/// its callers.
 /// </summary>
 public class BlobManagementBlobApi_Tests : AbpWebApplicationFactoryIntegratedTest<Program>
 {
-    private const string ApiPath = "/api/blob-management/blobs/";
+    private const string ApiPath = "/integration-api/blob-management/blobs/";
 
     private readonly IBlobContainerFactory _blobContainerFactory;
     private readonly ICurrentTenant _currentTenant;
@@ -128,7 +129,7 @@ public class BlobManagementBlobApi_Tests : AbpWebApplicationFactoryIntegratedTes
     }
 
     [Fact]
-    public async Task A_Missing_File_Should_Be_404_With_The_Drives_Code()
+    public async Task A_Missing_File_Should_Be_404_With_The_Modules_Code()
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, ApiPath + BlobManagementHttpApiTestModule.OpenContainer + "?blobName=missing.pdf");
         request.Headers.Add(TestCaller.ClientHeader, BlobManagementHttpApiTestModule.AllowedClient);
@@ -188,10 +189,10 @@ public class BlobManagementBlobApi_Tests : AbpWebApplicationFactoryIntegratedTes
         return response.StatusCode;
     }
 
-    private async Task<FileDescriptor?> FindInBlobManagementAsync(string driveContainer, string name)
+    private async Task<FileDescriptor?> FindInBlobManagementAsync(string managedContainer, string name)
     {
         using var uow = GetRequiredService<IUnitOfWorkManager>().Begin();
-        var file = await GetRequiredService<FileDescriptorManager>().FindAsync(driveContainer, name);
+        var file = await GetRequiredService<FileDescriptorManager>().FindBlobAsync(managedContainer, name);
         await uow.CompleteAsync();
         return file;
     }

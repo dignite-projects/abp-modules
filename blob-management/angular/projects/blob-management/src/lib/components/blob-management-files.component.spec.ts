@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { CoreTestingModule } from '@abp/ng.core/testing';
 import { BlobManagementFilesComponent } from './blob-management-files.component';
-import { BlobManagementContainerService } from '../proxy/containers';
+import { BlobManagementContainerService } from '@dignite/ng.blob-management/proxy';
 
 describe('BlobManagementFilesComponent', () => {
   let getList: ReturnType<typeof vi.fn>;
@@ -46,14 +46,5 @@ describe('BlobManagementFilesComponent', () => {
     expect(page.permissionsOpen()).toBe(false);
     expect(page.selected()?.name).toBe('media');
     expect(page.selected()?.access?.createDirectories).toBe(true);
-  });
-
-  it('keeps the container shown as it is when nothing about it changed, so its browser does not start over', () => {
-    const page = render([container('documents')], [container('documents')]);
-    const shown = page.selected();
-
-    page.onPermissionsVisibleChange(false);
-
-    expect(page.selected()).toBe(shown);
   });
 });

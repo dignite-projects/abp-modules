@@ -15,9 +15,8 @@ const ICONS: Record<string, string> = {
 };
 
 /**
- * A thumbnail or a type icon for one file. A picture is shown when there is an address to show it from - a public
- * file's, asked for at the thumbnail's size, or a local `blob:` address of a file not uploaded yet; a file of a
- * container that is not public has none, and gets its type's icon.
+ * A thumbnail or a type icon for one file. A picture is shown when the file is public - its public address, asked for
+ * at the thumbnail's size; a file that is not public has no address, and gets its type's icon.
  */
 @Component({
   selector: 'blob-file-preview',
@@ -53,7 +52,7 @@ const ICONS: Record<string, string> = {
 export class BlobManagementFilePreviewComponent {
   private readonly urls = inject(BlobManagementFileUrlService);
 
-  /** The file's address: a public address, or a local `blob:` one; empty for a file that is not public. */
+  /** The file's public address, as Blob Management returns it (`BlobManagementFileDto.url`); empty when it is not public. */
   readonly src = input<string | null | undefined>('');
   readonly mimeType = input<string | null | undefined>('');
   readonly name = input<string | null | undefined>('');

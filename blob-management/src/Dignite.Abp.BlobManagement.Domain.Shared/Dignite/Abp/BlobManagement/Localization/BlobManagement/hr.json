@@ -35,7 +35,7 @@
     "Permission:ManagePermissions": "Upravljanje dozvolama za spremnike",
     "Permission:TenantUsages": "Prikaži upotrebu po zakupcu (samo host)",
     "Menu:BlobManagement": "Upravljanje BLOB-ovima",
-    "Menu:Files": "Datoteke",
+    "Files": "Datoteke",
     "NoContainers": "Nema spremnika za prikaz.",
     "NewDirectory": "Nova mapa",
     "Rename": "Preimenuj",

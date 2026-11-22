@@ -3,7 +3,7 @@ import { PageComponent, PageToolbarContainerComponent } from '@abp/ng.components
 import { ThemeSharedModule } from '@abp/ng.theme.shared';
 import { ChangeDetectionStrategy, Component, InjectionToken, OnInit, computed, inject, signal } from '@angular/core';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
-import { eBlobManagementPolicyNames } from '../../blob-management-permissions';
+import { eBlobManagementPolicyNames } from '@dignite/ng.blob-management/config';
 import { FormatFileSizePipe } from '../../pipes/format-file-size.pipe';
 import {
   BlobManagementClientUsageDto,
@@ -11,7 +11,7 @@ import {
   BlobManagementUsageDto,
   BlobManagementUsageService,
   BlobManagementUserUsageDto,
-} from '../../proxy/usage';
+} from '@dignite/ng.blob-management/proxy';
 
 /** Which breakdown of the usage is shown. */
 export type BlobManagementUsageView = 'containers' | 'users' | 'clients' | 'tenants';

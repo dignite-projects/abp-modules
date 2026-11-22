@@ -26,7 +26,7 @@ public class BlobManagementUploadApi_Tests : AbpWebApplicationFactoryIntegratedT
     private const string Container = BlobManagementHttpApiTestModule.OpenContainer;
 
     private readonly IBlobManagementFileService _appFiles;
-    private readonly BlobManagementFileClientProxy _files;
+    private readonly BlobManagementFileIntegrationClientProxy _files;
     private readonly ICurrentPrincipalAccessor _principalAccessor;
     private readonly ICurrentTenant _currentTenant;
 
@@ -35,7 +35,7 @@ public class BlobManagementUploadApi_Tests : AbpWebApplicationFactoryIntegratedT
     public BlobManagementUploadApi_Tests()
     {
         _appFiles = GetRequiredService<IBlobManagementFileService>();
-        _files = GetRequiredService<BlobManagementFileClientProxy>();
+        _files = GetRequiredService<BlobManagementFileIntegrationClientProxy>();
         _principalAccessor = GetRequiredService<ICurrentPrincipalAccessor>();
         _currentTenant = GetRequiredService<ICurrentTenant>();
     }

@@ -36,7 +36,7 @@ public abstract class BlobManagementUsageManager_Tests<TStartupModule> : BlobMan
     }
 
     [Fact]
-    public async Task Usage_Should_Count_Each_Live_File()
+    public async Task Usage_Should_Count_Each_File()
     {
         using (_currentTenant.Change(Guid.NewGuid()))
         {
@@ -228,7 +228,7 @@ public abstract class BlobManagementUsageManager_Tests<TStartupModule> : BlobMan
             exception.Code.ShouldBe(BlobManagementErrorCodes.StorageQuotaExceeded);
             exception.Data["StorageSize"].ShouldBe(1L);
             exception.Data["UsedBytes"].ShouldBe((long)first.Length);
-            (await WithUnitOfWorkAsync(() => _fileDescriptorManager.FindAsync(BlobManagementTestContainers.Files, "second.pdf"))).ShouldBeNull();
+            (await WithUnitOfWorkAsync(() => _fileDescriptorManager.FindBlobAsync(BlobManagementTestContainers.Files, "second.pdf"))).ShouldBeNull();
             (await UsedBytesAsync()).ShouldBe(first.Length);
 
             // The same bytes again are stored again, so they do not fit either.
@@ -306,8 +306,9 @@ public abstract class BlobManagementUsageManager_Tests<TStartupModule> : BlobMan
         return WithUnitOfWorkAsync(async () =>
         {
             using var stream = new MemoryStream(bytes);
-            return await _fileDescriptorManager.CreateAsync(
-                containerName, name, stream, overrideExisting, clientId: clientId, creatorId: creatorId);
+            return await _fileDescriptorManager.SaveBlobAsync(
+                containerName, name, stream,
+                new SaveBlobArgs { OverrideExisting = overrideExisting, ClientId = clientId, CreatorId = creatorId });
         });
     }
 

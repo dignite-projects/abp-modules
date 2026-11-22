@@ -1,11 +1,42 @@
 ﻿{
   "packages":[
     {
+      "name": "@dignite/ng.blob-management",
+      "appRoutingModuleConfiguration":{
+        "routes":[
+          "{ path: 'blob-management', loadChildren: () => import('@dignite/ng.blob-management').then(c => c.createRoutes()),}"
+        ]
+      },
+      "appModuleConfiguration":{
+        "imports":[
+          {
+            "names":[
+              "provideBlobManagementConfig"
+            ],
+            "namespace": "@dignite/ng.blob-management/config"
+          }
+        ],
+        "providerNames":[
+          "provideBlobManagementConfig()"
+        ]
+      },
       "tsJsonPathRecordConfigurations":[
         {
           "name": "@dignite/ng.blob-management",
           "paths": [
             "angular/projects/blob-management/src/public-api.ts"
+          ]
+        },
+        {
+          "name": "@dignite/ng.blob-management/config",
+          "paths": [
+            "angular/projects/blob-management/config/src/public-api.ts"
+          ]
+        },
+        {
+          "name": "@dignite/ng.blob-management/proxy",
+          "paths": [
+            "angular/projects/blob-management/proxy/src/public-api.ts"
           ]
         }
       ]

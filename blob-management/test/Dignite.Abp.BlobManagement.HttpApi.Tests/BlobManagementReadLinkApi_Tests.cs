@@ -22,11 +22,11 @@ public class BlobManagementReadLinkApi_Tests : AbpWebApplicationFactoryIntegrate
 {
     private const string Container = BlobManagementHttpApiTestModule.OpenContainer;
 
-    private readonly BlobManagementFileClientProxy _files;
+    private readonly BlobManagementFileIntegrationClientProxy _files;
 
     public BlobManagementReadLinkApi_Tests()
     {
-        _files = GetRequiredService<BlobManagementFileClientProxy>();
+        _files = GetRequiredService<BlobManagementFileIntegrationClientProxy>();
     }
 
     [Fact]

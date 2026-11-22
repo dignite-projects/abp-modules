@@ -51,11 +51,13 @@ abp generate-proxy -t ng
 
 This command generates service proxies that allow you to call your backend APIs in a type-safe manner. Without `--source` it reads the root namespace and API URL from the first application in `angular.json`, which is `Host`.
 
-To generate the **library's** proxies, name `dev-app` as the source and `blob-management` as the target, so that types in the `Dignite.Abp.BlobManagement.*` namespace are laid out as `proxy/<sub-namespace>/...` instead of `proxy/dignite/blob-management/<sub-namespace>/...` (the root namespace is only stripped from a namespace that starts with it, and `Host`'s `Dignite.Abp.BlobManagement.Host` does not):
+To generate the **library's** proxies, name `dev-app` as the source, `blob-management` as the target and `proxy` as the entry point, so that types in the `Dignite.Abp.BlobManagement.*` namespace are laid out as `proxy/<sub-namespace>/...` instead of `proxy/dignite/blob-management/<sub-namespace>/...` (the root namespace is only stripped from a namespace that starts with it, and `Host`'s `Dignite.Abp.BlobManagement.Host` does not), and land in `projects/blob-management/proxy/src/proxy/`, the source of the `@dignite/ng.blob-management/proxy` entry point:
 
 ```bash
-abp generate-proxy -t ng -m blobManagement --source dev-app --target blob-management
+abp generate-proxy -t ng -m blobManagement --source dev-app --target blob-management --entry-point proxy
 ```
+
+The entry point exports the generated files by name in `projects/blob-management/proxy/src/public-api.ts`: add a line there when a new service or model file appears.
 
 `dev-app` points at the Host API (`https://localhost:44352`), so start `Dignite.Abp.BlobManagement.Host` first. Keep `Host` the first application in `angular.json`: the ABP Studio run profile generates the Host's own proxies without `--source` and relies on that order.
 

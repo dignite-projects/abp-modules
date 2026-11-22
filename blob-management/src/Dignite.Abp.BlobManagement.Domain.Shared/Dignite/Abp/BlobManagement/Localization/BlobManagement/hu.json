@@ -35,7 +35,7 @@
     "Permission:ManagePermissions": "Tárolók engedélyeinek kezelése",
     "Permission:TenantUsages": "Használat megtekintése bérlőnként (csak a gazdának)",
     "Menu:BlobManagement": "Blobkezelés",
-    "Menu:Files": "Fájlok",
+    "Files": "Fájlok",
     "NoContainers": "Nincs megjeleníthető tároló.",
     "NewDirectory": "Új mappa",
     "Rename": "Átnevezés",

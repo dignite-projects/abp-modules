@@ -94,8 +94,8 @@ A business system that holds the SHA-256 of a file can have the upload checked a
 
 | Way in | Where the value goes |
 |---|---|
-| `IBlobManagementFileService.CreateAsync` and `POST api/blob-management/files` | `Sha256` of the input; the form field `sha256` |
-| `IBlobManagementBlobService.SaveAsync` and `PUT api/blob-management/blobs/{containerName}` | the `sha256` argument; the query string `sha256` |
+| `IBlobManagementFileService.CreateAsync` and `POST integration-api/blob-management/files` | `Sha256` of the input; the form field `sha256` |
+| `IBlobManagementBlobService.SaveAsync` and `PUT integration-api/blob-management/blobs/{containerName}` | the `sha256` argument; the query string `sha256` |
 | `POST api/blob-management/uploads/{ticket}` (the browser) | the form field `sha256`, or, when the body is the raw file, the header `Content-Digest: sha-256=:<base64>:` |
 
 The check is optional and costs nothing when it is not asked for: without a value no hash is computed, and the file's `Hash` is empty. With one, the hash is taken while the bytes are read in, so the upload does not wait for it afterwards. The value that was verified is kept as the file's hash, and the BLOB API's `BlobManagementBlobDto.Hash` returns it, exactly as it was sent. It is the hash of the bytes the business system sent, before the container's [pipeline](setting-up.md) changed them - a JPEG stored as WebP still carries the hash of the JPEG.
@@ -143,7 +143,7 @@ const response = await fetch(blobManagementUrl + ticket.uploadUrl, { method: 'PO
 const file = await response.json(); // file.id === ticket.fileId, file.isPending === true
 ````
 
-A ticket stores **one file, once**: the file takes the ticket's id, and a second upload is refused (`BlobManagement:UploadTicketUsed`, 409). An expired or altered ticket is `BlobManagement:UploadTicketInvalid` (403). The container's own rules apply as for any file.
+A ticket stores **one file**: the file takes the ticket's id, and a second upload is refused while that file exists (`BlobManagement:UploadTicketUsed`, 409). Once the file is deleted, the ticket can store one again until it expires - pending, like the first. An expired or altered ticket is `BlobManagement:UploadTicketInvalid` (403). The container's own rules apply as for any file.
 
 The file is **pending** until the business system confirms it: it is not listed, gets no read link and is not read publicly, but it counts in the usage and the allocation. When the browser reports the upload, the business system reads the file by its id, checks that `creatorId` is its current user (and whatever else it requires), files it with its record and confirms it:
 
@@ -195,26 +195,37 @@ Configure<BlobManagementReadLinkOptions>(options =>
 
 ## The File API
 
-The file service over HTTP is `IBlobManagementFileAppService`, at `api/blob-management/files`. It admits two callers:
+The file service over HTTP is `IBlobManagementFileIntegrationService`, at `integration-api/blob-management/files`: an ABP [integration service](https://abp.io/docs/latest/framework/api-development/integration-services), for a business system's back end. It admits **an OAuth client granted the files of the file's container**, with a token that carries no user, and no one else. A file in a container the client is not granted is not found.
 
-* **an OAuth client granted the files of the file's container**, with a token that carries no user - for everything. A file in a container the client is not granted is not found;
-* **a user who holds `BlobManagement.Containers`** - for the reads only: the listing, one file and its bytes. This is what the [management page](angular-ui.md#the-pages) reads with.
+As any integration service, it is there only where the host exposes integration services ([Blob Management as Its Own Service](hosting.md#blob-management-as-its-own-service)), and its calls are not audit-logged unless the host turns that on (`AbpAuditingOptions.IsEnabledForIntegrationServices`).
 
-No user stores, renames, moves or deletes a file here, and no user gets a ticket or a link.
+No user stores, renames, moves or deletes a file through the module, and no user gets a ticket or a link.
+
+| | |
+|---|---|
+| `GET integration-api/blob-management/files?containerName=&directoryId=` | The files of a place, a page at a time. |
+| `GET integration-api/blob-management/files/{id}` | One file. |
+| `GET integration-api/blob-management/files/{id}/content` | Its bytes, always as an attachment - a file may be HTML, and is never rendered on the host's address. |
+| `POST integration-api/blob-management/files` | Stores a file: a form with `containerName`, an optional `directoryId`, `name`, `creatorId`, `isPublic` and [`sha256`](#verifying-an-upload), and the file in `file`. |
+| `PUT integration-api/blob-management/files/{id}` | Renames it: `name`. |
+| `PUT integration-api/blob-management/files/{id}/move` | Moves it to `directoryId` of the same container; none for the top. |
+| `PUT integration-api/blob-management/files/{id}/public` | Marks it public or not: `isPublic`. |
+| `POST integration-api/blob-management/files/upload-tickets` | An upload ticket. |
+| `POST integration-api/blob-management/files/{id}/confirm` | Confirms a file uploaded with a ticket. |
+| `POST integration-api/blob-management/files/{id}/read-link`, `POST integration-api/blob-management/files/read-links` | Read links. |
+| `DELETE integration-api/blob-management/files/{id}` | Deletes it. |
+
+### What the Management Page Reads
+
+A user who holds `BlobManagement.Containers` reads files through `IBlobManagementFileAppService`, at `api/blob-management/files` - what the [management page](angular-ui.md#the-pages) reads with. It reads and changes nothing:
 
 | | |
 |---|---|
 | `GET api/blob-management/files?containerName=&directoryId=` | The files of a place, a page at a time. |
 | `GET api/blob-management/files/{id}` | One file. |
-| `GET api/blob-management/files/{id}/content` | Its bytes, always as an attachment - a file may be HTML, and is never rendered on the host's address. |
-| `POST api/blob-management/files` | Stores a file: a form with `containerName`, an optional `directoryId`, `name`, `creatorId`, `isPublic` and [`sha256`](#verifying-an-upload), and the file in `file`. |
-| `PUT api/blob-management/files/{id}` | Renames it: `name`. |
-| `PUT api/blob-management/files/{id}/move` | Moves it to `directoryId` of the same container; none for the top. |
-| `PUT api/blob-management/files/{id}/public` | Marks it public or not: `isPublic`. |
-| `POST api/blob-management/files/upload-tickets` | An upload ticket. |
-| `POST api/blob-management/files/{id}/confirm` | Confirms a file uploaded with a ticket. |
-| `POST api/blob-management/files/{id}/read-link`, `POST api/blob-management/files/read-links` | Read links. |
-| `DELETE api/blob-management/files/{id}` | Deletes it. |
+| `GET api/blob-management/files/{id}/content` | Its bytes, always as an attachment. |
+
+A token without a user - a client acting for itself - is refused here, as it is by the directory, container and usage APIs.
 
 The browser's two addresses are not part of the API, and have no client proxy:
 

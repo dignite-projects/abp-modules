@@ -35,7 +35,7 @@
     "Permission:ManagePermissions": "कंटेनरों की अनुमतियाँ प्रबंधित करें",
     "Permission:TenantUsages": "किरायेदार के अनुसार उपयोग देखें (केवल होस्ट)",
     "Menu:BlobManagement": "ब्लॉब प्रबंधन",
-    "Menu:Files": "फ़ाइलें",
+    "Files": "फ़ाइलें",
     "NoContainers": "दिखाने के लिए कोई कंटेनर नहीं है।",
     "NewDirectory": "नया फ़ोल्डर",
     "Rename": "नाम बदलें",

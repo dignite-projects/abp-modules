@@ -23,7 +23,7 @@ A container that allows directories holds one tree for each tenant.
 * A tree is at most 16 directories deep.
 * The directories beside each other have an **order**: a new one goes last, and a move names the position.
 * A directory moves within its own container only, never into itself or below itself. Its files and subdirectories go with it.
-* Only an **empty** directory is deleted; one that still holds files or directories is refused (`BlobManagement:DirectoryNotEmpty`). A deleted directory is kept as a deleted row.
+* Only an **empty** directory is deleted; one that still holds files or directories is refused (`BlobManagement:DirectoryNotEmpty`). A deleted directory is removed for good: there is no trash to restore it from.
 
 ## Who May Change It
 

@@ -9,6 +9,7 @@ using Dignite.Abp.BlobManagement.Files;
 using Dignite.Abp.BlobManagement.Permissions;
 using Dignite.Abp.BlobManagement.Public;
 using Dignite.Abp.BlobManagement.Usage;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Volo.Abp;
 using Volo.Abp.Authorization;
@@ -20,6 +21,7 @@ using Volo.Abp.Modularity;
 using Volo.Abp.MultiTenancy;
 using Volo.Abp.PermissionManagement;
 using Volo.Abp.Security.Claims;
+using Volo.Abp.Uow;
 using Volo.Abp.Validation;
 using Xunit;
 
@@ -28,8 +30,9 @@ namespace Dignite.Abp.BlobManagement;
 /// <summary>
 /// The application services end to end, against the database provider of the concrete test class: files as an
 /// application in this process keeps them (<see cref="IBlobManagementFileService"/>, trusted), the file API as a client
-/// and as a user reach it (<see cref="IBlobManagementFileAppService"/>), containers, usage and public reads - with
-/// grants written through ABP's permission managers.
+/// reaches it (<see cref="IBlobManagementFileIntegrationService"/>), what a user with the management permission reads
+/// (<see cref="IBlobManagementFileAppService"/>), containers, usage and public reads - with grants written through ABP's
+/// permission managers.
 /// </summary>
 public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagementApplicationTestBase<TStartupModule>
     where TStartupModule : IAbpModule
@@ -38,7 +41,8 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
 
     private readonly IBlobManagementContainerAppService _containers;
     private readonly IBlobManagementFileService _files;
-    private readonly IBlobManagementFileAppService _fileApi;
+    private readonly IBlobManagementFileIntegrationService _fileApi;
+    private readonly IBlobManagementFileAppService _managementFiles;
     private readonly IBlobManagementUsageAppService _usage;
     private readonly ICurrentPrincipalAccessor _principalAccessor;
 
@@ -50,7 +54,8 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
     {
         _containers = GetRequiredService<IBlobManagementContainerAppService>();
         _files = GetRequiredService<IBlobManagementFileService>();
-        _fileApi = GetRequiredService<IBlobManagementFileAppService>();
+        _fileApi = GetRequiredService<IBlobManagementFileIntegrationService>();
+        _managementFiles = GetRequiredService<IBlobManagementFileAppService>();
         _usage = GetRequiredService<IBlobManagementUsageAppService>();
         _principalAccessor = GetRequiredService<ICurrentPrincipalAccessor>();
     }
@@ -174,33 +179,49 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
         }
     }
 
+    /// <summary>
+    /// The management page's reads (<see cref="IBlobManagementFileAppService"/>) admit a user who holds the management
+    /// permission, in every container, and nobody else - not a client acting for itself. What changes a file is the
+    /// file API, which takes no user, whatever they hold.
+    /// </summary>
     [Fact]
-    public async Task The_File_Api_Should_Let_A_User_Read_With_The_Management_Permission_And_Change_Nothing()
+    public async Task The_Management_Page_Should_Read_Files_With_The_Management_Permission_And_Change_Nothing()
     {
         await GrantAsync(_admin, BlobManagementPermissions.GetAll());
+        await GrantFilesToClientAsync(BlobManagementTestContainers.Files, Client);
         var bytes = BlobManagementTestFiles.Pdf("kept " + Guid.NewGuid());
         var file = await StoreAsync(BlobManagementTestContainers.Files, "kept.pdf", bytes);
 
         // A signed-in user without the permission reads nothing, and learns nothing about an id.
         using (As(_bob))
         {
-            await Should.ThrowAsync<AbpAuthorizationException>(() => _fileApi.GetAsync(file.Id));
-            await Should.ThrowAsync<AbpAuthorizationException>(() => _fileApi.GetAsync(Guid.NewGuid()));
-            await Should.ThrowAsync<AbpAuthorizationException>(() => _fileApi.GetContentAsync(file.Id));
+            await Should.ThrowAsync<AbpAuthorizationException>(() => _managementFiles.GetAsync(file.Id));
+            await Should.ThrowAsync<AbpAuthorizationException>(() => _managementFiles.GetAsync(Guid.NewGuid()));
+            await Should.ThrowAsync<AbpAuthorizationException>(() => _managementFiles.GetContentAsync(file.Id));
             await Should.ThrowAsync<AbpAuthorizationException>(() =>
-                _fileApi.GetListAsync(new GetBlobManagementFilesInput { ContainerName = BlobManagementTestContainers.Files }));
+                _managementFiles.GetListAsync(new GetBlobManagementFilesInput { ContainerName = BlobManagementTestContainers.Files }));
+        }
+
+        // A client - even one granted the container's files - is no user of the management page.
+        using (AsClient(Client))
+        {
+            await Should.ThrowAsync<AbpAuthorizationException>(() => _managementFiles.GetAsync(file.Id));
+            await Should.ThrowAsync<AbpAuthorizationException>(() =>
+                _managementFiles.GetListAsync(new GetBlobManagementFilesInput { ContainerName = BlobManagementTestContainers.Files }));
         }
 
         // The management permission reads every container, whatever clients it lists.
         using (As(_admin))
         {
-            (await _fileApi.GetAsync(file.Id)).Name.ShouldBe("kept.pdf");
-            (await ReadAsync(await _fileApi.GetContentAsync(file.Id))).ShouldBe(bytes);
-            (await _fileApi.GetListAsync(new GetBlobManagementFilesInput { ContainerName = BlobManagementTestContainers.Files, Filter = "kept" }))
+            (await _managementFiles.GetAsync(file.Id)).Name.ShouldBe("kept.pdf");
+            (await ReadAsync(await _managementFiles.GetContentAsync(file.Id))).ShouldBe(bytes);
+            (await _managementFiles.GetListAsync(new GetBlobManagementFilesInput { ContainerName = BlobManagementTestContainers.Files, Filter = "kept" }))
                 .Items.Select(f => f.Id).ShouldContain(file.Id);
-            await Should.ThrowAsync<EntityNotFoundException>(() => _fileApi.GetAsync(Guid.NewGuid()));
+            await Should.ThrowAsync<EntityNotFoundException>(() => _managementFiles.GetAsync(Guid.NewGuid()));
 
-            // It changes nothing: a file is its application's, whatever the user holds here.
+            // It changes nothing through the file API, nor reads there: a token with a user is no client's, whatever
+            // the user holds here.
+            await Should.ThrowAsync<AbpAuthorizationException>(() => _fileApi.GetAsync(file.Id));
             await Should.ThrowAsync<AbpAuthorizationException>(() => _fileApi.CreateAsync(NewFile(BlobManagementTestContainers.Documents, "a.pdf")));
             await Should.ThrowAsync<AbpAuthorizationException>(() =>
                 _fileApi.UpdateAsync(file.Id, new UpdateBlobManagementFileInput { Name = "mine.pdf" }));
@@ -448,7 +469,7 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
     public async Task A_File_An_Application_Saved_Under_A_Name_Should_Be_Listed_And_Not_Renamed_Or_Moved()
     {
         var name = "themes/" + Guid.NewGuid().ToString("N") + ".pdf";
-        var saved = await StoreSystemFileAsync(name, BlobManagementTestFiles.Pdf(Guid.NewGuid().ToString()));
+        var saved = await SaveUnderNameAsync(name, BlobManagementTestFiles.Pdf(Guid.NewGuid().ToString()));
 
         var listed = (await _files.GetListAsync(new GetBlobManagementFilesInput
         {
@@ -469,7 +490,7 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
 
         await _files.DeleteAsync(saved.Id);
 
-        (await WithUnitOfWorkAsync(() => GetRequiredService<FileDescriptorManager>().FindAsync(BlobManagementTestContainers.Files, name)))
+        (await WithUnitOfWorkAsync(() => GetRequiredService<FileDescriptorManager>().FindBlobAsync(BlobManagementTestContainers.Files, name)))
             .ShouldBeNull();
     }
 
@@ -628,7 +649,7 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
     {
         var name = Guid.NewGuid() + ".png";
         var bytes = BlobManagementTestFiles.Png(40, 20, seed: 11);
-        var stored = await StoreSystemFileAsync(name, bytes);
+        var stored = await SaveUnderNameAsync(name, bytes, isPublic: true);
         var reads = GetRequiredService<RacingBlobManagementPublicAppService>();
 
         var head = await reads.ReadAsync(BlobManagementTestContainers.Files, name, new BlobManagementPublicReadInput(), HeadersOnly());
@@ -664,7 +685,7 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
     public async Task A_Public_Reads_Entity_Tag_Should_Change_With_The_Size_And_When_The_File_Is_Overwritten()
     {
         var name = Guid.NewGuid() + ".png";
-        await StoreSystemFileAsync(name, BlobManagementTestFiles.Png(200, 100, seed: 12));
+        await SaveUnderNameAsync(name, BlobManagementTestFiles.Png(200, 100, seed: 12), isPublic: true);
         var reads = GetRequiredService<RacingBlobManagementPublicAppService>();
 
         var plain = (await reads.ReadAsync(BlobManagementTestContainers.Files, name, new BlobManagementPublicReadInput(), HeadersOnly())).File.EntityTag;
@@ -674,7 +695,7 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
             .File.EntityTag.ShouldBe(plain + "-64x64");
 
         // For a BLOB saved under a name the name is the address: an overwrite keeps it and changes the tag behind it.
-        await StoreSystemFileAsync(name, BlobManagementTestFiles.Png(200, 100, seed: 13), overrideExisting: true);
+        await SaveUnderNameAsync(name, BlobManagementTestFiles.Png(200, 100, seed: 13), overrideExisting: true, isPublic: true);
 
         var overwritten = await reads.ReadAsync(BlobManagementTestContainers.Files, name, new BlobManagementPublicReadInput(),
             new BlobManagementPublicReadRequest { IfNoneMatch = { plain } });
@@ -691,40 +712,55 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
         var name = "race-" + Guid.NewGuid();
         var oldBytes = BlobManagementTestFiles.Png(16, 16, seed: 14);
         var newBytes = BlobManagementTestFiles.Pdf("new " + Guid.NewGuid());
-        var old = await StoreSystemFileAsync(name, oldBytes);
+        var old = await SaveUnderNameAsync(name, oldBytes, isPublic: true);
 
         var reads = GetRequiredService<RacingBlobManagementPublicAppService>();
 
         // The overwrite lands after the read found the file and before it opens the bytes - where a second lookup
-        // used to find the new file and mix its bytes and type into the old file's tag and disposition. (It runs in
-        // the read's unit of work, as a child; a concurrent request would commit its own, with the same effect.)
-        reads.AfterLookup = () => StoreSystemFileAsync(name, newBytes, overrideExisting: true);
+        // used to find the new file and mix its bytes and type into the old file's tag and disposition. It commits in
+        // a unit of work of its own, as a concurrent request does: the file's row now names the new BLOB, and the old
+        // one is deleted with that commit.
+        reads.AfterLookup = () => SaveUnderNameInItsOwnUnitOfWorkAsync(name, newBytes);
 
-        var result = await reads.ReadAsync(BlobManagementTestContainers.Files, name, new BlobManagementPublicReadInput(), new BlobManagementPublicReadRequest());
-
+        // The bytes the read found are gone, and the file is not: it answers from the descriptor the file has now, the
+        // whole answer - never the old file's tag and type over the new file's bytes, and never a file that is missing.
+        var read = await reads.ReadAsync(
+            BlobManagementTestContainers.Files, name, new BlobManagementPublicReadInput(), new BlobManagementPublicReadRequest());
         reads.Lookups.ShouldBe(1);
-        result.File.ContentId.ShouldBe(old.BlobName);
-        result.File.EntityTag.ShouldBe(old.BlobName);
-        result.File.MimeType.ShouldBe("image/png");
-        result.Content.ShouldNotBeNull();
-        result.Content!.ContentType.ShouldBe("image/png");
-        (await ReadAsync(result.Content)).ShouldBe(oldBytes);
-
-        // The next read is the new file, whole.
-        var next = await reads.ReadAsync(BlobManagementTestContainers.Files, name, new BlobManagementPublicReadInput(), new BlobManagementPublicReadRequest());
-        next.File.MimeType.ShouldBe("application/pdf");
-        next.File.EntityTag.ShouldNotBe(result.File.EntityTag);
-        next.Content!.ContentType.ShouldBe("application/pdf");
-        (await ReadAsync(next.Content)).ShouldBe(newBytes);
+        read.File.MimeType.ShouldBe("application/pdf");
+        read.File.EntityTag.ShouldNotBe(old.BlobName);
+        read.File.Size.ShouldBe(newBytes.Length);
+        read.Content!.ContentType.ShouldBe("application/pdf");
+        (await ReadAsync(read.Content)).ShouldBe(newBytes);
     }
 
-    private Task<FileDescriptor> StoreSystemFileAsync(string name, byte[] bytes, bool overrideExisting = false)
+    /// <summary>
+    /// Overwrites the BLOB saved under <paramref name="name"/> in a unit of work of its own, whatever unit of work is
+    /// current - another request's - so it has its own database context and commits on its own.
+    /// </summary>
+    private async Task SaveUnderNameInItsOwnUnitOfWorkAsync(string name, byte[] bytes)
+    {
+        using var scope = ServiceProvider.CreateScope();
+        using var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkManager>().Begin(requiresNew: true);
+        using (var stream = new MemoryStream(bytes))
+        {
+            await scope.ServiceProvider.GetRequiredService<FileDescriptorManager>().SaveBlobAsync(
+                BlobManagementTestContainers.Files, name, stream, new SaveBlobArgs { OverrideExisting = true, IsPublic = true });
+        }
+
+        await unitOfWork.CompleteAsync();
+    }
+
+    /// <summary>Saves a BLOB under <paramref name="name"/>, as an application does through the provider.</summary>
+    private Task<FileDescriptor> SaveUnderNameAsync(string name, byte[] bytes, bool overrideExisting = false, bool isPublic = false)
     {
         return WithUnitOfWorkAsync(async () =>
         {
             using var stream = new MemoryStream(bytes);
             return await GetRequiredService<FileDescriptorManager>()
-                .CreateAsync(BlobManagementTestContainers.Files, name, stream, overrideExisting);
+                .SaveBlobAsync(
+                    BlobManagementTestContainers.Files, name, stream,
+                    new SaveBlobArgs { OverrideExisting = overrideExisting, IsPublic = isPublic });
         });
     }
 

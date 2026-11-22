@@ -35,7 +35,7 @@
     "Permission:ManagePermissions": "Kapsayıcı izinlerini yönet",
     "Permission:TenantUsages": "Kiracıya göre kullanımı görüntüle (yalnızca host)",
     "Menu:BlobManagement": "Blob Yönetimi",
-    "Menu:Files": "Dosyalar",
+    "Files": "Dosyalar",
     "NoContainers": "Gösterilecek kapsayıcı yok.",
     "NewDirectory": "Yeni klasör",
     "Rename": "Yeniden adlandır",

@@ -82,20 +82,21 @@ try {
     `import {
   BlobManagementBrowserComponent,
   BlobManagementFilesComponent,
-  BlobManagementContainerService,
-  BlobManagementDirectoryService,
   BlobManagementDirectoryTreeComponent,
   BlobManagementFileListComponent,
-  BlobManagementFileService,
   BlobManagementFileUrlService,
   BlobManagementUsageComponent,
-  BlobManagementUsageService,
   createRoutes,
   eBlobManagementComponents,
-  eBlobManagementPolicyNames,
   FormatFileSizePipe,
 } from '@dignite/ng.blob-management';
-import { provideBlobManagementConfig } from '@dignite/ng.blob-management/config';
+import { eBlobManagementPolicyNames, provideBlobManagementConfig } from '@dignite/ng.blob-management/config';
+import {
+  BlobManagementContainerService,
+  BlobManagementDirectoryService,
+  BlobManagementFileService,
+  BlobManagementUsageService,
+} from '@dignite/ng.blob-management/proxy';
 
 export const packageSurface = {
   BlobManagementBrowserComponent,

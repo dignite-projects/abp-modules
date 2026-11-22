@@ -2,8 +2,9 @@ import { CoreModule, PermissionService } from '@abp/ng.core';
 import { PageComponent, PageToolbarContainerComponent } from '@abp/ng.components/page';
 import { ResourcePermissionManagementComponent } from '@abp/ng.permission-management';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { eBlobManagementPolicyNames, eBlobManagementResourceNames } from '../blob-management-permissions';
-import { BlobManagementContainerDto, BlobManagementContainerService } from '../proxy/containers';
+import { eBlobManagementPolicyNames } from '@dignite/ng.blob-management/config';
+import { eBlobManagementResourceNames } from '../blob-management-permissions';
+import { BlobManagementContainerDto, BlobManagementContainerService } from '@dignite/ng.blob-management/proxy';
 import { BlobManagementBrowserComponent } from './blob-browser/blob-browser.component';
 
 /**
@@ -16,7 +17,7 @@ import { BlobManagementBrowserComponent } from './blob-browser/blob-browser.comp
   selector: 'blob-management-files',
   changeDetection: ChangeDetectionStrategy.Eager,
   template: `
-    <abp-page [title]="'BlobManagement::Menu:Files' | abpLocalization">
+    <abp-page [title]="'BlobManagement::Files' | abpLocalization">
       @if (canManagePermissions() && selected()) {
         <abp-page-toolbar-container class="col">
           <div class="d-flex justify-content-lg-end">
@@ -101,22 +102,14 @@ export class BlobManagementFilesComponent {
     }
   }
 
-  /**
-   * Reads the containers and shows the one shown before, or the first. A container whose answer has not changed stays
-   * the object it was: the browser below starts over - its tree collapsed, its directory forgotten - when it is given
-   * another one.
-   */
+  /** Reads the containers and shows the one shown before, or the first. */
   private load(): void {
     this.containerService.getList().subscribe(result => {
       const containers = result.items ?? [];
       const shown = this.selected();
-      const next = containers.find(container => container.name === shown?.name) ?? containers[0] ?? null;
 
       this.containers.set(containers);
-      if (!shown || !next || JSON.stringify(shown) !== JSON.stringify(next)) {
-        this.selected.set(next);
-      }
-
+      this.selected.set(containers.find(container => container.name === shown?.name) ?? containers[0] ?? null);
       this.loaded.set(true);
     });
   }

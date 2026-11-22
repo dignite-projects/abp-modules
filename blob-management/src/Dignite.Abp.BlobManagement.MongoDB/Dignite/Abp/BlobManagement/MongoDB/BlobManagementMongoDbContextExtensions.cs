@@ -19,9 +19,10 @@ public static class BlobManagementMongoDbContextExtensions
             {
                 var keys = Builders<BsonDocument>.IndexKeys;
 
-                // The address of a file an application saved: one live descriptor per tenant, container and name (the
-                // same rule as the EF Core unique index). Uploaded files and deleted rows carry no key and are not
-                // indexed.
+                // The address of a file an application saved, and the arbiter of it: one descriptor per tenant,
+                // container and name (the same rule as the EF Core unique index). The provider reads, overwrites and
+                // deletes by it. A file kept by id carries no key and is not indexed: MongoDB would otherwise count
+                // every null as the same value.
                 indexes.CreateOne(new CreateIndexModel<BsonDocument>(
                     keys.Ascending(nameof(FileDescriptor.NameKey)),
                     new CreateIndexOptions<BsonDocument>
@@ -29,11 +30,6 @@ public static class BlobManagementMongoDbContextExtensions
                         Unique = true,
                         PartialFilterExpression = Builders<BsonDocument>.Filter.Type(nameof(FileDescriptor.NameKey), BsonType.String)
                     }));
-
-                indexes.CreateOne(new CreateIndexModel<BsonDocument>(
-                    keys.Ascending(nameof(FileDescriptor.TenantId))
-                        .Ascending(nameof(FileDescriptor.ContainerName))
-                        .Ascending(nameof(FileDescriptor.Name))));
 
                 // The public address of a file kept by id: its BLOB.
                 indexes.CreateOne(new CreateIndexModel<BsonDocument>(
@@ -51,6 +47,12 @@ public static class BlobManagementMongoDbContextExtensions
                 // "Is anything filed here" - asked on every directory delete, by directory alone.
                 indexes.CreateOne(new CreateIndexModel<BsonDocument>(
                     keys.Ascending(nameof(FileDescriptor.DirectoryId))));
+
+                // The pending files of a tenant uploaded before a time, oldest first: the cleanup of abandoned uploads.
+                indexes.CreateOne(new CreateIndexModel<BsonDocument>(
+                    keys.Ascending(nameof(FileDescriptor.TenantId))
+                        .Ascending(nameof(FileDescriptor.IsPending))
+                        .Ascending(nameof(FileDescriptor.CreationTime))));
             });
         });
 
@@ -61,16 +63,11 @@ public static class BlobManagementMongoDbContextExtensions
             {
                 var keys = Builders<BsonDocument>.IndexKeys;
 
-                // Sibling names, as an arbiter: one live directory per tenant, container, parent and name (the same
-                // rule as the EF Core unique index). A deleted directory carries no key and is not indexed: MongoDB
-                // would otherwise count every null as the same value.
+                // Sibling names, as an arbiter: one directory per tenant, container, parent and name (the same rule as
+                // the EF Core unique index). Every directory holds its key; a deleted one is gone with it.
                 indexes.CreateOne(new CreateIndexModel<BsonDocument>(
                     keys.Ascending(nameof(DirectoryDescriptor.NameKey)),
-                    new CreateIndexOptions<BsonDocument>
-                    {
-                        Unique = true,
-                        PartialFilterExpression = Builders<BsonDocument>.Filter.Type(nameof(DirectoryDescriptor.NameKey), BsonType.String)
-                    }));
+                    new CreateIndexOptions<BsonDocument> { Unique = true }));
 
                 // One level of a container's tree.
                 indexes.CreateOne(new CreateIndexModel<BsonDocument>(

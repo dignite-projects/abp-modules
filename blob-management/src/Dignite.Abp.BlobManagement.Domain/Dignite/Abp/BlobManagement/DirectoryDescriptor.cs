@@ -14,11 +14,11 @@ namespace Dignite.Abp.BlobManagement;
 /// sibling names, a parent in the same container, no cycles, a bounded depth, deletion only when empty - lives in
 /// <see cref="DirectoryManager"/>.
 /// <para>
-/// Soft-deleted. It has no permissions of its own: what a user may do with the directories of a container is the
-/// container's permission.
+/// Deleted for good: a deleted directory is removed, not marked - the module has no trash. It has no permissions of
+/// its own: what a user may do with the directories of a container is the container's permission.
 /// </para>
 /// </summary>
-public class DirectoryDescriptor : FullAuditedAggregateRoot<Guid>, IMultiTenant
+public class DirectoryDescriptor : AuditedAggregateRoot<Guid>, IMultiTenant
 {
     protected DirectoryDescriptor()
     {
@@ -47,7 +47,7 @@ public class DirectoryDescriptor : FullAuditedAggregateRoot<Guid>, IMultiTenant
     /// <summary>The container the directory belongs to.</summary>
     public virtual string ContainerName { get; protected set; } = default!;
 
-    /// <summary>Unique among its live siblings, without regard to case (<see cref="NameKey"/>).</summary>
+    /// <summary>Unique among its siblings, without regard to case (<see cref="NameKey"/>).</summary>
     public virtual string Name { get; protected set; } = default!;
 
     /// <summary>The parent directory, or <c>null</c> at the top of the tree.</summary>
@@ -60,8 +60,7 @@ public class DirectoryDescriptor : FullAuditedAggregateRoot<Guid>, IMultiTenant
     /// path starts with this one's plus the separator.
     /// <para>
     /// Ids, not per-level counters like ABP's <c>OrganizationUnit.Code</c>: a counter is assigned check-then-act, so two
-    /// simultaneous creates can get the same one, and it is reused after a soft delete, which a restore would collide
-    /// with. An id path is unique by construction.
+    /// simultaneous creates can get the same one. An id path is unique by construction.
     /// </para>
     /// </summary>
     public virtual string Path { get; protected set; } = default!;
@@ -72,13 +71,12 @@ public class DirectoryDescriptor : FullAuditedAggregateRoot<Guid>, IMultiTenant
     public virtual Guid? TenantId { get; protected set; }
 
     /// <summary>
-    /// On a live directory, the SHA-256 (upper-case hex) of its tenant, container, parent and name, the name
-    /// upper-cased (<see cref="CreateNameKey"/>); <c>null</c> on a deleted one. Unique in the database, so two
-    /// simultaneous creates, renames or moves cannot leave two live siblings of one name - the sibling-name check of
-    /// <see cref="DirectoryManager"/> is check-then-act, and this is the arbiter. Cleared on delete, so a deleted
-    /// directory does not hold its name, as <c>FileDescriptor.NameKey</c> is.
+    /// The SHA-256 (upper-case hex) of its tenant, container, parent and name, the name upper-cased
+    /// (<see cref="CreateNameKey"/>). Unique in the database, so two simultaneous creates, renames or moves cannot
+    /// leave two siblings of one name - the sibling-name check of <see cref="DirectoryManager"/> is check-then-act, and
+    /// this is the arbiter.
     /// </summary>
-    public virtual string? NameKey { get; protected set; }
+    public virtual string NameKey { get; protected set; } = default!;
 
     /// <summary>
     /// Renames the directory. Uniqueness among siblings is checked by <see cref="DirectoryManager.RenameAsync"/>; never
@@ -106,15 +104,6 @@ public class DirectoryDescriptor : FullAuditedAggregateRoot<Guid>, IMultiTenant
     public virtual void SetOrder(int order)
     {
         Order = order;
-    }
-
-    /// <summary>
-    /// Gives up the <see cref="NameKey"/>; done before the directory is deleted, so the deleted row does not keep a new
-    /// sibling from taking its name.
-    /// </summary>
-    public virtual void ReleaseNameKey()
-    {
-        NameKey = null;
     }
 
     /// <summary>
@@ -193,13 +182,10 @@ public class DirectoryDescriptor : FullAuditedAggregateRoot<Guid>, IMultiTenant
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key)));
     }
 
-    /// <summary>The <see cref="NameKey"/> after a rename or a move; a deleted directory, which has none, takes none.</summary>
+    /// <summary>The <see cref="NameKey"/> after a rename or a move.</summary>
     protected virtual void RefreshNameKey()
     {
-        if (NameKey != null)
-        {
-            NameKey = CreateNameKey(TenantId, ContainerName, ParentId, Name);
-        }
+        NameKey = CreateNameKey(TenantId, ContainerName, ParentId, Name);
     }
 
     /// <summary>

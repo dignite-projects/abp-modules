@@ -15,8 +15,8 @@ using Volo.Abp.Http.Modeling;
 namespace Dignite.Abp.BlobManagement.Files;
 
 [Dependency(ReplaceServices = true)]
-[ExposeServices(typeof(IBlobManagementFileService), typeof(BlobManagementFileClientProxy))]
-public partial class BlobManagementFileClientProxy : ClientProxyBase<IBlobManagementFileService>, IBlobManagementFileService
+[ExposeServices(typeof(IBlobManagementFileAppService), typeof(BlobManagementFileClientProxy))]
+public partial class BlobManagementFileClientProxy : ClientProxyBase<IBlobManagementFileAppService>, IBlobManagementFileAppService
 {
     public virtual async Task<BlobManagementFileDto> GetAsync(Guid id)
     {
@@ -31,82 +31,6 @@ public partial class BlobManagementFileClientProxy : ClientProxyBase<IBlobManage
         return await RequestAsync<PagedResultDto<BlobManagementFileDto>>(nameof(GetListAsync), new ClientProxyRequestTypeValue
         {
             { typeof(GetBlobManagementFilesInput), input }
-        });
-    }
-
-    public virtual async Task<BlobManagementFileDto> CreateAsync(CreateBlobManagementFileInput input)
-    {
-        return await RequestAsync<BlobManagementFileDto>(nameof(CreateAsync), new ClientProxyRequestTypeValue
-        {
-            { typeof(CreateBlobManagementFileInput), input }
-        });
-    }
-
-    public virtual async Task<BlobManagementFileDto> UpdateAsync(Guid id, UpdateBlobManagementFileInput input)
-    {
-        return await RequestAsync<BlobManagementFileDto>(nameof(UpdateAsync), new ClientProxyRequestTypeValue
-        {
-            { typeof(Guid), id },
-            { typeof(UpdateBlobManagementFileInput), input }
-        });
-    }
-
-    public virtual async Task<BlobManagementFileDto> MoveAsync(Guid id, MoveBlobManagementFileInput input)
-    {
-        return await RequestAsync<BlobManagementFileDto>(nameof(MoveAsync), new ClientProxyRequestTypeValue
-        {
-            { typeof(Guid), id },
-            { typeof(MoveBlobManagementFileInput), input }
-        });
-    }
-
-    public virtual async Task<BlobManagementFileDto> SetPublicAsync(Guid id, SetBlobManagementFilePublicInput input)
-    {
-        return await RequestAsync<BlobManagementFileDto>(nameof(SetPublicAsync), new ClientProxyRequestTypeValue
-        {
-            { typeof(Guid), id },
-            { typeof(SetBlobManagementFilePublicInput), input }
-        });
-    }
-
-    public virtual async Task<BlobManagementUploadTicketDto> CreateUploadTicketAsync(CreateBlobManagementUploadTicketInput input)
-    {
-        return await RequestAsync<BlobManagementUploadTicketDto>(nameof(CreateUploadTicketAsync), new ClientProxyRequestTypeValue
-        {
-            { typeof(CreateBlobManagementUploadTicketInput), input }
-        });
-    }
-
-    public virtual async Task<BlobManagementFileDto> ConfirmAsync(Guid id)
-    {
-        return await RequestAsync<BlobManagementFileDto>(nameof(ConfirmAsync), new ClientProxyRequestTypeValue
-        {
-            { typeof(Guid), id }
-        });
-    }
-
-    public virtual async Task<BlobManagementReadLinkDto> CreateReadLinkAsync(Guid id, CreateBlobManagementReadLinkInput input)
-    {
-        return await RequestAsync<BlobManagementReadLinkDto>(nameof(CreateReadLinkAsync), new ClientProxyRequestTypeValue
-        {
-            { typeof(Guid), id },
-            { typeof(CreateBlobManagementReadLinkInput), input }
-        });
-    }
-
-    public virtual async Task<ListResultDto<BlobManagementReadLinkDto>> CreateReadLinksAsync(CreateBlobManagementReadLinksInput input)
-    {
-        return await RequestAsync<ListResultDto<BlobManagementReadLinkDto>>(nameof(CreateReadLinksAsync), new ClientProxyRequestTypeValue
-        {
-            { typeof(CreateBlobManagementReadLinksInput), input }
-        });
-    }
-
-    public virtual async Task DeleteAsync(Guid id)
-    {
-        await RequestAsync(nameof(DeleteAsync), new ClientProxyRequestTypeValue
-        {
-            { typeof(Guid), id }
         });
     }
 

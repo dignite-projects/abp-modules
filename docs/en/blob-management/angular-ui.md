@@ -13,7 +13,7 @@
 
 ## Installation
 
-Add `@dignite/ng.blob-management` to the application. Its peer dependencies are packages an ABP application has: `@abp/ng.core`, `@abp/ng.theme.shared`, `@abp/ng.components`, `@abp/ng.permission-management` (the resource permission dialog), `@ng-bootstrap/ng-bootstrap`, `@swimlane/ngx-datatable`, `@ngx-validate/core` and Angular itself.
+Add `@dignite/ng.blob-management` to the application. Its peer dependencies are packages an ABP application has: `@abp/ng.core`, `@abp/ng.theme.shared`, `@abp/ng.components`, `@abp/ng.permission-management` (the resource permission dialog), `@swimlane/ngx-datatable`, `@ngx-validate/core` and Angular itself.
 
 Register the page's menu item in `app.config.ts`, and its route in `app.routes.ts`:
 
@@ -67,7 +67,7 @@ The pages are made of standalone components the library exports, for an applicat
 | `blob-management-files` | The whole Files page: the container tabs, and the permissions dialog. |
 | `blob-usage` | The whole Usage page: the tenant against its allocation, then by container, by user, by client or - in the host - by tenant. |
 | `blob-browser` | One container (`[container]`): its directory tree beside its files, or one flat list. |
-| `blob-directory-tree` | A container's directories (`[container]`), emitting the directory chosen (`(selectionChange)`). With `[manage]="false"` it only chooses - no menu, no dragging. |
+| `blob-directory-tree` | A container's directories (`[container]`), emitting the directory chosen (`(selectionChange)`). A caller who may not change the container's directories only chooses one - no menu, no dragging. |
 | `blob-file-list` | The files of a container (`[container]`) or of one of its directories (`[directory]`), read-only, with download. |
 | `blob-file-preview` | A thumbnail, or a type icon, for one file (`src`, `mimeType`, `name`). |
 
@@ -75,9 +75,9 @@ The pages are made of standalone components the library exports, for an applicat
 
 The library also exports:
 
-* the proxies and their DTOs by name: `BlobManagementContainerService`, `BlobManagementDirectoryService`, `BlobManagementFileService` (whose reads the page uses), `BlobManagementUsageService`, `BlobManagementContainerDto`, `BlobManagementDirectoryDto`, `BlobManagementFileDto`, `BlobManagementAccessDto` and the usage DTOs;
-* `BlobManagementFileUrlService` (`toAbsolute`, and `sized` for a public picture at one of the sizes its container serves, chosen with `toBlobManagementPublicSize` from the container's `publicSizes`), `ObjectUrlService`, and the `blobFileSize` pipe;
-* `eBlobManagementPolicyNames` and `eBlobManagementResourceNames`, the permission and resource names the UI uses.
+* from `@dignite/ng.blob-management/proxy`, the proxies and their DTOs by name: `BlobManagementContainerService`, `BlobManagementDirectoryService`, `BlobManagementFileService` (the reads of the management page: a list, one file, its bytes), `BlobManagementUsageService`, `BlobManagementContainerDto`, `BlobManagementDirectoryDto`, `BlobManagementFileDto`, `BlobManagementAccessDto` and the usage DTOs. There is no proxy for storing or changing a file: the [BLOB API and the file API](files.md#the-file-api) are integration services for back ends, which a browser does not call;
+* `BlobManagementFileUrlService` (`toAbsolute`, and `sized` for a public picture at one of the sizes its container serves, chosen with `toBlobManagementPublicSize` from the container's `publicSizes`) and the `blobFileSize` pipe;
+* `eBlobManagementPolicyNames`, from `@dignite/ng.blob-management/config`, and `eBlobManagementResourceNames`: the permission and resource names the UI uses.
 
 ## See Also
 

@@ -76,7 +76,7 @@ A browser does not reach a remote Blob Management for a file that is not public:
 
 ## What Blob Management Does With a File
 
-* **Names.** The file is addressed by the name the application saves it under, which may be a path (`2026/11/photo.png`). Saving a taken name fails with ABP's `BlobAlreadyExistsException` unless `overrideExisting` is set; overwriting replaces the file. Such a file sits at the top of its container, outside any directory, and is never renamed or moved.
+* **Names.** The file is addressed by the name the application saves it under, which may be a path (`2026/11/photo.png`). Saving a taken name fails with ABP's `BlobAlreadyExistsException` unless `overrideExisting` is set; overwriting replaces what the file holds - it stays the same file, with its id - and deletes the bytes it held. Such a file sits at the top of its container, outside any directory, and is never renamed or moved.
 * **Rules.** The application container's contributors run in the application; the managed container's run in Blob Management, on what the application sent. An image the managed container resizes is stored resized.
 * **Type.** The type is detected from the bytes, and a name whose extension the content contradicts is refused (`Dignite.Abp.BlobStoring:ContentTypeMismatch`).
 * **De-duplication.** Bytes already stored in the same managed container, for the same tenant, are not stored again: the new file shares them. Deleting a file deletes its bytes only when no other file shares them.
@@ -98,7 +98,7 @@ await _blobService.SaveAsync(
     creatorId: userId);         // null: the application's current user
 ````
 
-It also has `GetOrNullAsync`, `ExistsAsync` and `DeleteAsync`, by container and name. Over HTTP it is `api/blob-management/blobs/{containerName}`, with the name in `blobName`.
+It also has `GetOrNullAsync`, `ExistsAsync` and `DeleteAsync`, by container and name. Over HTTP it is `integration-api/blob-management/blobs/{containerName}`, with the name in `blobName` - an ABP integration service, which the Blob Management service exposes for back ends ([Hosting](hosting.md#blob-management-as-its-own-service)).
 
 `SaveAsync` takes an optional `sha256` - base64 of the file's SHA-256 - and then [verifies the upload](files.md#verifying-an-upload) against it. Saving through `IBlobContainer` carries no such value and is not checked.
 

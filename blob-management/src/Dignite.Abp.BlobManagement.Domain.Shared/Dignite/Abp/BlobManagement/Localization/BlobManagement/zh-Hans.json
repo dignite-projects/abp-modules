@@ -35,7 +35,7 @@
     "Permission:ManagePermissions": "管理容器的权限",
     "Permission:TenantUsages": "按租户查看用量（仅宿主）",
     "Menu:BlobManagement": "Blob 管理",
-    "Menu:Files": "文件",
+    "Files": "文件",
     "NoContainers": "没有可显示的容器。",
     "NewDirectory": "新建目录",
     "Rename": "重命名",

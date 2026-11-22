@@ -72,6 +72,37 @@ so it stays clear which part of the repository actually moved.
 
 ### Changed
 
+- **blob-management (pre-releases only): a deleted file or directory is removed, and an overriding save keeps the
+  file.** `FileDescriptor` and `DirectoryDescriptor` are no longer soft-deleted - the module has no trash, and a
+  deleted file's bytes are gone - and saving a BLOB over a taken name replaces the content of its descriptor instead
+  of writing a new one, so the file keeps its id. A BLOB is looked up by its name key, never by the name column,
+  whose comparison followed the database's collation. **Migrate** (a project built on `10.7.7-preview.3` or
+  earlier): add a migration, and before it drops `IsDeleted`, `DeleterId` and `DeletionTime` from
+  `BlobFileDescriptors` and `BlobDirectoryDescriptors`, delete the rows marked deleted from both
+  (`DELETE FROM BlobFileDescriptors WHERE IsDeleted = 1`, and the same for the directories): their BLOBs are deleted
+  already, and they would otherwise come back as files. `BlobDirectoryDescriptors.NameKey` becomes required. On
+  MongoDB, delete those documents and drop the `NameKey` index of the directory collection, which is created again
+  without its partial filter. In code, `FileDescriptorManager.CreateAsync`, `UploadAsync` and `FindAsync` are
+  `SaveBlobAsync`, `CreateFileAsync` and `FindBlobAsync`, which take `SaveBlobArgs` and `CreateFileArgs`;
+  `IFileDescriptorRepository.FindByNameAsync` is `FindByNameKeyAsync`; and `@dignite/ng.blob-management` no longer
+  exports `ObjectUrlService`, nor does its directory tree take `manage`.
+- **blob-management (pre-releases only): the BLOB API and the file API are ABP integration services.** They moved
+  from `api/blob-management/blobs` and `api/blob-management/files` to `integration-api/blob-management/blobs` and
+  `integration-api/blob-management/files`, and are hidden unless the host exposes integration services - which a host
+  that installs Blob Management in its own process has no reason to do. The file API now admits a granted client and
+  no one else; what a holder of `BlobManagement.Containers` reads at the management page is a service of its own,
+  `IBlobManagementFileAppService`, at `api/blob-management/files` (a list, one file, its bytes). **Migrate** (a
+  project built on `10.7.7-preview.3` or earlier): a Blob Management that runs as its own service sets
+  `AbpAspNetCoreMvcOptions.ExposeIntegrationServices = true`, and its gateway keeps `/integration-api/blob-management`
+  for back ends; the applications take the new `Dignite.Abp.BlobManagement.HttpApi.Client`, whose proxies call the new
+  paths - code that injects `IBlobManagementBlobService` or `IBlobManagementFileService` does not change. The contracts
+  the API runs are `IBlobManagementBlobIntegrationService` and `IBlobManagementFileIntegrationService` (they were
+  `IBlobManagementBlobAppService` and `IBlobManagementFileAppService`, a name the management page's reads now have).
+  In `@dignite/ng.blob-management`, the proxies are imported from `@dignite/ng.blob-management/proxy` and
+  `eBlobManagementPolicyNames` from `@dignite/ng.blob-management/config`; the proxies of the BLOB API and of the file
+  API's writes are gone, since a browser cannot call them; and the menu text of the files page is the `Files` key of
+  the `BlobManagement` resource (it was `Menu:Files`).
+
 #### blob-storing
 
 - **The pipeline's own copies spill to disk.** `EnsureSeekableAsync` (the allowed content types, the image contributors)

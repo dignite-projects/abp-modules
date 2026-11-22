@@ -7,21 +7,23 @@ using Volo.Abp.Domain.Repositories;
 namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
-/// The descriptors of the current tenant. Every query sees live descriptors only (ABP's soft-delete filter).
+/// The descriptors of the current tenant. A deleted descriptor is gone: there is no deleted row for a query to skip.
 /// </summary>
 public interface IFileDescriptorRepository : IBasicRepository<FileDescriptor, Guid>
 {
     /// <summary>
-    /// The live descriptor an application saved under <paramref name="name"/> in <paramref name="containerName"/>, if
-    /// any: a file addressed by its name. An uploaded file of the same name is not it.
+    /// The descriptor that holds <paramref name="nameKey"/> (<see cref="FileDescriptor.CreateNameKey"/>), if any:
+    /// the file an application saved under that name, in that container and tenant. Found by the key, never by the
+    /// name column - the key is what the database keeps unique, and comparing names would follow the database's
+    /// collation, which on some servers ignores case. A file kept by id holds no key, so one of the same name is not
+    /// it.
     /// </summary>
-    Task<FileDescriptor?> FindByNameAsync(
-        string containerName,
-        string name,
+    Task<FileDescriptor?> FindByNameKeyAsync(
+        string nameKey,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// The bytes the current tenant stores: the sum of the <see cref="FileDescriptor.Size"/> of its live descriptors,
+    /// The bytes the current tenant stores: the sum of the <see cref="FileDescriptor.Size"/> of its descriptors,
     /// each of which has a BLOB of its own.
     /// </summary>
     Task<long> GetUsedStorageSizeAsync(CancellationToken cancellationToken = default);
@@ -69,7 +71,7 @@ public interface IFileDescriptorRepository : IBasicRepository<FileDescriptor, Gu
     Task<long> GetTenantCountAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// The live, confirmed public descriptor kept by id (no name key) of the container whose physical BLOB is
+    /// The confirmed public descriptor kept by id (no name key) of the container whose physical BLOB is
     /// <paramref name="blobName"/>, if any - the public address of a file kept by id names its BLOB.
     /// </summary>
     Task<FileDescriptor?> FindPublicByBlobNameAsync(
@@ -100,11 +102,11 @@ public interface IFileDescriptorRepository : IBasicRepository<FileDescriptor, Gu
         string? filter = null,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Whether a live file is filed in <paramref name="directoryId"/>.</summary>
+    /// <summary>Whether a file is filed in <paramref name="directoryId"/>.</summary>
     Task<bool> AnyInDirectoryAsync(Guid directoryId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// The live files of the current tenant still pending (<see cref="FileDescriptor.IsPending"/>) that were created
+    /// The files of the current tenant still pending (<see cref="FileDescriptor.IsPending"/>) that were created
     /// before <paramref name="createdBefore"/>, oldest first, at most <paramref name="maxResultCount"/> of them.
     /// </summary>
     Task<List<FileDescriptor>> GetExpiredPendingListAsync(
@@ -113,7 +115,7 @@ public interface IFileDescriptorRepository : IBasicRepository<FileDescriptor, Gu
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// The uploaded files of <paramref name="containerName"/> filed in no directory - not the ones addressed by a name
+    /// The files kept by id in <paramref name="containerName"/> that are filed in no directory - not the ones addressed by a name
     /// - by id, a page at a time.
     /// </summary>
     Task<List<FileDescriptor>> GetUnfiledListAsync(

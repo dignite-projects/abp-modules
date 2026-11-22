@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.Mapperly" />
     <PackageReference Include="Volo.Abp.Ddd.Application" />
     <!-- Only for IExternalUserLookupServiceProvider (BlobManagementUsageAppService); resolved optionally, no module dependency. -->
     <PackageReference Include="Volo.Abp.Users.Abstractions" />

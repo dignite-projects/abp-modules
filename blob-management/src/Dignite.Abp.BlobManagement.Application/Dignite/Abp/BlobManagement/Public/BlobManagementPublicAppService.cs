@@ -51,9 +51,14 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
     }
 
     /// <summary>
-    /// One lookup per read: where a file's name is its address a file can be overwritten between
-    /// two lookups, and a response built from both would carry the old file's tag and type with the new file's bytes.
-    /// The tag, the not-modified decision, the information and the bytes all come from the one descriptor found here.
+    /// One descriptor per answer: where a file's name is its address a file can be saved over between two lookups, and
+    /// a response built from both would carry the old file's tag and type with the new file's bytes. The tag, the
+    /// not-modified decision, the information and the bytes all come from the one descriptor an answer is built on.
+    /// <para>
+    /// A save that lands between the lookup and the read of the bytes deletes the BLOB that was found. The file is
+    /// not missing then: it is looked up once more, and the whole answer is built again from the descriptor it has
+    /// now (<see cref="FileDescriptorManager.FindReplacedBlobAsync"/>).
+    /// </para>
     /// </summary>
     [UnitOfWork(isTransactional: false)]
     public virtual async Task<BlobManagementPublicReadResult> ReadAsync(
@@ -66,6 +71,29 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
         CheckSize(containerName, input);
 
         var (file, name) = await GetPublicFileAsync(containerName, blobName);
+        var result = await ReadAsync(file, name, input, request);
+        if (result == null)
+        {
+            var replaced = await FileDescriptorManager.FindReplacedBlobAsync(file);
+            if (replaced is { IsPublic: true })
+            {
+                result = await ReadAsync(replaced, replaced.Name, input, request);
+            }
+        }
+
+        return result ?? throw new EntityNotFoundException(typeof(FileDescriptor), file.Id);
+    }
+
+    /// <summary>
+    /// The answer built on <paramref name="file"/> alone, or <c>null</c> when its bytes are wanted and its BLOB is
+    /// missing from storage.
+    /// </summary>
+    protected virtual async Task<BlobManagementPublicReadResult?> ReadAsync(
+        FileDescriptor file,
+        string name,
+        BlobManagementPublicReadInput input,
+        BlobManagementPublicReadRequest request)
+    {
         var result = new BlobManagementPublicReadResult
         {
             File = new BlobManagementPublicFileDto
@@ -92,8 +120,8 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
             return result;
         }
 
-        result.Content = await GetContentAsync(file, name, input);
-        return result;
+        result.Content = await GetContentOrNullAsync(file, name, input);
+        return result.Content == null ? null : result;
     }
 
     /// <summary>
@@ -130,12 +158,15 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
     /// <summary>
     /// The bytes of <paramref name="file"/> - the very descriptor the read was decided on - or the picture resized when
     /// <paramref name="input"/> asks for a size - under <paramref name="name"/>, the name the address answers with
-    /// (see <see cref="GetPublicFileAsync"/>). A BLOB missing from storage is <see cref="EntityNotFoundException"/>.
+    /// (see <see cref="GetPublicFileAsync"/>); <c>null</c> when the BLOB is missing from storage.
     /// </summary>
-    protected virtual async Task<IRemoteStreamContent> GetContentAsync(FileDescriptor file, string name, BlobManagementPublicReadInput input)
+    protected virtual async Task<IRemoteStreamContent?> GetContentOrNullAsync(FileDescriptor file, string name, BlobManagementPublicReadInput input)
     {
-        var stream = await FileDescriptorManager.GetStreamOrNullAsync(file)
-                     ?? throw new EntityNotFoundException(typeof(FileDescriptor), file.Id);
+        var stream = await FileDescriptorManager.GetStreamOrNullAsync(file);
+        if (stream == null)
+        {
+            return null;
+        }
 
         int? width = input.Width > 0 ? input.Width : null;
         int? height = input.Height > 0 ? input.Height : null;
@@ -217,7 +248,7 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
     {
         try
         {
-            var saved = await FileDescriptorManager.FindAsync(containerName, blobName);
+            var saved = await FileDescriptorManager.FindBlobAsync(containerName, blobName);
             if (saved is { IsPublic: true })
             {
                 return (saved, saved.Name);

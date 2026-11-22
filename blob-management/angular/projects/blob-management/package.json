@@ -17,7 +17,6 @@
     "@angular/core": "^22.0.0",
     "@angular/forms": "^22.0.0",
     "@angular/router": "^22.0.0",
-    "@ng-bootstrap/ng-bootstrap": "~20.0.0",
     "@ngx-validate/core": "^0.2.0",
     "@swimlane/ngx-datatable": "~22.0.0",
     "rxjs": "~7.8.0"

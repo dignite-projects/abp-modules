@@ -35,7 +35,7 @@
     "Permission:ManagePermissions": "Zarządzanie uprawnieniami do kontenerów",
     "Permission:TenantUsages": "Wyświetlaj użycie według dzierżawców (tylko host)",
     "Menu:BlobManagement": "Zarządzanie obiektami BLOB",
-    "Menu:Files": "Pliki",
+    "Files": "Pliki",
     "NoContainers": "Brak kontenerów do wyświetlenia.",
     "NewDirectory": "Nowy folder",
     "Rename": "Zmień nazwę",

@@ -17,6 +17,7 @@ One host installs Blob Management ([Setting Up](setting-up.md)) and the modules 
 
 * Install `Dignite.Abp.BlobManagement.Application`, `Dignite.Abp.BlobManagement.HttpApi` (for public reads, the browser's uploads with a ticket and reads with a link, and the APIs the management page calls) and the database provider; call `ConfigureBlobManagement()` in the migrations `DbContext`.
 * Leave `AbpBlobStoringBlobManagementOptions.PublicBaseUrl` empty: public addresses, upload addresses and read links are relative to the host.
+* Leave ABP's integration services hidden, as they are by default. The BLOB API and the file API (`/integration-api/blob-management/*`) are [integration services](https://abp.io/docs/latest/framework/api-development/integration-services): in this mode the provider and the file service call Blob Management in process, and nothing reaches it over them.
 * Upload tickets and read links are signed with the host's [Data Protection](#data-protection) key ring, which an ABP host already persists for its cookies when it runs more than one instance.
 
 This is the simplest mode, and the one to start with.
@@ -29,9 +30,10 @@ A business system joins in three steps: the authorization server registers its O
 
 What this mode needs:
 
+* **Integration services exposed.** The BLOB API and the file API are ABP integration services, hidden unless the host says otherwise: the service's host sets `AbpAspNetCoreMvcOptions.ExposeIntegrationServices = true`. They are for the applications' back ends - each call is still authorized as an OAuth client granted the container - and are not audit-logged unless the host sets `AbpAuditingOptions.IsEnabledForIntegrationServices`.
 * **One authorization server.** The applications get client-credentials tokens from it, and Blob Management validates them (the service is an API resource of it). Each application is an OAuth client, granted the files of the containers it uses. The token reaches every tenant - the proxies name the tenant of each call - so it never leaves the application's back end.
 * **Tenants.** The proxies send the tenant with each call; the service must resolve it (ABP's header and query-string resolvers do, by default) and know the same tenants - in an ABP microservice solution, from the shared tenant management data. Behind a gateway, the gateway passes the tenant header on. The browser's uploads and reads name no tenant: their ticket or link does.
-* **Routes.** The gateway routes two prefixes to the service: `/api/blob-management/*` - the BLOB and file APIs, the container, directory and usage APIs, the uploads with a ticket and the reads with a link - and **`/blobs/*`**, the public reads.
+* **Routes.** The gateway routes two prefixes to the service for browsers: `/api/blob-management/*` - the container, directory, usage and file-reading APIs of the management page, the uploads with a ticket and the reads with a link - and **`/blobs/*`**, the public reads. The applications' back ends reach **`/integration-api/blob-management/*`** - the BLOB and file APIs - at the service itself or through a route for back ends only; a gateway that browsers reach does not route that prefix.
 * **The public address.** Set `AbpBlobStoringBlobManagementOptions.PublicBaseUrl` in the applications to the service's (or the gateway's) public address, so the addresses they build for browsers reach it. A file's `url`, a ticket's `uploadUrl` and a link's `url` are relative to that address as well: the application puts it in front before it hands them to a browser.
 * **Data Protection.** See [below](#data-protection).
 * **CORS.** A browser uploads to the service from the business system's pages, a cross-origin `POST` with a body: the service's CORS policy allows those origins (`App:CorsOrigins` in an ABP host) on `/api/blob-management/uploads/*`. Reads with a link and public reads are plain `GET`s an `<img>` or a link makes, and need no CORS unless a script fetches them.

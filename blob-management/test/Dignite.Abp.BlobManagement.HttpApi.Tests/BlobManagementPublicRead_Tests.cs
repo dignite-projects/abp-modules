@@ -26,14 +26,14 @@ public class BlobManagementPublicRead_Tests : AbpWebApplicationFactoryIntegrated
     private readonly IBlobContainerFactory _blobContainerFactory;
     private readonly IBlobManagementPublicUrlBuilder _urlBuilder;
     private readonly ICurrentTenant _currentTenant;
-    private readonly BlobManagementFileClientProxy _files;
+    private readonly BlobManagementFileIntegrationClientProxy _files;
 
     public BlobManagementPublicRead_Tests()
     {
         _blobContainerFactory = GetRequiredService<IBlobContainerFactory>();
         _urlBuilder = GetRequiredService<IBlobManagementPublicUrlBuilder>();
         _currentTenant = GetRequiredService<ICurrentTenant>();
-        _files = GetRequiredService<BlobManagementFileClientProxy>();
+        _files = GetRequiredService<BlobManagementFileIntegrationClientProxy>();
     }
 
     [Fact]
@@ -252,7 +252,7 @@ public class BlobManagementPublicRead_Tests : AbpWebApplicationFactoryIntegrated
     }
 
     [Fact]
-    public async Task A_Type_Outside_The_Drives_List_Should_Be_Served_As_An_Attachment()
+    public async Task A_Type_Outside_The_Modules_File_Types_Should_Be_Served_As_An_Attachment()
     {
         await StoreAsync("data.bin", new byte[] { 0x00, 0x01, 0x02, 0x7F, 0x80, 0xFE, 0xFF, 0x10 });
 

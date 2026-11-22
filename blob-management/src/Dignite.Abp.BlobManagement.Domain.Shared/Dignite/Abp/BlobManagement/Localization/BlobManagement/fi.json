@@ -35,7 +35,7 @@
     "Permission:ManagePermissions": "Hallitse säilöjen käyttöoikeuksia",
     "Permission:TenantUsages": "Näytä käyttö vuokralaisittain (vain isäntä)",
     "Menu:BlobManagement": "Blob-hallinta",
-    "Menu:Files": "Tiedostot",
+    "Files": "Tiedostot",
     "NoContainers": "Näytettäviä säilöjä ei ole.",
     "NewDirectory": "Uusi kansio",
     "Rename": "Nimeä uudelleen",

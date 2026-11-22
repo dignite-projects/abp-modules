@@ -26,7 +26,10 @@ is for, who calls it, usage; the user-facing file API and restricted directories
 edition, one kind of container, the names). What they kept of the storage tier was decided in
 [`dev-docs/drive-decision.md`](dev-docs/drive-decision.md), which is history and keeps the names the module had then
 (`Dignite.Drive.*`, Drive Pro); the plan it followed is
-[issue #379](https://github.com/dignite-projects/abp-modules/issues/379).
+[issue #379](https://github.com/dignite-projects/abp-modules/issues/379). What a descriptor is today - hard-deleted,
+saved over in place, the BLOB API and the file API as integration services - was decided in
+[`dev-docs/design-review-decision.md`](dev-docs/design-review-decision.md) (2026-11-22), which amends the records above
+where it says so at their tops.
 
 **What is built**
 
@@ -38,8 +41,9 @@ edition, one kind of container, the names). What they kept of the storage tier w
   `UseBlobManagementContainer` beside the storage provider, never in `appsettings.json` (removed 2026-11-21: a host
   cannot be without code anyway, since the provider is configured in code);
   `IBlobManagementBlobService` with its in-process implementation, and the provider (`BlobManagementBlobProvider`,
-  `UseBlobManagement`); the BLOB API (`BlobManagementBlobController`, `BlobManagementBlobAppService`,
-  `BlobManagementClientChecker`) and its C# client proxies
+  `UseBlobManagement`); the BLOB API, an ABP integration service (`IBlobManagementBlobIntegrationService`,
+  `BlobManagementBlobIntegrationController` at `integration-api/blob-management/blobs`,
+  `BlobManagementBlobIntegrationService`, `BlobManagementClientChecker`) and its C# client proxies
   (`RemoteBlobManagementBlobService`); public reads with sizing at `/blobs` of the files marked public
   (`FileDescriptor.IsPublic`; `BlobManagementPublicController`, `BlobManagementPublicAppService`,
   `IBlobManagementPublicUrlBuilder`). The public read and the read with a link share `BlobManagementFileReadController`:
@@ -50,9 +54,10 @@ edition, one kind of container, the names). What they kept of the storage tier w
   where the host runs `app.UseRateLimiter()` after routing.
 - Files by id, for a business system: `IBlobManagementFileService` (list a place, one file, bytes, store, rename,
   move, mark public, delete; upload tickets and confirmation; read links) with its trusted in-process implementation
-  (`BlobManagementFileService`), the file API behind it (`IBlobManagementFileAppService`, `api/blob-management/files`:
-  a granted client for everything, a user with the management permission for the reads) and the remote implementation
-  (`RemoteBlobManagementFileService`).
+  (`BlobManagementFileService`), the file API behind it (`IBlobManagementFileIntegrationService`, `integration-api/blob-management/files`:
+  an ABP integration service, for a granted client only) and the remote implementation
+  (`RemoteBlobManagementFileService`); what a user with the management permission reads at the management page is
+  `IBlobManagementFileAppService` (`api/blob-management/files`: list, one, bytes).
 - For the browser, signed with Data Protection (`BlobManagementTicketProtector`): the anonymous upload with a ticket
   (`BlobManagementUploadController`, `BlobManagementUploadAppService`, `api/blob-management/uploads/{ticket}`), whose
   file is pending until confirmed and deleted by `BlobManagementPendingFileCleanupWorker` if never; the anonymous read
@@ -74,8 +79,10 @@ edition, one kind of container, the names). What they kept of the storage tier w
   The parts are `blob-browser`, `blob-directory-tree`, `blob-file-list` and `blob-file-preview`; the proxies.
 - The texts are in 25 cultures; the user documentation is in `docs/en/blob-management/`.
 
-Nothing is published: the packages are not packable by default (`Directory.Build.props`, until the owner releases the
-module), so no release ships them, and CI passes `-p:PackBlobManagement=true` to keep verifying how they pack.
+There is no stable release: the packages are not packable by default (`Directory.Build.props`, until the owner
+releases the module), so a stable release ships none of them. Pre-releases opt in (`release.yml` packs with
+`-p:PackBlobManagement=true`, since 2026-11-19) and put them on GitHub Packages for this organization's own projects,
+which build against them; CI opts in too, to keep verifying how they pack.
 
 ## Structure
 
@@ -103,17 +110,21 @@ One `.slnx` — `Dignite.Abp.BlobManagement.slnx`:
   `dotnet run --project host/Dignite.Abp.BlobManagement.Host`. Its own `Directory.Build.props` /
   `Directory.Packages.props` opt it out of the repo-root central package management. It installs the module in-process
   (Application, HttpApi, EF Core; its containers are declared in `HostModule.ConfigureBlobStoring`); its migrations are in `Migrations/`. It is
-  also where the C# client proxies come from: with the host running (`abp install-libs` in its folder first), run
+  also where the C# client proxies come from - which is why it sets `ExposeIntegrationServices`, though a host that
+  installs the module in process has no caller for the integration services: with the host running (`abp install-libs` in its folder first), run
   `abp generate-proxy -t csharp -u https://localhost:44352 -m blobManagement --without-contracts` in
   `src/Dignite.Abp.BlobManagement.HttpApi.Client`.
 - **`angular/`** — one workspace that is both the Angular host app (`src/`) and the publishable
-  `@dignite/ng.blob-management` library (`projects/blob-management`); npm only, not in the `.slnx`. The library has two
-  entry points: the main one (`src/public-api.ts`: components, routes, proxies, services) and
-  `@dignite/ng.blob-management/config` (`provideBlobManagementConfig()`: the menu item and route name), as ABP's own
-  libraries split them. `projects/dev-app` is the *source project* for generating the library's proxies:
-  `abp generate-proxy -t ng -m blobManagement --source dev-app --target blob-management` (Host's root namespace is
-  `Dignite.Abp.BlobManagement.Host`, which would leave the module's types under an extra `dignite/abp/blob-management`
-  folder). Keep `Host` the first application in `angular.json`; the ABP Studio run profile generates the Host's own
+  `@dignite/ng.blob-management` library (`projects/blob-management`); npm only, not in the `.slnx`. The library has three
+  entry points, as ABP's own libraries split them: the main one (`src/public-api.ts`: components, routes, services),
+  `@dignite/ng.blob-management/config` (`provideBlobManagementConfig()`: the menu items, the route names and the
+  policy names) and `@dignite/ng.blob-management/proxy` (the generated proxies, exported by name from the hand-written
+  `proxy/src/public-api.ts` - a proxy that is generated anew has to be added there). `projects/dev-app` is the *source
+  project* for generating the library's proxies, into `proxy/src/proxy/`:
+  `abp generate-proxy -t ng -m blobManagement --source dev-app --target blob-management --entry-point proxy` (Host's
+  root namespace is `Dignite.Abp.BlobManagement.Host`, which would leave the module's types under an extra
+  `dignite/abp/blob-management` folder). ABP generates Angular proxies for application services only, so the
+  integration services - the BLOB API and the file API - have none: a browser does not call them. Keep `Host` the first application in `angular.json`; the ABP Studio run profile generates the Host's own
   proxies without `--source`.
 
 Namespace-mirrored files: `<Project>/<namespace path>/File.cs`, `<RootNamespace/>` empty (the test projects keep the
@@ -123,7 +134,7 @@ imports the root one, so the lockstep `<Version>` applies.
 ## What a change must not break
 
 1. **Two ways in, one table, both an application's.** It saves a BLOB under a name (the provider,
-   `api/blob-management/blobs/...`): the name is its address, unique among the container's live files. Or it keeps a
+   `api/blob-management/blobs/...`): the name is its address, unique among the container's files. Or it keeps a
    file by its id for its user (`IBlobManagementFileService`, `api/blob-management/files`): the name may repeat, and
    the file can be filed in a directory, renamed and moved. Both are `FileDescriptor` rows of any managed container;
    the difference is the file's (`IsAddressedByName`), not the container's. There is one kind of container - `Kind`
@@ -132,8 +143,12 @@ imports the root one, so the lockstep `<Version>` applies.
    a file through the module by a permission of theirs: an application's rules run in the application, before it
    calls. The BLOB API and the file API authorize *clients* by ABP's resource permission
    `BlobManagement.Container.Files` granted to the client (provider `C`, defined on the host side) on the container -
-   ABP's own mechanism, not a list of this module's - and reject any token that carries a user id for a write; the file
-   API's reads also admit a user who holds the management permission - the management page - and nothing more. A
+   ABP's own mechanism, not a list of this module's - and reject any token that carries a user id. Both are ABP
+   integration services (`/integration-api/blob-management`): hidden unless the host exposes them
+   (`ExposeIntegrationServices`), which a Blob Management running as its own service does and a host that installs it
+   in process does not - and never a browser's to call. A user reads files only through the management page's own
+   service (`IBlobManagementFileAppService`, `api/blob-management/files`: list, one, bytes), with the management
+   permission, and changes none. A
    browser comes in only with what a granted client asked for on its behalf: an upload ticket or a read link, which
    the module alone signs and verifies (Data Protection; the keys never leave it) and which carry the tenant, the file
    and the user. A file uploaded with a ticket is pending until its business system confirms it. No bridging to
@@ -152,14 +167,22 @@ imports the root one, so the lockstep `<Version>` applies.
    authorized by the host-side permission alone, never by a `CurrentTenant.Id == null` check beside another permission.
 4. **Authorization lives in application services only** (`[Authorize]` on the class, `BlobManagementAccessService` and
    `BlobManagementClientChecker` in methods); domain services never check. The in-process `IBlobManagementBlobService`
-   and `IBlobManagementFileService` are trusted and never exposed over HTTP.
+   and `IBlobManagementFileService` are trusted and never exposed over HTTP. The services that
+   authorize do not inherit from the trusted ones: they share the protected helpers of a base without public methods
+   (`BlobManagementBlobServiceBase`, `BlobManagementFileServiceBase`), so a method added to a contract has to be
+   written - and its caller authorized - in each (`BlobManagementServiceShape_Tests`).
 5. **Directories exist only where the container allows them** (`AllowDirectories`, default `false`): every directory
    operation elsewhere fails with `BlobManagement:DirectoriesNotAllowed`, and a file there has no directory. A file
    addressed by name is never renamed or moved (`BlobManagement:FileAddressedByName`).
 6. **Every BLOB has one `FileDescriptor`, and every descriptor its own BLOB.** Two files never share stored bytes, even
    when they hold the same content: no content dedup, no lock or key for it, no "is this BLOB still in use" - a BLOB is
    removed with its descriptor, after commit ([`dev-docs/peer-comparison.md`](dev-docs/peer-comparison.md) §1: no
-   peer shares bytes between files, and sharing cost locks, two measures of usage and shared public addresses). Usage
+   peer shares bytes between files, and sharing cost locks, two measures of usage and shared public addresses). A
+   descriptor that is deleted is removed, not marked: no soft delete, on files or on directories - there is no trash
+   (item 10), and bytes that are gone restore nothing. Saving over a taken name replaces the content of its one row
+   (`FileDescriptor.ReplaceContent`): the file keeps its id and its name key, which it holds for as long as it exists
+   and by which - never by the name column, whose comparison is the database collation's - it is found; the BLOB it
+   had is deleted after commit, and a BLOB written in a unit of work that then rolls back is deleted with it. Usage
    is computed from this table, in the current tenant, in one measure, **stored bytes**: the sizes of the descriptors.
    The containers, the users and the clients each add up to the tenant, and the allocation - the tenant's only - is
    checked against it. A file's public address is its name when it is addressed by name, else its physical BLOB name,
@@ -179,8 +202,8 @@ imports the root one, so the lockstep `<Version>` applies.
     it lives minutes); an application that needs them has ABP's File Management. Neither is a file UI
     for end users - the management page reads - nor tools for an AI assistant: a business system contributes its own
     MCP tools, which know the record a file belongs to, and calls the file service from them.
-11. **Names are contracts once published** (nothing is yet): the package IDs, `@dignite/ng.blob-management`, the
-    permission and feature group `BlobManagement`, the permission names, the remote service name, `api/blob-management`,
+11. **Names are contracts once published** (only pre-releases are so far): the package IDs, `@dignite/ng.blob-management`, the
+    permission and feature group `BlobManagement`, the permission names, the remote service name, `api/blob-management`, `integration-api/blob-management`,
     `/blobs` (the public read prefix, `BlobManagementPublicUrl.RoutePrefix`), the `Blob` table prefix and the
     `BlobManagement` connection string name, the Data Protection purposes of tickets and links, and the class a
     resource permission is granted on (its resource name is that type's

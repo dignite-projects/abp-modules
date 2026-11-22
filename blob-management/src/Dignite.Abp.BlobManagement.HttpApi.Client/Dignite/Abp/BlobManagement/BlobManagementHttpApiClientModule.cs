@@ -16,14 +16,16 @@ public class BlobManagementHttpApiClientModule : AbpModule
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         // Static proxies (ClientProxies/, generated with `abp generate-proxy -t csharp -m blobManagement --without-contracts`
-        // against blob-management/host), as ABP's own modules ship them.
+        // against blob-management/host, which exposes the integration services for it), as ABP's own modules ship them.
         context.Services.AddStaticHttpClientProxies(
             typeof(BlobManagementApplicationContractsModule).Assembly,
             BlobManagementRemoteServiceConsts.RemoteServiceName
         );
 
-        // What the BLOB storing provider and a business system's file library resolve: the proxies, behind the
-        // in-process services' contracts.
+        // What the BLOB storing provider and a business system's file library resolve: the proxies of the integration
+        // services, behind the in-process services' contracts. Replaced here, after this assembly's types were
+        // registered: a generated proxy registers itself under the contract its methods are declared in - the same
+        // IBlobManagementBlobService and IBlobManagementFileService - and these must be what a caller gets.
         context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementBlobService, RemoteBlobManagementBlobService>());
         context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementFileService, RemoteBlobManagementFileService>());
 
