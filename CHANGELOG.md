@@ -117,6 +117,18 @@ so it stays clear which part of the repository actually moved.
 
 ### Fixed
 
+- **The pre-release npm packages that import their own secondary entry points could not be built by a consumer.**
+  `@dignite-projects/ng.blob-management@10.7.7-preview.4` failed in the consumer's `ng build` with
+  `Could not resolve "@dignite/ng.blob-management/config"` (and `/proxy`). The GitHub Packages copy of a package is
+  renamed from `@dignite/ng.x` to `@dignite-projects/ng.x`, but its code kept importing its own entry points by the old
+  name, which no installed package has: the primary entry imports `/config` and `/proxy`, the first of which it had not
+  done before `10.7.7-preview.4`. `@dignite-projects/ng.notification-center` had the same defect in its `/config` entry,
+  which imports the primary one. The pre-release rewrite (`build/rewrite-for-github-packages.mjs`) now rewrites the import specifiers
+  that name the package itself in the `.mjs` and `.d.ts` files too, fails the release step when a subpath it rewrites is
+  not in the package's `exports`, and fails when a string that names the package is left over. **Use `10.7.7-preview.5`**:
+  GitHub Packages cannot overwrite a published version, so `preview.4` stays as it was published. The stable `@dignite/*`
+  packages on npmjs are not rewritten and were not affected.
+
 #### blob-storing
 
 - **The image resize contributor measures a photo as it is displayed.** It compared the box and the minimum with the
