@@ -52,7 +52,7 @@ A role keeps the directories of a container by the grants above alone: `BlobMana
 | Manage the grants on a container | `BlobManagement.ManagePermissions` |
 
 * The answer is the **container's**, the same for every directory in it: no directory has permissions of its own, and no file has any.
-* The **list of containers** is those the caller holds `BlobManagement.Containers` for, or any grant on. **One container's limits**, by its name, are read by every signed-in user.
+* The **list of containers** is those the caller holds `BlobManagement.Containers` for, or any grant on. **One container's limits**, by its name, are read by every signed-in user, and by an application's client, for its back end's file input or its own tools; a client's `access` is none.
 * A token without a user is allowed none of the user's rows, and a token with one - whichever client it came from - none of the application's. Nobody is allowed any of them while the tenant's Blob Management is off ([The Tenant Feature](files.md#the-tenant-feature)).
 
 Each request asks the grant store once for each container it answers about, never once per directory or file. What the caller may do with a container's directories is sent with every container as `access`.

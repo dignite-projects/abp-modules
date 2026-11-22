@@ -245,10 +245,22 @@ public abstract class BlobManagementFiles_Tests<TStartupModule> : BlobManagement
     [Fact]
     public async Task A_Container_Should_Tell_What_It_Takes_And_What_The_Caller_May_Do_With_Its_Directories()
     {
-        // The container service serves users: a client reads a container's limits from its own configuration.
+        // The list serves users. One container's limits are a client's too - a business system's back end builds the file
+        // input - with no access to its directories, which are users'.
         using (AsClient(Client))
         {
             await Should.ThrowAsync<AbpAuthorizationException>(() => _containers.GetListAsync());
+
+            var documents = await _containers.GetAsync(BlobManagementTestContainers.Documents);
+            documents.MaxFileSize.ShouldBeGreaterThan(0);
+            documents.AllowDirectories.ShouldBeTrue();
+            documents.Access.View.ShouldBeFalse();
+            documents.Access.CreateDirectories.ShouldBeFalse();
+            documents.Access.UpdateDirectories.ShouldBeFalse();
+            documents.Access.DeleteDirectories.ShouldBeFalse();
+
+            var unknown = await Should.ThrowAsync<BusinessException>(() => _containers.GetAsync(BlobManagementTestContainers.NotManaged));
+            unknown.Code.ShouldBe(BlobManagementErrorCodes.ContainerNotFound);
         }
 
         // Open to every signed-in user: a business system's file input needs the limits before it offers an upload.
