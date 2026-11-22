@@ -25,20 +25,21 @@ public static class BlobManagementDbContextModelCreatingExtensions
             b.Property(f => f.ClientId).HasMaxLength(FileDescriptorConsts.MaxClientIdLength);
 
             b.Property(f => f.NameKey).HasMaxLength(FileDescriptorConsts.MaxNameKeyLength);
-            // The address of a file an application saved, as an arbiter (FileDescriptorManager.CreateAsync): one live
-            // descriptor per tenant, container and name. A plain unique index on a nullable column, not a filtered one,
-            // so it works on every EF Core provider: only live descriptors addressed by their name carry a key, and rows
-            // without one do not collide (EF Core adds the IS NOT NULL filter on SQL Server by itself).
+            // The address of a file an application saved, and the arbiter of it (FileDescriptorManager.CreateAsync): one
+            // descriptor per tenant, container and name. The provider reads, overwrites and deletes by it. A plain
+            // unique index on a nullable column, not a filtered one, so it works on every EF Core provider: a file kept
+            // by id has no key, and rows without one do not collide (EF Core adds the IS NOT NULL filter on SQL Server
+            // by itself).
             b.HasIndex(f => f.NameKey).IsUnique();
 
-            // The address of a file an application saved: the provider reads, overwrites and deletes by name.
-            b.HasIndex(f => new { f.TenantId, f.ContainerName, f.Name });
             // The public address of a file kept by id: its BLOB.
             b.HasIndex(f => new { f.TenantId, f.ContainerName, f.BlobName });
-            // The listing of one place: a container's top, or a directory.
-            b.HasIndex(f => new { f.TenantId, f.ContainerName, f.DirectoryId });
+            // The listing of one place - a container's top, or a directory - sorted by name.
+            b.HasIndex(f => new { f.TenantId, f.ContainerName, f.DirectoryId, f.Name });
             // "Is anything filed here" - asked on every directory delete, by directory alone.
             b.HasIndex(f => f.DirectoryId);
+            // The pending files of a tenant uploaded before a time, oldest first: the cleanup of abandoned uploads.
+            b.HasIndex(f => new { f.TenantId, f.IsPending, f.CreationTime });
         });
 
         builder.Entity<DirectoryDescriptor>(b =>
@@ -49,11 +50,10 @@ public static class BlobManagementDbContextModelCreatingExtensions
             b.Property(d => d.ContainerName).IsRequired().HasMaxLength(FileDescriptorConsts.MaxContainerNameLength);
             b.Property(d => d.Name).IsRequired().HasMaxLength(DirectoryDescriptorConsts.MaxNameLength);
             b.Property(d => d.Path).IsRequired().HasMaxLength(DirectoryDescriptorConsts.MaxPathLength);
-            b.Property(d => d.NameKey).HasMaxLength(DirectoryDescriptorConsts.NameKeyLength);
+            b.Property(d => d.NameKey).IsRequired().HasMaxLength(DirectoryDescriptorConsts.NameKeyLength);
 
-            // Sibling names, as an arbiter: one live directory per tenant, container, parent and name. A plain unique
-            // index on a nullable column, as the file table's keys: a deleted directory's key is cleared, and rows
-            // without one do not collide.
+            // Sibling names, as an arbiter: one directory per tenant, container, parent and name. Every directory holds
+            // its key; a deleted one is gone with it.
             b.HasIndex(d => d.NameKey).IsUnique();
 
             // One level of a container's tree.

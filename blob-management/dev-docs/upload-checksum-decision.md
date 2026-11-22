@@ -1,5 +1,8 @@
 # Upload checksum: verified when the caller sends one (2026-11-20)
 
+> The paths below that name the BLOB API and the file API (`api/blob-management/blobs`, `.../files`) are
+> `integration-api/blob-management/...` since 2026-11-22 ([`design-review-decision.md`](design-review-decision.md)).
+
 > Partly replaces [`peer-comparison.md`](peer-comparison.md) (2026-11-14), which kept the SHA-256 on every file "as an
 > `ETag` and for a duplicate check if a business system asks for one". The code never used it as an `ETag` (the `ETag`
 > is the file's physical BLOB name), nothing queries by it, and its index went with `DedupKey`. What is written there

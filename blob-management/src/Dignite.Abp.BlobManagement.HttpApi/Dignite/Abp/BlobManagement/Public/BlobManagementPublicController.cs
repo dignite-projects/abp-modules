@@ -40,9 +40,9 @@ public class BlobManagementPublicController : BlobManagementFileReadController
 
     protected IBlobManagementPublicAppService BlobManagementPublicAppService { get; }
 
-    public BlobManagementPublicController(IBlobManagementPublicAppService drivePublicAppService)
+    public BlobManagementPublicController(IBlobManagementPublicAppService publicAppService)
     {
-        BlobManagementPublicAppService = drivePublicAppService;
+        BlobManagementPublicAppService = publicAppService;
     }
 
     [HttpGet]

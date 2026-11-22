@@ -46,24 +46,10 @@ namespace Dignite.Abp.BlobManagement.Host.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("CreatorId");
 
-                    b.Property<Guid?>("DeleterId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("DeleterId");
-
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("DeletionTime");
-
                     b.Property<string>("ExtraProperties")
                         .IsRequired()
                         .HasColumnType("TEXT")
                         .HasColumnName("ExtraProperties");
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(false)
-                        .HasColumnName("IsDeleted");
 
                     b.Property<DateTime?>("LastModificationTime")
                         .HasColumnType("TEXT")
@@ -79,6 +65,7 @@ namespace Dignite.Abp.BlobManagement.Host.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("NameKey")
+                        .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("TEXT");
 
@@ -146,14 +133,6 @@ namespace Dignite.Abp.BlobManagement.Host.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("CreatorId");
 
-                    b.Property<Guid?>("DeleterId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("DeleterId");
-
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("DeletionTime");
-
                     b.Property<Guid?>("DirectoryId")
                         .HasColumnType("TEXT");
 
@@ -163,14 +142,8 @@ namespace Dignite.Abp.BlobManagement.Host.Migrations
                         .HasColumnName("ExtraProperties");
 
                     b.Property<string>("Hash")
-                        .HasMaxLength(64)
+                        .HasMaxLength(44)
                         .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(false)
-                        .HasColumnName("IsDeleted");
 
                     b.Property<bool>("IsPending")
                         .HasColumnType("INTEGER");
@@ -216,9 +189,9 @@ namespace Dignite.Abp.BlobManagement.Host.Migrations
 
                     b.HasIndex("TenantId", "ContainerName", "BlobName");
 
-                    b.HasIndex("TenantId", "ContainerName", "DirectoryId");
+                    b.HasIndex("TenantId", "IsPending", "CreationTime");
 
-                    b.HasIndex("TenantId", "ContainerName", "Name");
+                    b.HasIndex("TenantId", "ContainerName", "DirectoryId", "Name");
 
                     b.ToTable("BlobFileDescriptors", (string)null);
                 });

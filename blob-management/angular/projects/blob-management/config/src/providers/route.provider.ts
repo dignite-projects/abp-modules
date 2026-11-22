@@ -1,10 +1,12 @@
 import { eLayoutType, RoutesService } from '@abp/ng.core';
+import { eThemeSharedRouteNames } from '@abp/ng.theme.shared';
 import {
   EnvironmentProviders,
   inject,
   makeEnvironmentProviders,
   provideAppInitializer,
 } from '@angular/core';
+import { eBlobManagementPolicyNames } from '../enums/policy-names';
 import { eBlobManagementRouteNames } from '../enums/route-names';
 
 export const BLOB_MANAGEMENT_ROUTE_PROVIDERS = [
@@ -19,24 +21,24 @@ export function configureRoutes() {
     {
       path: undefined,
       name: eBlobManagementRouteNames.BlobManagement,
-      parentName: 'AbpUiNavigation::Menu:Administration',
+      parentName: eThemeSharedRouteNames.Administration,
       iconClass: 'fas fa-folder-open',
       layout: eLayoutType.application,
-      requiredPolicy: 'BlobManagement.Containers',
+      requiredPolicy: eBlobManagementPolicyNames.Containers,
       order: 100,
     },
     {
       path: '/blob-management/usage',
       name: eBlobManagementRouteNames.Usage,
       parentName: eBlobManagementRouteNames.BlobManagement,
-      requiredPolicy: 'BlobManagement.Containers',
+      requiredPolicy: eBlobManagementPolicyNames.Containers,
       order: 1,
     },
     {
       path: '/blob-management/files',
       name: eBlobManagementRouteNames.Files,
       parentName: eBlobManagementRouteNames.BlobManagement,
-      requiredPolicy: 'BlobManagement.Containers',
+      requiredPolicy: eBlobManagementPolicyNames.Containers,
       order: 2,
     },
   ]);

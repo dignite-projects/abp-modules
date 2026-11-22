@@ -196,6 +196,12 @@ alias in exactly that form: an identical spec is one Yarn Classic lockfile entry
 copy, which is what issue #211 needs. Switching to the stable release is replacing each alias with the
 plain version (`"@dignite/ng.flex-fields": "10.8.0"`).
 
+An alias cannot serve a package that imports **itself**: a package whose primary entry point imports its
+own secondary ones (`@dignite/ng.x/config`) would be looked up by a name that is not installed, since the copy
+on GitHub Packages is `@dignite-projects/ng.x`. The same script therefore rewrites the import specifiers in
+the package's `.mjs` and `.d.ts` files that name the package itself, and fails the release when it meets a subpath
+that `exports` does not list, or a reference to the package it did not understand.
+
 **With Yarn Classic, an alias downloads with no credential.** Yarn 1 picks a tarball's registry, and
 so its token, by the name it installs the package under: for `"@dignite/ng.x": "npm:@dignite-projects/ng.x@…"`
 that is `@dignite`, mapped to npmjs, so the GitHub Packages tarball is requested without the token and

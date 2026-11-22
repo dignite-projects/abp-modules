@@ -6,7 +6,7 @@ import {
   RouterOutletComponent,
 } from '@abp/ng.core';
 import { Routes } from '@angular/router';
-import { eBlobManagementPolicyNames } from './blob-management-permissions';
+import { eBlobManagementPolicyNames } from '@dignite/ng.blob-management/config';
 import { BlobManagementFilesComponent } from './components/blob-management-files.component';
 import { BlobManagementUsageComponent } from './components/blob-usage/blob-usage.component';
 import { eBlobManagementComponents } from './enums/components';
@@ -46,7 +46,7 @@ export const createRoutes = (): Routes => [
             defaultComponent: BlobManagementFilesComponent,
           } as ReplaceableComponents.RouteData<BlobManagementFilesComponent>,
         },
-        title: 'BlobManagement::Menu:Files',
+        title: 'BlobManagement::Files',
       },
     ],
   },

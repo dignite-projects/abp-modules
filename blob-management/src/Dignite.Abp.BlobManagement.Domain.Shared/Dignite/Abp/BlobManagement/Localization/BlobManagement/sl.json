@@ -35,7 +35,7 @@
     "Permission:ManagePermissions": "Upravljanje dovoljenj za vsebnike",
     "Permission:TenantUsages": "Ogled porabe po najemnikih (samo gostitelj)",
     "Menu:BlobManagement": "Upravljanje objektov BLOB",
-    "Menu:Files": "Datoteke",
+    "Files": "Datoteke",
     "NoContainers": "Ni vsebnika za prikaz.",
     "NewDirectory": "Nova mapa",
     "Rename": "Preimenuj",

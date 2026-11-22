@@ -1,20 +1,26 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
+import { AbpWindowService } from '@abp/ng.core';
 import { CoreTestingModule } from '@abp/ng.core/testing';
 import { BlobManagementFileListComponent } from './blob-file-list.component';
-import { BlobManagementFileService } from '../../proxy/files';
+import { BlobManagementFileService } from '@dignite/ng.blob-management/proxy';
 
 describe('BlobManagementFileListComponent', () => {
   let getList: ReturnType<typeof vi.fn>;
   let getContent: ReturnType<typeof vi.fn>;
+  let downloadBlob: ReturnType<typeof vi.fn>;
   let fixture: ComponentFixture<BlobManagementFileListComponent>;
 
   function render(directory: unknown = null) {
     getList = vi.fn(() => of({ items: [{ id: 'f1', name: 'report.pdf', size: 3 }], totalCount: 1 }));
     getContent = vi.fn(() => of(new Blob(['x'])));
+    downloadBlob = vi.fn();
     TestBed.configureTestingModule({
       imports: [BlobManagementFileListComponent, CoreTestingModule.withConfig()],
-      providers: [{ provide: BlobManagementFileService, useValue: { getList, getContent } }],
+      providers: [
+        { provide: BlobManagementFileService, useValue: { getList, getContent } },
+        { provide: AbpWindowService, useValue: { downloadBlob } },
+      ],
     });
     fixture = TestBed.createComponent(BlobManagementFileListComponent);
     fixture.componentRef.setInput('container', { name: 'documents', allowDirectories: true, access: { view: true } });
@@ -45,12 +51,37 @@ describe('BlobManagementFileListComponent', () => {
     expect(getList).toHaveBeenCalledWith(expect.objectContaining({ directoryId: 'd2' }));
   });
 
+  it('does not list again when only what the caller may do with the container changes', () => {
+    render();
+    getList.mockClear();
+
+    fixture.componentRef.setInput('container', {
+      name: 'documents',
+      allowDirectories: true,
+      access: { view: true, createDirectories: true },
+    });
+    fixture.detectChanges();
+
+    expect(getList).not.toHaveBeenCalled();
+  });
+
+  it('lists again when another container is shown', () => {
+    render();
+    getList.mockClear();
+
+    fixture.componentRef.setInput('container', { name: 'media', allowDirectories: true, access: { view: true } });
+    fixture.detectChanges();
+
+    expect(getList).toHaveBeenCalledWith(expect.objectContaining({ containerName: 'media' }));
+  });
+
   it('downloads a file through the file API', () => {
     const list = render();
 
     list.download({ id: 'f1', name: 'report.pdf' });
 
     expect(getContent).toHaveBeenCalledWith('f1');
+    expect(downloadBlob).toHaveBeenCalledWith(expect.any(Blob), 'report.pdf');
   });
 
   it('offers nothing that changes a file', () => {

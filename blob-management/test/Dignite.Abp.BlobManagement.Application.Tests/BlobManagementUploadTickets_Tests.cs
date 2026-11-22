@@ -20,7 +20,7 @@ namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
 /// A browser's upload with a ticket, as an application in Blob Management's own process issues it: the ticket's limits,
-/// the file pending until its business system confirms it, a ticket used once, and the cleanup of what is never
+/// the file pending until its business system confirms it, one file per ticket, and the cleanup of what is never
 /// confirmed.
 /// </summary>
 public abstract class BlobManagementUploadTickets_Tests<TStartupModule> : BlobManagementApplicationTestBase<TStartupModule>
@@ -76,8 +76,12 @@ public abstract class BlobManagementUploadTickets_Tests<TStartupModule> : BlobMa
         (await _files.ConfirmAsync(ticket.FileId)).IsPending.ShouldBeFalse();
     }
 
+    /// <summary>
+    /// A ticket stores one file: while its file is there, a second upload with it is refused. Once that file is
+    /// deleted - removed, not marked - the ticket, still valid, stores it again: the same id, pending again.
+    /// </summary>
     [Fact]
-    public async Task A_Ticket_Should_Store_One_File_Once()
+    public async Task A_Ticket_Should_Store_One_File_While_It_Is_There()
     {
         var ticket = await _files.CreateUploadTicketAsync(new CreateBlobManagementUploadTicketInput { ContainerName = Container });
         await _uploads.UploadAsync(ticket.Ticket, Content("a.pdf", BlobManagementTestFiles.Pdf("once " + Guid.NewGuid())));
@@ -86,11 +90,11 @@ public abstract class BlobManagementUploadTickets_Tests<TStartupModule> : BlobMa
             _uploads.UploadAsync(ticket.Ticket, Content("b.pdf", BlobManagementTestFiles.Pdf("twice " + Guid.NewGuid()))));
         again.Code.ShouldBe(BlobManagementErrorCodes.UploadTicketUsed);
 
-        // Deleted, the file still keeps its ticket from being used again.
         await _files.DeleteAsync(ticket.FileId);
-        (await Should.ThrowAsync<BusinessException>(() =>
-                _uploads.UploadAsync(ticket.Ticket, Content("c.pdf", BlobManagementTestFiles.Pdf("thrice " + Guid.NewGuid())))))
-            .Code.ShouldBe(BlobManagementErrorCodes.UploadTicketUsed);
+        var stored = await _uploads.UploadAsync(ticket.Ticket, Content("c.pdf", BlobManagementTestFiles.Pdf("thrice " + Guid.NewGuid())));
+        stored.Id.ShouldBe(ticket.FileId);
+        stored.IsPending.ShouldBeTrue();
+        stored.Name.ShouldBe("c.pdf");
     }
 
     [Fact]

@@ -347,6 +347,13 @@ public class HostModule : AbpModule
         Configure<AbpAspNetCoreMvcOptions>(options =>
         {
             options.ConventionalControllers.Create(typeof(HostModule).Assembly);
+
+            // Blob Management's BLOB API and file API are ABP integration services (/integration-api/blob-management),
+            // hidden unless a host says otherwise. A host that installs the module in its own process, as this one
+            // does, has no caller for them and would leave them hidden; this host exposes them because it is where the
+            // C# client proxies are generated from, and where the API is tried out. A Blob Management that runs as a
+            // service of its own sets the same switch, and keeps the path away from browsers at its gateway.
+            options.ExposeIntegrationServices = true;
         });
     }
 

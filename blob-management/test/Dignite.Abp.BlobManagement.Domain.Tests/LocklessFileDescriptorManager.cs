@@ -1,8 +1,10 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobStoring.Pipeline;
+using Volo.Abp.Auditing;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.DistributedLocking;
+using Volo.Abp.Uow;
 
 namespace Dignite.Abp.BlobManagement;
 
@@ -14,11 +16,17 @@ public class LocklessFileDescriptorManager : FileDescriptorManager
 {
     public LocklessFileDescriptorManager(
         IFileDescriptorRepository fileDescriptorRepository,
+        IDirectoryDescriptorRepository directoryRepository,
         IBlobContainerFactory blobContainerFactory,
         IBlobContainerConfigurationProvider blobContainerConfigurationProvider,
         IMimeTypeDetector mimeTypeDetector,
-        BlobManagementUsageManager usageManager)
-        : base(fileDescriptorRepository, blobContainerFactory, blobContainerConfigurationProvider, mimeTypeDetector, usageManager)
+        BlobManagementUsageManager usageManager,
+        IAbpDistributedLock distributedLock,
+        IUnitOfWorkManager unitOfWorkManager,
+        IAuditPropertySetter auditPropertySetter)
+        : base(
+            fileDescriptorRepository, directoryRepository, blobContainerFactory, blobContainerConfigurationProvider,
+            mimeTypeDetector, usageManager, distributedLock, unitOfWorkManager, auditPropertySetter)
     {
     }
 

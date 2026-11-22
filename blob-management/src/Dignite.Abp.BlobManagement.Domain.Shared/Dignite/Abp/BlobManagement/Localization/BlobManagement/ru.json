@@ -35,7 +35,7 @@
     "Permission:ManagePermissions": "Управление разрешениями для контейнеров",
     "Permission:TenantUsages": "Просмотр использования по арендаторам (только хост)",
     "Menu:BlobManagement": "Управление BLOB-объектами",
-    "Menu:Files": "Файлы",
+    "Files": "Файлы",
     "NoContainers": "Нет контейнеров для отображения.",
     "NewDirectory": "Новая папка",
     "Rename": "Переименовать",

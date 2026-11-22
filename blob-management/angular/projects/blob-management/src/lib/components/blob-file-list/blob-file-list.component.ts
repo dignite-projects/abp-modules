@@ -1,12 +1,14 @@
-import { CoreModule, ListService, PagedResultDto } from '@abp/ng.core';
+import { AbpWindowService, CoreModule, ListService, PagedResultDto } from '@abp/ng.core';
 import { ThemeSharedModule } from '@abp/ng.theme.shared';
-import { ChangeDetectionStrategy, Component, OnInit, effect, inject, input, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { FormatFileSizePipe } from '../../pipes/format-file-size.pipe';
-import { BlobManagementContainerDto } from '../../proxy/containers';
-import { BlobManagementDirectoryDto } from '../../proxy/directories';
-import { BlobManagementFileDto, BlobManagementFileService } from '../../proxy/files';
-import { ObjectUrlService } from '../../services/object-url.service';
+import {
+  BlobManagementContainerDto,
+  BlobManagementDirectoryDto,
+  BlobManagementFileDto,
+  BlobManagementFileService,
+} from '@dignite/ng.blob-management/proxy';
 import { BlobManagementFilePreviewComponent } from '../blob-file-preview/blob-file-preview.component';
 
 /**
@@ -24,17 +26,23 @@ import { BlobManagementFilePreviewComponent } from '../blob-file-preview/blob-fi
 export class BlobManagementFileListComponent implements OnInit {
   readonly list = inject(ListService);
   private readonly fileService = inject(BlobManagementFileService);
-  private readonly objectUrls = inject(ObjectUrlService);
+  private readonly window = inject(AbpWindowService);
 
   readonly container = input.required<BlobManagementContainerDto>();
   /** The directory whose files are listed; `null` for the top of the container. */
   readonly directory = input<BlobManagementDirectoryDto | null>(null);
 
+  /**
+   * Which container is listed. The container's object changes when what the caller may do with it does; the files
+   * listed change only with its name.
+   */
+  readonly containerName = computed(() => this.container().name ?? '');
+
   readonly data = signal<PagedResultDto<BlobManagementFileDto>>({ items: [], totalCount: 0 });
 
   constructor() {
     effect(() => {
-      this.container();
+      this.containerName();
       this.directory();
       untracked(() => {
         if (this.list.page === 0) {
@@ -52,7 +60,7 @@ export class BlobManagementFileListComponent implements OnInit {
       .hookToQuery(query =>
         this.fileService.getList({
           ...query,
-          containerName: this.container().name ?? '',
+          containerName: this.containerName(),
           directoryId: this.directory()?.id ?? null,
         }),
       )
@@ -63,19 +71,12 @@ export class BlobManagementFileListComponent implements OnInit {
     this.list.filter = filter;
   }
 
-  /** Saves the file's bytes through the file API - a file of a container that is not public has no address. */
+  /** Saves the file's bytes through the file API - a file that is not public has no address. */
   download(file: BlobManagementFileDto): void {
     if (!file.id) {
       return;
     }
 
-    this.fileService.getContent(file.id).subscribe(blob => {
-      const url = this.objectUrls.get(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = file.name ?? 'file';
-      link.click();
-      setTimeout(() => this.objectUrls.revoke(url), 1000);
-    });
+    this.fileService.getContent(file.id).subscribe(blob => this.window.downloadBlob(blob, file.name ?? 'file'));
   }
 }

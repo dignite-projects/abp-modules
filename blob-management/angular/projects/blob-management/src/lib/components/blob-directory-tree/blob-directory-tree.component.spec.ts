@@ -1,9 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { of, throwError } from 'rxjs';
+import { TreeComponent } from '@abp/ng.components/tree';
 import { CoreTestingModule } from '@abp/ng.core/testing';
 import { ConfirmationService } from '@abp/ng.theme.shared';
 import { BLOB_MANAGEMENT_ROOT_KEY, BlobManagementDirectoryTreeComponent } from './blob-directory-tree.component';
-import { BlobManagementDirectoryService } from '../../proxy/directories';
+import { BlobManagementDirectoryService } from '@dignite/ng.blob-management/proxy';
 
 describe('BlobManagementDirectoryTreeComponent', () => {
   let getList: ReturnType<typeof vi.fn>;
@@ -55,6 +57,52 @@ describe('BlobManagementDirectoryTreeComponent', () => {
 
     TestBed.resetTestingModule();
     expect(render(undefined, { view: true }).canCreate()).toBe(false);
+  });
+
+  it('offers no menu and no dragging to a caller who may only view the container', () => {
+    render(undefined, { view: true });
+    const abpTree = fixture.debugElement.query(By.directive(TreeComponent)).componentInstance as TreeComponent;
+
+    expect(abpTree.draggable()).toBe(false);
+    expect(abpTree.menu()).toBeUndefined();
+  });
+
+  it('lets a caller who may move directories drag them', () => {
+    render(undefined, { view: true, updateDirectories: true });
+    const abpTree = fixture.debugElement.query(By.directive(TreeComponent)).componentInstance as TreeComponent;
+
+    expect(abpTree.draggable()).toBe(true);
+    expect(abpTree.menu()).toBeDefined();
+  });
+
+  it('keeps what is expanded and chosen when only what the caller may do with the container changes', () => {
+    const tree = render({ root: [docs], d1: [] }, { view: true });
+    tree.onExpandChange({ node: node(docs, 'd1') });
+    tree.select({ key: 'd1', directory: docs });
+    getList.mockClear();
+
+    fixture.componentRef.setInput('container', { name: 'documents', allowDirectories: true, access: all });
+    fixture.detectChanges();
+
+    expect(getList).not.toHaveBeenCalled();
+    expect(tree.expandedKeys).toContain('d1');
+    expect(tree.selectedKey()).toBe('d1');
+    expect(tree.canCreate()).toBe(true);
+  });
+
+  it('starts over when another container is shown', () => {
+    const tree = render({ root: [docs], d1: [] });
+    tree.onExpandChange({ node: node(docs, 'd1') });
+    tree.select({ key: 'd1', directory: docs });
+    getList.mockClear();
+
+    fixture.componentRef.setInput('container', { name: 'media', allowDirectories: true, access: all });
+    fixture.detectChanges();
+
+    expect(getList).toHaveBeenCalledTimes(1);
+    expect(getList).toHaveBeenCalledWith({ containerName: 'media', parentId: null });
+    expect(tree.expandedKeys).toEqual([BLOB_MANAGEMENT_ROOT_KEY]);
+    expect(tree.selectedKey()).toBe(BLOB_MANAGEMENT_ROOT_KEY);
   });
 
   it('loads a level when it is first expanded, and not again', () => {

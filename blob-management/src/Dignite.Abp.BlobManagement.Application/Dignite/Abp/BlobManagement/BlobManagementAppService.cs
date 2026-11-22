@@ -24,7 +24,6 @@ public abstract class BlobManagementAppService : ApplicationService
     protected BlobManagementAppService()
     {
         LocalizationResource = typeof(BlobManagementResource);
-        ObjectMapperContext = typeof(BlobManagementApplicationModule);
     }
 
     protected IBlobContainerConfigurationProvider ContainerConfigurationProvider =>

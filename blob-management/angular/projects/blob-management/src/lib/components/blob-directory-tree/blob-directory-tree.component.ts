@@ -1,11 +1,14 @@
 import { TreeModule } from '@abp/ng.components/tree';
 import { CoreModule } from '@abp/ng.core';
 import { Confirmation, ConfirmationService, ThemeSharedModule } from '@abp/ng.theme.shared';
-import { ChangeDetectionStrategy, Component, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable, catchError, finalize, forkJoin, map, of } from 'rxjs';
-import { BlobManagementContainerDto } from '../../proxy/containers';
-import { BlobManagementDirectoryDto, BlobManagementDirectoryService } from '../../proxy/directories';
+import {
+  BlobManagementContainerDto,
+  BlobManagementDirectoryDto,
+  BlobManagementDirectoryService,
+} from '@dignite/ng.blob-management/proxy';
 
 /** The key of the node that stands for the top of the container. */
 export const BLOB_MANAGEMENT_ROOT_KEY = '__blob-container-root__';
@@ -40,8 +43,8 @@ interface TreeNodeRef {
  * The directories of one container, loaded a level at a time: the top when the container is shown, a directory's
  * subdirectories when it is first expanded. Directories are created, renamed and deleted from a node's menu and moved
  * by dragging, each offered only when the caller may do it - which is the container's answer, the same for every
- * directory in it. Every change reloads the levels already loaded. With `manage` off it only chooses a directory - no
- * menu, no dragging.
+ * directory in it. Every change reloads the levels already loaded. A caller who may not change directories only
+ * chooses one - no menu, no dragging.
  */
 @Component({
   selector: 'blob-directory-tree',
@@ -55,8 +58,13 @@ export class BlobManagementDirectoryTreeComponent {
   private readonly fb = inject(FormBuilder);
 
   readonly container = input.required<BlobManagementContainerDto>();
-  /** Whether directories are created, renamed, deleted and moved here, or only chosen. */
-  readonly manage = input(true);
+
+  /**
+   * Which container is shown. The container's object changes when what the caller may do with it does: that changes
+   * the operations offered, and the tree - its levels, what is expanded, the directory chosen - starts over only when
+   * another container is shown.
+   */
+  readonly containerName = computed(() => this.container().name ?? '');
 
   /** The directory chosen; `null` for the top of the container. */
   readonly selectionChange = output<BlobManagementDirectoryDto | null>();
@@ -83,7 +91,7 @@ export class BlobManagementDirectoryTreeComponent {
 
   constructor() {
     effect(() => {
-      this.container();
+      this.containerName();
       untracked(() => this.reset());
     });
   }
@@ -112,7 +120,7 @@ export class BlobManagementDirectoryTreeComponent {
 
     return this.directoryService
       .getList({
-        containerName: this.container().name ?? '',
+        containerName: this.containerName(),
         parentId: parentKey === BLOB_MANAGEMENT_ROOT_KEY ? null : parentKey,
       })
       .pipe(
@@ -157,7 +165,7 @@ export class BlobManagementDirectoryTreeComponent {
     this.nodes.set([
       {
         key: BLOB_MANAGEMENT_ROOT_KEY,
-        title: this.container().name ?? '',
+        title: this.containerName(),
         isLeaf: false,
         expanded: true,
         children: (this.levels.get(BLOB_MANAGEMENT_ROOT_KEY) ?? []).map(build),
@@ -198,6 +206,17 @@ export class BlobManagementDirectoryTreeComponent {
 
   isNodeSelected = (node: { key: string }): boolean => node.key === this.selectedKey();
 
+  /** Whether the caller may change any directory here: without it the tree has no menu and nothing is dragged. */
+  canChange(): boolean {
+    const access = this.container().access;
+    return !!(access?.createDirectories || access?.updateDirectories || access?.deleteDirectories);
+  }
+
+  /** Moving directories by dragging them: the container's permission to rename and move them. */
+  canMove(): boolean {
+    return !!this.container().access?.updateDirectories;
+  }
+
   /** Creating directories is the container's permission, in any node: at its top or in a directory. */
   canCreate(): boolean {
     return !!this.container().access?.createDirectories;
@@ -234,7 +253,7 @@ export class BlobManagementDirectoryTreeComponent {
     const request = this.editing?.id
       ? this.directoryService.update(this.editing.id, { name })
       : this.directoryService.create({
-          containerName: this.container().name ?? '',
+          containerName: this.containerName(),
           parentId: this.formParentKey === BLOB_MANAGEMENT_ROOT_KEY ? null : this.formParentKey,
           name,
         });

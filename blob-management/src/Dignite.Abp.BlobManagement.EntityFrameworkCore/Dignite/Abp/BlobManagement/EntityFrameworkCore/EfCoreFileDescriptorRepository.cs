@@ -17,15 +17,12 @@ public class EfCoreFileDescriptorRepository : EfCoreRepository<IBlobManagementDb
     {
     }
 
-    public virtual async Task<FileDescriptor?> FindByNameAsync(
-        string containerName,
-        string name,
+    public virtual async Task<FileDescriptor?> FindByNameKeyAsync(
+        string nameKey,
         CancellationToken cancellationToken = default)
     {
         return await (await GetDbSetAsync())
-            .FirstOrDefaultAsync(
-                f => f.ContainerName == containerName && f.Name == name && f.NameKey != null,
-                GetCancellationToken(cancellationToken));
+            .FirstOrDefaultAsync(f => f.NameKey == nameKey, GetCancellationToken(cancellationToken));
     }
 
     public virtual async Task<long> GetUsedStorageSizeAsync(CancellationToken cancellationToken = default)

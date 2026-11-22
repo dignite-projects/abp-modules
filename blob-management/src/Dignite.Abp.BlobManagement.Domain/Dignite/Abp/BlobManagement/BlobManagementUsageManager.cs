@@ -14,7 +14,7 @@ namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
 /// The current tenant's allocation: the <see cref="BlobManagementFeatures"/> checked against what it stores. Usage is computed
-/// from the descriptor table - the sizes of the live descriptors, each with a BLOB of its own - per tenant only, across
+/// from the descriptor table - the sizes of the descriptors, each with a BLOB of its own - per tenant only, across
 /// every Blob Management container.
 /// <para>
 /// The check is a soft limit: it reads the usage, then the caller stores, so two simultaneous uploads can both pass it

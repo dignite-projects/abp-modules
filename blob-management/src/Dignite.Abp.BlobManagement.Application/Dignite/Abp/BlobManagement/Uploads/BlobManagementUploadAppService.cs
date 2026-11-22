@@ -7,7 +7,6 @@ using Dignite.Abp.BlobStoring.Pipeline;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
 using Volo.Abp.Content;
-using Volo.Abp.Data;
 using Volo.Abp.Security.Claims;
 using Volo.Abp.Uow;
 
@@ -19,11 +18,12 @@ namespace Dignite.Abp.BlobManagement.Uploads;
 /// name, and nothing else of it is used - no signed-in user, no cookie, no tenant it names (the call runs under an
 /// anonymous principal, in the ticket's tenant).
 /// <para>
-/// The file is stored as any file kept by id is (<see cref="FileDescriptorManager.UploadAsync"/>): the container's
+/// The file is stored as any file kept by id is (<see cref="FileDescriptorManager.CreateFileAsync"/>): the container's
 /// pipeline contributors run, the tenant's allocation is checked. It is pending until its
-/// business system confirms it. A ticket is used once: its file's id is given, and a second upload collides with the
-/// first one's row - deleted rows included - and is refused before anything is stored; two at the same moment are
-/// settled by the primary key, and the loser's bytes are removed again.
+/// business system confirms it. A ticket stores one file: its file's id is given, and a second upload collides with the
+/// first one's row and is refused before anything is stored; two at the same moment are settled by the primary key,
+/// and the loser's bytes are removed again. Once that file is deleted - by its business system, or as abandoned - the
+/// ticket can store one again while it lasts: still one file, pending until confirmed, within the ticket's limits.
 /// </para>
 /// Exposed only through <c>BlobManagementUploadController</c>.
 /// </summary>
@@ -96,19 +96,19 @@ public class BlobManagementUploadAppService : BlobManagementAppService, IBlobMan
                     .WithData("ContentType", contentType);
             }
 
-            var stored = await FileDescriptorManager.UploadAsync(
+            var stored = await FileDescriptorManager.CreateFileAsync(
                 upload.ContainerName,
                 name,
                 buffer,
-                upload.DirectoryId,
-                descriptor =>
+                new CreateFileArgs
                 {
-                    descriptor.MarkPending();
-                    descriptor.CreatorId = upload.UploaderId;
-                },
-                upload.ClientId,
-                upload.FileId,
-                expectedSha256: sha256);
+                    Id = upload.FileId,
+                    DirectoryId = upload.DirectoryId,
+                    IsPending = true,
+                    CreatorId = upload.UploaderId,
+                    ClientId = upload.ClientId,
+                    ExpectedSha256 = sha256
+                });
 
             await unitOfWork.CompleteAsync();
             return Map(stored);
@@ -125,17 +125,12 @@ public class BlobManagementUploadAppService : BlobManagementAppService, IBlobMan
                ?? throw new BusinessException(BlobManagementErrorCodes.UploadTicketInvalid);
     }
 
-    /// <summary>
-    /// Refuses a ticket whose file is there already, or was and has been deleted: a ticket stores one file, once.
-    /// </summary>
+    /// <summary>Refuses a ticket whose file is there already: a ticket stores one file.</summary>
     protected virtual async Task CheckUnusedAsync(BlobManagementUploadTicket upload)
     {
-        using (DataFilter.Disable<ISoftDelete>())
+        if (await FileRepository.FindAsync(upload.FileId) != null)
         {
-            if (await FileRepository.FindAsync(upload.FileId) != null)
-            {
-                throw new BusinessException(BlobManagementErrorCodes.UploadTicketUsed);
-            }
+            throw new BusinessException(BlobManagementErrorCodes.UploadTicketUsed);
         }
     }
 }

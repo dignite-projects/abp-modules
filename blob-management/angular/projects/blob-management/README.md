@@ -1,24 +1,14 @@
-# Blob Management
+# @dignite/ng.blob-management
 
-This library was generated with [Angular CLI](https://github.com/angular/angular-cli) version ~19.0.0
+The Angular UI of [Dignite.Abp.BlobManagement](https://github.com/dignite-projects/abp-modules/tree/main/blob-management),
+an ABP Framework module that manages a tenant's BLOB containers. This library holds the module's management pages,
+for users who hold the `BlobManagement.Containers` permission: the **Usage** page shows what the tenant stores (by
+container, user, client and, in the host, by tenant), and the **Files** page shows one container at a time. On the Files
+page users manage the container's directories, and its files are read-only.
 
-## Code scaffolding
+Route the pages with `createRoutes()` from `@dignite/ng.blob-management`
+(`{ path: 'blob-management', loadChildren: () => import('@dignite/ng.blob-management').then(m => m.createRoutes()) }`)
+and add the menu items with `provideBlobManagementConfig()` from `@dignite/ng.blob-management/config`.
 
-Run `ng generate component component-name --project blob-management` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module --project blob-management`.
-> Note: Don't forget to add `--project blob-management` or else it will be added to the default project in your `angular.json` file. 
-
-## Build
-
-Run `ng build blob-management` to build the project. The build artifacts will be stored in the `dist/` directory.
-
-## Publishing
-
-After building your library with `ng build blob-management`, go to the dist folder `cd dist/blob-management` and run `npm publish`.
-
-## Running unit tests
-
-Run `ng test blob-management` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+See the [Blob Management documentation](https://github.com/dignite-projects/abp-modules/tree/main/docs/en/blob-management)
+for installation and configuration.

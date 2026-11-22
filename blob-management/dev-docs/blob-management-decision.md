@@ -1,5 +1,10 @@
 # Blob Management: the redesign of 2026-11-12
 
+> Partly replaced by [`design-review-decision.md`](design-review-decision.md) (2026-11-22): a descriptor is no longer
+> soft-deleted (files and directories are removed), a name key is kept for the life of a file and is no longer handed
+> between rows, and saving over a taken name changes the row of the file it replaces. What is written below about
+> "soft-deleted", "unique among live files" and the file API's callers is history.
+
 > Narrowed on 2026-11-13 by [`positioning-decision.md`](positioning-decision.md): what is written here about
 > authorization, the surface and the two ways a file arrives is replaced there. The names, the containers and the
 > directory tree's own rules stand.

@@ -1,14 +1,14 @@
 <abp-tree
   [nodes]="nodes()"
   [expandedKeys]="expandedKeys"
-  [draggable]="manage()"
+  [draggable]="canMove()"
   [beforeDrop]="beforeDrop"
   [isNodeSelected]="isNodeSelected"
   (selectedNodeChange)="select($event)"
   (nzExpandChange)="onExpandChange($event)"
   (contextmenu)="$event.preventDefault()"
 >
-  @if (manage()) {
+  @if (canChange()) {
     <ng-template #menu let-node>
       @if (canCreate()) {
         <button type="button" class="dropdown-item" (click)="openCreateForm(node)">

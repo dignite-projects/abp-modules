@@ -2,15 +2,15 @@ using System;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobManagement.Public;
 using Volo.Abp.DependencyInjection;
-using Volo.Abp.Domain.Entities;
 using Volo.Abp.Imaging;
 
 namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
-/// A <see cref="BlobManagementPublicAppService"/> that reads any container as if it were read publicly, and runs <see cref="AfterLookup"/> once right after it found the file -
-/// where an overwrite by another request would land between a read's lookup and its bytes. Exposed as itself only, so
-/// it does not replace the real <see cref="IBlobManagementPublicAppService"/>.
+/// A <see cref="BlobManagementPublicAppService"/> that runs <see cref="AfterLookup"/> once right after the real lookup
+/// found the file - where an overwrite by another request would land between a read's lookup and its bytes. The lookup
+/// itself is the service's own. Exposed as itself only, so it does not replace the real
+/// <see cref="IBlobManagementPublicAppService"/>.
 /// </summary>
 [ExposeServices(typeof(RacingBlobManagementPublicAppService))]
 public class RacingBlobManagementPublicAppService : BlobManagementPublicAppService
@@ -31,8 +31,7 @@ public class RacingBlobManagementPublicAppService : BlobManagementPublicAppServi
     protected override async Task<(FileDescriptor File, string Name)> GetPublicFileAsync(string containerName, string blobName)
     {
         Lookups++;
-        var file = await FileDescriptorManager.FindAsync(containerName, blobName)
-                   ?? throw new EntityNotFoundException(typeof(FileDescriptor), $"{containerName}/{blobName}");
+        var found = await base.GetPublicFileAsync(containerName, blobName);
 
         var afterLookup = AfterLookup;
         AfterLookup = null;
@@ -41,6 +40,6 @@ public class RacingBlobManagementPublicAppService : BlobManagementPublicAppServi
             await afterLookup();
         }
 
-        return (file, file.Name);
+        return found;
     }
 }

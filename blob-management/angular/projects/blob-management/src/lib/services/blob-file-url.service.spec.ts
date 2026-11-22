@@ -14,7 +14,7 @@ describe('BlobManagementFileUrlService', () => {
 
   it('puts a public address on Blob Management\'s host', () => {
     expect(service.toAbsolute('/blobs/media/a.png')).toBe('https://blobs.example.com/blobs/media/a.png');
-    expect(service.toAbsolute('blob:x')).toBe('blob:x');
+    expect(service.toAbsolute('https://cdn.example.com/a.png')).toBe('https://cdn.example.com/a.png');
     expect(service.toAbsolute(null)).toBe('');
   });
 
@@ -22,9 +22,7 @@ describe('BlobManagementFileUrlService', () => {
     expect(service.sized('/blobs/media/a.png?__tenant=t', 128, 128)).toBe(
       'https://blobs.example.com/blobs/media/a.png?__tenant=t&width=128&height=128',
     );
-    expect(service.sized('/blobs/media/a.png', 0, 0)).toBe('https://blobs.example.com/blobs/media/a.png');
-    expect(service.sized('blob:x', 128)).toBe('blob:x');
-  });
+    expect(service.sized('/blobs/media/a.png', 0, 0)).toBe('https://blobs.example.com/blobs/media/a.png');  });
 
   it('rounds a size up to the next one Blob Management serves', () => {
     const sizes = [256, 64, 128, 4096];

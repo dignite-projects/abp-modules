@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobStoring.Pipeline;
 using Shouldly;
@@ -121,8 +122,26 @@ public abstract class BlobManagementBlobProvider_Tests<TStartupModule> : BlobMan
         b!.BlobName.ShouldNotBe(a!.BlobName);
     }
 
-    private Task<FileDescriptor?> FindInBlobManagementAsync(string driveContainer, string name)
+    /// <summary>
+    /// The caller's token reaches the module: a call whose token is cancelled already is cancelled, not answered.
+    /// <c>ExistsAsync</c>, not a save, so no pipeline contributor fails first and lets the test pass for another reason.
+    /// </summary>
+    [Fact]
+    public async Task The_Callers_Cancellation_Should_Reach_The_BlobManagement()
     {
-        return WithUnitOfWorkAsync(() => _fileDescriptorManager.FindAsync(driveContainer, name));
+        var container = _blobContainerFactory.Create(BlobManagementTestAppContainers.Media);
+        var name = "cancelled-" + Guid.NewGuid().ToString("N") + ".pdf";
+        await container.SaveAsync(name, BlobManagementTestFiles.Pdf("cancelled " + name));
+
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => container.ExistsAsync(name, cancellation.Token));
+        (await container.ExistsAsync(name)).ShouldBeTrue();
+    }
+
+    private Task<FileDescriptor?> FindInBlobManagementAsync(string managedContainer, string name)
+    {
+        return WithUnitOfWorkAsync(() => _fileDescriptorManager.FindBlobAsync(managedContainer, name));
     }
 }

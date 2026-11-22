@@ -35,7 +35,7 @@
     "Permission:ManagePermissions": "Gestire le autorizzazioni sui contenitori",
     "Permission:TenantUsages": "Visualizza l'utilizzo per tenant (solo host)",
     "Menu:BlobManagement": "Gestione dei BLOB",
-    "Menu:Files": "File",
+    "Files": "File",
     "NoContainers": "Non c'è alcun contenitore da mostrare.",
     "NewDirectory": "Nuova cartella",
     "Rename": "Rinomina",

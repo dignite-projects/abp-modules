@@ -35,7 +35,7 @@
     "Permission:ManagePermissions": "Berechtigungen für Container verwalten",
     "Permission:TenantUsages": "Nutzung nach Mandant anzeigen (nur Host)",
     "Menu:BlobManagement": "Blob-Verwaltung",
-    "Menu:Files": "Dateien",
+    "Files": "Dateien",
     "NoContainers": "Es gibt keinen Container zum Anzeigen.",
     "NewDirectory": "Neuer Ordner",
     "Rename": "Umbenennen",

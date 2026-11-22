@@ -38,7 +38,7 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
         var descriptor = await WithUnitOfWorkAsync(async () =>
         {
             using var stream = new MemoryStream(upload);
-            return await _fileDescriptorManager.CreateAsync(BlobManagementTestContainers.ImagesAsUploaded, "wide.png", stream);
+            return await _fileDescriptorManager.SaveBlobAsync(BlobManagementTestContainers.ImagesAsUploaded, "wide.png", stream);
         });
 
         var stored = await ReadStoredAsync(descriptor);
@@ -53,15 +53,15 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
 
     /// <summary>
     /// A PNG of 64 KB or more is stored as a lossless WebP, fitted into the box: the physical BLOB is named <c>.webp</c>,
-    /// the descriptor records the WebP, and an uploaded file's name takes the extension.
+    /// the descriptor records the WebP, and the name of a file kept by id takes the extension.
     /// </summary>
     [Fact]
-    public async Task A_Png_Uploaded_To_A_User_BlobManagement_Should_Be_Stored_And_Named_As_Webp()
+    public async Task A_Png_Kept_By_Id_Should_Be_Stored_And_Named_As_Webp()
     {
         var upload = BlobManagementTestFiles.Png(256, 128, seed: 3);
         upload.Length.ShouldBeGreaterThanOrEqualTo((int)BlobManagementPresetDefaults.ImagesPngWebpMinSizeInBytes);
 
-        var descriptor = await UploadAsync(BlobManagementTestContainers.UserImages, "diagram.png", upload);
+        var descriptor = await CreateFileAsync(BlobManagementTestContainers.UserImages, "diagram.png", upload);
 
         var stored = await ReadStoredAsync(descriptor);
         BlobManagementTestFiles.Format(stored).ShouldBe(SkiaSharp.SKEncodedImageFormat.Webp);
@@ -81,7 +81,7 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
     {
         var upload = BlobManagementTestFiles.WithAnimationControl(BlobManagementTestFiles.Png(256, 128, seed: 4));
 
-        var descriptor = await UploadAsync(BlobManagementTestContainers.UserImages, "spinner.png", upload);
+        var descriptor = await CreateFileAsync(BlobManagementTestContainers.UserImages, "spinner.png", upload);
 
         (await ReadStoredAsync(descriptor)).ShouldBe(upload);
         descriptor.BlobName.ShouldEndWith(".png");
@@ -95,7 +95,7 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
         var exception = await Should.ThrowAsync<BusinessException>(() => WithUnitOfWorkAsync(async () =>
         {
             using var stream = new MemoryStream(BlobManagementTestFiles.Pdf("not a picture"));
-            return await _fileDescriptorManager.CreateAsync(BlobManagementTestContainers.Images, "notes.pdf", stream);
+            return await _fileDescriptorManager.SaveBlobAsync(BlobManagementTestContainers.Images, "notes.pdf", stream);
         }));
 
         exception.Code.ShouldBe(BlobStoringPipelineErrorCodes.ContentTypeNotAllowed);
@@ -190,13 +190,13 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
     }
 
     /// <summary>
-    /// A JPEG a person uploads is stored as WebP: the physical BLOB is named <c>.webp</c>, the descriptor records
-    /// the WebP, and the file's name takes the <c>.webp</c> extension, so a download is named for what it is.
+    /// A JPEG kept by id is stored as WebP: the physical BLOB is named <c>.webp</c>, the descriptor records the WebP,
+    /// and the file's name takes the <c>.webp</c> extension, so a download is named for what it is.
     /// </summary>
     [Fact]
-    public async Task A_Jpeg_Uploaded_To_A_User_BlobManagement_Should_Be_Stored_And_Named_As_Webp()
+    public async Task A_Jpeg_Kept_By_Id_Should_Be_Stored_And_Named_As_Webp()
     {
-        var descriptor = await UploadAsync(BlobManagementTestContainers.UserImages, "holiday.jpg", BlobManagementTestFiles.Jpeg(128, 96, seed: 5));
+        var descriptor = await CreateFileAsync(BlobManagementTestContainers.UserImages, "holiday.jpg", BlobManagementTestFiles.Jpeg(128, 96, seed: 5));
 
         var stored = await ReadStoredAsync(descriptor);
         BlobManagementTestFiles.Format(stored).ShouldBe(SkiaSharp.SKEncodedImageFormat.Webp);
@@ -212,12 +212,12 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
     /// and the descriptor records what is served.
     /// </summary>
     [Fact]
-    public async Task A_Jpeg_Stored_In_A_System_Container_Should_Keep_Its_Name()
+    public async Task A_Jpeg_Saved_Under_A_Name_Should_Keep_Its_Name()
     {
         var descriptor = await WithUnitOfWorkAsync(async () =>
         {
             using var stream = new MemoryStream(BlobManagementTestFiles.Jpeg(48, 32, seed: 6));
-            return await _fileDescriptorManager.CreateAsync(BlobManagementTestContainers.Images, "covers/holiday.jpg", stream);
+            return await _fileDescriptorManager.SaveBlobAsync(BlobManagementTestContainers.Images, "covers/holiday.jpg", stream);
         });
 
         var stored = await ReadStoredAsync(descriptor);
@@ -225,20 +225,20 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
         descriptor.Name.ShouldBe("covers/holiday.jpg");
         descriptor.BlobName.ShouldEndWith(".webp");
         descriptor.MimeType.ShouldBe("image/webp");
-        (await WithUnitOfWorkAsync(() => _fileDescriptorManager.FindAsync(BlobManagementTestContainers.Images, "covers/holiday.jpg")))
+        (await WithUnitOfWorkAsync(() => _fileDescriptorManager.FindBlobAsync(BlobManagementTestContainers.Images, "covers/holiday.jpg")))
             .ShouldNotBeNull().Id.ShouldBe(descriptor.Id);
     }
 
     /// <summary>
-    /// The same JPEG uploaded again is converted again, into a WebP of its own, and its name takes that extension too.
+    /// The same JPEG kept again is converted again, into a WebP of its own, and its name takes that extension too.
     /// </summary>
     [Fact]
-    public async Task The_Same_Jpeg_Uploaded_Again_Should_Be_Stored_As_A_Webp_Of_Its_Own()
+    public async Task The_Same_Jpeg_Kept_Twice_Should_Be_Stored_As_A_Webp_Of_Its_Own()
     {
         var upload = BlobManagementTestFiles.Jpeg(40, 40, seed: 7);
 
-        var first = await UploadAsync(BlobManagementTestContainers.UserImages, "a.jpg", upload);
-        var second = await UploadAsync(BlobManagementTestContainers.UserImages, "b.jpeg", upload);
+        var first = await CreateFileAsync(BlobManagementTestContainers.UserImages, "a.jpg", upload);
+        var second = await CreateFileAsync(BlobManagementTestContainers.UserImages, "b.jpeg", upload);
 
         second.BlobName.ShouldNotBe(first.BlobName);
         second.BlobName.ShouldEndWith(".webp");
@@ -254,7 +254,7 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
         var descriptor = await WithUnitOfWorkAsync(async () =>
         {
             using var stream = new MemoryStream(upload);
-            return await _fileDescriptorManager.CreateAsync(BlobManagementTestContainers.ImagesAsUploaded, "holiday.jpg", stream);
+            return await _fileDescriptorManager.SaveBlobAsync(BlobManagementTestContainers.ImagesAsUploaded, "holiday.jpg", stream);
         });
 
         (await ReadStoredAsync(descriptor)).ShouldBe(upload);
@@ -263,14 +263,14 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
         descriptor.Name.ShouldBe("holiday.jpg");
     }
 
-    /// <summary>An uploaded PNG under 64 KB, too small to convert, keeps its type and its name.</summary>
+    /// <summary>A PNG kept by id under 64 KB, too small to convert, keeps its type and its name.</summary>
     [Fact]
-    public async Task A_Small_Png_Uploaded_To_A_User_BlobManagement_Should_Keep_Its_Name()
+    public async Task A_Small_Png_Kept_By_Id_Should_Keep_Its_Name()
     {
         var upload = BlobManagementTestFiles.Png(32, 32, seed: 9);
         upload.Length.ShouldBeLessThan((int)BlobManagementPresetDefaults.ImagesPngWebpMinSizeInBytes);
 
-        var descriptor = await UploadAsync(BlobManagementTestContainers.UserImages, "drawing.png", upload);
+        var descriptor = await CreateFileAsync(BlobManagementTestContainers.UserImages, "drawing.png", upload);
 
         descriptor.MimeType.ShouldBe("image/png");
         descriptor.Name.ShouldBe("drawing.png");
@@ -290,20 +290,20 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
         var descriptor = await WithUnitOfWorkAsync(async () =>
         {
             using var stream = new MemoryStream(jpeg);
-            return await _fileDescriptorManager.UploadAsync(
-                BlobManagementTestContainers.UserImages, "checked.jpg", stream, expectedSha256: checksum);
+            return await _fileDescriptorManager.CreateFileAsync(
+                BlobManagementTestContainers.UserImages, "checked.jpg", stream, new CreateFileArgs { ExpectedSha256 = checksum });
         });
 
         descriptor.MimeType.ShouldBe("image/webp");
         descriptor.Hash.ShouldBe(checksum);
     }
 
-    private Task<FileDescriptor> UploadAsync(string containerName, string name, byte[] content)
+    private Task<FileDescriptor> CreateFileAsync(string containerName, string name, byte[] content)
     {
         return WithUnitOfWorkAsync(async () =>
         {
             using var stream = new MemoryStream(content);
-            return await _fileDescriptorManager.UploadAsync(containerName, name, stream);
+            return await _fileDescriptorManager.CreateFileAsync(containerName, name, stream);
         });
     }
 

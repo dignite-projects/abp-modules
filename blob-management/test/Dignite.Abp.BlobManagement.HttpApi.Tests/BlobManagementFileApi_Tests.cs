@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -26,8 +27,9 @@ namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
 /// The file API over HTTP, through the generated C# client proxies: an application keeps files as an OAuth client
-/// (<see cref="IBlobManagementFileService"/>, the remote one), and an administrator reads them - and the usage - with
-/// the management permission.
+/// through the integration service (<c>integration-api/blob-management/files</c>; <see cref="IBlobManagementFileService"/>,
+/// the remote one, or its proxy), and an administrator reads them - and the usage - with the management permission,
+/// through the service for users (<c>api/blob-management/files</c>, <see cref="IBlobManagementFileAppService"/>).
 /// </summary>
 public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTest<Program>
 {
@@ -36,6 +38,7 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
 
     private readonly IBlobManagementFileService _appFiles;
     private readonly IBlobManagementBlobService _appBlobs;
+    private readonly BlobManagementFileIntegrationClientProxy _integration;
     private readonly BlobManagementFileClientProxy _files;
     private readonly BlobManagementContainerClientProxy _containers;
     private readonly BlobManagementUsageClientProxy _usage;
@@ -49,6 +52,7 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
     {
         _appFiles = GetRequiredService<IBlobManagementFileService>();
         _appBlobs = GetRequiredService<IBlobManagementBlobService>();
+        _integration = GetRequiredService<BlobManagementFileIntegrationClientProxy>();
         _files = GetRequiredService<BlobManagementFileClientProxy>();
         _containers = GetRequiredService<BlobManagementContainerClientProxy>();
         _usage = GetRequiredService<BlobManagementUsageClientProxy>();
@@ -66,16 +70,16 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
             BlobManagementFileDto file;
             using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
             {
-                file = await _files.CreateAsync(NewFile(Container, "tenant.pdf"));
-                (await _files.GetAsync(file.Id)).Name.ShouldBe("tenant.pdf");
-                (await _files.GetListAsync(new GetBlobManagementFilesInput { ContainerName = Container, Filter = "tenant.pdf" }))
+                file = await _integration.CreateAsync(NewFile(Container, "tenant.pdf"));
+                (await _integration.GetAsync(file.Id)).Name.ShouldBe("tenant.pdf");
+                (await _integration.GetListAsync(new GetBlobManagementFilesInput { ContainerName = Container, Filter = "tenant.pdf" }))
                     .Items.Select(f => f.Id).ShouldContain(file.Id);
             }
 
             using (TestCaller.As("another-app"))
             {
-                await ShouldFailAsync(HttpStatusCode.Forbidden, () => _files.CreateAsync(NewFile(Container, "a.pdf")));
-                await ShouldFailAsync(HttpStatusCode.NotFound, () => _files.GetAsync(file.Id));
+                await ShouldFailAsync(HttpStatusCode.Forbidden, () => _integration.CreateAsync(NewFile(Container, "a.pdf")));
+                await ShouldFailAsync(HttpStatusCode.NotFound, () => _integration.GetAsync(file.Id));
             }
         }
     }
@@ -131,39 +135,45 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
         BlobManagementFileDto file;
         using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
         {
-            file = await _files.CreateAsync(NewFile(Container, "theirs.pdf"));
+            file = await _integration.CreateAsync(NewFile(Container, "theirs.pdf"));
 
             // A container that lists no client takes nothing from one - and one the host never declared answers the
             // same, as on the BLOB API.
-            await ShouldFailAsync(HttpStatusCode.Forbidden, () => _files.CreateAsync(NewFile(BlobManagementHttpApiTestModule.ClosedContainer, "a.pdf")));
-            await ShouldFailAsync(HttpStatusCode.Forbidden, () => _files.CreateAsync(NewFile("undeclared", "a.pdf")));
+            await ShouldFailAsync(HttpStatusCode.Forbidden, () => _integration.CreateAsync(NewFile(BlobManagementHttpApiTestModule.ClosedContainer, "a.pdf")));
+            await ShouldFailAsync(HttpStatusCode.Forbidden, () => _integration.CreateAsync(NewFile("undeclared", "a.pdf")));
         }
 
         // Another client: the file is not found, and deleting it does nothing.
         using (TestCaller.As("another-app"))
         {
-            await ShouldFailAsync(HttpStatusCode.Forbidden, () => _files.CreateAsync(NewFile(Container, "a.pdf")));
-            await ShouldFailAsync(HttpStatusCode.NotFound, () => _files.GetAsync(file.Id));
-            await _files.DeleteAsync(file.Id);
+            await ShouldFailAsync(HttpStatusCode.Forbidden, () => _integration.CreateAsync(NewFile(Container, "a.pdf")));
+            await ShouldFailAsync(HttpStatusCode.NotFound, () => _integration.GetAsync(file.Id));
+            await _integration.DeleteAsync(file.Id);
         }
 
-        // A token that carries a user is no client's, whatever the user holds and whichever client issued it.
+        // A token that carries a user is no client's, whatever the user holds - here every permission, the management
+        // one among them - and whichever client issued it: the integration service lets it neither write nor read.
         foreach (var client in new[] { UiClient, BlobManagementHttpApiTestModule.AllowedClient })
         {
             using (TestCaller.As(client, _admin))
             {
-                await ShouldFailAsync(HttpStatusCode.Forbidden, () => _files.CreateAsync(NewFile(Container, "a.pdf")));
+                await ShouldFailAsync(HttpStatusCode.Forbidden, () => _integration.CreateAsync(NewFile(Container, "a.pdf")));
                 await ShouldFailAsync(HttpStatusCode.Forbidden,
-                    () => _files.UpdateAsync(file.Id, new UpdateBlobManagementFileInput { Name = "mine.pdf" }));
+                    () => _integration.UpdateAsync(file.Id, new UpdateBlobManagementFileInput { Name = "mine.pdf" }));
                 await ShouldFailAsync(HttpStatusCode.Forbidden,
-                    () => _files.MoveAsync(file.Id, new MoveBlobManagementFileInput { DirectoryId = null }));
-                await ShouldFailAsync(HttpStatusCode.Forbidden, () => _files.DeleteAsync(file.Id));
+                    () => _integration.MoveAsync(file.Id, new MoveBlobManagementFileInput { DirectoryId = null }));
+                await ShouldFailAsync(HttpStatusCode.Forbidden, () => _integration.DeleteAsync(file.Id));
+
+                await ShouldFailAsync(HttpStatusCode.Forbidden, () => _integration.GetAsync(file.Id));
+                await ShouldFailAsync(HttpStatusCode.Forbidden,
+                    () => _integration.GetListAsync(new GetBlobManagementFilesInput { ContainerName = Container }));
+                await ShouldFailAsync(HttpStatusCode.Forbidden, () => _integration.GetContentAsync(file.Id));
             }
         }
 
         using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
         {
-            (await _files.GetAsync(file.Id)).Name.ShouldBe("theirs.pdf");
+            (await _integration.GetAsync(file.Id)).Name.ShouldBe("theirs.pdf");
         }
     }
 
@@ -171,13 +181,15 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
     public async Task An_Administrator_Should_Read_Files_And_Their_Bytes_As_An_Attachment()
     {
         await GrantAsync(_admin, BlobManagementPermissions.Containers.Default);
+        var bytes = BlobManagementTestFiles.Pdf("page " + Guid.NewGuid());
 
         BlobManagementFileDto file;
         using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
         {
-            file = await _files.CreateAsync(NewFile(BlobManagementHttpApiTestModule.DocumentsContainer, "page.pdf"));
+            file = await _integration.CreateAsync(NewFile(BlobManagementHttpApiTestModule.DocumentsContainer, "page.pdf", bytes));
         }
 
+        // The management page's own service, api/blob-management/files: what a client stored, listed, shown and read.
         using (TestCaller.As(UiClient, _admin))
         {
             // The management permission sees every container the host declares, and no other.
@@ -189,9 +201,25 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
             (await _files.GetAsync(file.Id)).Name.ShouldBe("page.pdf");
             (await _files.GetListAsync(new GetBlobManagementFilesInput { ContainerName = BlobManagementHttpApiTestModule.DocumentsContainer }))
                 .Items.Select(f => f.Id).ShouldContain(file.Id);
+            using (var content = await _files.GetContentAsync(file.Id))
+            {
+                using var memory = new MemoryStream();
+                await content.GetStream().CopyToAsync(memory);
+                memory.ToArray().ShouldBe(bytes);
+            }
+
             await ShouldFailAsync(HttpStatusCode.BadRequest,
                 () => _files.GetListAsync(new GetBlobManagementFilesInput { ContainerName = Container, Sorting = "Hash" }),
                 BlobManagementErrorCodes.SortingNotSupported);
+        }
+
+        // A client acting for itself is no user: the management page's service lets it read nothing, whatever it may
+        // do through the integration service.
+        using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
+        {
+            await ShouldFailAsync(HttpStatusCode.Forbidden,
+                () => _files.GetListAsync(new GetBlobManagementFilesInput { ContainerName = BlobManagementHttpApiTestModule.DocumentsContainer }));
+            await ShouldFailAsync(HttpStatusCode.Forbidden, () => _files.GetAsync(file.Id));
         }
 
         using (var request = new HttpRequestMessage(HttpMethod.Get, $"/api/blob-management/files/{file.Id}/content"))
@@ -319,6 +347,70 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
         }
     }
 
+    /// <summary>
+    /// The remote services send the application's user without touching the caller's input: what goes over HTTP is a
+    /// copy, so an input the caller keeps or sends again still names nobody.
+    /// </summary>
+    [Fact]
+    public async Task The_Remote_Services_Should_Not_Change_The_Callers_Input()
+    {
+        using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
+        using (AsApplicationUser(_appUser))
+        {
+            var input = NewFile(Container, "untouched.pdf");
+            var file = await _appFiles.CreateAsync(input);
+            file.CreatorId.ShouldBe(_appUser);
+            input.CreatorId.ShouldBeNull();
+
+            var ticketInput = new CreateBlobManagementUploadTicketInput { ContainerName = Container };
+            await _appFiles.CreateUploadTicketAsync(ticketInput);
+            ticketInput.UploaderId.ShouldBeNull();
+        }
+    }
+
+    /// <summary>
+    /// A file stored without a named user is counted for the application's current user when that user belongs to the
+    /// current tenant, as ABP's auditing records the creator in process; a user of another side - a host user working in
+    /// a tenant - is not sent, and the file is counted for nobody. Both ways in follow it.
+    /// </summary>
+    [Fact]
+    public async Task A_File_Should_Be_Counted_For_The_Current_User_Only_When_They_Belong_To_The_Current_Tenant()
+    {
+        var tenantId = BlobManagementHttpApiTestModule.TenantId;
+        var tenantUser = Guid.NewGuid();
+        var hostUser = Guid.NewGuid();
+        var bytes = BlobManagementTestFiles.Pdf("tenant rule " + Guid.NewGuid());
+
+        using (_currentTenant.Change(tenantId))
+        using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
+        {
+            using (AsApplicationUser(tenantUser, tenantId))
+            {
+                (await _appFiles.CreateAsync(NewFile(Container, "tenant-user.pdf", bytes))).CreatorId.ShouldBe(tenantUser);
+                (await SaveUnderNameAsync(bytes)).CreatorId.ShouldBe(tenantUser);
+            }
+
+            using (AsApplicationUser(hostUser))
+            {
+                (await _appFiles.CreateAsync(NewFile(Container, "host-user.pdf", bytes))).CreatorId.ShouldBeNull();
+                (await SaveUnderNameAsync(bytes)).CreatorId.ShouldBeNull();
+
+                // A user the caller names is sent as named, whatever the tenant.
+                var named = NewFile(Container, "named.pdf", bytes);
+                named.CreatorId = hostUser;
+                (await _appFiles.CreateAsync(named)).CreatorId.ShouldBe(hostUser);
+            }
+        }
+    }
+
+    /// <summary>Saves a BLOB under a new name through the remote BLOB service and reads back its file.</summary>
+    private async Task<BlobManagementFileDto> SaveUnderNameAsync(byte[] bytes)
+    {
+        var blobName = "counted/" + Guid.NewGuid().ToString("N") + ".pdf";
+        await _appBlobs.SaveAsync(Container, blobName, new RemoteStreamContent(new MemoryStream(bytes), blobName, "application/pdf"));
+        return (await _appFiles.GetListAsync(new GetBlobManagementFilesInput { ContainerName = Container, Filter = blobName })).Items.Single();
+    }
+
     private static CreateBlobManagementFileInput NewFile(string containerName, string name, byte[]? bytes = null)
     {
         return new CreateBlobManagementFileInput
@@ -330,10 +422,15 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
     }
 
     /// <summary>The user signed in to the application - its side of the call, not what Blob Management is sent.</summary>
-    private IDisposable AsApplicationUser(Guid userId)
+    private IDisposable AsApplicationUser(Guid userId, Guid? tenantId = null)
     {
-        return _principalAccessor.Change(new ClaimsPrincipal(new ClaimsIdentity(
-            new[] { new Claim(AbpClaimTypes.UserId, userId.ToString()) }, "Application")));
+        var claims = new List<Claim> { new(AbpClaimTypes.UserId, userId.ToString()) };
+        if (tenantId.HasValue)
+        {
+            claims.Add(new Claim(AbpClaimTypes.TenantId, tenantId.Value.ToString()));
+        }
+
+        return _principalAccessor.Change(new ClaimsPrincipal(new ClaimsIdentity(claims, "Application")));
     }
 
     private async Task GrantAsync(Guid userId, params string[] permissions)

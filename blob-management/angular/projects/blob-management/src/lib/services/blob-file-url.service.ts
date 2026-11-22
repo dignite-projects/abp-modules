@@ -24,13 +24,13 @@ export function toBlobManagementPublicSize(pixels: number, sizes: readonly numbe
 export class BlobManagementFileUrlService {
   private readonly environment = inject(EnvironmentService);
 
-  /** The address on Blob Management's host; an absolute, `blob:` or `data:` address is returned as it is. */
+  /** The address on Blob Management's host; an absolute `http(s)` address is returned as it is. */
   toAbsolute(url: string | null | undefined): string {
     if (!url) {
       return '';
     }
 
-    if (/^(https?:|blob:|data:)/i.test(url)) {
+    if (/^https?:/i.test(url)) {
       return url;
     }
 
@@ -40,12 +40,12 @@ export class BlobManagementFileUrlService {
 
   /**
    * A public picture asked for at a size, so the browser does not load the whole upload for a thumbnail: the Blob Management
-   * renders `?width=&height=` (cropped to fill when both are set). Any other address is returned as it is.
-   * Pass sizes of the file's container (see `toBlobManagementPublicSize`): Blob Management refuses others with 400.
+   * renders `?width=&height=` (cropped to fill when both are set). Pass sizes of the file's container (see
+   * `toBlobManagementPublicSize`): Blob Management refuses others with 400.
    */
   sized(url: string | null | undefined, width?: number, height?: number): string {
     const absolute = this.toAbsolute(url);
-    if (!absolute || /^(blob:|data:)/i.test(absolute) || (!width && !height)) {
+    if (!absolute || (!width && !height)) {
       return absolute;
     }
 

@@ -35,7 +35,7 @@
     "Permission:ManagePermissions": "Quản lý quyền trên bộ chứa",
     "Permission:TenantUsages": "Xem mức sử dụng theo tenant (chỉ máy chủ)",
     "Menu:BlobManagement": "Quản lý Blob",
-    "Menu:Files": "Tệp",
+    "Files": "Tệp",
     "NoContainers": "Không có bộ chứa nào để hiển thị.",
     "NewDirectory": "Thư mục mới",
     "Rename": "Đổi tên",

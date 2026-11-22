@@ -1,5 +1,10 @@
 # Blob Management: how a business system integrates (2026-11-14)
 
+> Partly replaced by [`design-review-decision.md`](design-review-decision.md) (2026-11-22): the BLOB API and the file
+> API are ABP integration services at `integration-api/blob-management/{blobs,files}`, hidden unless the host exposes
+> integration services, and an upload ticket stores one file *while that file exists* - it can store another once
+> the file is deleted. The three layers of credentials and everything else stand.
+
 > Partly replaced by [`peer-comparison.md`](peer-comparison.md) (the same day): files no longer share stored bytes, so
 > a public address is one file's. What is written below about files kept by id sharing one address is history.
 

@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Volo.Abp;
+using Volo.Abp.AspNetCore.Mvc;
 using Volo.Abp.AspNetCore.MultiTenancy;
 using Volo.Abp.AspNetCore.TestBase;
 using Volo.Abp.Autofac;
@@ -110,6 +111,10 @@ public class BlobManagementHttpApiTestModule : AbpModule
         ConfigureDatabase(context);
         ConfigureBlobStoring(context);
 
+        // Blob Management as its own service exposes its integration services - the BLOB API and the file API under
+        // integration-api/ - which ABP leaves out of a host unless it says so.
+        Configure<AbpAspNetCoreMvcOptions>(options => options.ExposeIntegrationServices = true);
+
         // The application's side: its IBlobManagementBlobService and IBlobManagementFileService are the remote ones, though
         // Blob Management's in-process ones are installed in this host too.
         Configure<AbpRemoteServiceOptions>(options =>
@@ -119,8 +124,10 @@ public class BlobManagementHttpApiTestModule : AbpModule
         context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementBlobService, RemoteBlobManagementBlobService>());
         context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementFileService, RemoteBlobManagementFileService>());
 
-        // The file and container services' generated proxies replace its services wherever HttpApi.Client is installed. This host is
-        // the Blob Management too, so its controllers get the in-process services back; the tests call the proxies by their type.
+        // The generated proxies of the services for users replace them wherever HttpApi.Client is installed. This host is
+        // the Blob Management too, so its controllers get the in-process services back; the tests call the proxies by their
+        // type. (The integration services' proxies register under the base contracts, IBlobManagementBlobService and
+        // IBlobManagementFileService - replaced above - not under the integration interfaces the controllers take.)
         context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementContainerAppService, BlobManagementContainerAppService>());
         context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementFileAppService, BlobManagementFileAppService>());
         context.Services.Replace(ServiceDescriptor.Transient<IBlobManagementDirectoryAppService, BlobManagementDirectoryAppService>());

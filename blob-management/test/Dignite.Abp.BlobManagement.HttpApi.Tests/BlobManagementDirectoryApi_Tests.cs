@@ -19,7 +19,8 @@ namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
 /// The directories over HTTP, through the generated C# client proxies: a signed-in user keeps them at
-/// <c>api/blob-management/directories</c>, and an application files, lists and moves files in them as a client.
+/// <c>api/blob-management/directories</c>, and an application files, lists and moves files in them as a client, through
+/// the file API (<c>integration-api/blob-management/files</c>).
 /// </summary>
 public class BlobManagementDirectoryApi_Tests : AbpWebApplicationFactoryIntegratedTest<Program>
 {
@@ -27,14 +28,14 @@ public class BlobManagementDirectoryApi_Tests : AbpWebApplicationFactoryIntegrat
     private const string Container = BlobManagementHttpApiTestModule.DocumentsContainer;
 
     private readonly BlobManagementDirectoryClientProxy _directories;
-    private readonly BlobManagementFileClientProxy _files;
+    private readonly BlobManagementFileIntegrationClientProxy _files;
 
     private readonly Guid _user = Guid.NewGuid();
 
     public BlobManagementDirectoryApi_Tests()
     {
         _directories = GetRequiredService<BlobManagementDirectoryClientProxy>();
-        _files = GetRequiredService<BlobManagementFileClientProxy>();
+        _files = GetRequiredService<BlobManagementFileIntegrationClientProxy>();
     }
 
     [Fact]

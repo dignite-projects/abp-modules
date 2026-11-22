@@ -143,7 +143,7 @@ Usage is counted from the file descriptors: the size of every file, across every
 | `BlobManagement:StorageQuotaExceeded` | The tenant's `BlobManagement.StorageSize` would be exceeded (HTTP 403). An overriding save is checked for the net change: the bytes of the file it replaces count as freed. |
 | `BlobManagement:FileAddressedByName` | The file was saved by an application under its name, and is not renamed, moved or marked public by id (HTTP 409). |
 | `BlobManagement:UploadTicketInvalid` | An upload ticket that is expired, altered or not this Blob Management's (HTTP 403). |
-| `BlobManagement:UploadTicketUsed` | The ticket's file was stored already: a ticket stores one file, once (HTTP 409). |
+| `BlobManagement:UploadTicketUsed` | The ticket's file was stored already: a ticket stores one file (HTTP 409). |
 | `BlobManagement:FilePending` | The file was uploaded with a ticket and is not confirmed yet, so it gets no read link (HTTP 409). |
 | `BlobManagement:ReadLinkInvalid` | A read link that is expired, altered or not this Blob Management's (HTTP 403). |
 | `BlobManagement:DirectoriesNotAllowed` and the other directory errors | See [Directories](directories.md#errors). |

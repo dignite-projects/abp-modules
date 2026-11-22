@@ -1,5 +1,10 @@
 # Blob Management: what it is for (2026-11-13)
 
+> Partly replaced by [`design-review-decision.md`](design-review-decision.md) (2026-11-22): the file API
+> (`IBlobManagementFileAppService`, `api/blob-management/files`) no longer admits two callers. A granted client uses
+> `IBlobManagementFileIntegrationService` at `integration-api/blob-management/files`; what a holder of the management
+> permission reads is `IBlobManagementFileAppService`, which has the reads only.
+
 > Partly replaced by [`business-system-integration-decision.md`](business-system-integration-decision.md) (2026-11-14):
 > the module issues upload tickets and read links again, and a file - not its container - is public. What is written
 > below about "no upload of its own", tickets and `PublicRead` is history.

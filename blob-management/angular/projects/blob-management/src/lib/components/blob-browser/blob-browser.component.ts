@@ -1,7 +1,6 @@
 import { CoreModule } from '@abp/ng.core';
-import { ChangeDetectionStrategy, Component, effect, input, signal, untracked } from '@angular/core';
-import { BlobManagementContainerDto } from '../../proxy/containers';
-import { BlobManagementDirectoryDto } from '../../proxy/directories';
+import { ChangeDetectionStrategy, Component, computed, effect, input, signal, untracked } from '@angular/core';
+import { BlobManagementContainerDto, BlobManagementDirectoryDto } from '@dignite/ng.blob-management/proxy';
 import { BlobManagementDirectoryTreeComponent } from '../blob-directory-tree/blob-directory-tree.component';
 import { BlobManagementFileListComponent } from '../blob-file-list/blob-file-list.component';
 
@@ -31,12 +30,18 @@ import { BlobManagementFileListComponent } from '../blob-file-list/blob-file-lis
 export class BlobManagementBrowserComponent {
   readonly container = input.required<BlobManagementContainerDto>();
 
+  /**
+   * Which container is shown. The container's object changes when what the caller may do with it does; the directory
+   * chosen is forgotten only when another container is shown.
+   */
+  readonly containerName = computed(() => this.container().name ?? '');
+
   /** The directory shown; `null` for the top of the container. */
   readonly directory = signal<BlobManagementDirectoryDto | null>(null);
 
   constructor() {
     effect(() => {
-      this.container();
+      this.containerName();
       untracked(() => this.directory.set(null));
     });
   }

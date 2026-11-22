@@ -4,16 +4,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using Shouldly;
 using Volo.Abp;
-using Volo.Abp.Data;
 using Volo.Abp.Modularity;
 using Xunit;
+using Volo.Abp.Data;
 
 namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
-/// The files people upload through <see cref="FileDescriptorManager"/> - addressed by their ids, with names that
-/// repeat, filed in directories, renamed and moved - beside the files applications save under a name, in the same
-/// containers.
+/// The files an application keeps by id through <see cref="FileDescriptorManager"/> - with names that repeat, filed in
+/// directories, renamed and moved - beside the BLOBs applications save under a name, in the same containers.
 /// </summary>
 public abstract class UploadedFiles_Tests<TStartupModule> : BlobManagementDomainTestBase<TStartupModule>
     where TStartupModule : IAbpModule
@@ -30,13 +29,13 @@ public abstract class UploadedFiles_Tests<TStartupModule> : BlobManagementDomain
     }
 
     [Fact]
-    public async Task Names_Of_Uploaded_Files_Should_Repeat()
+    public async Task Names_Of_Files_Kept_By_Id_Should_Repeat()
     {
-        var first = await UploadAsync(BlobManagementTestContainers.Documents, "minutes.pdf", "first");
-        var second = await UploadAsync(BlobManagementTestContainers.Documents, "minutes.pdf", "second");
+        var first = await CreateFileAsync(BlobManagementTestContainers.Documents, "minutes.pdf", "first");
+        var second = await CreateFileAsync(BlobManagementTestContainers.Documents, "minutes.pdf", "second");
 
         second.Id.ShouldNotBe(first.Id);
-        // An uploaded file's name is not an address: no name key, so the unique index does not keep them apart.
+        // The name of a file kept by id is not an address: no name key, so the unique index does not keep them apart.
         first.NameKey.ShouldBeNull();
         second.NameKey.ShouldBeNull();
         first.IsAddressedByName.ShouldBeFalse();
@@ -48,33 +47,42 @@ public abstract class UploadedFiles_Tests<TStartupModule> : BlobManagementDomain
     {
         var content = "same content " + Guid.NewGuid();
 
-        var first = await UploadAsync(BlobManagementTestContainers.Documents, "a.pdf", content);
-        var second = await UploadAsync(BlobManagementTestContainers.Documents, "b.pdf", content);
+        var first = await CreateFileAsync(BlobManagementTestContainers.Documents, "a.pdf", content);
+        var second = await CreateFileAsync(BlobManagementTestContainers.Documents, "b.pdf", content);
 
         second.BlobName.ShouldNotBe(first.BlobName);
     }
 
+    /// <summary>
+    /// What the application says with the file - its id, its directory, whether it is public or pending, whom it is
+    /// counted for, the client - is in the row as it was inserted, which nothing updated.
+    /// </summary>
     [Fact]
-    public async Task A_Callback_Should_Set_Fields_Before_The_Row_Is_Inserted()
+    public async Task What_The_Application_Says_Should_Be_In_The_Inserted_Row()
     {
-        var content = "configured " + Guid.NewGuid();
+        var folder = await CreateDirectoryAsync(BlobManagementTestContainers.Documents, "Said", null);
+        var args = new CreateFileArgs
+        {
+            Id = Guid.NewGuid(),
+            DirectoryId = folder.Id,
+            IsPublic = true,
+            IsPending = true,
+            CreatorId = Guid.NewGuid(),
+            ClientId = "site-app"
+        };
+        args.ExtraProperties["LegacyPath"] = "Docs/2026";
 
-        var stored = await UploadAsync(BlobManagementTestContainers.Documents, "first.pdf", content, configureFile: file => file.SetProperty("Test:Marker", "stored"));
+        var stored = await CreateFileAsync(BlobManagementTestContainers.Documents, "said.pdf", args: args);
 
-        // Read back: the value was in the inserted row, which nothing updated.
-        (await WithUnitOfWorkAsync(() => _fileRepository.GetAsync(stored.Id))).GetProperty<string>("Test:Marker").ShouldBe("stored");
-        stored.LastModificationTime.ShouldBeNull();
-    }
-
-    [Fact]
-    public async Task A_Failing_Callback_Should_Fail_The_Upload_And_Store_Nothing()
-    {
-        var name = Guid.NewGuid().ToString("N") + ".pdf";
-
-        await Should.ThrowAsync<InvalidOperationException>(() => UploadAsync(
-            BlobManagementTestContainers.Documents, name, configureFile: _ => throw new InvalidOperationException("refused")));
-
-        (await WithUnitOfWorkAsync(() => _fileRepository.GetListAsync())).ShouldNotContain(f => f.Name == name);
+        var read = await WithUnitOfWorkAsync(() => _fileRepository.GetAsync(stored.Id));
+        read.Id.ShouldBe(args.Id.Value);
+        read.DirectoryId.ShouldBe(folder.Id);
+        read.IsPublic.ShouldBeTrue();
+        read.IsPending.ShouldBeTrue();
+        read.CreatorId.ShouldBe(args.CreatorId);
+        read.ClientId.ShouldBe("site-app");
+        read.GetProperty<string>("LegacyPath").ShouldBe("Docs/2026");
+        read.LastModificationTime.ShouldBeNull();
     }
 
     [Fact]
@@ -84,19 +92,19 @@ public abstract class UploadedFiles_Tests<TStartupModule> : BlobManagementDomain
         var saved = await SaveAsync(BlobManagementTestContainers.Documents, "report.pdf");
         saved.IsAddressedByName.ShouldBeTrue();
 
-        // ...and a person uploads a file of the same name: another file, which is no address.
-        var uploaded = await UploadAsync(BlobManagementTestContainers.Documents, "report.pdf");
-        uploaded.IsAddressedByName.ShouldBeFalse();
+        // ...and keeps a file of the same name by id: another file, which is no address.
+        var kept = await CreateFileAsync(BlobManagementTestContainers.Documents, "report.pdf");
+        kept.IsAddressedByName.ShouldBeFalse();
 
-        (await WithUnitOfWorkAsync(() => _fileDescriptorManager.FindAsync(BlobManagementTestContainers.Documents, "report.pdf")))!
+        (await WithUnitOfWorkAsync(() => _fileDescriptorManager.FindBlobAsync(BlobManagementTestContainers.Documents, "report.pdf")))!
             .Id.ShouldBe(saved.Id);
 
         // The top of the container lists both.
         var listed = await WithUnitOfWorkAsync(() => _fileRepository.GetListAsync(BlobManagementTestContainers.Documents, null));
-        listed.Select(f => f.Id).ShouldBe(new[] { saved.Id, uploaded.Id }, ignoreOrder: true);
+        listed.Select(f => f.Id).ShouldBe(new[] { saved.Id, kept.Id }, ignoreOrder: true);
 
-        // Uploading works in a container without directories too, and saving in one with them.
-        (await UploadAsync(BlobManagementTestContainers.Files, "a.pdf")).IsAddressedByName.ShouldBeFalse();
+        // Keeping by id works in a container without directories too, and saving in one with them.
+        (await CreateFileAsync(BlobManagementTestContainers.Files, "a.pdf")).IsAddressedByName.ShouldBeFalse();
     }
 
     [Fact]
@@ -116,14 +124,14 @@ public abstract class UploadedFiles_Tests<TStartupModule> : BlobManagementDomain
     }
 
     [Fact]
-    public async Task An_Uploaded_File_Should_Be_Filed_Renamed_And_Moved()
+    public async Task A_File_Kept_By_Id_Should_Be_Filed_Renamed_And_Moved()
     {
         var first = await CreateDirectoryAsync(BlobManagementTestContainers.Documents, "First", null);
         var second = await CreateDirectoryAsync(BlobManagementTestContainers.Documents, "Second", first.Id);
         var elsewhere = await CreateDirectoryAsync(BlobManagementTestContainers.Archive, "Elsewhere", null);
 
         // Filed before it is inserted: the row is written once.
-        var file = await UploadAsync(BlobManagementTestContainers.Documents, "draft.pdf", directoryId: first.Id);
+        var file = await CreateFileAsync(BlobManagementTestContainers.Documents, "draft.pdf", directoryId: first.Id);
         file.DirectoryId.ShouldBe(first.Id);
         file.LastModificationTime.ShouldBeNull();
 
@@ -147,24 +155,24 @@ public abstract class UploadedFiles_Tests<TStartupModule> : BlobManagementDomain
         await ShouldFailAsync(BlobManagementErrorCodes.DirectoryNotFound, () => WithUnitOfWorkAsync(async () =>
             await _fileDescriptorManager.MoveAsync(await _fileRepository.GetAsync(file.Id), elsewhere.Id)));
         await ShouldFailAsync(BlobManagementErrorCodes.DirectoryNotFound,
-            () => UploadAsync(BlobManagementTestContainers.Documents, "a.pdf", directoryId: elsewhere.Id));
+            () => CreateFileAsync(BlobManagementTestContainers.Documents, "a.pdf", directoryId: elsewhere.Id));
         await ShouldFailAsync(BlobManagementErrorCodes.DirectoriesNotAllowed,
-            () => UploadAsync(BlobManagementTestContainers.Files, "a.pdf", directoryId: first.Id));
+            () => CreateFileAsync(BlobManagementTestContainers.Files, "a.pdf", directoryId: first.Id));
     }
 
     [Fact]
     public async Task A_Place_Should_List_Its_Files_Searched_Sorted_And_Paged()
     {
         var folder = await CreateDirectoryAsync(BlobManagementTestContainers.Documents, "Listing", null);
-        var report = await UploadAsync(BlobManagementTestContainers.Documents, "Report-2026.pdf", directoryId: folder.Id);
-        var notes = await UploadAsync(BlobManagementTestContainers.Documents, "notes.pdf", directoryId: folder.Id);
+        var report = await CreateFileAsync(BlobManagementTestContainers.Documents, "Report-2026.pdf", directoryId: folder.Id);
+        var notes = await CreateFileAsync(BlobManagementTestContainers.Documents, "notes.pdf", directoryId: folder.Id);
         var same = new[]
         {
-            await UploadAsync(BlobManagementTestContainers.Documents, "scan.pdf", directoryId: folder.Id),
-            await UploadAsync(BlobManagementTestContainers.Documents, "scan.pdf", directoryId: folder.Id),
-            await UploadAsync(BlobManagementTestContainers.Documents, "scan.pdf", directoryId: folder.Id)
+            await CreateFileAsync(BlobManagementTestContainers.Documents, "scan.pdf", directoryId: folder.Id),
+            await CreateFileAsync(BlobManagementTestContainers.Documents, "scan.pdf", directoryId: folder.Id),
+            await CreateFileAsync(BlobManagementTestContainers.Documents, "scan.pdf", directoryId: folder.Id)
         };
-        var atTop = await UploadAsync(BlobManagementTestContainers.Documents, "top.pdf");
+        var atTop = await CreateFileAsync(BlobManagementTestContainers.Documents, "top.pdf");
         var saved = await SaveAsync(BlobManagementTestContainers.Documents, "saved.pdf");
 
         await WithUnitOfWorkAsync(async () =>
@@ -199,7 +207,7 @@ public abstract class UploadedFiles_Tests<TStartupModule> : BlobManagementDomain
             // The top of the container: what is filed nowhere, the files applications saved among them.
             (await _fileRepository.GetListAsync(BlobManagementTestContainers.Documents, null))
                 .Select(f => f.Id).ShouldBe(new[] { atTop.Id, saved.Id }, ignoreOrder: true);
-            // The unfiled uploads only - what an import of directories reads.
+            // The unfiled files kept by id only - what an import of directories reads.
             (await _fileRepository.GetUnfiledListAsync(BlobManagementTestContainers.Documents, 0, 10))
                 .Select(f => f.Id).ShouldBe(new[] { atTop.Id });
         });
@@ -209,17 +217,18 @@ public abstract class UploadedFiles_Tests<TStartupModule> : BlobManagementDomain
         unsupported.Code.ShouldBe(BlobManagementErrorCodes.SortingNotSupported);
     }
 
-    private Task<FileDescriptor> UploadAsync(
+    private Task<FileDescriptor> CreateFileAsync(
         string containerName,
         string name,
         string? content = null,
         Guid? directoryId = null,
-        Action<FileDescriptor>? configureFile = null)
+        CreateFileArgs? args = null)
     {
+        args ??= new CreateFileArgs { DirectoryId = directoryId };
         return WithUnitOfWorkAsync(async () =>
         {
             using var stream = new MemoryStream(BlobManagementTestFiles.Pdf(content ?? Guid.NewGuid().ToString()));
-            return await _fileDescriptorManager.UploadAsync(containerName, name, stream, directoryId, configureFile);
+            return await _fileDescriptorManager.CreateFileAsync(containerName, name, stream, args);
         });
     }
 
@@ -228,7 +237,7 @@ public abstract class UploadedFiles_Tests<TStartupModule> : BlobManagementDomain
         return WithUnitOfWorkAsync(async () =>
         {
             using var stream = new MemoryStream(BlobManagementTestFiles.Pdf(Guid.NewGuid().ToString()));
-            return await _fileDescriptorManager.CreateAsync(containerName, name, stream);
+            return await _fileDescriptorManager.SaveBlobAsync(containerName, name, stream);
         });
     }
 

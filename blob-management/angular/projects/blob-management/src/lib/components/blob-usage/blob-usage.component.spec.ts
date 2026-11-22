@@ -3,7 +3,7 @@ import { PermissionService } from '@abp/ng.core';
 import { of } from 'rxjs';
 import { CoreTestingModule } from '@abp/ng.core/testing';
 import { BlobManagementUsageComponent } from './blob-usage.component';
-import { BlobManagementUsageService } from '../../proxy/usage';
+import { BlobManagementUsageService } from '@dignite/ng.blob-management/proxy';
 
 describe('BlobManagementUsageComponent', () => {
   let get: ReturnType<typeof vi.fn>;

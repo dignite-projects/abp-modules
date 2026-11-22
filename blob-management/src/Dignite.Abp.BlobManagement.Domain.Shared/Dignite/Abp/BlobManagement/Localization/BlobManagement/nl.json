@@ -35,7 +35,7 @@
     "Permission:ManagePermissions": "Machtigingen voor containers beheren",
     "Permission:TenantUsages": "Gebruik per tenant bekijken (alleen host)",
     "Menu:BlobManagement": "Blobbeheer",
-    "Menu:Files": "Bestanden",
+    "Files": "Bestanden",
     "NoContainers": "Er is geen container om weer te geven.",
     "NewDirectory": "Nieuwe map",
     "Rename": "Naam wijzigen",

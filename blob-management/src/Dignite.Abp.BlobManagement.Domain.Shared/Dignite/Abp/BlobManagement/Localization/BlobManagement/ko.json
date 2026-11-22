@@ -35,7 +35,7 @@
     "Permission:ManagePermissions": "컨테이너의 권한 관리",
     "Permission:TenantUsages": "테넌트별 사용량 보기(호스트 전용)",
     "Menu:BlobManagement": "Blob 관리",
-    "Menu:Files": "파일",
+    "Files": "파일",
     "NoContainers": "표시할 컨테이너가 없습니다.",
     "NewDirectory": "새 폴더",
     "Rename": "이름 바꾸기",

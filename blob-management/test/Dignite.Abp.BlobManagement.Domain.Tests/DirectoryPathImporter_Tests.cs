@@ -12,7 +12,7 @@ using Xunit;
 namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
-/// The unfiled uploads of a container filed into directories by a path an extra property holds, against the database
+/// The unfiled files kept by id of a container filed into directories by a path an extra property holds, against the database
 /// provider of the concrete test class.
 /// </summary>
 public abstract class DirectoryPathImporter_Tests<TStartupModule> : BlobManagementDomainTestBase<TStartupModule>
@@ -74,7 +74,7 @@ public abstract class DirectoryPathImporter_Tests<TStartupModule> : BlobManageme
         (await WithUnitOfWorkAsync(() => _fileRepository.GetAsync(content.NotesId))).DirectoryId.ShouldBe(year.Id);
         (await WithUnitOfWorkAsync(() => _fileRepository.GetAsync(content.IndexId))).DirectoryId.ShouldBe(existing.Id);
         (await WithUnitOfWorkAsync(() => _fileRepository.GetAsync(content.TooDeepId))).DirectoryId.ShouldBeNull();
-        // A file an application saved under a name is not an upload to file.
+        // A file an application saved under a name is not one to file.
         (await WithUnitOfWorkAsync(() => _fileRepository.GetAsync(content.SavedId))).DirectoryId.ShouldBeNull();
 
         // Run again: the filed files are no longer read, and nothing is created.
@@ -101,43 +101,44 @@ public abstract class DirectoryPathImporter_Tests<TStartupModule> : BlobManageme
     }
 
     /// <summary>
-    /// Uploads at the top of the container: two under <c>Docs/2026</c> (one written with spaces and a doubled
+    /// Files kept by id at the top of the container: two under <c>Docs/2026</c> (one written with spaces and a doubled
     /// separator), one under <c>Docs</c>, one without a path, one too deep to file - and a file an application saved,
     /// with a path that is not the importer's to follow. Every test has a database of its own.
     /// </summary>
     private async Task<Content> NewContentAsync()
     {
         var content = new Content();
-        content.MinutesId = (await UploadAsync("Docs/2026")).Id;
-        content.NotesId = (await UploadAsync(" Docs //2026/ ")).Id;
-        content.IndexId = (await UploadAsync("Docs")).Id;
-        await UploadAsync(null);
-        content.TooDeepId = (await UploadAsync(
+        content.MinutesId = (await CreateFileAsync("Docs/2026")).Id;
+        content.NotesId = (await CreateFileAsync(" Docs //2026/ ")).Id;
+        content.IndexId = (await CreateFileAsync("Docs")).Id;
+        await CreateFileAsync(null);
+        content.TooDeepId = (await CreateFileAsync(
             string.Join("/", Enumerable.Range(1, DirectoryDescriptorConsts.MaxDepth + 1).Select(i => "level" + i)))).Id;
         content.SavedId = (await WithUnitOfWorkAsync(async () =>
         {
             using var stream = new MemoryStream(BlobManagementTestFiles.Pdf(Guid.NewGuid().ToString()));
-            return await _fileDescriptorManager.CreateAsync(BlobManagementTestContainers.Documents, Guid.NewGuid().ToString("N") + ".pdf", stream);
+            return await _fileDescriptorManager.SaveBlobAsync(BlobManagementTestContainers.Documents, Guid.NewGuid().ToString("N") + ".pdf", stream);
         })).Id;
         return content;
     }
 
-    private Task<FileDescriptor> UploadAsync(string? path)
+    /// <summary>
+    /// A file kept by id at the top of the container, with <paramref name="path"/> in the extra property the importer
+    /// reads - written with the file, as an application that migrates its own library in writes it.
+    /// </summary>
+    private Task<FileDescriptor> CreateFileAsync(string? path)
     {
         return WithUnitOfWorkAsync(async () =>
         {
             using var stream = new MemoryStream(BlobManagementTestFiles.Pdf(Guid.NewGuid().ToString()));
-            return await _fileDescriptorManager.UploadAsync(
-                BlobManagementTestContainers.Documents,
-                Guid.NewGuid().ToString("N") + ".pdf",
-                stream,
-                configureFile: file =>
-                {
-                    if (path != null)
-                    {
-                        file.SetProperty(Property, path);
-                    }
-                });
+            var args = new CreateFileArgs();
+            if (path != null)
+            {
+                args.ExtraProperties[Property] = path;
+            }
+
+            return await _fileDescriptorManager.CreateFileAsync(
+                BlobManagementTestContainers.Documents, Guid.NewGuid().ToString("N") + ".pdf", stream, args);
         });
     }
 

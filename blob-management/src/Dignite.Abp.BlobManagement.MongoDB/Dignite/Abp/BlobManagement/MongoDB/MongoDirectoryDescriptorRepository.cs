@@ -86,11 +86,13 @@ public class MongoDirectoryDescriptorRepository
     {
         var token = GetCancellationToken(cancellationToken);
         var parentIds = ids.Select(id => (Guid?)id).ToList();
-        var children = await (await GetQueryableAsync(token))
+        // Distinct in the database: a parent comes back once, however many children it has.
+        var parents = await (await GetQueryableAsync(token))
             .Where(d => parentIds.Contains(d.ParentId))
             .Select(d => d.ParentId)
+            .Distinct()
             .ToListAsync(token);
-        return children.Where(id => id.HasValue).Select(id => id!.Value).Distinct().ToList();
+        return parents.Where(id => id.HasValue).Select(id => id!.Value).ToList();
     }
 
     public virtual async Task<bool> HasChildrenAsync(Guid id, CancellationToken cancellationToken = default)

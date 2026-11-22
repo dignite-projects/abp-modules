@@ -35,7 +35,7 @@
     "Permission:ManagePermissions": "Gestionarea permisiunilor pentru containere",
     "Permission:TenantUsages": "Vizualizează utilizarea pe chiriași (doar gazdă)",
     "Menu:BlobManagement": "Gestionare bloburi",
-    "Menu:Files": "Fișiere",
+    "Files": "Fișiere",
     "NoContainers": "Nu există niciun container de afișat.",
     "NewDirectory": "Folder nou",
     "Rename": "Redenumire",

@@ -137,31 +137,6 @@ public abstract class DirectoryManager_Tests<TStartupModule> : BlobManagementDom
         await ShouldFailAsync(BlobManagementErrorCodes.DirectoryTooDeep, () => MoveAsync(top.Id, last.ParentId));
     }
 
-    /// <summary>
-    /// A deleted subdirectory is seen by nobody and restored by nothing: it does not make the directory it was in too
-    /// deep to move.
-    /// </summary>
-    [Fact]
-    public async Task A_Deleted_Subdirectory_Should_Not_Count_For_The_Depth_Of_A_Move()
-    {
-        Guid? parentId = null;
-        DirectoryDescriptor deep = null!;
-        for (var level = 1; level < DirectoryDescriptorConsts.MaxDepth; level++)
-        {
-            deep = await CreateAsync(BlobManagementTestContainers.Documents, "deep" + level, parentId);
-            parentId = deep.Id;
-        }
-
-        var top = await CreateAsync(BlobManagementTestContainers.Documents, "Emptied", null);
-        var below = await CreateAsync(BlobManagementTestContainers.Documents, "Below", top.Id);
-        await ShouldFailAsync(BlobManagementErrorCodes.DirectoryTooDeep, () => MoveAsync(top.Id, deep.Id));
-
-        await DeleteAsync(below.Id);
-        await MoveAsync(top.Id, deep.Id);
-
-        (await WithUnitOfWorkAsync(() => _directoryRepository.GetAsync(top.Id))).GetDepth().ShouldBe(DirectoryDescriptorConsts.MaxDepth);
-    }
-
     [Fact]
     public async Task Only_An_Empty_Directory_Should_Be_Deleted()
     {
@@ -174,7 +149,8 @@ public abstract class DirectoryManager_Tests<TStartupModule> : BlobManagementDom
         var file = await WithUnitOfWorkAsync(async () =>
         {
             using var stream = new MemoryStream(BlobManagementTestFiles.Pdf(Guid.NewGuid().ToString()));
-            return await _fileDescriptorManager.UploadAsync(BlobManagementTestContainers.Documents, "kept.pdf", stream, folder.Id);
+            return await _fileDescriptorManager.CreateFileAsync(
+                BlobManagementTestContainers.Documents, "kept.pdf", stream, new CreateFileArgs { DirectoryId = folder.Id });
         });
         await ShouldFailAsync(BlobManagementErrorCodes.DirectoryNotEmpty, () => DeleteAsync(folder.Id));
 
@@ -182,7 +158,7 @@ public abstract class DirectoryManager_Tests<TStartupModule> : BlobManagementDom
         await DeleteAsync(folder.Id);
 
         (await WithUnitOfWorkAsync(() => _directoryRepository.FindAsync(folder.Id))).ShouldBeNull();
-        // A deleted directory does not hold its name.
+        // The row is gone, and its name is free again.
         await CreateAsync(BlobManagementTestContainers.Documents, "Folder", null);
     }
 
