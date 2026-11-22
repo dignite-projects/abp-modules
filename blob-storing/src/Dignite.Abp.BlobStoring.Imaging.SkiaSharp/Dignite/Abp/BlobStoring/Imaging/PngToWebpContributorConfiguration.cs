@@ -9,11 +9,11 @@ namespace Dignite.Abp.BlobStoring.Imaging;
 public class PngToWebpContributorConfiguration
 {
     /// <summary>
-    /// The size below which a PNG is stored as it is when none is given: 16 KB. Lossless WebP is about 26% smaller than
-    /// PNG (Google's figure), so from about 16 KB a conversion saves 4 KB - the least saving Chrome DevTools' image
-    /// delivery insight reports as worth a modern format.
+    /// The size below which a PNG is stored as it is when none is given: 64 KB. Lossless WebP is about 26% smaller than
+    /// PNG (Google's figure), so from 64 KB a conversion saves about 16 KB; a smaller PNG - an icon, a logo, a piece of
+    /// a page - is left as the PNG it was made as, for a saving of a few KB.
     /// </summary>
-    public const long DefaultMinSizeInBytes = 16 * 1024;
+    public const long DefaultMinSizeInBytes = 64 * 1024;
 
     private readonly BlobContainerConfiguration _containerConfiguration;
 

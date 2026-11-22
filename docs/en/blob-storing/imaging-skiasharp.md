@@ -75,11 +75,11 @@ Like the other image contributors, it is a one-way transformation: the stored We
 
 Use the `StorePngAsWebp` extension method after the allowed content types contributor and **before any contributor that changes the bytes** - the metadata and image resize contributors - as in the example above. Its rule reads the length of the upload, which has to be the length your application saves.
 
-* `minSizeInBytes` (`long`, default `16384`): The size from which a PNG is stored as WebP; a smaller one is stored as it is. `0` converts every PNG the other rules allow. Calling `StorePngAsWebp` again only changes it.
+* `minSizeInBytes` (`long`, default `65536`, 64 KB): The size from which a PNG is stored as WebP; a smaller one is stored as it is. `0` converts every PNG the other rules allow. Calling `StorePngAsWebp` again only changes it.
 
 A PNG is decoded, turned and fitted into the box as a JPEG is, and encoded as **lossless** WebP: a PNG that already fits keeps every visible pixel, its transparency included - WebP has an alpha channel in both its modes. A PNG is stored as it is when:
 
-* It is smaller than `minSizeInBytes`. Lossless WebP is about [26% smaller than PNG](https://developers.google.com/speed/webp), so from 16 KB a conversion saves about 4 KB, the least saving that Chrome DevTools' image delivery insight reports as worth a modern format.
+* It is smaller than `minSizeInBytes`. Lossless WebP is about [26% smaller than PNG](https://developers.google.com/speed/webp), so from 64 KB a conversion saves about 16 KB. A smaller PNG - an icon, a logo, a piece of a page - stays the PNG it was made as, for a saving of a few KB.
 * It has 16 bits per channel. WebP has 8.
 * It is animated: an APNG would keep one frame.
 * It would still exceed WebP's 16383 pixels once fitted into the box, or its header gives no size, as for a JPEG.

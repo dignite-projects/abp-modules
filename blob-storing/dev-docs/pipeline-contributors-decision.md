@@ -218,14 +218,16 @@ in step. Re-read against "what stays out":
   converted. Before this, a JPEG beyond the limit would have failed the upload, the encoder being unable to write it
   (not reproduced); it only happens
   without a box, or with one side unconstrained, and with the decode guard raised above its default 8192.
-- PNG: at least `MinSizeInBytes` (default 16 KB), 8 bits per channel or fewer, not an APNG (`acTL` before the first
+- PNG: at least `MinSizeInBytes` (default 64 KB), 8 bits per channel or fewer, not an APNG (`acTL` before the first
   `IDAT`).
 
-**The default size, 16 KB, is derived, not borrowed.** No product that converts on store was surveyed for a threshold of
-its own; two published figures give it: Google states lossless WebP is about 26% smaller than PNG
-(developers.google.com/speed/webp), and Chrome DevTools' image delivery insight (`ImageDelivery.ts`,
-`BYTE_SAVINGS_THRESHOLD = 4096`; BSD-3-Clause) does not suggest a modern format for a saving under 4 KB - Lighthouse's
-retired `modern-image-formats` audit used 8 KB (Apache-2.0). 4 KB / 26% is about 16 KB.
+**The default size is 64 KB, the owner's choice above the 16 KB first derived.** No product that converts on store was
+surveyed for a threshold of its own. The first default was derived from two published figures: Google states lossless
+WebP is about 26% smaller than PNG (developers.google.com/speed/webp), and Chrome DevTools' image delivery insight
+(`ImageDelivery.ts`, `BYTE_SAVINGS_THRESHOLD = 4096`; BSD-3-Clause) does not suggest a modern format for a saving under
+4 KB - Lighthouse's retired `modern-image-formats` audit used 8 KB (Apache-2.0); 4 KB / 26% is about 16 KB, and
+`10.7.7-preview.2` shipped with it. On 2026-11-21 the owner raised it to 64 KB, from which a conversion saves about
+16 KB; a PNG under it is stored as uploaded.
 
 **Encoding.** Lossless at effort 75, libwebp's own `cwebp` default; the PNG is decoded unpremultiplied, so a
 semi-transparent pixel keeps its colour exactly (libwebp may still rewrite the colour of a fully transparent pixel,

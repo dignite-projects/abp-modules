@@ -40,11 +40,12 @@ so it stays clear which part of the repository actually moved.
   still wins). `ImageOrientation` turns a decoded picture upright for code that renders stored pictures. On Linux, also
   reference `SkiaSharp.NativeAssets.Linux`. `Dignite.Abp.BlobStoring.Imaging` itself still references no image library.
   See [SkiaSharp Image Contributors](docs/en/blob-storing/imaging-skiasharp.md).
-- **PNGs stored as lossless WebP.** `container.StorePngAsWebp(minSizeInBytes: 16384)` (SkiaSharp package), after the
+- **PNGs stored as lossless WebP.** `container.StorePngAsWebp(minSizeInBytes: 65536)` (SkiaSharp package), after the
   allowed content types and before the metadata and resize contributors, stores a PNG as a lossless WebP - transparency
   and every visible pixel kept - turned upright and fitted into the resize box as a JPEG is. A PNG smaller than
-  `minSizeInBytes`, with 16 bits per channel, or animated (an APNG) is stored as it is. 16 KB: lossless WebP is about 26%
-  smaller than PNG, and below about 4 KB of saving Chrome DevTools does not suggest a modern format. See
+  `minSizeInBytes`, with 16 bits per channel, or animated (an APNG) is stored as it is. 64 KB: lossless WebP is about 26%
+  smaller than PNG, so from there a conversion saves about 16 KB, while a smaller PNG - an icon, a logo - stays a PNG
+  (`10.7.7-preview.2` had 16 KB). See
   [Storing PNGs as WebP](docs/en/blob-storing/imaging-skiasharp.md#storing-pngs-as-webp).
 - **A container can declare the type it stores content as.** `BlobContainerConfiguration.GetStoredContentType(mimeType, content)`
   (Pipeline package) returns what a converting contributor declared with `SetStoredContentType` - `image/webp` for
