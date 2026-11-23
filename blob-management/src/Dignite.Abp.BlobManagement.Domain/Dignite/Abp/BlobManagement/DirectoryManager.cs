@@ -19,9 +19,10 @@ namespace Dignite.Abp.BlobManagement;
 /// It authorizes nobody: the application services decide who may do what.
 /// </para>
 /// <para>
-/// The sibling-name check is check-then-act, with the unique <see cref="DirectoryDescriptor.NameKey"/> as the arbiter:
-/// of two simultaneous requests that would leave two siblings of one name, one fails with the database provider's
-/// exception.
+/// Sibling names are checked here, against the siblings read from the database - as ABP checks the display name of an
+/// organization unit (<c>OrganizationUnitManager.ValidateOrganizationUnitAsync</c>) - and not by a unique index. The
+/// check is check-then-act: two simultaneous requests can leave two siblings of one name. A directory is known by its
+/// id, so that costs a duplicate label, not a wrong file.
 /// </para>
 /// </summary>
 public class DirectoryManager : DomainService
@@ -63,8 +64,7 @@ public class DirectoryManager : DomainService
             throw TooDeep();
         }
 
-        await CheckNameIsFreeAsync(
-            DirectoryDescriptor.CreateNameKey(CurrentTenant.Id, containerName, parentId, name), name, cancellationToken);
+        await CheckNameIsFreeAsync(containerName, parentId, name, exceptId: null, cancellationToken);
 
         var order = await DirectoryRepository.GetMaxOrderAsync(containerName, parentId, cancellationToken);
         return await DirectoryRepository.InsertAsync(
@@ -87,12 +87,7 @@ public class DirectoryManager : DomainService
             return directory;
         }
 
-        // A change of case only keeps the key: the sibling it would collide with is the directory itself.
-        var nameKey = DirectoryDescriptor.CreateNameKey(directory.TenantId, directory.ContainerName, directory.ParentId, name);
-        if (nameKey != directory.NameKey)
-        {
-            await CheckNameIsFreeAsync(nameKey, name, cancellationToken);
-        }
+        await CheckNameIsFreeAsync(directory.ContainerName, directory.ParentId, name, directory.Id, cancellationToken);
 
         directory.Rename(name);
         return await DirectoryRepository.UpdateAsync(directory, autoSave: true, cancellationToken: cancellationToken);
@@ -140,10 +135,7 @@ public class DirectoryManager : DomainService
                 throw TooDeep();
             }
 
-            await CheckNameIsFreeAsync(
-                DirectoryDescriptor.CreateNameKey(directory.TenantId, directory.ContainerName, parentId, directory.Name),
-                directory.Name,
-                cancellationToken);
+            await CheckNameIsFreeAsync(directory.ContainerName, parentId, directory.Name, directory.Id, cancellationToken);
         }
 
         var siblings = await DirectoryRepository.GetChildrenAsync(directory.ContainerName, parentId, cancellationToken);
@@ -169,10 +161,12 @@ public class DirectoryManager : DomainService
     }
 
     /// <summary>
-    /// Deletes an empty directory - the row is removed, not marked; one with a subdirectory or a file is refused with
-    /// <see cref="BlobManagementErrorCodes.DirectoryNotEmpty"/>. The check and the delete are check-then-act: a file
-    /// stored in the directory, or a subdirectory created in it, between the two is left naming a directory that is
-    /// gone.
+    /// Deletes an empty directory - soft, as ABP deletes a <c>FullAuditedAggregateRoot</c>; one with a subdirectory or a
+    /// file is refused with <see cref="BlobManagementErrorCodes.DirectoryNotEmpty"/>. A file or a subdirectory that is
+    /// deleted itself does not count: nobody lists it, and a file restored later whose directory is gone goes to the top
+    /// of its container (<see cref="FileDescriptorManager.RestoreAsync"/>). The check and the delete are check-then-act:
+    /// a file stored in the directory, or a subdirectory created in it, between the two is left naming a directory that
+    /// is deleted.
     /// </summary>
     public virtual async Task DeleteAsync(DirectoryDescriptor directory, CancellationToken cancellationToken = default)
     {
@@ -238,9 +232,20 @@ public class DirectoryManager : DomainService
         }
     }
 
-    protected virtual async Task CheckNameIsFreeAsync(string nameKey, string name, CancellationToken cancellationToken)
+    /// <summary>
+    /// Fails with <see cref="BlobManagementErrorCodes.DirectoryNameAlreadyExists"/> when a directory under
+    /// <paramref name="parentId"/> other than <paramref name="exceptId"/> is named <paramref name="name"/>, as written.
+    /// A deleted directory is not a sibling: its name is free.
+    /// </summary>
+    protected virtual async Task CheckNameIsFreeAsync(
+        string containerName,
+        Guid? parentId,
+        string name,
+        Guid? exceptId,
+        CancellationToken cancellationToken)
     {
-        if (await DirectoryRepository.NameKeyExistsAsync(nameKey, cancellationToken))
+        var siblings = await DirectoryRepository.GetChildrenAsync(containerName, parentId, cancellationToken);
+        if (siblings.Any(d => d.Id != exceptId && string.Equals(d.Name, name, StringComparison.Ordinal)))
         {
             throw new BusinessException(BlobManagementErrorCodes.DirectoryNameAlreadyExists).WithData("Name", name);
         }

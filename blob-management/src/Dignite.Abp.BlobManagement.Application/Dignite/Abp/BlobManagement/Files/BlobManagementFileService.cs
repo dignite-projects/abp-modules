@@ -107,13 +107,20 @@ public class BlobManagementFileService : BlobManagementFileServiceBase, IBlobMan
         return new ListResultDto<BlobManagementReadLinkDto>(links);
     }
 
-    public virtual async Task DeleteAsync(Guid id)
+    public virtual async Task DeleteAsync(Guid id, bool permanently = false)
     {
-        var file = await FindManagedFileAsync(id);
+        var file = await FindManagedFileAsync(id, includeDeleted: permanently);
         if (file != null)
         {
-            await FileDescriptorManager.DeleteAsync(file);
+            await FileDescriptorManager.DeleteAsync(file, permanently);
         }
+    }
+
+    public virtual async Task<BlobManagementFileDto> RestoreAsync(Guid id)
+    {
+        var file = await FindManagedFileAsync(id, includeDeleted: true)
+                   ?? throw new Volo.Abp.Domain.Entities.EntityNotFoundException(typeof(FileDescriptor), id);
+        return Map(await FileDescriptorManager.RestoreAsync(file));
     }
 
     public virtual async Task<IRemoteStreamContent> GetContentAsync(Guid id)

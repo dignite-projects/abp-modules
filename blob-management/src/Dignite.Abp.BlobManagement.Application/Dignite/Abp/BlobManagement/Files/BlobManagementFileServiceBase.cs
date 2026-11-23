@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Content;
+using Volo.Abp.Data;
 using Volo.Abp.Domain.Entities;
 
 namespace Dignite.Abp.BlobManagement.Files;
@@ -108,10 +109,18 @@ public abstract class BlobManagementFileServiceBase : BlobManagementAppService
         return await FindManagedFileAsync(id) ?? throw new EntityNotFoundException(typeof(FileDescriptor), id);
     }
 
-    /// <summary>A file of a managed container, or <c>null</c>.</summary>
-    protected virtual async Task<FileDescriptor?> FindManagedFileAsync(Guid id)
+    /// <summary>
+    /// A file of a managed container, or <c>null</c>; with <paramref name="includeDeleted"/> one that is soft-deleted as
+    /// well - to restore it, or to delete it for good.
+    /// </summary>
+    protected virtual async Task<FileDescriptor?> FindManagedFileAsync(Guid id, bool includeDeleted = false)
     {
-        var file = await FileRepository.FindAsync(id);
+        FileDescriptor? file;
+        using (includeDeleted ? DataFilter.Disable<ISoftDelete>() : null)
+        {
+            file = await FileRepository.FindAsync(id);
+        }
+
         return file != null && IsManagedContainer(file.ContainerName) ? file : null;
     }
 }

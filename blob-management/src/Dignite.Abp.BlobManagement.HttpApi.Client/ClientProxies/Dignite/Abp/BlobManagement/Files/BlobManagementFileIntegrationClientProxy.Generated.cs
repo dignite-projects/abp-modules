@@ -103,9 +103,18 @@ public partial class BlobManagementFileIntegrationClientProxy : ClientProxyBase<
         });
     }
 
-    public virtual async Task DeleteAsync(Guid id)
+    public virtual async Task DeleteAsync(Guid id, bool permanently)
     {
         await RequestAsync(nameof(DeleteAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(Guid), id },
+            { typeof(bool), permanently }
+        });
+    }
+
+    public virtual async Task<BlobManagementFileDto> RestoreAsync(Guid id)
+    {
+        return await RequestAsync<BlobManagementFileDto>(nameof(RestoreAsync), new ClientProxyRequestTypeValue
         {
             { typeof(Guid), id }
         });

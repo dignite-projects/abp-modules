@@ -17,16 +17,15 @@ public class MongoDirectoryDescriptorRepository
     {
     }
 
-    public virtual async Task<bool> NameKeyExistsAsync(string nameKey, CancellationToken cancellationToken = default)
+    public virtual async Task<DirectoryDescriptor?> FindByNameAsync(
+        string containerName,
+        Guid? parentId,
+        string name,
+        CancellationToken cancellationToken = default)
     {
-        var token = GetCancellationToken(cancellationToken);
-        return await (await GetQueryableAsync(token)).AnyAsync(d => d.NameKey == nameKey, token);
-    }
-
-    public virtual async Task<DirectoryDescriptor?> FindByNameKeyAsync(string nameKey, CancellationToken cancellationToken = default)
-    {
-        var token = GetCancellationToken(cancellationToken);
-        return await (await GetQueryableAsync(token)).FirstOrDefaultAsync(d => d.NameKey == nameKey, token);
+        // Read the siblings and compare here, as the EF Core repository does.
+        var siblings = await GetChildrenAsync(containerName, parentId, cancellationToken);
+        return siblings.FirstOrDefault(d => string.Equals(d.Name, name, StringComparison.Ordinal));
     }
 
     public virtual async Task<List<DirectoryDescriptor>> GetChildrenAsync(

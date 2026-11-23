@@ -109,9 +109,14 @@ public class RemoteBlobManagementFileService : IBlobManagementFileService
         return Proxy.CreateReadLinksAsync(input);
     }
 
-    public virtual Task DeleteAsync(Guid id)
+    public virtual Task DeleteAsync(Guid id, bool permanently = false)
     {
-        return Proxy.DeleteAsync(id);
+        return Proxy.DeleteAsync(id, permanently);
+    }
+
+    public virtual Task<BlobManagementFileDto> RestoreAsync(Guid id)
+    {
+        return Proxy.RestoreAsync(id);
     }
 
     public virtual Task<IRemoteStreamContent> GetContentAsync(Guid id)

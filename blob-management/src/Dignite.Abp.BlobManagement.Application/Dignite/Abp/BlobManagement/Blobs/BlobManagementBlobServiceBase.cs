@@ -117,7 +117,8 @@ public abstract class BlobManagementBlobServiceBase : BlobManagementAppService
             return false;
         }
 
-        await FileDescriptorManager.DeleteAsync(file, cancellationToken);
+        // A BLOB saved under a name is deleted for good: ABP's IBlobContainer cannot restore one.
+        await FileDescriptorManager.DeleteAsync(file, permanently: true, cancellationToken);
         return true;
     }
 }

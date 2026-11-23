@@ -50,6 +50,7 @@
     "Usage": "उपयोग",
     "Usage:StoredOfAllocation": "{1} में से {0} संग्रहीत",
     "Usage:Stored": "संग्रहीत",
+    "Usage:Deleted": "हटाया गया, अभी भी संग्रहीत: {0}, {1} फ़ाइलों में",
     "Usage:Files": "फ़ाइलें",
     "Usage:Containers": "कंटेनर",
     "Usage:Users": "उपयोगकर्ता",

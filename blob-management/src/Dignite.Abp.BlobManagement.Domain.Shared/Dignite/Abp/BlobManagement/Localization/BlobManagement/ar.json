@@ -50,6 +50,7 @@
     "Usage": "الاستخدام",
     "Usage:StoredOfAllocation": "تم تخزين {0} من {1}",
     "Usage:Stored": "المخزَّن",
+    "Usage:Deleted": "محذوف ولا يزال مخزَّنًا: {0} في {1} ملفات",
     "Usage:Files": "الملفات",
     "Usage:Containers": "الحاويات",
     "Usage:Users": "المستخدمون",

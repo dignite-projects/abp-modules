@@ -50,6 +50,7 @@
     "Usage": "Wykorzystanie",
     "Usage:StoredOfAllocation": "Zapisano {0} z {1}",
     "Usage:Stored": "Zapisano",
+    "Usage:Deleted": "Usunięte, nadal zapisane: {0} w {1} plikach",
     "Usage:Files": "Pliki",
     "Usage:Containers": "Kontenery",
     "Usage:Users": "Użytkownicy",

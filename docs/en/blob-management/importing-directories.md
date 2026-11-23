@@ -39,7 +39,7 @@ public class FileTreeImport : ITransientDependency
 `DirectoryPathImportRequest` takes the container, the name of the extra property, and `dryRun`, which is `true` unless it is set otherwise; `Separator` is `/` by default.
 
 * **A dry run changes nothing** and reports what an import would do. Run one first and read its report.
-* **An import can be run again.** Only files at the top of the container are read, so a file filed before - by an import or by its business system - stays where it is; a directory is looked up before it is created, by its name whatever its case, so an existing one is used and a second run creates nothing the first created.
+* **An import can be run again.** Only files at the top of the container are read, so a file filed before - by an import or by its business system - stays where it is; a directory is looked up before it is created, by its name as written, so an existing one is used and a second run creates nothing the first created.
 * **Only files kept by id are read.** A file an application saved under its name stays at the top of its container.
 * **A path is split on the separator**, each name trimmed and empty ones dropped (`/a//b/` is `a/b`). A path deeper than 16 directories, or with a name longer than 256 characters, cannot be filed.
 * A file without a path in the property stays at the top of the container.

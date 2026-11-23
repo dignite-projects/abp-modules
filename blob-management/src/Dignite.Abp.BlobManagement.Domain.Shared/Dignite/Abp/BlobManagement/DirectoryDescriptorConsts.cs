@@ -19,7 +19,4 @@ public static class DirectoryDescriptorConsts
 
     /// <summary>What joins the ids of a <c>DirectoryDescriptor.Path</c>.</summary>
     public const char PathSeparator = '/';
-
-    /// <summary>A <c>DirectoryDescriptor.NameKey</c>: SHA-256 as upper-case hexadecimal.</summary>
-    public const int NameKeyLength = 64;
 }

@@ -50,6 +50,7 @@
     "Usage": "Использование",
     "Usage:StoredOfAllocation": "Сохранено {0} из {1}",
     "Usage:Stored": "Сохранено",
+    "Usage:Deleted": "Удалено, но хранится: {0} в {1} файлах",
     "Usage:Files": "Файлы",
     "Usage:Containers": "Контейнеры",
     "Usage:Users": "Пользователи",

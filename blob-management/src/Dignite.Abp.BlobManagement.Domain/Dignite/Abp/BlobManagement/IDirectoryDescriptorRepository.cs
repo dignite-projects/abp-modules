@@ -7,15 +7,19 @@ using Volo.Abp.Domain.Repositories;
 namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
-/// The directories of the current tenant. A deleted directory is gone: there is no deleted row for a query to skip.
+/// The directories of the current tenant. Every query sees live directories only (ABP's soft-delete filter).
 /// </summary>
 public interface IDirectoryDescriptorRepository : IBasicRepository<DirectoryDescriptor, Guid>
 {
-    /// <summary>Whether a directory holds <paramref name="nameKey"/> (<see cref="DirectoryDescriptor.CreateNameKey"/>).</summary>
-    Task<bool> NameKeyExistsAsync(string nameKey, CancellationToken cancellationToken = default);
-
-    /// <summary>The directory that holds <paramref name="nameKey"/>, or <c>null</c>.</summary>
-    Task<DirectoryDescriptor?> FindByNameKeyAsync(string nameKey, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// The directory named <paramref name="name"/>, as written, under <paramref name="parentId"/> (<c>null</c>: the top
+    /// of the container), or <c>null</c>.
+    /// </summary>
+    Task<DirectoryDescriptor?> FindByNameAsync(
+        string containerName,
+        Guid? parentId,
+        string name,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// The direct children of <paramref name="parentId"/> (<c>null</c>: the top of the container), by position.

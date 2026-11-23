@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
-using System.Text;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
 using Volo.Abp.MultiTenancy;
@@ -14,11 +12,12 @@ namespace Dignite.Abp.BlobManagement;
 /// sibling names, a parent in the same container, no cycles, a bounded depth, deletion only when empty - lives in
 /// <see cref="DirectoryManager"/>.
 /// <para>
-/// Deleted for good: a deleted directory is removed, not marked - the module has no trash. It has no permissions of
-/// its own: what a user may do with the directories of a container is the container's permission.
+/// Soft-deleted, as ABP's own trees are (<c>OrganizationUnit</c>): a deleted directory stays as a row nobody lists, and
+/// gives its name up to whatever is created in its place. It has no permissions of its own: what a user may do with
+/// the directories of a container is the container's permission.
 /// </para>
 /// </summary>
-public class DirectoryDescriptor : AuditedAggregateRoot<Guid>, IMultiTenant
+public class DirectoryDescriptor : FullAuditedAggregateRoot<Guid>, IMultiTenant
 {
     protected DirectoryDescriptor()
     {
@@ -41,13 +40,15 @@ public class DirectoryDescriptor : AuditedAggregateRoot<Guid>, IMultiTenant
         Path = BuildPath(id, parentId, parentPath);
         Order = order;
         TenantId = tenantId;
-        NameKey = CreateNameKey(tenantId, containerName, parentId, name);
     }
 
     /// <summary>The container the directory belongs to.</summary>
     public virtual string ContainerName { get; protected set; } = default!;
 
-    /// <summary>Unique among its siblings, without regard to case (<see cref="NameKey"/>).</summary>
+    /// <summary>
+    /// Unique among its siblings, compared as it is written: <see cref="DirectoryManager"/> checks it, as ABP checks
+    /// the display name of an organization unit among its siblings. A display name, so a change of case is a new name.
+    /// </summary>
     public virtual string Name { get; protected set; } = default!;
 
     /// <summary>The parent directory, or <c>null</c> at the top of the tree.</summary>
@@ -71,21 +72,12 @@ public class DirectoryDescriptor : AuditedAggregateRoot<Guid>, IMultiTenant
     public virtual Guid? TenantId { get; protected set; }
 
     /// <summary>
-    /// The SHA-256 (upper-case hex) of its tenant, container, parent and name, the name upper-cased
-    /// (<see cref="CreateNameKey"/>). Unique in the database, so two simultaneous creates, renames or moves cannot
-    /// leave two siblings of one name - the sibling-name check of <see cref="DirectoryManager"/> is check-then-act, and
-    /// this is the arbiter.
-    /// </summary>
-    public virtual string NameKey { get; protected set; } = default!;
-
-    /// <summary>
     /// Renames the directory. Uniqueness among siblings is checked by <see cref="DirectoryManager.RenameAsync"/>; never
     /// call this to bypass it.
     /// </summary>
     public virtual void Rename(string name)
     {
         Name = Check.NotNullOrWhiteSpace(name, nameof(name), DirectoryDescriptorConsts.MaxNameLength);
-        RefreshNameKey();
     }
 
     /// <summary>
@@ -98,7 +90,6 @@ public class DirectoryDescriptor : AuditedAggregateRoot<Guid>, IMultiTenant
         ParentId = parentId;
         Path = BuildPath(Id, parentId, parentPath);
         Order = order;
-        RefreshNameKey();
     }
 
     public virtual void SetOrder(int order)
@@ -109,8 +100,7 @@ public class DirectoryDescriptor : AuditedAggregateRoot<Guid>, IMultiTenant
     /// <summary>
     /// Moves this directory's path along with an ancestor's: <paramref name="oldPrefix"/>, the ancestor's path before it
     /// moved, is replaced by <paramref name="newPrefix"/>, its path now. Called by <see cref="DirectoryManager.MoveAsync"/>
-    /// for every directory below the one it moved; never call it otherwise. The name key names the parent, not the path,
-    /// so it does not change.
+    /// for every directory below the one it moved; never call it otherwise.
     /// </summary>
     public virtual void ReplacePathPrefix(string oldPrefix, string newPrefix)
     {
@@ -167,25 +157,6 @@ public class DirectoryDescriptor : AuditedAggregateRoot<Guid>, IMultiTenant
         }
 
         return depth;
-    }
-
-    /// <summary>
-    /// SHA-256, as upper-case hex, of <c>{tenant}:{container}:{parent}:{NAME}</c> - the tenant as 32 hexadecimal
-    /// digits or <c>host</c>, the parent as 32 hexadecimal digits or <c>-</c>, the name upper-cased with
-    /// the invariant culture, so names that differ only in case are one name, as they are on the desktop file systems
-    /// people move folders to and from. A hash, since unique-index keys are size-limited and a name may be long.
-    /// </summary>
-    public static string CreateNameKey(Guid? tenantId, string containerName, Guid? parentId, string name)
-    {
-        var key = (tenantId?.ToString("N") ?? "host") + ":" + containerName + ":" +
-                  (parentId?.ToString("N") ?? "-") + ":" + name.ToUpperInvariant();
-        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key)));
-    }
-
-    /// <summary>The <see cref="NameKey"/> after a rename or a move.</summary>
-    protected virtual void RefreshNameKey()
-    {
-        NameKey = CreateNameKey(TenantId, ContainerName, ParentId, Name);
     }
 
     /// <summary>

@@ -11,6 +11,7 @@ using Volo.Abp.Auditing;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.Data;
 using Volo.Abp.DistributedLocking;
+using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Domain.Services;
 using Volo.Abp.Threading;
 using Volo.Abp.Uow;
@@ -33,7 +34,8 @@ namespace Dignite.Abp.BlobManagement;
 /// <para>
 /// <b>One BLOB per file.</b> Every descriptor has a BLOB of its own, under a generated name, even when another file
 /// holds the same content: no BLOB is shared, so none is counted twice or outlives the question of who still uses it.
-/// A descriptor that is deleted is gone - there is no trash to bring it back from - and its BLOB goes with it.
+/// A file kept by id is soft-deleted and keeps its BLOB until its business system deletes it for good
+/// (<see cref="DeleteAsync"/>, <see cref="RestoreAsync"/>); a file saved under a name is deleted for good at once.
 /// </para>
 /// <para>
 /// <b>Consistency.</b> Bytes are written before the row that names them and removed after the row that named them:
@@ -265,24 +267,62 @@ public class FileDescriptorManager : DomainService
     }
 
     /// <summary>
-    /// Deletes the descriptor in the current unit of work, then - once that unit of work has committed - its BLOB.
+    /// Deletes a file. A file kept by id is soft-deleted and keeps its bytes, so its business system can take it back
+    /// with the record that refers to it (<see cref="RestoreAsync"/>). It is deleted for good - the row now, its BLOB
+    /// once the unit of work has committed - when <paramref name="permanently"/> is set, which a business system does as
+    /// it deletes its record for good, and always for a file saved under a name (ABP's <c>IBlobContainer</c> can neither
+    /// restore one nor delete one for good) and for a file still pending (no record refers to it yet). A file that is
+    /// soft-deleted already is deleted for good the same way.
     /// <para>
-    /// The row is removed, not marked: there is no trash, and bytes that are gone cannot be restored. The BLOB step is
-    /// registered with <c>IUnitOfWork.OnCompleted</c>, which runs only after a successful commit: a rollback brings the
-    /// row back with its bytes. Without a unit of work it runs at once.
-    /// </para>
-    /// <para>
-    /// The step is best-effort: a failure is logged and leaves an unreferenced BLOB - unreachable bytes, never lost
-    /// data - and does not surface to a request whose transaction already committed. ABP's BLOB containers cannot be
-    /// enumerated, so reclaiming such orphans belongs to tooling on the concrete storage backend.
+    /// The BLOB step is registered with <c>IUnitOfWork.OnCompleted</c>, which runs only after a successful commit: a
+    /// rollback brings the row back with its bytes. Without a unit of work it runs at once. It is best-effort: a
+    /// failure is logged and leaves an unreferenced BLOB - unreachable bytes, never lost data - and does not surface to
+    /// a request whose transaction already committed.
     /// </para>
     /// </summary>
-    public virtual async Task DeleteAsync(FileDescriptor file, CancellationToken cancellationToken = default)
+    public virtual async Task DeleteAsync(
+        FileDescriptor file,
+        bool permanently = false,
+        CancellationToken cancellationToken = default)
     {
         Check.NotNull(file, nameof(file));
 
-        await FileDescriptorRepository.DeleteAsync(file, autoSave: true, cancellationToken);
+        if (!permanently && !file.IsAddressedByName && !file.IsPending)
+        {
+            if (!file.IsDeleted)
+            {
+                await FileDescriptorRepository.DeleteAsync(file, autoSave: true, cancellationToken);
+            }
+
+            return;
+        }
+
+        await FileDescriptorRepository.HardDeleteAsync(file, autoSave: true, cancellationToken);
         await DeleteBlobAfterCommitAsync(file.TenantId, file.ContainerName, file.BlobName);
+    }
+
+    /// <summary>
+    /// Takes back a file that was soft-deleted (<see cref="DeleteAsync"/>), as its business system restores the record
+    /// that refers to it: it is listed, read and public again as before, at the same address. When the directory it was
+    /// filed in has been deleted meanwhile, it goes to the top of its container. A file that is not deleted is left as
+    /// it is.
+    /// </summary>
+    public virtual async Task<FileDescriptor> RestoreAsync(FileDescriptor file, CancellationToken cancellationToken = default)
+    {
+        Check.NotNull(file, nameof(file));
+        if (!file.IsDeleted)
+        {
+            return file;
+        }
+
+        if (file.DirectoryId.HasValue &&
+            await DirectoryRepository.FindAsync(file.DirectoryId.Value, false, cancellationToken) == null)
+        {
+            file.SetDirectory(null);
+        }
+
+        file.Restore();
+        return await FileDescriptorRepository.UpdateAsync(file, autoSave: true, cancellationToken);
     }
 
     /// <summary>

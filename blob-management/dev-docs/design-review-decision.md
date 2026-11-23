@@ -1,5 +1,9 @@
 # Blob Management: the design review of 2026-11-22
 
+> **Amended 2026-11-23** ([below](#amendment-2026-11-23-a-files-life-is-its-records)): a file kept by id and a
+> directory are soft-deleted again, a file keeps its bytes until its business system deletes it for good, and a
+> directory has no name key. What *A deleted descriptor is removed* says further down is history.
+
 Status: decided by the module's maintainer on 2026-11-22 - the owner asked for the code base to be looked at again, for
 compromises and patches left by the changes of direction since 2026-11-10, and left the design to the maintainer -
 and implemented the same day in three batches, in the working tree (not committed). Nothing was published under the
@@ -186,3 +190,54 @@ Costs:
 [`upload-checksum-decision.md`](upload-checksum-decision.md) carry a note at their top for what they say that is no
 longer so: soft deletion, the name key handed between rows, the file API's two callers and its path, and the two
 paths of the BLOB and file APIs.
+
+## Amendment 2026-11-23: a file's life is its record's
+
+Decided by the owner on 2026-11-23, against the hard delete of the second batch: a business record that refers to a
+file may be soft-deleted and restored. If the file went for good when the record was soft-deleted, restoring the record
+would bring back a reference to nothing - and the business entity cannot be made to delete for good because the file
+did. The second batch was right that the old soft delete protected nothing (it deleted the bytes at once); the wrong
+conclusion was to drop recoverability rather than keep the bytes.
+
+What the peers do, read for this amendment:
+
+- Object stores keep deleted bytes recoverable for a time: Google Cloud Storage's soft delete (on by default, 7 days, 7
+  to 90), Azure Blob soft delete (1 to 365 days, `Undelete Blob`), S3 versioning's delete markers with lifecycle
+  expiration. Supabase Storage has none: a delete is final.
+- Systems where records refer to assets keep the two lifecycles apart: Directus will not delete a file still related
+  to an item; Drupal counts a file's usages and collects only those no entity uses; Squidex deletes an asset softly
+  and for good with `?permanent=true` on its delete endpoints (seen on its support forum, not in its reference).
+- ABP's CMS Kit soft-deletes a `MediaDescriptor` and deletes its BLOB at once - the defect this amendment removes
+  here, not a model.
+
+Decided:
+
+- **A file kept by id is soft-deleted** (`FileDescriptor` is `IDeletionAuditedObject` again) and keeps its BLOB. Hidden
+  from every read - listings, by id, the public address, read links - it comes back as it was with
+  `IBlobManagementFileService.RestoreAsync(id)`, at the same address; at the top of its container when its directory
+  was deleted meanwhile.
+- **It is deleted for good only when its business system asks**: `DeleteAsync(id, permanently: true)`
+  (`?permanently=true` on the integration API, as Squidex has it), on a live file or a soft-deleted one - the row now,
+  the BLOB after commit. No retention period, and no cleanup by the module: the owner's call, since only the business
+  system knows when its record is gone. The one exception is a file uploaded with a ticket and never confirmed, which
+  no record refers to: the pending cleanup still deletes it for good, and a pending file is always deleted for good.
+- **A file saved under a name is deleted for good at once.** ABP's `IBlobContainer` has neither a restore nor a delete
+  for good, so a soft-deleted one would hold its name for ever. Soft deletion therefore only ever touches files kept by
+  id, which have no name key: nothing is handed between rows.
+- **The allocation counts soft-deleted files**: their bytes are stored. The usage of the tenant shows that part apart
+  (`DeletedBytes`, `DeletedFileCount`).
+- **A ticket stores one file**, also while that file is soft-deleted: the replay check reads soft-deleted rows again.
+- **A directory is soft-deleted** (`FullAuditedAggregateRoot`, as ABP's `OrganizationUnit`), and **has no name key**.
+  Sibling names are checked in `DirectoryManager` against the siblings read from the database, as written, as ABP
+  checks an organization unit's display name among its siblings (`OrganizationUnitManager.ValidateOrganizationUnitAsync`).
+  Two simultaneous creates can leave two siblings of one name; a directory is known by its id, so that costs a
+  duplicate label, not a wrong file. A soft-deleted file does not keep its directory from being deleted.
+- **A file's name key stays**, weighed again with the owner: it is what makes the lookup of a name exact on every
+  database (the name column compares as the collation does, case-insensitively on SQL Server and MySQL by default), and
+  what keeps an overriding save from finding - and deleting the bytes of - another file.
+
+Costs: soft-deleted files and their bytes stay until their business systems delete them for good, and count against
+the tenant's allocation until then; a business system that never deletes for good keeps them for good, as it keeps
+its records. A project that ran a pre-release adds a migration that puts back `IsDeleted`, `DeleterId` and
+`DeletionTime` on both tables and drops the directory's `NameKey` (`CHANGELOG.md`).
+

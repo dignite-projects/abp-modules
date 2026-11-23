@@ -50,6 +50,7 @@
     "Usage": "Korištenje",
     "Usage:StoredOfAllocation": "Pohranjeno {0} od {1}",
     "Usage:Stored": "Pohranjeno",
+    "Usage:Deleted": "Izbrisano, još pohranjeno: {0} u {1} datoteka",
     "Usage:Files": "Datoteke",
     "Usage:Containers": "Spremnici",
     "Usage:Users": "Korisnici",

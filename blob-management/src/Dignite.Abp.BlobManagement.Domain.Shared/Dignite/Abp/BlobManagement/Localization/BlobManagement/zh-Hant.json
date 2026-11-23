@@ -50,6 +50,7 @@
     "Usage": "用量",
     "Usage:StoredOfAllocation": "已儲存 {0}，共 {1}",
     "Usage:Stored": "已儲存",
+    "Usage:Deleted": "已刪除但仍儲存：{0}，共 {1} 個檔案",
     "Usage:Files": "檔案數",
     "Usage:Containers": "容器",
     "Usage:Users": "使用者",

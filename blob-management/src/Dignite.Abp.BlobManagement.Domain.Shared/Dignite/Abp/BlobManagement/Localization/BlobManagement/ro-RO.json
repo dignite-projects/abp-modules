@@ -50,6 +50,7 @@
     "Usage": "Utilizare",
     "Usage:StoredOfAllocation": "{0} din {1} stocat",
     "Usage:Stored": "Stocat",
+    "Usage:Deleted": "Șters, încă stocat: {0} în {1} fișiere",
     "Usage:Files": "Fișiere",
     "Usage:Containers": "Containere",
     "Usage:Users": "Utilizatori",

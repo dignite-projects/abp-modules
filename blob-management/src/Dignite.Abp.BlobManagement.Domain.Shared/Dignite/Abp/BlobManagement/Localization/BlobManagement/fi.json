@@ -50,6 +50,7 @@
     "Usage": "Käyttö",
     "Usage:StoredOfAllocation": "Tallennettu {0} / {1}",
     "Usage:Stored": "Tallennettu",
+    "Usage:Deleted": "Poistettu, yhä tallennettuna: {0}, {1} tiedostoa",
     "Usage:Files": "Tiedostot",
     "Usage:Containers": "Säilöt",
     "Usage:Users": "Käyttäjät",

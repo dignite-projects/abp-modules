@@ -50,6 +50,7 @@
     "Usage": "Notkun",
     "Usage:StoredOfAllocation": "{0} af {1} geymt",
     "Usage:Stored": "Geymt",
+    "Usage:Deleted": "Eytt, enn geymt: {0} í {1} skrám",
     "Usage:Files": "Skrár",
     "Usage:Containers": "Gámar",
     "Usage:Users": "Notendur",

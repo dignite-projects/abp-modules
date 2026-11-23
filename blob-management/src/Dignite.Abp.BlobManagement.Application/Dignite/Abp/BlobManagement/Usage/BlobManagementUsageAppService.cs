@@ -7,8 +7,10 @@ using Dignite.Abp.BlobManagement.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.BlobStoring;
+using Volo.Abp.Data;
 using Volo.Abp.Features;
 using Volo.Abp.MultiTenancy;
 using Volo.Abp.Users;
@@ -47,7 +49,16 @@ public class BlobManagementUsageAppService : BlobManagementAppService, IBlobMana
     public virtual async Task<BlobManagementUsageDto> GetAsync()
     {
         GetUserId();
-        var usages = (await FileRepository.GetContainerUsagesAsync()).ToDictionary(u => u.ContainerName, StringComparer.Ordinal);
+
+        // What is stored, soft-deleted files included; and, apart, what the live ones are, for the deleted part.
+        List<BlobManagementContainerUsage> stored;
+        using (DataFilter.Disable<ISoftDelete>())
+        {
+            stored = await FileRepository.GetContainerUsagesAsync();
+        }
+
+        var live = await FileRepository.GetContainerUsagesAsync();
+        var usages = stored.ToDictionary(u => u.ContainerName, StringComparer.Ordinal);
 
         // Every managed container, empty ones too; then any other that still holds files, so the rows add up to the
         // tenant whatever the host has stopped managing. ConfigureAll is how ABP enumerates the configured containers;
@@ -74,6 +85,8 @@ public class BlobManagementUsageAppService : BlobManagementAppService, IBlobMana
         {
             StoredBytes = containers.Sum(c => c.StoredBytes),
             StorageSize = await UsageManager.GetStorageSizeAsync(),
+            DeletedBytes = stored.Sum(u => u.StoredBytes) - live.Sum(u => u.StoredBytes),
+            DeletedFileCount = stored.Sum(u => u.FileCount) - live.Sum(u => u.FileCount),
             FileCount = containers.Sum(c => c.FileCount),
             Containers = containers
         };
@@ -84,8 +97,14 @@ public class BlobManagementUsageAppService : BlobManagementAppService, IBlobMana
         GetUserId();
         var containerName = NormalizeContainerName(input.ContainerName);
 
-        var count = await FileRepository.GetCreatorCountAsync(containerName);
-        var usages = await FileRepository.GetCreatorUsagesAsync(containerName, input.SkipCount, input.MaxResultCount);
+        long count;
+        List<BlobManagementCreatorUsage> usages;
+        using (DataFilter.Disable<ISoftDelete>())
+        {
+            count = await FileRepository.GetCreatorCountAsync(containerName);
+            usages = await FileRepository.GetCreatorUsagesAsync(containerName, input.SkipCount, input.MaxResultCount);
+        }
+
         var userNames = await GetUserNamesAsync(usages.Where(u => u.CreatorId.HasValue).Select(u => u.CreatorId!.Value));
 
         return new PagedResultDto<BlobManagementUserUsageDto>(
@@ -104,7 +123,12 @@ public class BlobManagementUsageAppService : BlobManagementAppService, IBlobMana
     public virtual async Task<ListResultDto<BlobManagementClientUsageDto>> GetClientsAsync(GetBlobManagementClientUsagesInput input)
     {
         GetUserId();
-        var usages = await FileRepository.GetClientUsagesAsync(NormalizeContainerName(input.ContainerName));
+        List<BlobManagementClientUsage> usages;
+        using (DataFilter.Disable<ISoftDelete>())
+        {
+            usages = await FileRepository.GetClientUsagesAsync(NormalizeContainerName(input.ContainerName));
+        }
+
 
         return new ListResultDto<BlobManagementClientUsageDto>(usages
             .Select(u => new BlobManagementClientUsageDto

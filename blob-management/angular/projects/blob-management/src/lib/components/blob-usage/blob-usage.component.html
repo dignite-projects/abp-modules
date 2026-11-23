@@ -20,6 +20,11 @@
           <span>{{ 'BlobManagement::Usage:Stored' | abpLocalization }}: {{ usage.storedBytes | blobFileSize }}</span>
         }
         <span class="text-muted">{{ 'BlobManagement::Usage:Files' | abpLocalization }}: {{ usage.fileCount }}</span>
+        @if (usage.deletedFileCount) {
+          <span class="text-muted" data-test="usage-deleted">{{
+            'BlobManagement::Usage:Deleted' | abpLocalization: (usage.deletedBytes | blobFileSize) : '' + usage.deletedFileCount
+          }}</span>
+        }
       </div>
       @if (usedPercent() !== null) {
         <div

@@ -63,13 +63,7 @@ public static class BlobManagementMongoDbContextExtensions
             {
                 var keys = Builders<BsonDocument>.IndexKeys;
 
-                // Sibling names, as an arbiter: one directory per tenant, container, parent and name (the same rule as
-                // the EF Core unique index). Every directory holds its key; a deleted one is gone with it.
-                indexes.CreateOne(new CreateIndexModel<BsonDocument>(
-                    keys.Ascending(nameof(DirectoryDescriptor.NameKey)),
-                    new CreateIndexOptions<BsonDocument> { Unique = true }));
-
-                // One level of a container's tree.
+                // One level of a container's tree - and the siblings DirectoryManager checks a name against.
                 indexes.CreateOne(new CreateIndexModel<BsonDocument>(
                     keys.Ascending(nameof(DirectoryDescriptor.TenantId))
                         .Ascending(nameof(DirectoryDescriptor.ContainerName))

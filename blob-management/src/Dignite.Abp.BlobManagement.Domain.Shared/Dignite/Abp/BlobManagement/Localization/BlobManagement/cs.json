@@ -50,6 +50,7 @@
     "Usage": "Využití",
     "Usage:StoredOfAllocation": "Uloženo {0} z {1}",
     "Usage:Stored": "Uloženo",
+    "Usage:Deleted": "Smazáno, stále uloženo: {0} v {1} souborech",
     "Usage:Files": "Soubory",
     "Usage:Containers": "Kontejnery",
     "Usage:Users": "Uživatelé",

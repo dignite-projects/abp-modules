@@ -50,6 +50,7 @@
     "Usage": "Mức sử dụng",
     "Usage:StoredOfAllocation": "Đã lưu {0} trên {1}",
     "Usage:Stored": "Đã lưu",
+    "Usage:Deleted": "Đã xóa, vẫn lưu: {0} trong {1} tệp",
     "Usage:Files": "Tệp",
     "Usage:Containers": "Bộ chứa",
     "Usage:Users": "Người dùng",

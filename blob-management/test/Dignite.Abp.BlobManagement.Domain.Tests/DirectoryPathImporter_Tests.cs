@@ -58,8 +58,8 @@ public abstract class DirectoryPathImporter_Tests<TStartupModule> : BlobManageme
     public async Task An_Import_Should_Build_The_Tree_File_The_Files_And_Be_Repeatable()
     {
         var content = await NewContentAsync();
-        // A directory that exists already is used as it is, whatever its case.
-        var existing = await WithUnitOfWorkAsync(() => _directoryManager.CreateAsync(BlobManagementTestContainers.Documents, "DOCS", null));
+        // A directory that exists already under the name is used as it is.
+        var existing = await WithUnitOfWorkAsync(() => _directoryManager.CreateAsync(BlobManagementTestContainers.Documents, "Docs", null));
 
         var report = await ImportAsync(BlobManagementTestContainers.Documents, dryRun: false);
         report.DirectoriesReused.ShouldBe(new[] { "Docs" });

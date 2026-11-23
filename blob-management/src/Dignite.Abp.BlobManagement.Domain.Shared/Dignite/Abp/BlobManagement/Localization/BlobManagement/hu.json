@@ -50,6 +50,7 @@
     "Usage": "Használat",
     "Usage:StoredOfAllocation": "{0} tárolva ebből: {1}",
     "Usage:Stored": "Tárolva",
+    "Usage:Deleted": "Törölve, még tárolva: {0}, {1} fájlban",
     "Usage:Files": "Fájlok",
     "Usage:Containers": "Tárolók",
     "Usage:Users": "Felhasználók",

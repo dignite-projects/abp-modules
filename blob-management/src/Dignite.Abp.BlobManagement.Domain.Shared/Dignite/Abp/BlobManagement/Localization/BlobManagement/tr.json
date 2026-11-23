@@ -50,6 +50,7 @@
     "Usage": "Kullanım",
     "Usage:StoredOfAllocation": "{0} / {1} depolandı",
     "Usage:Stored": "Depolanan",
+    "Usage:Deleted": "Silinmiş, hâlâ depolanan: {1} dosyada {0}",
     "Usage:Files": "Dosyalar",
     "Usage:Containers": "Kapsayıcılar",
     "Usage:Users": "Kullanıcılar",

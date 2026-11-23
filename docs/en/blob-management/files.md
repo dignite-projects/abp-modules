@@ -23,7 +23,13 @@ Blob Management has no business rules, and authorizes no user for files. The bus
 * **lets its browser in** with what it asks Blob Management for on the user's behalf: an [upload ticket](#upload-tickets) to send a file, a [read link](#read-links) to read one that is not public - or it receives the upload and hands the bytes on itself;
 * **marks a file public** when anyone may read it ([Public Files](#public-files)).
 
-A file that no business record refers to has no value: delete a file when the record that refers to it lets go of it.
+A file's life is the life of the record that refers to it, and the business system decides it:
+
+* when it **soft-deletes** the record, it deletes the file (`DeleteAsync(id)`): the file is soft-deleted and keeps its bytes. It is not listed, not read by id, and its public address and read links answer 404;
+* when it **restores** the record, it restores the file (`RestoreAsync(id)`): the file is as it was, at the same address; at the top of its container if its directory was deleted meanwhile;
+* when it **deletes the record for good**, it deletes the file for good (`DeleteAsync(id, permanently: true)`), live or soft-deleted: the row, then its bytes.
+
+Blob Management never deletes a file for good on its own, but one uploaded with a ticket and never confirmed. A file saved under a name ([BLOB Storing Provider](provider.md)) is deleted for good at once: ABP's `IBlobContainer` cannot restore one. A soft-deleted file keeps counting against the tenant's allocation until it is deleted for good.
 
 ## The File Service
 
@@ -143,7 +149,7 @@ const response = await fetch(blobManagementUrl + ticket.uploadUrl, { method: 'PO
 const file = await response.json(); // file.id === ticket.fileId, file.isPending === true
 ````
 
-A ticket stores **one file**: the file takes the ticket's id, and a second upload is refused while that file exists (`BlobManagement:UploadTicketUsed`, 409). Once the file is deleted, the ticket can store one again until it expires - pending, like the first. An expired or altered ticket is `BlobManagement:UploadTicketInvalid` (403). The container's own rules apply as for any file.
+A ticket stores **one file**: the file takes the ticket's id, and a second upload is refused while that file exists, soft-deleted or not (`BlobManagement:UploadTicketUsed`, 409). Once the file is deleted for good, the ticket can store one again until it expires - pending, like the first. An expired or altered ticket is `BlobManagement:UploadTicketInvalid` (403). The container's own rules apply as for any file.
 
 The file is **pending** until the business system confirms it: it is not listed, gets no read link and is not read publicly, but it counts in the usage and the allocation. When the browser reports the upload, the business system reads the file by its id, checks that `creatorId` is its current user (and whatever else it requires), files it with its record and confirms it:
 
@@ -213,7 +219,8 @@ No user stores, renames, moves or deletes a file through the module, and no user
 | `POST integration-api/blob-management/files/upload-tickets` | An upload ticket. |
 | `POST integration-api/blob-management/files/{id}/confirm` | Confirms a file uploaded with a ticket. |
 | `POST integration-api/blob-management/files/{id}/read-link`, `POST integration-api/blob-management/files/read-links` | Read links. |
-| `DELETE integration-api/blob-management/files/{id}` | Deletes it. |
+| `DELETE integration-api/blob-management/files/{id}?permanently=` | Deletes it: soft, or for good with `permanently=true`. |
+| `POST integration-api/blob-management/files/{id}/restore` | Restores a soft-deleted file. |
 
 ### What the Management Page Reads
 

@@ -25,11 +25,14 @@ namespace Dignite.Abp.BlobManagement;
 /// hold the same content, so a BLOB goes with its descriptor.
 /// </para>
 /// <para>
-/// <b>Deleted for good.</b> A descriptor that is deleted is removed, not marked: its bytes are deleted with it, and
-/// the module has no trash to restore either from.
+/// <b>Its life is its record's.</b> A file kept by id is soft-deleted (ABP's <see cref="ISoftDelete"/>) and keeps its bytes:
+/// the business record that refers to it may be soft-deleted and restored, and the file goes and comes back with it
+/// (<see cref="FileDescriptorManager.RestoreAsync"/>). It is deleted for good - the row, then its bytes - only when its
+/// business system asks for it, as it deletes the record for good. Nothing expires on its own. A file saved under a
+/// name is deleted for good at once: ABP's <c>IBlobContainer</c> has no way to restore one or to delete one for good.
 /// </para>
 /// </summary>
-public class FileDescriptor : AggregateRoot<Guid>, ICreationAuditedObject, IModificationAuditedObject, IMultiTenant
+public class FileDescriptor : AggregateRoot<Guid>, ICreationAuditedObject, IModificationAuditedObject, IDeletionAuditedObject, IMultiTenant
 {
     protected FileDescriptor()
     {
@@ -145,6 +148,12 @@ public class FileDescriptor : AggregateRoot<Guid>, ICreationAuditedObject, IModi
 
     public virtual Guid? LastModifierId { get; set; }
 
+    public virtual Guid? DeleterId { get; set; }
+
+    public virtual DateTime? DeletionTime { get; set; }
+
+    public virtual bool IsDeleted { get; set; }
+
     public virtual Guid? TenantId { get; protected set; }
 
     /// <summary>
@@ -193,6 +202,17 @@ public class FileDescriptor : AggregateRoot<Guid>, ICreationAuditedObject, IModi
     /// Confirms a pending file. <see cref="FileDescriptorManager.ConfirmAsync"/> saves it; a confirmed file is not
     /// pending again.
     /// </summary>
+    /// <summary>
+    /// Takes a soft-deleted file back: listed, readable and public again as it was. Where it is filed is
+    /// <see cref="FileDescriptorManager.RestoreAsync"/>'s to check; never call this to bypass it.
+    /// </summary>
+    public virtual void Restore()
+    {
+        IsDeleted = false;
+        DeleterId = null;
+        DeletionTime = null;
+    }
+
     public virtual void Confirm()
     {
         IsPending = false;

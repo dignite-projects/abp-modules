@@ -15,7 +15,7 @@ namespace Dignite.Abp.BlobManagement.Uploads;
 /// <see cref="BlobManagementUploadOptions.PendingLifetime"/>. A browser that uploads and leaves, or a record that was
 /// never saved, would otherwise keep bytes the tenant pays for. Every tenant is looked at - the host, then each tenant
 /// <see cref="ITenantStore"/> lists, in its own database if it has one - and each file is deleted as any other is
-/// (<see cref="FileDescriptorManager.DeleteAsync"/>), its BLOB once its row is gone.
+/// (<see cref="FileDescriptorManager.DeleteAsync"/>), for good: a file that was never confirmed belongs to no record.
 /// <para>
 /// Several Blob Management instances run the cleanup each on its own schedule; a distributed lock lets one of them
 /// work at a time, and an instance that finds it taken skips its turn.
@@ -107,7 +107,7 @@ public class BlobManagementPendingFileCleaner : DomainService
                     var files = await FileRepository.GetExpiredPendingListAsync(createdBefore, BatchSize, cancellationToken);
                     foreach (var file in files)
                     {
-                        await FileDescriptorManager.DeleteAsync(file, cancellationToken);
+                        await FileDescriptorManager.DeleteAsync(file, permanently: true, cancellationToken);
                     }
 
                     await unitOfWork.CompleteAsync(cancellationToken);

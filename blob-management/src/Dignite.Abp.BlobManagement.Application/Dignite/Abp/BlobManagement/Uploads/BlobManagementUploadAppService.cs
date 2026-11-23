@@ -7,6 +7,7 @@ using Dignite.Abp.BlobStoring.Pipeline;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
 using Volo.Abp.Content;
+using Volo.Abp.Data;
 using Volo.Abp.Security.Claims;
 using Volo.Abp.Uow;
 
@@ -21,9 +22,10 @@ namespace Dignite.Abp.BlobManagement.Uploads;
 /// The file is stored as any file kept by id is (<see cref="FileDescriptorManager.CreateFileAsync"/>): the container's
 /// pipeline contributors run, the tenant's allocation is checked. It is pending until its
 /// business system confirms it. A ticket stores one file: its file's id is given, and a second upload collides with the
-/// first one's row and is refused before anything is stored; two at the same moment are settled by the primary key,
-/// and the loser's bytes are removed again. Once that file is deleted - by its business system, or as abandoned - the
-/// ticket can store one again while it lasts: still one file, pending until confirmed, within the ticket's limits.
+/// first one's row - a soft-deleted one included - and is refused before anything is stored; two at the same moment
+/// are settled by the primary key, and the loser's bytes are removed again. Once that file is deleted for good - by its
+/// business system, or as abandoned - the ticket can store one again while it lasts: still one file, pending until
+/// confirmed, within the ticket's limits.
 /// </para>
 /// Exposed only through <c>BlobManagementUploadController</c>.
 /// </summary>
@@ -125,12 +127,17 @@ public class BlobManagementUploadAppService : BlobManagementAppService, IBlobMan
                ?? throw new BusinessException(BlobManagementErrorCodes.UploadTicketInvalid);
     }
 
-    /// <summary>Refuses a ticket whose file is there already: a ticket stores one file.</summary>
+    /// <summary>
+    /// Refuses a ticket whose file is there already, soft-deleted or not: a ticket stores one file.
+    /// </summary>
     protected virtual async Task CheckUnusedAsync(BlobManagementUploadTicket upload)
     {
-        if (await FileRepository.FindAsync(upload.FileId) != null)
+        using (DataFilter.Disable<ISoftDelete>())
         {
-            throw new BusinessException(BlobManagementErrorCodes.UploadTicketUsed);
+            if (await FileRepository.FindAsync(upload.FileId) != null)
+            {
+                throw new BusinessException(BlobManagementErrorCodes.UploadTicketUsed);
+            }
         }
     }
 }

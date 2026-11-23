@@ -101,9 +101,16 @@ public class BlobManagementFileIntegrationController : BlobManagementController,
 
     [HttpDelete]
     [Route("{id}")]
-    public virtual Task DeleteAsync(Guid id)
+    public virtual Task DeleteAsync(Guid id, [FromQuery] bool permanently = false)
     {
-        return FileIntegrationService.DeleteAsync(id);
+        return FileIntegrationService.DeleteAsync(id, permanently);
+    }
+
+    [HttpPost]
+    [Route("{id}/restore")]
+    public virtual Task<BlobManagementFileDto> RestoreAsync(Guid id)
+    {
+        return FileIntegrationService.RestoreAsync(id);
     }
 
     [HttpGet]

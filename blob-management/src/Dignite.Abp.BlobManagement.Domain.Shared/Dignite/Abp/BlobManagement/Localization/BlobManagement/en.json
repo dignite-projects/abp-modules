@@ -50,6 +50,7 @@
     "Usage": "Usage",
     "Usage:StoredOfAllocation": "{0} of {1} stored",
     "Usage:Stored": "Stored",
+    "Usage:Deleted": "Deleted, still stored: {0} in {1} files",
     "Usage:Files": "Files",
     "Usage:Containers": "Containers",
     "Usage:Users": "Users",

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Shouldly;
 using Volo.Abp;
+using Volo.Abp.Data;
 using Volo.Abp.Modularity;
 using Xunit;
 
@@ -19,6 +20,7 @@ public abstract class DirectoryManager_Tests<TStartupModule> : BlobManagementDom
     private readonly FileDescriptorManager _fileDescriptorManager;
     private readonly IDirectoryDescriptorRepository _directoryRepository;
     private readonly IFileDescriptorRepository _fileRepository;
+    private readonly IDataFilter _dataFilter;
 
     protected DirectoryManager_Tests()
     {
@@ -26,6 +28,7 @@ public abstract class DirectoryManager_Tests<TStartupModule> : BlobManagementDom
         _fileDescriptorManager = GetRequiredService<FileDescriptorManager>();
         _directoryRepository = GetRequiredService<IDirectoryDescriptorRepository>();
         _fileRepository = GetRequiredService<IFileDescriptorRepository>();
+        _dataFilter = GetRequiredService<IDataFilter>();
     }
 
     [Fact]
@@ -58,26 +61,54 @@ public abstract class DirectoryManager_Tests<TStartupModule> : BlobManagementDom
         });
     }
 
+    /// <summary>
+    /// Sibling names are display names, compared as they are written - as ABP compares the display names of sibling
+    /// organization units: a name another sibling has is refused, one that differs in case is another name.
+    /// </summary>
     [Fact]
-    public async Task Sibling_Names_Should_Be_One_Name_Whatever_Their_Case()
+    public async Task Sibling_Names_Should_Be_Compared_As_Written()
     {
         var docs = await CreateAsync(BlobManagementTestContainers.Documents, "Docs", null);
 
         await ShouldFailAsync(BlobManagementErrorCodes.DirectoryNameAlreadyExists,
-            () => CreateAsync(BlobManagementTestContainers.Documents, "DOCS", null));
+            () => CreateAsync(BlobManagementTestContainers.Documents, "Docs", null));
+        await CreateAsync(BlobManagementTestContainers.Documents, "DOCS", null);
 
         // Under another parent, and in another container, the name is free.
-        await CreateAsync(BlobManagementTestContainers.Documents, "docs", docs.Id);
+        await CreateAsync(BlobManagementTestContainers.Documents, "Docs", docs.Id);
         await CreateAsync(BlobManagementTestContainers.Archive, "Docs", null);
 
         var notes = await CreateAsync(BlobManagementTestContainers.Documents, "Notes", null);
         await ShouldFailAsync(BlobManagementErrorCodes.DirectoryNameAlreadyExists,
-            () => RenameAsync(notes.Id, "docs"));
+            () => RenameAsync(notes.Id, "Docs"));
 
-        // A change of case only is the directory's own name.
+        // A directory's own name is no sibling's.
         (await RenameAsync(notes.Id, "NOTES")).Name.ShouldBe("NOTES");
         (await RenameAsync(notes.Id, "Minutes")).Name.ShouldBe("Minutes");
         await CreateAsync(BlobManagementTestContainers.Documents, "Notes", null);
+    }
+
+    /// <summary>
+    /// A deleted directory is soft-deleted, as ABP deletes its own trees: it is not listed, and its name is free for
+    /// whatever is created in its place. Files that are soft-deleted do not keep it from being deleted.
+    /// </summary>
+    [Fact]
+    public async Task A_Deleted_Directory_Should_Be_Kept_And_Give_Its_Name_Up()
+    {
+        var docs = await CreateAsync(BlobManagementTestContainers.Documents, "Gone", null);
+        await WithUnitOfWorkAsync(async () =>
+            await _directoryManager.DeleteAsync(await _directoryRepository.GetAsync(docs.Id)));
+
+        (await WithUnitOfWorkAsync(() => _directoryRepository.FindAsync(docs.Id))).ShouldBeNull();
+        using (_dataFilter.Disable<ISoftDelete>())
+        {
+            var kept = await WithUnitOfWorkAsync(() => _directoryRepository.FindAsync(docs.Id));
+            kept.ShouldNotBeNull();
+            kept!.IsDeleted.ShouldBeTrue();
+        }
+
+        var again = await CreateAsync(BlobManagementTestContainers.Documents, "Gone", null);
+        again.Id.ShouldNotBe(docs.Id);
     }
 
     [Fact]
@@ -95,7 +126,7 @@ public abstract class DirectoryManager_Tests<TStartupModule> : BlobManagementDom
         await ShouldFailAsync(BlobManagementErrorCodes.DirectoryNotFound, () => MoveAsync(a.Id, elsewhere.Id));
 
         // A name taken where it lands is refused.
-        await CreateAsync(BlobManagementTestContainers.Documents, "b", target.Id);
+        await CreateAsync(BlobManagementTestContainers.Documents, "B", target.Id);
         await ShouldFailAsync(BlobManagementErrorCodes.DirectoryNameAlreadyExists, () => MoveAsync(b.Id, target.Id));
 
         // The paths of everything below move along.

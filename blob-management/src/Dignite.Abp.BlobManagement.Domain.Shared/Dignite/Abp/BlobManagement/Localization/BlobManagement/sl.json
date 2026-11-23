@@ -50,6 +50,7 @@
     "Usage": "Poraba",
     "Usage:StoredOfAllocation": "Shranjeno {0} od {1}",
     "Usage:Stored": "Shranjeno",
+    "Usage:Deleted": "Izbrisano, še shranjeno: {0} v {1} datotekah",
     "Usage:Files": "Datoteke",
     "Usage:Containers": "Vsebniki",
     "Usage:Users": "Uporabniki",

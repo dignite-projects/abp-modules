@@ -19,11 +19,11 @@ Directories are the one thing Blob Management lets a user change, so that a busi
 
 A container that allows directories holds one tree for each tenant.
 
-* A name is unique among the directories beside it, **compared without regard to case** (`Reports` and `reports` cannot both be there), and is at most 256 characters long.
+* A name is unique among the directories beside it, **compared as it is written** (`Reports` and `reports` can both be there), and is at most 256 characters long.
 * A tree is at most 16 directories deep.
 * The directories beside each other have an **order**: a new one goes last, and a move names the position.
 * A directory moves within its own container only, never into itself or below itself. Its files and subdirectories go with it.
-* Only an **empty** directory is deleted; one that still holds files or directories is refused (`BlobManagement:DirectoryNotEmpty`). A deleted directory is removed for good: there is no trash to restore it from.
+* Only an **empty** directory is deleted; one that still holds files or directories is refused (`BlobManagement:DirectoryNotEmpty`). A deleted directory is soft-deleted, as ABP deletes its own trees: nobody lists it, and its name is free for whatever is created in its place. Files that are soft-deleted do not keep a directory from being deleted; restored later, such a file goes to the top of its container.
 
 ## Who May Change It
 
@@ -57,7 +57,7 @@ The containers a user has something to do in, each with its `access`, are `GET a
 |---|---|
 | `BlobManagement:DirectoriesNotAllowed` | The container does not allow directories (HTTP 400). |
 | `BlobManagement:DirectoryNotFound` | The directory does not exist where it was named, for example in another container (HTTP 404). |
-| `BlobManagement:DirectoryNameAlreadyExists` | A directory beside it has the name already, compared without regard to case (HTTP 409). |
+| `BlobManagement:DirectoryNameAlreadyExists` | A directory beside it has the name already, as written (HTTP 409). |
 | `BlobManagement:DirectoryCannotMoveIntoItself` | A directory cannot be moved into itself or below itself (HTTP 400). |
 | `BlobManagement:DirectoryTooDeep` | The tree would be deeper than 16 directories (HTTP 400). |
 | `BlobManagement:DirectoryNotEmpty` | Only an empty directory can be deleted (HTTP 409). |

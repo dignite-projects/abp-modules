@@ -68,8 +68,20 @@ public interface IBlobManagementFileService : IApplicationService
     /// </summary>
     Task<ListResultDto<BlobManagementReadLinkDto>> CreateReadLinksAsync(CreateBlobManagementReadLinksInput input);
 
-    /// <summary>Deletes a file; a file that is not there is no error.</summary>
-    Task DeleteAsync(Guid id);
+    /// <summary>
+    /// Deletes a file; a file that is not there is no error. A file kept by id is soft-deleted and keeps its bytes, so
+    /// it can be restored with the record that refers to it (<see cref="RestoreAsync"/>); with
+    /// <paramref name="permanently"/> it is deleted for good, bytes and all - as the business system deletes its record
+    /// for good. That works on a file that is soft-deleted already. A file saved under a name, or still pending, is
+    /// always deleted for good.
+    /// </summary>
+    Task DeleteAsync(Guid id, bool permanently = false);
+
+    /// <summary>
+    /// Takes back a soft-deleted file: listed, read and public again as before, at the same address; at the top of its
+    /// container if its directory was deleted meanwhile. A file that is not deleted is returned as it is.
+    /// </summary>
+    Task<BlobManagementFileDto> RestoreAsync(Guid id);
 
     /// <summary>The file's bytes - in any container, public or not.</summary>
     Task<IRemoteStreamContent> GetContentAsync(Guid id);

@@ -17,16 +17,15 @@ public class EfCoreDirectoryDescriptorRepository
     {
     }
 
-    public virtual async Task<bool> NameKeyExistsAsync(string nameKey, CancellationToken cancellationToken = default)
+    public virtual async Task<DirectoryDescriptor?> FindByNameAsync(
+        string containerName,
+        Guid? parentId,
+        string name,
+        CancellationToken cancellationToken = default)
     {
-        return await (await GetDbSetAsync())
-            .AnyAsync(d => d.NameKey == nameKey, GetCancellationToken(cancellationToken));
-    }
-
-    public virtual async Task<DirectoryDescriptor?> FindByNameKeyAsync(string nameKey, CancellationToken cancellationToken = default)
-    {
-        return await (await GetDbSetAsync())
-            .FirstOrDefaultAsync(d => d.NameKey == nameKey, GetCancellationToken(cancellationToken));
+        // Read the siblings and compare here: the database's collation would decide the case otherwise.
+        var siblings = await GetChildrenAsync(containerName, parentId, cancellationToken);
+        return siblings.FirstOrDefault(d => string.Equals(d.Name, name, StringComparison.Ordinal));
     }
 
     public virtual async Task<List<DirectoryDescriptor>> GetChildrenAsync(

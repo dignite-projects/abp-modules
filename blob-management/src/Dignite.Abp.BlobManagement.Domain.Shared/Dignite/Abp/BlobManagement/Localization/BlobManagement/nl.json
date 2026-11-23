@@ -50,6 +50,7 @@
     "Usage": "Gebruik",
     "Usage:StoredOfAllocation": "{0} van {1} opgeslagen",
     "Usage:Stored": "Opgeslagen",
+    "Usage:Deleted": "Verwijderd, nog opgeslagen: {0} in {1} bestanden",
     "Usage:Files": "Bestanden",
     "Usage:Containers": "Containers",
     "Usage:Users": "Gebruikers",
