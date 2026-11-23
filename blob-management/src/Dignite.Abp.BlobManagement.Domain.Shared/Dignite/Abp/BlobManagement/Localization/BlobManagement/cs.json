@@ -20,6 +20,7 @@
     "BlobManagement:UploadTicketUsed": "Odkaz pro nahrání už byl použit.",
     "BlobManagement:FilePending": "Soubor ještě nebyl potvrzen.",
     "BlobManagement:ReadLinkInvalid": "Odkaz není platný nebo vypršel.",
+    "BlobManagement:ImageSizeNotSupported": "Kontejner „{ContainerName}“ nezmenšuje obrázky tak, aby se vešly, proto si nahrání nemůže určit vlastní velikost obrázku.",
     "Feature:BlobManagementGroup": "Správa objektů BLOB",
     "Feature:BlobManagementEnable": "Povolit správu objektů BLOB",
     "Feature:BlobManagementEnableDescription": "Zda může tenant ukládat soubory do kontejnerů BLOB.",

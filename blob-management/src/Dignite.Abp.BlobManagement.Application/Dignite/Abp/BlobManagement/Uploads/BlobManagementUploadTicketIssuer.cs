@@ -32,13 +32,16 @@ public class BlobManagementUploadTicketIssuer : ITransientDependency
 
     protected ICurrentUser CurrentUser { get; }
 
+    protected FileDescriptorManager FileDescriptorManager { get; }
+
     public BlobManagementUploadTicketIssuer(
         BlobManagementTicketProtector ticketProtector,
         IBlobContainerConfigurationProvider containerConfigurationProvider,
         IOptions<BlobManagementUploadOptions> options,
         IGuidGenerator guidGenerator,
         ICurrentTenant currentTenant,
-        ICurrentUser currentUser)
+        ICurrentUser currentUser,
+        FileDescriptorManager fileDescriptorManager)
     {
         TicketProtector = ticketProtector;
         ContainerConfigurationProvider = containerConfigurationProvider;
@@ -46,16 +49,21 @@ public class BlobManagementUploadTicketIssuer : ITransientDependency
         GuidGenerator = guidGenerator;
         CurrentTenant = currentTenant;
         CurrentUser = currentUser;
+        FileDescriptorManager = fileDescriptorManager;
     }
 
     /// <summary>
     /// The ticket for one file in the place <paramref name="input"/> names, in the current tenant, recording
     /// <paramref name="clientId"/> as the writer of the file it brings in when a remote client asked for it. Its size
     /// is the input's, never more than the container takes; its lifetime the input's, never more than
-    /// <see cref="BlobManagementUploadOptions.MaxTicketLifetime"/>; its user the input's, else the current one.
+    /// <see cref="BlobManagementUploadOptions.MaxTicketLifetime"/>; its user the input's, else the current one. A box
+    /// for its pictures is checked now, as the upload will apply it (<see cref="FileDescriptorManager.GetSaveConfiguration"/>):
+    /// one the container cannot take is refused before a ticket is signed, not when the browser brings the file.
     /// </summary>
     public virtual BlobManagementUploadTicketDto Issue(CreateBlobManagementUploadTicketInput input, string? clientId)
     {
+        FileDescriptorManager.GetSaveConfiguration(input.ContainerName, input.ImageMaxWidth, input.ImageMaxHeight);
+
         var containerMax = BlobStreamBuffering.GetMaxBufferedBytes(ContainerConfigurationProvider.Get(input.ContainerName));
         var lifetime = input.LifetimeInSeconds is > 0
             ? TimeSpan.FromSeconds(input.LifetimeInSeconds.Value)
@@ -78,7 +86,9 @@ public class BlobManagementUploadTicketIssuer : ITransientDependency
                 .Where(type => !type.IsNullOrWhiteSpace())
                 .Select(type => type.Trim().ToLowerInvariant())
                 .Distinct()
-                .ToList()
+                .ToList(),
+            ImageMaxWidth = input.ImageMaxWidth,
+            ImageMaxHeight = input.ImageMaxHeight
         };
 
         var expiration = DateTimeOffset.UtcNow.Add(lifetime);

@@ -76,7 +76,9 @@ public abstract class BlobManagementFileServiceBase : BlobManagementAppService
                 IsPublic = input.IsPublic,
                 CreatorId = input.CreatorId,
                 ClientId = clientId,
-                ExpectedSha256 = input.Sha256
+                ExpectedSha256 = input.Sha256,
+                ImageMaxWidth = input.ImageMaxWidth,
+                ImageMaxHeight = input.ImageMaxHeight
             });
 
         return Map(file);

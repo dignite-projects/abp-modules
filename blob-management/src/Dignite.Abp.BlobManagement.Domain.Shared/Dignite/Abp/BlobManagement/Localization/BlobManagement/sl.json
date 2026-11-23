@@ -20,6 +20,7 @@
     "BlobManagement:UploadTicketUsed": "Povezava za nalaganje je bila že uporabljena.",
     "BlobManagement:FilePending": "Datoteka še ni potrjena.",
     "BlobManagement:ReadLinkInvalid": "Povezava ni veljavna ali je potekla.",
+    "BlobManagement:ImageSizeNotSupported": "Vsebnik '{ContainerName}' svojih slik ne pomanjša tako, da se prilegajo, zato nalaganje ne more zahtevati lastne velikosti slike.",
     "Feature:BlobManagementGroup": "Upravljanje objektov BLOB",
     "Feature:BlobManagementEnable": "Omogoči upravljanje objektov BLOB",
     "Feature:BlobManagementEnableDescription": "Ali lahko najemnik shranjuje datoteke v vsebnike BLOB.",

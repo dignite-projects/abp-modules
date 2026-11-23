@@ -20,6 +20,7 @@
     "BlobManagement:UploadTicketUsed": "Linkul de încărcare a fost deja folosit.",
     "BlobManagement:FilePending": "Fișierul nu a fost încă confirmat.",
     "BlobManagement:ReadLinkInvalid": "Linkul nu este valid sau a expirat.",
+    "BlobManagement:ImageSizeNotSupported": "Containerul '{ContainerName}' nu își scalează imaginile pentru a se încadra, așa că o încărcare nu poate cere o dimensiune proprie a imaginii.",
     "Feature:BlobManagementGroup": "Gestionare bloburi",
     "Feature:BlobManagementEnable": "Activează gestionarea bloburilor",
     "Feature:BlobManagementEnableDescription": "Dacă chiriașul poate stoca fișiere în containerele BLOB.",

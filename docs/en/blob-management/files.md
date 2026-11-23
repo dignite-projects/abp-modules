@@ -110,6 +110,30 @@ A `Content-Digest` that names no `sha-256` (for example only `md5`) is refused r
 
 A file stored through ABP's `IBlobContainer` is not checked: the BLOB storing provider has nowhere to carry the value. A business system that wants the check calls `IBlobManagementBlobService` itself, as [Calling the BLOB Service Directly](provider.md#calling-the-blob-service-directly) shows.
 
+## Picture Sizes
+
+A business system can ask for a picture to be stored no larger than a box of its own - an avatar, a cover, a picture in an article - with `ImageMaxWidth` and `ImageMaxHeight`, in pixels:
+
+| Way in | Where the box goes |
+|---|---|
+| `IBlobManagementFileService.CreateAsync` and `POST integration-api/blob-management/files` | `ImageMaxWidth` and `ImageMaxHeight` of the input; the form fields `imageMaxWidth` and `imageMaxHeight` |
+| `CreateUploadTicketAsync` | `ImageMaxWidth` and `ImageMaxHeight` of the input, kept in the [ticket](#upload-tickets) |
+
+A picture larger than the box is **scaled down to fit inside it, keeping its aspect ratio**: it is never cropped and never enlarged. With a box of 1000 × 1000:
+
+| Uploaded | Stored |
+|---|---|
+| 4000 × 3000 | 1000 × 750 |
+| 800 × 3000 | 267 × 1000 |
+| 900 × 600 | as uploaded |
+
+* Either side can be left out (`null`): a box of width 1000 alone stores 4000 × 3000 as 1000 × 750.
+* The container's own box still applies, and each side is the smaller of the two: an upload can make what the container keeps smaller, never larger. In a container that resizes nothing, the upload's box is the only one; the picture is fitted after the container's own contributors and before its GZip compression, if it has one.
+* A container whose resize crops, stretches or pads (a `Mode` other than `Max`) takes no box: the upload, or the request for the ticket, fails with `BlobManagement:ImageSizeNotSupported` (HTTP 400).
+* The picture is scaled in the same step as the container's other processing: on the images preset, a JPEG is turned upright, fitted and [stored as WebP](setting-up.md#pictures-stored-as-webp) in one encode.
+* What is not a picture is stored as it is, and so is a picture the image provider does not resize: on SkiaSharp, which Blob Management brings, anything but a JPEG, a PNG or a WebP, and an animated one.
+* A side that is not a positive number is a validation error. A BLOB saved under a name through ABP's `IBlobContainer` has no box of its own: it is the container's.
+
 ## Public Files
 
 Whether anyone may read a file at its public address, without signing in, is the business system's call, kept on the file (`isPublic`):
@@ -132,13 +156,14 @@ var ticket = await _files.CreateUploadTicketAsync(new CreateBlobManagementUpload
     DirectoryId = directoryId,                      // optional
     MaxSize = 10 * 1024 * 1024,                     // optional: at most the container's own limit
     AllowedContentTypes = { "application/pdf", "image/*" }, // optional: detected from the bytes
+    ImageMaxWidth = 1920,                           // optional: see Picture Sizes
     LifetimeInSeconds = 300                         // optional
 });
 // ticket.UploadUrl: /api/blob-management/uploads/{ticket}
 // ticket.FileId:    the id the file will have
 ````
 
-* The ticket is signed by Blob Management with ASP.NET Core Data Protection and carries the tenant, the container, the directory, the file's id, the user (`UploaderId`; by default the current user, which the remote service sends), the client, the size and the types. The browser can change none of it.
+* The ticket is signed by Blob Management with ASP.NET Core Data Protection and carries the tenant, the container, the directory, the file's id, the user (`UploaderId`; by default the current user, which the remote service sends), the client, the size, the types and the box for pictures ([Picture Sizes](#picture-sizes)). The browser can change none of it.
 * Its lifetime is `LifetimeInSeconds`, else `BlobManagementUploadOptions.TicketLifetime` (5 minutes), and never more than `MaxTicketLifetime` (1 hour).
 * The browser posts the file to `UploadUrl` - relative to Blob Management's address - as the multipart field `file` (or the raw body, with `?name=`). The request is anonymous: no token, cookie, antiforgery token or tenant header is needed or used. The body is limited to the ticket's size.
 

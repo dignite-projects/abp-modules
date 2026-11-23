@@ -22,6 +22,13 @@ so it stays clear which part of the repository actually moved.
   from GitHub Packages (first: `10.7.7-preview.1`). A stable release still leaves them out until the module is complete.
   From `10.7.7-preview.2` this includes the Angular package, as `@dignite-projects/ng.blob-management` on GitHub
   Packages' npm registry.
+- **blob-management (pre-releases only): a box for the pictures of one upload.** `ImageMaxWidth` and `ImageMaxHeight`
+  on `CreateBlobManagementFileInput` (the form fields `imageMaxWidth` and `imageMaxHeight` of the file API) and on
+  `CreateBlobManagementUploadTicketInput`, which keeps them in the ticket: a larger picture is scaled down to fit inside
+  the box, keeping its aspect ratio - never cropped or enlarged - and each side is the smaller of the upload's and the
+  container's. On the images preset the picture is fitted and stored as WebP in one encode; a container that resizes
+  nothing resizes such an upload too, and one that crops, stretches or pads its pictures refuses the box
+  (`BlobManagement:ImageSizeNotSupported`).
 
 #### blob-storing
 

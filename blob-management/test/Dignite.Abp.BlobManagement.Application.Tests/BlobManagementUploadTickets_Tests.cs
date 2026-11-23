@@ -14,6 +14,7 @@ using Volo.Abp.Domain.Entities;
 using Volo.Abp.Modularity;
 using Volo.Abp.Security.Claims;
 using Volo.Abp.Timing;
+using Volo.Abp.Validation;
 using Xunit;
 
 namespace Dignite.Abp.BlobManagement;
@@ -146,6 +147,36 @@ public abstract class BlobManagementUploadTickets_Tests<TStartupModule> : BlobMa
             MaxSize = long.MaxValue
         });
         (await _uploads.GetTicketAsync(limited.Ticket)).MaxSize.ShouldBe(BlobManagementTestContainers.LimitedMaxSizeInBytes);
+    }
+
+    /// <summary>
+    /// The box a ticket is issued with is in the ticket: the picture the browser uploads with it is scaled down to fit
+    /// inside, keeping its aspect ratio. A side that is not positive is refused when the ticket is asked for.
+    /// </summary>
+    [Fact]
+    public async Task A_Ticket_Should_Store_A_Picture_Within_Its_Box()
+    {
+        var ticket = await _files.CreateUploadTicketAsync(new CreateBlobManagementUploadTicketInput
+        {
+            ContainerName = Container,
+            ImageMaxWidth = 64,
+            ImageMaxHeight = 64
+        });
+
+        var uploaded = await _uploads.UploadAsync(ticket.Ticket, Content("wide.png", BlobManagementTestFiles.Png(256, 128, seed: 71)));
+
+        using var content = await _files.GetContentAsync(uploaded.Id);
+        var stored = BlobManagementTestFiles.ReadAll(content.GetStream());
+        BlobManagementTestFiles.Measure(stored).ShouldBe((64, 32));
+        uploaded.Size.ShouldBe(stored.Length);
+
+        await Should.ThrowAsync<AbpValidationException>(() => _files.CreateUploadTicketAsync(
+            new CreateBlobManagementUploadTicketInput { ContainerName = Container, ImageMaxWidth = 0 }));
+
+        // A container that crops its pictures takes no box: refused when the ticket is asked for, not at the upload.
+        (await Should.ThrowAsync<BusinessException>(() => _files.CreateUploadTicketAsync(
+                new CreateBlobManagementUploadTicketInput { ContainerName = BlobManagementTestContainers.Cropped, ImageMaxWidth = 32 })))
+            .Code.ShouldBe(BlobManagementErrorCodes.ImageSizeNotSupported);
     }
 
     [Fact]

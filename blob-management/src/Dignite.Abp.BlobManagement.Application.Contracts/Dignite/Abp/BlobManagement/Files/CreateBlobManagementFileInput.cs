@@ -38,6 +38,18 @@ public class CreateBlobManagementFileInput
     [DynamicStringLength(typeof(FileDescriptorConsts), nameof(FileDescriptorConsts.MaxHashLength))]
     public string? Sha256 { get; set; }
 
+    /// <summary>
+    /// The largest width a picture is stored at, in pixels; <c>null</c> leaves it to the container. A wider picture is
+    /// scaled down, keeping its aspect ratio - never cropped, never enlarged - and the container's own box still applies:
+    /// each side is the smaller of the two. Content that is not a picture is stored as it is.
+    /// </summary>
+    [Range(1, int.MaxValue)]
+    public int? ImageMaxWidth { get; set; }
+
+    /// <summary>The largest height a picture is stored at, in pixels; <c>null</c> leaves it to the container.</summary>
+    [Range(1, int.MaxValue)]
+    public int? ImageMaxHeight { get; set; }
+
     [Required]
     public IRemoteStreamContent File { get; set; } = default!;
 }

@@ -109,7 +109,9 @@ public class BlobManagementUploadAppService : BlobManagementAppService, IBlobMan
                     IsPending = true,
                     CreatorId = upload.UploaderId,
                     ClientId = upload.ClientId,
-                    ExpectedSha256 = sha256
+                    ExpectedSha256 = sha256,
+                    ImageMaxWidth = upload.ImageMaxWidth,
+                    ImageMaxHeight = upload.ImageMaxHeight
                 });
 
             await unitOfWork.CompleteAsync();

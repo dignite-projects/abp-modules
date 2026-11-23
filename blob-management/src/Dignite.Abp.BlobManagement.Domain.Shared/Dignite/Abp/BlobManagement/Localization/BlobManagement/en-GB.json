@@ -20,6 +20,7 @@
     "BlobManagement:UploadTicketUsed": "The upload link has been used already.",
     "BlobManagement:FilePending": "The file has not been confirmed yet.",
     "BlobManagement:ReadLinkInvalid": "The link is not valid or has expired.",
+    "BlobManagement:ImageSizeNotSupported": "The container '{ContainerName}' does not scale its pictures to fit, so an upload cannot ask for a picture size of its own.",
     "Feature:BlobManagementGroup": "Blob Management",
     "Feature:BlobManagementEnable": "Enable Blob Management",
     "Feature:BlobManagementEnableDescription": "Whether the tenant may store files in the BLOB containers.",

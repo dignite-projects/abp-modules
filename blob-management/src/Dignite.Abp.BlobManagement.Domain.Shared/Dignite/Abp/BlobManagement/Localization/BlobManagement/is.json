@@ -20,6 +20,7 @@
     "BlobManagement:UploadTicketUsed": "Upphleðslutengillinn hefur þegar verið notaður.",
     "BlobManagement:FilePending": "Skráin hefur ekki verið staðfest enn.",
     "BlobManagement:ReadLinkInvalid": "Tengillinn er ógildur eða útrunninn.",
+    "BlobManagement:ImageSizeNotSupported": "Gámurinn '{ContainerName}' skalar ekki myndir sínar þannig að þær passi, svo upphleðsla getur ekki beðið um eigin myndastærð.",
     "Feature:BlobManagementGroup": "Blob-umsýsla",
     "Feature:BlobManagementEnable": "Virkja Blob-umsýslu",
     "Feature:BlobManagementEnableDescription": "Hvort leigjandinn megi geyma skrár í BLOB-gámunum.",

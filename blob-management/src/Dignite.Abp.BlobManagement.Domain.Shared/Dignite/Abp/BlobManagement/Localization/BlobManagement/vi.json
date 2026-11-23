@@ -20,6 +20,7 @@
     "BlobManagement:UploadTicketUsed": "Liên kết tải lên đã được sử dụng.",
     "BlobManagement:FilePending": "Tệp chưa được xác nhận.",
     "BlobManagement:ReadLinkInvalid": "Liên kết không hợp lệ hoặc đã hết hạn.",
+    "BlobManagement:ImageSizeNotSupported": "Vùng chứa '{ContainerName}' không thu nhỏ ảnh cho vừa khung, nên một lần tải lên không thể yêu cầu kích thước ảnh riêng.",
     "Feature:BlobManagementGroup": "Quản lý Blob",
     "Feature:BlobManagementEnable": "Bật Quản lý Blob",
     "Feature:BlobManagementEnableDescription": "Đối tượng thuê có được lưu tệp trong các bộ chứa BLOB hay không.",

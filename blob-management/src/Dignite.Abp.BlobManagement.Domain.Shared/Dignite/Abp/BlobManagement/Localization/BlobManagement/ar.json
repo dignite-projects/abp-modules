@@ -20,6 +20,7 @@
     "BlobManagement:UploadTicketUsed": "تم استخدام رابط الرفع من قبل.",
     "BlobManagement:FilePending": "لم يتم تأكيد الملف بعد.",
     "BlobManagement:ReadLinkInvalid": "الرابط غير صالح أو انتهت صلاحيته.",
+    "BlobManagement:ImageSizeNotSupported": "الحاوية '{ContainerName}' لا تصغّر صورها لتلائم الحجم، لذلك لا يمكن للرفع أن يطلب حجم صورة خاصاً به.",
     "Feature:BlobManagementGroup": "إدارة كائنات Blob",
     "Feature:BlobManagementEnable": "تفعيل إدارة كائنات Blob",
     "Feature:BlobManagementEnableDescription": "ما إذا كان يُسمح للمستأجر بتخزين الملفات في حاويات BLOB.",

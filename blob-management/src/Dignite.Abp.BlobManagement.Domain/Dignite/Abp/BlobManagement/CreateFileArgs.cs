@@ -44,6 +44,16 @@ public class CreateFileArgs
     public string? ExpectedSha256 { get; set; }
 
     /// <summary>
+    /// The largest width a picture of this upload is stored at, in pixels; <c>null</c> leaves it to the container. A
+    /// wider picture is scaled down, keeping its aspect ratio - never cropped, never enlarged - and the container's own
+    /// box still applies: each side is the smaller of the two (<see cref="FileDescriptorManager.GetSaveConfiguration"/>).
+    /// </summary>
+    public int? ImageMaxWidth { get; set; }
+
+    /// <summary>The largest height a picture of this upload is stored at, in pixels; <c>null</c> leaves it to the container.</summary>
+    public int? ImageMaxHeight { get; set; }
+
+    /// <summary>
     /// Fields of its own the application keeps on the file - the descriptor's extra properties - written with the row,
     /// so it is inserted once: the path a file had in the library an application migrates in, for one, which
     /// <c>DirectoryPathImporter</c> files it by. Blob Management reads none of them itself.

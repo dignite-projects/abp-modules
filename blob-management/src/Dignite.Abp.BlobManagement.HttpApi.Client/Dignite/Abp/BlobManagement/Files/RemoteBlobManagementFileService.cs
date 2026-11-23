@@ -62,6 +62,8 @@ public class RemoteBlobManagementFileService : IBlobManagementFileService
             CreatorId = input.CreatorId ?? GetCreatorId(),
             IsPublic = input.IsPublic,
             Sha256 = input.Sha256,
+            ImageMaxWidth = input.ImageMaxWidth,
+            ImageMaxHeight = input.ImageMaxHeight,
             File = input.File
         });
     }
@@ -90,6 +92,8 @@ public class RemoteBlobManagementFileService : IBlobManagementFileService
             UploaderId = input.UploaderId ?? CurrentUser.Id,
             MaxSize = input.MaxSize,
             AllowedContentTypes = new List<string>(input.AllowedContentTypes),
+            ImageMaxWidth = input.ImageMaxWidth,
+            ImageMaxHeight = input.ImageMaxHeight,
             LifetimeInSeconds = input.LifetimeInSeconds
         });
     }

@@ -146,6 +146,7 @@ Usage is counted from the file descriptors: the size of every file, across every
 | `BlobManagement:UploadTicketUsed` | The ticket's file was stored already: a ticket stores one file (HTTP 409). |
 | `BlobManagement:FilePending` | The file was uploaded with a ticket and is not confirmed yet, so it gets no read link (HTTP 409). |
 | `BlobManagement:ReadLinkInvalid` | A read link that is expired, altered or not this Blob Management's (HTTP 403). |
+| `BlobManagement:ImageSizeNotSupported` | An upload asked for a [picture size](files.md#picture-sizes) in a container that crops, stretches or pads its pictures (HTTP 400). |
 | `BlobManagement:DirectoriesNotAllowed` and the other directory errors | See [Directories](directories.md#errors). |
 
 The container's contributors add their own, which Blob Management's HTTP API answers with the status of what is wrong with the content:

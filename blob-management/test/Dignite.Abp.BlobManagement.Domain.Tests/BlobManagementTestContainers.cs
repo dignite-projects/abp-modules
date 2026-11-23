@@ -33,6 +33,12 @@ public static class BlobManagementTestContainers
 
     public static readonly int[] AvatarSizes = { 32, 48 };
 
+    /// <summary>A container that crops its pictures to <see cref="ImagesMaxWidth"/> square, not the default mode.</summary>
+    public const string Cropped = "cropped";
+
+    /// <summary>A container that stores its content compressed, and resizes nothing.</summary>
+    public const string Zipped = "zipped";
+
     /// <summary>A BLOB container the Blob Management host did not declare.</summary>
     public const string NotManaged = "not-managed";
 }

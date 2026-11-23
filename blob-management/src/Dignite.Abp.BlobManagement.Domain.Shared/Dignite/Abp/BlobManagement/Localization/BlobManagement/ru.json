@@ -20,6 +20,7 @@
     "BlobManagement:UploadTicketUsed": "Ссылка для загрузки уже использована.",
     "BlobManagement:FilePending": "Файл ещё не подтверждён.",
     "BlobManagement:ReadLinkInvalid": "Ссылка недействительна или срок её действия истёк.",
+    "BlobManagement:ImageSizeNotSupported": "Контейнер «{ContainerName}» не масштабирует изображения по размеру, поэтому при загрузке нельзя запросить собственный размер изображения.",
     "Feature:BlobManagementGroup": "Управление BLOB-объектами",
     "Feature:BlobManagementEnable": "Включить управление BLOB-объектами",
     "Feature:BlobManagementEnableDescription": "Может ли арендатор хранить файлы в BLOB-контейнерах.",

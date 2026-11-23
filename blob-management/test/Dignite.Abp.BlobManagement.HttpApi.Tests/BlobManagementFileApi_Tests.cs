@@ -379,6 +379,26 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
     }
 
     /// <summary>
+    /// The box a file is stored within travels as the form fields <c>imageMaxWidth</c> and <c>imageMaxHeight</c> of the
+    /// file API: the picture is scaled down to fit inside it.
+    /// </summary>
+    [Fact]
+    public async Task A_Box_Sent_With_A_File_Should_Reach_Blob_Management_Over_Http()
+    {
+        using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
+        using (AsApplicationUser(_appUser))
+        {
+            var input = NewFile(Container, "wide.png", BlobManagementTestFiles.Png(256, 128, seed: 81));
+            input.ImageMaxWidth = 64;
+            input.ImageMaxHeight = 64;
+            var file = await _appFiles.CreateAsync(input);
+
+            using var content = await _appFiles.GetContentAsync(file.Id);
+            BlobManagementTestFiles.Measure(BlobManagementTestFiles.ReadAll(content.GetStream())).ShouldBe((64, 32));
+        }
+    }
+
+    /// <summary>
     /// The remote services send the application's user without touching the caller's input: what goes over HTTP is a
     /// copy, so an input the caller keeps or sends again still names nobody.
     /// </summary>

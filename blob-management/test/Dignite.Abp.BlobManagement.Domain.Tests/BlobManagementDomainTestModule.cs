@@ -1,3 +1,4 @@
+using Dignite.Abp.BlobStoring.Imaging;
 using Dignite.Abp.BlobStoring.Pipeline;
 using Dignite.Abp.BlobManagement.Presets;
 using Volo.Abp.BlobStoring;
@@ -91,6 +92,25 @@ public class BlobManagementDomainTestModule : AbpModule
                 container.UseBlobManagementContainer();
                 container.UseMemory();
                 container.UseBlobManagementPublicSizes(BlobManagementTestContainers.AvatarSizes);
+            });
+
+            options.Containers.Configure(BlobManagementTestContainers.Cropped, container =>
+            {
+                container.UseBlobManagementContainer();
+                container.UseMemory();
+                container.AddImageResizeContributor(c =>
+                {
+                    c.MaxWidth = BlobManagementTestContainers.ImagesMaxWidth;
+                    c.MaxHeight = BlobManagementTestContainers.ImagesMaxWidth;
+                    c.Mode = ImageResizeMode.Crop;
+                });
+            });
+
+            options.Containers.Configure(BlobManagementTestContainers.Zipped, container =>
+            {
+                container.UseBlobManagementContainer();
+                container.UseMemory();
+                container.AddGZipContributor();
             });
 
             // Not a managed container: the manager refuses it.

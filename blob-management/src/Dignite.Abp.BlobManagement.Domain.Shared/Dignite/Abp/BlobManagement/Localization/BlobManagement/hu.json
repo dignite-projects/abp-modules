@@ -20,6 +20,7 @@
     "BlobManagement:UploadTicketUsed": "A feltöltési hivatkozást már felhasználták.",
     "BlobManagement:FilePending": "A fájl még nincs megerősítve.",
     "BlobManagement:ReadLinkInvalid": "A hivatkozás érvénytelen vagy lejárt.",
+    "BlobManagement:ImageSizeNotSupported": "A(z) '{ContainerName}' tároló nem méretezi a képeit beleillesztéssel, ezért egy feltöltés nem kérhet saját képméretet.",
     "Feature:BlobManagementGroup": "Blobkezelés",
     "Feature:BlobManagementEnable": "Blobkezelés engedélyezése",
     "Feature:BlobManagementEnableDescription": "A bérlő tárolhat-e fájlokat a BLOB-tárolókban.",
