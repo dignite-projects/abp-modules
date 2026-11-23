@@ -256,6 +256,33 @@ public class BlobManagementUploadApi_Tests : AbpWebApplicationFactoryIntegratedT
         }
     }
 
+    /// <summary>The box an application asks a ticket for over HTTP is the one the browser's picture is stored within.</summary>
+    [Fact]
+    public async Task A_Ticket_Issued_Over_Http_Should_Store_A_Picture_Within_Its_Box()
+    {
+        BlobManagementUploadTicketDto ticket;
+        using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
+        using (AsApplicationUser(_appUser))
+        {
+            ticket = await _appFiles.CreateUploadTicketAsync(new CreateBlobManagementUploadTicketInput
+            {
+                ContainerName = Container,
+                ImageMaxHeight = 16
+            });
+        }
+
+        using (var response = await PostFileAsync(ticket.UploadUrl, "wide.png", BlobManagementTestFiles.Png(256, 128, seed: 82)))
+        {
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+
+        using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
+        {
+            using var content = await _appFiles.GetContentAsync(ticket.FileId);
+            BlobManagementTestFiles.Measure(BlobManagementTestFiles.ReadAll(content.GetStream())).ShouldBe((32, 16));
+        }
+    }
+
     private async Task<BlobManagementUploadTicketDto> IssueTicketAsync()
     {
         using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))

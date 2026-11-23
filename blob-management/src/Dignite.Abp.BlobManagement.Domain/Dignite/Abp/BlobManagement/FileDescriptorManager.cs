@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
+using Dignite.Abp.BlobStoring.Imaging;
 using Dignite.Abp.BlobStoring.Pipeline;
 using Microsoft.Extensions.Logging;
 using Volo.Abp;
@@ -11,7 +13,9 @@ using Volo.Abp.Auditing;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.Data;
 using Volo.Abp.DistributedLocking;
+using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Domain.Services;
+using Volo.Abp.Imaging;
 using Volo.Abp.Threading;
 using Volo.Abp.Uow;
 
@@ -33,7 +37,8 @@ namespace Dignite.Abp.BlobManagement;
 /// <para>
 /// <b>One BLOB per file.</b> Every descriptor has a BLOB of its own, under a generated name, even when another file
 /// holds the same content: no BLOB is shared, so none is counted twice or outlives the question of who still uses it.
-/// A descriptor that is deleted is gone - there is no trash to bring it back from - and its BLOB goes with it.
+/// A file kept by id is soft-deleted and keeps its BLOB until its business system deletes it for good
+/// (<see cref="DeleteAsync"/>, <see cref="RestoreAsync"/>); a file saved under a name is deleted for good at once.
 /// </para>
 /// <para>
 /// <b>Consistency.</b> Bytes are written before the row that names them and removed after the row that named them:
@@ -174,7 +179,8 @@ public class FileDescriptorManager : DomainService
             }
 
             var stored = await StoreBlobAsync(
-                containerName, name, stream, args.ExpectedSha256, releasedBytes: existing?.Size ?? 0, cancellationToken);
+                containerName, BlobContainerConfigurationProvider.Get(containerName), name, stream, args.ExpectedSha256,
+                releasedBytes: existing?.Size ?? 0, cancellationToken);
 
             if (existing != null)
             {
@@ -210,7 +216,9 @@ public class FileDescriptorManager : DomainService
     /// keeps a file for its user. The name need not be unique: the file is addressed by its id, and holds no
     /// <see cref="FileDescriptor.NameKey"/>. The bytes are stored as <see cref="SaveBlobAsync"/> stores them (see
     /// <see cref="StoreBlobAsync"/>). One difference: when the container stores the upload in another format (a JPEG as
-    /// WebP), the name takes that format's extension (<see cref="GetNameForStoredType"/>).
+    /// WebP), the name takes that format's extension (<see cref="GetNameForStoredType"/>). Another: the upload may ask for
+    /// a smaller box for its pictures (<see cref="CreateFileArgs.ImageMaxWidth"/>, <see cref="CreateFileArgs.ImageMaxHeight"/>),
+    /// which the save applies with the container's (<see cref="GetSaveConfiguration"/>).
     /// <para>
     /// The directory must be one of the container, which must allow directories
     /// (<see cref="BlobManagementErrorCodes.DirectoryNotFound"/>, <see cref="BlobManagementErrorCodes.DirectoriesNotAllowed"/>).
@@ -233,9 +241,10 @@ public class FileDescriptorManager : DomainService
         Check.NotNull(stream, nameof(stream));
         await UsageManager.CheckEnabledAsync();
         await CheckDirectoryAsync(containerName, args.DirectoryId, cancellationToken);
+        var configuration = GetSaveConfiguration(containerName, args.ImageMaxWidth, args.ImageMaxHeight);
 
         var stored = await StoreBlobAsync(
-            containerName, name, stream, args.ExpectedSha256, releasedBytes: 0, cancellationToken);
+            containerName, configuration, name, stream, args.ExpectedSha256, releasedBytes: 0, cancellationToken);
 
         return await RecordAsync(containerName, stored, () =>
         {
@@ -265,24 +274,62 @@ public class FileDescriptorManager : DomainService
     }
 
     /// <summary>
-    /// Deletes the descriptor in the current unit of work, then - once that unit of work has committed - its BLOB.
+    /// Deletes a file. A file kept by id is soft-deleted and keeps its bytes, so its business system can take it back
+    /// with the record that refers to it (<see cref="RestoreAsync"/>). It is deleted for good - the row now, its BLOB
+    /// once the unit of work has committed - when <paramref name="permanently"/> is set, which a business system does as
+    /// it deletes its record for good, and always for a file saved under a name (ABP's <c>IBlobContainer</c> can neither
+    /// restore one nor delete one for good) and for a file still pending (no record refers to it yet). A file that is
+    /// soft-deleted already is deleted for good the same way.
     /// <para>
-    /// The row is removed, not marked: there is no trash, and bytes that are gone cannot be restored. The BLOB step is
-    /// registered with <c>IUnitOfWork.OnCompleted</c>, which runs only after a successful commit: a rollback brings the
-    /// row back with its bytes. Without a unit of work it runs at once.
-    /// </para>
-    /// <para>
-    /// The step is best-effort: a failure is logged and leaves an unreferenced BLOB - unreachable bytes, never lost
-    /// data - and does not surface to a request whose transaction already committed. ABP's BLOB containers cannot be
-    /// enumerated, so reclaiming such orphans belongs to tooling on the concrete storage backend.
+    /// The BLOB step is registered with <c>IUnitOfWork.OnCompleted</c>, which runs only after a successful commit: a
+    /// rollback brings the row back with its bytes. Without a unit of work it runs at once. It is best-effort: a
+    /// failure is logged and leaves an unreferenced BLOB - unreachable bytes, never lost data - and does not surface to
+    /// a request whose transaction already committed.
     /// </para>
     /// </summary>
-    public virtual async Task DeleteAsync(FileDescriptor file, CancellationToken cancellationToken = default)
+    public virtual async Task DeleteAsync(
+        FileDescriptor file,
+        bool permanently = false,
+        CancellationToken cancellationToken = default)
     {
         Check.NotNull(file, nameof(file));
 
-        await FileDescriptorRepository.DeleteAsync(file, autoSave: true, cancellationToken);
+        if (!permanently && !file.IsAddressedByName && !file.IsPending)
+        {
+            if (!file.IsDeleted)
+            {
+                await FileDescriptorRepository.DeleteAsync(file, autoSave: true, cancellationToken);
+            }
+
+            return;
+        }
+
+        await FileDescriptorRepository.HardDeleteAsync(file, autoSave: true, cancellationToken);
         await DeleteBlobAfterCommitAsync(file.TenantId, file.ContainerName, file.BlobName);
+    }
+
+    /// <summary>
+    /// Takes back a file that was soft-deleted (<see cref="DeleteAsync"/>), as its business system restores the record
+    /// that refers to it: it is listed, read and public again as before, at the same address. When the directory it was
+    /// filed in has been deleted meanwhile, it goes to the top of its container. A file that is not deleted is left as
+    /// it is.
+    /// </summary>
+    public virtual async Task<FileDescriptor> RestoreAsync(FileDescriptor file, CancellationToken cancellationToken = default)
+    {
+        Check.NotNull(file, nameof(file));
+        if (!file.IsDeleted)
+        {
+            return file;
+        }
+
+        if (file.DirectoryId.HasValue &&
+            await DirectoryRepository.FindAsync(file.DirectoryId.Value, false, cancellationToken) == null)
+        {
+            file.SetDirectory(null);
+        }
+
+        file.Restore();
+        return await FileDescriptorRepository.UpdateAsync(file, autoSave: true, cancellationToken);
     }
 
     /// <summary>
@@ -456,6 +503,95 @@ public class FileDescriptorManager : DomainService
     }
 
     /// <summary>
+    /// The configuration a file is stored into <paramref name="containerName"/> with: the container's own, or - when the
+    /// upload asks for a smaller box for its pictures - one for this save that falls back to it, as ABP's named
+    /// containers fall back to the default one, with the box narrowed. Each side is the smaller of the container's and
+    /// the upload's, a side one of them leaves unconstrained being the other's: an upload can make what the container
+    /// keeps smaller, never larger.
+    /// <para>
+    /// The box is the one of <see cref="ImageResizeContributor"/>, which the WebP contributors fit a converted picture
+    /// into in the same decode and the declaration of the stored type measures by; they read it from the configuration
+    /// of the save, so the picture is encoded once and its BLOB named for what is stored. The picture is scaled down to
+    /// fit inside the box, keeping its aspect ratio (<see cref="ImageResizeMode.Max"/>), never cropped or enlarged.
+    /// Content that is not a picture passes through.
+    /// </para>
+    /// <para>
+    /// A container without that contributor gets it for the save: after its own contributors, which have converted the
+    /// picture by then, but before <see cref="GZipContributor"/>, after which the content is no picture any more. A
+    /// contributor of the host's own that changes the bytes the same way has to come after the resize in the
+    /// container's own configuration. A container that crops, stretches or pads its pictures (another
+    /// <see cref="ImageResizeContributorConfiguration.Mode"/>) has no box an upload could narrow and still get what the
+    /// container makes of a picture: an upload that asks for one is refused
+    /// (<see cref="BlobManagementErrorCodes.ImageSizeNotSupported"/>).
+    /// </para>
+    /// </summary>
+    /// <param name="containerName">The managed container the file is stored in.</param>
+    /// <param name="imageMaxWidth">The largest width, in pixels; <c>null</c> leaves it to the container.</param>
+    /// <param name="imageMaxHeight">The largest height, in pixels; <c>null</c> leaves it to the container.</param>
+    public virtual BlobContainerConfiguration GetSaveConfiguration(string containerName, int? imageMaxWidth, int? imageMaxHeight)
+    {
+        var configuration = BlobContainerConfigurationProvider.Get(containerName);
+        if (imageMaxWidth == null && imageMaxHeight == null)
+        {
+            return configuration;
+        }
+
+        if (imageMaxWidth.HasValue)
+        {
+            Check.Positive(imageMaxWidth.Value, nameof(imageMaxWidth));
+        }
+
+        if (imageMaxHeight.HasValue)
+        {
+            Check.Positive(imageMaxHeight.Value, nameof(imageMaxHeight));
+        }
+
+        var contributors = configuration.GetEffectivePipelineContributors().ToList();
+        var resizes = contributors.Contains(typeof(ImageResizeContributor));
+        if (resizes && configuration.GetImageResizeContributorConfiguration().Mode != ImageResizeMode.Max)
+        {
+            throw new BusinessException(BlobManagementErrorCodes.ImageSizeNotSupported)
+                .WithData("ContainerName", containerName);
+        }
+
+        // The container's contributors copied, not inherited: blob-storing tells whether a container resizes from its own
+        // list (the WebP contributors' box), and one added to an inheriting configuration would not be in it.
+        var narrowed = new BlobContainerConfiguration(configuration)
+        {
+            IsMultiTenant = configuration.IsMultiTenant,
+            InheritPipelineContributors = false
+        };
+        foreach (var contributor in contributors)
+        {
+            // A container that does not resize gets the resize before its compression: after it, the content is no
+            // picture. Without one, the resize is added last, below.
+            if (!resizes && contributor == typeof(GZipContributor))
+            {
+                narrowed.PipelineContributors.TryAdd<ImageResizeContributor>();
+            }
+
+            narrowed.PipelineContributors.Add(contributor);
+        }
+
+        var resize = narrowed.GetImageResizeContributorConfiguration();
+        var width = Narrow(resizes ? resize.MaxWidth : 0, imageMaxWidth ?? 0);
+        var height = Narrow(resizes ? resize.MaxHeight : 0, imageMaxHeight ?? 0);
+
+        // Sets the box on this configuration only; the contributor keeps the place it has.
+        narrowed.AddImageResizeContributor(c =>
+        {
+            c.MaxWidth = width;
+            c.MaxHeight = height;
+            c.Mode = ImageResizeMode.Max;
+        });
+
+        return narrowed;
+
+        static int Narrow(int container, int upload) =>
+            container == 0 ? upload : upload == 0 ? container : Math.Min(container, upload);
+    }
+
+    /// <summary>
     /// Whether <paramref name="directoryId"/> may hold a file of <paramref name="containerName"/>: it is a directory of
     /// that container, which allows directories. <c>null</c>, the top of the container, always may.
     /// </summary>
@@ -535,11 +671,14 @@ public class FileDescriptorManager : DomainService
     /// bytes.
     /// </para>
     /// </summary>
+    /// <param name="configuration">The configuration the save runs with: the container's, or one for this save
+    /// (<see cref="GetSaveConfiguration"/>).</param>
     /// <param name="releasedBytes">The bytes the save frees once it is done - those an overriding save replaces - which
     /// still count while the allocation is checked.</param>
     /// <param name="expectedSha256">The SHA-256 (base64) the caller says the bytes have; <c>null</c> asks for no check.</param>
     protected virtual async Task<StoredBlob> StoreBlobAsync(
         string containerName,
+        BlobContainerConfiguration configuration,
         string name,
         Stream stream,
         string? expectedSha256,
@@ -554,7 +693,7 @@ public class FileDescriptorManager : DomainService
         using var hashing = expectedHash != null && !stream.CanSeek ? new BlobManagementHashingStream(stream) : null;
         Stream source = hashing ?? stream;
 
-        var maxBytes = BlobStreamBuffering.GetMaxBufferedBytes(BlobContainerConfigurationProvider.Get(containerName));
+        var maxBytes = BlobStreamBuffering.GetMaxBufferedBytes(configuration);
         var content = await BlobStreamBuffering.EnsureSeekableAsync(source, maxBytes, cancellationToken);
         // A copy is this method's to dispose; the caller's own stream, used as it is, stays the caller's.
         await using var ownedCopy = ReferenceEquals(content, source) ? null : content;
@@ -579,9 +718,9 @@ public class FileDescriptorManager : DomainService
         await UsageManager.CheckCanStoreAsync(uploadLength, releasedBytes, cancellationToken);
 
         // Named for what the container stores: a JPEG it stores as WebP gets a .webp BLOB.
-        var storedMimeType = GetStoredMimeType(containerName, mimeType, content);
+        var storedMimeType = GetStoredMimeType(configuration, mimeType, content);
         var blobName = CreateBlobName(storedMimeType);
-        var container = BlobContainerFactory.Create(containerName);
+        var container = CreateBlobContainer(containerName, configuration);
         try
         {
             await container.SaveAsync(blobName, content, overrideExisting: false, cancellationToken);
@@ -756,16 +895,38 @@ public class FileDescriptorManager : DomainService
     }
 
     /// <summary>
-    /// The type the container <paramref name="containerName"/> stores <paramref name="content"/>, an upload detected as
+    /// The type a save with <paramref name="configuration"/> stores <paramref name="content"/>, an upload detected as
     /// <paramref name="mimeType"/>, as: what its contributors declared for it (<c>GetStoredContentType</c> - on the images
     /// preset a JPEG is stored as WebP, and a PNG unless it is small, 16-bit or animated), else <paramref name="mimeType"/>.
     /// Known before the save - the declaration reads the content's header and length, as the contributor in the save
     /// does - so the BLOB can be named after it; the descriptor still records the type detected from the stored bytes
     /// (<see cref="GetStoredSizeAndTypeAsync"/>). <paramref name="content"/> is seekable; its position is restored.
     /// </summary>
-    protected virtual string GetStoredMimeType(string containerName, string mimeType, Stream content)
+    protected virtual string GetStoredMimeType(BlobContainerConfiguration configuration, string mimeType, Stream content)
     {
-        return BlobContainerConfigurationProvider.Get(containerName).GetStoredContentType(mimeType, content);
+        return configuration.GetStoredContentType(mimeType, content);
+    }
+
+    /// <summary>
+    /// The container a save of <paramref name="containerName"/> runs through: ABP's, from its factory, with the
+    /// container's own configuration; with a configuration for one save (<see cref="GetSaveConfiguration"/>), one built
+    /// as ABP's factory builds it - the same provider, tenant and naming - on that configuration.
+    /// </summary>
+    protected virtual IBlobContainer CreateBlobContainer(string containerName, BlobContainerConfiguration configuration)
+    {
+        if (ReferenceEquals(configuration, BlobContainerConfigurationProvider.Get(containerName)))
+        {
+            return BlobContainerFactory.Create(containerName);
+        }
+
+        return new BlobContainer(
+            containerName,
+            configuration,
+            LazyServiceProvider.LazyGetRequiredService<IBlobProviderSelector>().Get(containerName),
+            CurrentTenant,
+            LazyServiceProvider.LazyGetRequiredService<ICancellationTokenProvider>(),
+            LazyServiceProvider.LazyGetRequiredService<IBlobNormalizeNamingService>(),
+            LazyServiceProvider.LazyGetRequiredService<IServiceProvider>());
     }
 
     /// <summary>

@@ -38,6 +38,18 @@ public class CreateBlobManagementUploadTicketInput
     public List<string> AllowedContentTypes { get; set; } = new();
 
     /// <summary>
+    /// The largest width a picture uploaded with the ticket is stored at, in pixels; <c>null</c> leaves it to the
+    /// container. A wider picture is scaled down, keeping its aspect ratio - never cropped, never enlarged - and the
+    /// container's own box still applies: each side is the smaller of the two.
+    /// </summary>
+    [Range(1, int.MaxValue)]
+    public int? ImageMaxWidth { get; set; }
+
+    /// <summary>The largest height a picture uploaded with the ticket is stored at, in pixels; <c>null</c> leaves it to the container.</summary>
+    [Range(1, int.MaxValue)]
+    public int? ImageMaxHeight { get; set; }
+
+    /// <summary>
     /// How long the ticket is valid, in seconds; <c>null</c> is <c>BlobManagementUploadOptions.TicketLifetime</c>, and
     /// a lifetime past <c>BlobManagementUploadOptions.MaxTicketLifetime</c> is cut to it.
     /// </summary>

@@ -22,6 +22,13 @@ so it stays clear which part of the repository actually moved.
   from GitHub Packages (first: `10.7.7-preview.1`). A stable release still leaves them out until the module is complete.
   From `10.7.7-preview.2` this includes the Angular package, as `@dignite-projects/ng.blob-management` on GitHub
   Packages' npm registry.
+- **blob-management (pre-releases only): a box for the pictures of one upload.** `ImageMaxWidth` and `ImageMaxHeight`
+  on `CreateBlobManagementFileInput` (the form fields `imageMaxWidth` and `imageMaxHeight` of the file API) and on
+  `CreateBlobManagementUploadTicketInput`, which keeps them in the ticket: a larger picture is scaled down to fit inside
+  the box, keeping its aspect ratio - never cropped or enlarged - and each side is the smaller of the upload's and the
+  container's. On the images preset the picture is fitted and stored as WebP in one encode; a container that resizes
+  nothing resizes such an upload too, and one that crops, stretches or pads its pictures refuses the box
+  (`BlobManagement:ImageSizeNotSupported`).
 
 #### blob-storing
 
@@ -72,19 +79,24 @@ so it stays clear which part of the repository actually moved.
 
 ### Changed
 
-- **blob-management (pre-releases only): a deleted file or directory is removed, and an overriding save keeps the
-  file.** `FileDescriptor` and `DirectoryDescriptor` are no longer soft-deleted - the module has no trash, and a
-  deleted file's bytes are gone - and saving a BLOB over a taken name replaces the content of its descriptor instead
-  of writing a new one, so the file keeps its id. A BLOB is looked up by its name key, never by the name column,
-  whose comparison followed the database's collation. **Migrate** (a project built on `10.7.7-preview.3` or
-  earlier): add a migration, and before it drops `IsDeleted`, `DeleterId` and `DeletionTime` from
-  `BlobFileDescriptors` and `BlobDirectoryDescriptors`, delete the rows marked deleted from both
-  (`DELETE FROM BlobFileDescriptors WHERE IsDeleted = 1`, and the same for the directories): their BLOBs are deleted
-  already, and they would otherwise come back as files. `BlobDirectoryDescriptors.NameKey` becomes required. On
-  MongoDB, delete those documents and drop the `NameKey` index of the directory collection, which is created again
-  without its partial filter. In code, `FileDescriptorManager.CreateAsync`, `UploadAsync` and `FindAsync` are
+- **blob-management (pre-releases only): a file's life is its record's, and an overriding save keeps the file.** A
+  file kept by id is soft-deleted and keeps its bytes: `IBlobManagementFileService.RestoreAsync(id)` takes it back, and
+  `DeleteAsync(id, permanently: true)` (`?permanently=true` over HTTP) deletes it for good - as a business system
+  soft-deletes, restores and deletes for good the record that refers to it. A file saved under a name is deleted for
+  good at once. Saving a BLOB over a taken name replaces the content of its descriptor instead of writing a new one,
+  so the file keeps its id. A BLOB is looked up by its name key, never by the name column, whose comparison followed
+  the database's collation. A directory is soft-deleted and has no name key: sibling names are checked in code, as
+  written. Usage counts soft-deleted files, and shows them apart (`DeletedBytes`, `DeletedFileCount`).
+  **Migrate** (a project built on `10.7.7-preview.3` or earlier): soft-deleted descriptors of those versions have
+  already lost their bytes - delete them (`DELETE FROM BlobFileDescriptors WHERE IsDeleted = 1`), then add a migration,
+  which drops `BlobDirectoryDescriptors.NameKey` and its index. (A project built on `10.7.7-preview.4` or `-preview.5`,
+  which dropped the three deletion columns: add a migration that puts back `IsDeleted`, `DeleterId` and
+  `DeletionTime` on both tables and drops the directory's `NameKey`.) On MongoDB, drop the `NameKey` index of the
+  directory collection. In code, `FileDescriptorManager.CreateAsync`, `UploadAsync` and `FindAsync` are
   `SaveBlobAsync`, `CreateFileAsync` and `FindBlobAsync`, which take `SaveBlobArgs` and `CreateFileArgs`;
-  `IFileDescriptorRepository.FindByNameAsync` is `FindByNameKeyAsync`; and `@dignite/ng.blob-management` no longer
+  `IFileDescriptorRepository.FindByNameAsync` is `FindByNameKeyAsync`; `IDirectoryDescriptorRepository`'s
+  `NameKeyExistsAsync` and `FindByNameKeyAsync` are gone, and `FindByNameAsync` finds a directory by its parent and
+  name; `FileDescriptorManager.DeleteAsync` takes `permanently`, and `RestoreAsync` is new; and `@dignite/ng.blob-management` no longer
   exports `ObjectUrlService`, nor does its directory tree take `manage`.
 - **blob-management (pre-releases only): the BLOB API and the file API are ABP integration services.** They moved
   from `api/blob-management/blobs` and `api/blob-management/files` to `integration-api/blob-management/blobs` and

@@ -129,9 +129,9 @@ public class DirectoryPathImporter : DomainService
     }
 
     /// <summary>
-    /// The directory named <paramref name="name"/> under <paramref name="parentId"/>: the one that holds the name
-    /// already (its name key, so case aside), or a new one. In a dry run nothing is created; the directory is given an
-    /// id of its own for the rest of the run.
+    /// The directory named <paramref name="name"/> under <paramref name="parentId"/>: the one that has the name already,
+    /// as written, or a new one. In a dry run nothing is created; the directory is given an id of its own for the rest
+    /// of the run.
     /// </summary>
     protected virtual async Task<Guid> GetOrCreateDirectoryAsync(
         DirectoryPathImportRequest request,
@@ -142,15 +142,15 @@ public class DirectoryPathImporter : DomainService
         string description,
         CancellationToken cancellationToken)
     {
-        var nameKey = DirectoryDescriptor.CreateNameKey(CurrentTenant.Id, request.ContainerName, parentId, name);
+        var nameKey = (parentId?.ToString("N") ?? "-") + ":" + name;
         if (directories.TryGetValue(nameKey, out var known))
         {
             return known;
         }
 
-        // Under a directory a dry run would create, the key names an id that is in no database: nothing is found.
+        // Under a directory a dry run would create, the parent is an id that is in no database: nothing is found.
         Guid id;
-        var existing = await DirectoryRepository.FindByNameKeyAsync(nameKey, cancellationToken);
+        var existing = await DirectoryRepository.FindByNameAsync(request.ContainerName, parentId, name, cancellationToken);
         if (existing != null)
         {
             id = existing.Id;

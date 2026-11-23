@@ -62,6 +62,8 @@ public class RemoteBlobManagementFileService : IBlobManagementFileService
             CreatorId = input.CreatorId ?? GetCreatorId(),
             IsPublic = input.IsPublic,
             Sha256 = input.Sha256,
+            ImageMaxWidth = input.ImageMaxWidth,
+            ImageMaxHeight = input.ImageMaxHeight,
             File = input.File
         });
     }
@@ -90,6 +92,8 @@ public class RemoteBlobManagementFileService : IBlobManagementFileService
             UploaderId = input.UploaderId ?? CurrentUser.Id,
             MaxSize = input.MaxSize,
             AllowedContentTypes = new List<string>(input.AllowedContentTypes),
+            ImageMaxWidth = input.ImageMaxWidth,
+            ImageMaxHeight = input.ImageMaxHeight,
             LifetimeInSeconds = input.LifetimeInSeconds
         });
     }
@@ -109,9 +113,14 @@ public class RemoteBlobManagementFileService : IBlobManagementFileService
         return Proxy.CreateReadLinksAsync(input);
     }
 
-    public virtual Task DeleteAsync(Guid id)
+    public virtual Task DeleteAsync(Guid id, bool permanently = false)
     {
-        return Proxy.DeleteAsync(id);
+        return Proxy.DeleteAsync(id, permanently);
+    }
+
+    public virtual Task<BlobManagementFileDto> RestoreAsync(Guid id)
+    {
+        return Proxy.RestoreAsync(id);
     }
 
     public virtual Task<IRemoteStreamContent> GetContentAsync(Guid id)

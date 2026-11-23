@@ -57,7 +57,15 @@ where it says so at their tops.
   (`BlobManagementFileService`), the file API behind it (`IBlobManagementFileIntegrationService`, `integration-api/blob-management/files`:
   an ABP integration service, for a granted client only) and the remote implementation
   (`RemoteBlobManagementFileService`); what a user with the management permission reads at the management page is
-  `IBlobManagementFileAppService` (`api/blob-management/files`: list, one, bytes).
+  `IBlobManagementFileAppService` (`api/blob-management/files`: list, one, bytes). A file stored by id, and one
+  uploaded with a ticket, may ask for a box for its pictures (`ImageMaxWidth`, `ImageMaxHeight`: scaled down to fit,
+  never cropped or enlarged, each side the smaller of the upload's and the container's): the save runs with a
+  configuration of its own that falls back to the container's (`FileDescriptorManager.GetSaveConfiguration`), so the
+  WebP contributors fit the picture in their one encode and the BLOB is named for what is stored; a container that
+  does not resize gets the resize for that save before its `GZipContributor`, and one whose resize mode is not `Max`
+  refuses the box (`BlobManagement:ImageSizeNotSupported`, checked when a ticket is issued too). The C# proxies
+  list the file API's form fields one by one (`blobManagement-generate-proxy.json`): a field added to
+  `CreateBlobManagementFileInput` is added there too.
 - For the browser, signed with Data Protection (`BlobManagementTicketProtector`): the anonymous upload with a ticket
   (`BlobManagementUploadController`, `BlobManagementUploadAppService`, `api/blob-management/uploads/{ticket}`), whose
   file is pending until confirmed and deleted by `BlobManagementPendingFileCleanupWorker` if never; the anonymous read
@@ -178,12 +186,18 @@ imports the root one, so the lockstep `<Version>` applies.
    when they hold the same content: no content dedup, no lock or key for it, no "is this BLOB still in use" - a BLOB is
    removed with its descriptor, after commit ([`dev-docs/peer-comparison.md`](dev-docs/peer-comparison.md) §1: no
    peer shares bytes between files, and sharing cost locks, two measures of usage and shared public addresses). A
-   descriptor that is deleted is removed, not marked: no soft delete, on files or on directories - there is no trash
-   (item 10), and bytes that are gone restore nothing. Saving over a taken name replaces the content of its one row
+   file's life is its business record's: a file kept by id is soft-deleted and keeps its BLOB, comes back with the
+   record (`RestoreAsync`), and is deleted for good - row, then BLOB - only when its business system asks for it
+   (`DeleteAsync(id, permanently: true)`), as it deletes the record for good. Nothing expires or is cleaned up on the
+   module's own, but a file uploaded with a ticket and never confirmed, which no record refers to. A file saved under a
+   name is deleted for good at once: ABP's `IBlobContainer` can neither restore one nor delete one for good. Directories
+   are soft-deleted too, as ABP's own trees are, and their sibling names are checked in code, as written - there is
+   no name key on a directory. Saving over a taken name replaces the content of its one row
    (`FileDescriptor.ReplaceContent`): the file keeps its id and its name key, which it holds for as long as it exists
    and by which - never by the name column, whose comparison is the database collation's - it is found; the BLOB it
    had is deleted after commit, and a BLOB written in a unit of work that then rolls back is deleted with it. Usage
-   is computed from this table, in the current tenant, in one measure, **stored bytes**: the sizes of the descriptors.
+   is computed from this table, in the current tenant, in one measure, **stored bytes**: the sizes of the descriptors,
+   soft-deleted ones included - their bytes are still stored.
    The containers, the users and the clients each add up to the tenant, and the allocation - the tenant's only - is
    checked against it. A file's public address is its name when it is addressed by name, else its physical BLOB name,
    so renaming or moving never breaks a published link; it is that one file's, and answers while the file is

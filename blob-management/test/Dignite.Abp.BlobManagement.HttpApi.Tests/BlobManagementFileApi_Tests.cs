@@ -84,6 +84,37 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
         }
     }
 
+    /// <summary>
+    /// Over HTTP, through the application's remote file service: a delete is soft and the file comes back with its
+    /// bytes; a delete with <c>permanently</c> removes it for good, and nothing is left to restore.
+    /// </summary>
+    [Fact]
+    public async Task An_Application_Should_Delete_Restore_And_Delete_A_File_For_Good()
+    {
+        var bytes = BlobManagementTestFiles.Pdf("restored over http " + Guid.NewGuid());
+
+        using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
+        {
+            var file = await _appFiles.CreateAsync(NewFile(Container, "contract.pdf", bytes));
+
+            await _appFiles.DeleteAsync(file.Id);
+            await ShouldFailAsync(HttpStatusCode.NotFound, () => _appFiles.GetAsync(file.Id));
+
+            var restored = await _appFiles.RestoreAsync(file.Id);
+            restored.Id.ShouldBe(file.Id);
+            using (var content = await _appFiles.GetContentAsync(file.Id))
+            {
+                using var memory = new MemoryStream();
+                await content.GetStream().CopyToAsync(memory);
+                memory.ToArray().ShouldBe(bytes);
+            }
+
+            await _appFiles.DeleteAsync(file.Id, permanently: true);
+            await ShouldFailAsync(HttpStatusCode.NotFound, () => _appFiles.GetAsync(file.Id));
+            await ShouldFailAsync(HttpStatusCode.NotFound, () => _appFiles.RestoreAsync(file.Id));
+        }
+    }
+
     [Fact]
     public async Task An_Application_Should_Keep_Files_As_A_Client_And_Name_Its_User()
     {
@@ -148,7 +179,7 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
         {
             await ShouldFailAsync(HttpStatusCode.Forbidden, () => _integration.CreateAsync(NewFile(Container, "a.pdf")));
             await ShouldFailAsync(HttpStatusCode.NotFound, () => _integration.GetAsync(file.Id));
-            await _integration.DeleteAsync(file.Id);
+            await _integration.DeleteAsync(file.Id, permanently: true);
         }
 
         // A token that carries a user is no client's, whatever the user holds - here every permission, the management
@@ -162,7 +193,7 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
                     () => _integration.UpdateAsync(file.Id, new UpdateBlobManagementFileInput { Name = "mine.pdf" }));
                 await ShouldFailAsync(HttpStatusCode.Forbidden,
                     () => _integration.MoveAsync(file.Id, new MoveBlobManagementFileInput { DirectoryId = null }));
-                await ShouldFailAsync(HttpStatusCode.Forbidden, () => _integration.DeleteAsync(file.Id));
+                await ShouldFailAsync(HttpStatusCode.Forbidden, () => _integration.DeleteAsync(file.Id, permanently: false));
 
                 await ShouldFailAsync(HttpStatusCode.Forbidden, () => _integration.GetAsync(file.Id));
                 await ShouldFailAsync(HttpStatusCode.Forbidden,
@@ -344,6 +375,26 @@ public class BlobManagementFileApi_Tests : AbpWebApplicationFactoryIntegratedTes
             rightInput.Sha256 = checksum;
             var file = await _appFiles.CreateAsync(rightInput);
             file.Name.ShouldBe("checked.pdf");
+        }
+    }
+
+    /// <summary>
+    /// The box a file is stored within travels as the form fields <c>imageMaxWidth</c> and <c>imageMaxHeight</c> of the
+    /// file API: the picture is scaled down to fit inside it.
+    /// </summary>
+    [Fact]
+    public async Task A_Box_Sent_With_A_File_Should_Reach_Blob_Management_Over_Http()
+    {
+        using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
+        using (AsApplicationUser(_appUser))
+        {
+            var input = NewFile(Container, "wide.png", BlobManagementTestFiles.Png(256, 128, seed: 81));
+            input.ImageMaxWidth = 64;
+            input.ImageMaxHeight = 64;
+            var file = await _appFiles.CreateAsync(input);
+
+            using var content = await _appFiles.GetContentAsync(file.Id);
+            BlobManagementTestFiles.Measure(BlobManagementTestFiles.ReadAll(content.GetStream())).ShouldBe((64, 32));
         }
     }
 

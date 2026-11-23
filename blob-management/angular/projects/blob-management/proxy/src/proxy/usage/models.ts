@@ -24,6 +24,8 @@ export interface BlobManagementUsageDto {
   storedBytes?: number;
   storageSize?: number | null;
   fileCount?: number;
+  deletedBytes?: number;
+  deletedFileCount?: number;
   containers?: BlobManagementContainerUsageDto[];
 }
 

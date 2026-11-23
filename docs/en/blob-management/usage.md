@@ -23,7 +23,7 @@ A user is the one a file is counted for, its `CreatorId` ([The Uploader](files.m
 
 | | |
 |---|---|
-| `GET api/blob-management/usage` | `GetAsync`: the tenant's stored bytes, file count and allocation (`storageSize`, in bytes; none when it has no limit), and each container's stored bytes and file count. Every managed container is listed, empty ones too, and any other container that still holds files. |
+| `GET api/blob-management/usage` | `GetAsync`: the tenant's stored bytes, file count and allocation (`storageSize`, in bytes; none when it has no limit), the part of them soft-deleted files keep (`deletedBytes`, `deletedFileCount`), and each container's stored bytes and file count. Every managed container is listed, empty ones too, and any other container that still holds files. |
 | `GET api/blob-management/usage/users?containerName=` | `GetUsersAsync`: each user's stored bytes and file count, the largest first, a page at a time (`skipCount`, `maxResultCount`). `containerName` narrows it to one container. |
 | `GET api/blob-management/usage/clients?containerName=` | `GetClientsAsync`: each client's stored bytes and file count, the largest first. |
 | `GET api/blob-management/usage/tenants` | `GetTenantsAsync`, **for the host only** ([By Tenant](#by-tenant)): each tenant's stored bytes, file count and allocation, the largest first, a page at a time (`skipCount`, `maxResultCount`). |

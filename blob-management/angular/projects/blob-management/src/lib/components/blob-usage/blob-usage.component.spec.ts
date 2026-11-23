@@ -47,6 +47,16 @@ describe('BlobManagementUsageComponent', () => {
     expect(getTenants).not.toHaveBeenCalled();
   });
 
+  it('shows how much of what is stored is kept by soft-deleted files', () => {
+    render({ storedBytes: 50, fileCount: 3, deletedBytes: 20, deletedFileCount: 1 });
+    expect(fixture.nativeElement.querySelector('[data-test="usage-deleted"]')).not.toBeNull();
+  });
+
+  it('says nothing of deleted files when there are none', () => {
+    render({ storedBytes: 50, fileCount: 3, deletedBytes: 0, deletedFileCount: 0 });
+    expect(fixture.nativeElement.querySelector('[data-test="usage-deleted"]')).toBeNull();
+  });
+
   it('has no share of an allocation when the tenant has no limit', () => {
     expect(render({ storedBytes: 50, storageSize: null }).usedPercent()).toBeNull();
   });

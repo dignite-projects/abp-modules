@@ -15,7 +15,8 @@ namespace Dignite.Abp.BlobManagement;
 /// <summary>
 /// The current tenant's allocation: the <see cref="BlobManagementFeatures"/> checked against what it stores. Usage is computed
 /// from the descriptor table - the sizes of the descriptors, each with a BLOB of its own - per tenant only, across
-/// every Blob Management container.
+/// every Blob Management container. A soft-deleted file keeps its bytes until its business system deletes it for good,
+/// so it is counted: what the allocation measures is what is stored.
 /// <para>
 /// The check is a soft limit: it reads the usage, then the caller stores, so two simultaneous uploads can both pass it
 /// and together exceed the allocation by up to one upload each.
@@ -40,9 +41,12 @@ public class BlobManagementUsageManager : DomainService
     }
 
     /// <summary>The bytes the current tenant stores.</summary>
-    public virtual Task<long> GetUsedBytesAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<long> GetUsedBytesAsync(CancellationToken cancellationToken = default)
     {
-        return FileDescriptorRepository.GetUsedStorageSizeAsync(cancellationToken);
+        using (DataFilter.Disable<ISoftDelete>())
+        {
+            return await FileDescriptorRepository.GetUsedStorageSizeAsync(cancellationToken);
+        }
     }
 
     /// <summary>
@@ -65,6 +69,7 @@ public class BlobManagementUsageManager : DomainService
         CancellationToken cancellationToken = default)
     {
         using (DataFilter.Disable<IMultiTenant>())
+        using (DataFilter.Disable<ISoftDelete>())
         {
             return await FileDescriptorRepository.GetTenantUsagesAsync(skipCount, maxResultCount, cancellationToken);
         }
@@ -74,6 +79,7 @@ public class BlobManagementUsageManager : DomainService
     public virtual async Task<long> GetTenantCountAsync(CancellationToken cancellationToken = default)
     {
         using (DataFilter.Disable<IMultiTenant>())
+        using (DataFilter.Disable<ISoftDelete>())
         {
             return await FileDescriptorRepository.GetTenantCountAsync(cancellationToken);
         }

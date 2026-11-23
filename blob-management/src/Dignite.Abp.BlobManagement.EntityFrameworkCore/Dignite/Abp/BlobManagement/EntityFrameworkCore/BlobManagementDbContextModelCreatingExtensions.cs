@@ -50,13 +50,8 @@ public static class BlobManagementDbContextModelCreatingExtensions
             b.Property(d => d.ContainerName).IsRequired().HasMaxLength(FileDescriptorConsts.MaxContainerNameLength);
             b.Property(d => d.Name).IsRequired().HasMaxLength(DirectoryDescriptorConsts.MaxNameLength);
             b.Property(d => d.Path).IsRequired().HasMaxLength(DirectoryDescriptorConsts.MaxPathLength);
-            b.Property(d => d.NameKey).IsRequired().HasMaxLength(DirectoryDescriptorConsts.NameKeyLength);
 
-            // Sibling names, as an arbiter: one directory per tenant, container, parent and name. Every directory holds
-            // its key; a deleted one is gone with it.
-            b.HasIndex(d => d.NameKey).IsUnique();
-
-            // One level of a container's tree.
+            // One level of a container's tree - and the siblings DirectoryManager checks a name against.
             b.HasIndex(d => new { d.TenantId, d.ContainerName, d.ParentId });
             b.HasIndex(d => d.ParentId);
 

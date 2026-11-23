@@ -298,12 +298,125 @@ public abstract class BlobManagementPresets_Tests<TStartupModule> : BlobManageme
         descriptor.Hash.ShouldBe(checksum);
     }
 
-    private Task<FileDescriptor> CreateFileAsync(string containerName, string name, byte[] content)
+    /// <summary>
+    /// The box an upload asks for is applied with the container's in the one encode: a JPEG on the images preset is stored
+    /// as a WebP fitted inside it, its aspect ratio kept, and named for it.
+    /// </summary>
+    [Fact]
+    public async Task An_Upload_Should_Store_Its_Pictures_Within_The_Box_It_Asks_For()
+    {
+        var descriptor = await CreateFileAsync(
+            BlobManagementTestContainers.UserImages, "holiday.jpg", BlobManagementTestFiles.Jpeg(128, 96, seed: 61),
+            new CreateFileArgs { ImageMaxWidth = 32, ImageMaxHeight = 32 });
+
+        var stored = await ReadStoredAsync(descriptor);
+        BlobManagementTestFiles.Format(stored).ShouldBe(SkiaSharp.SKEncodedImageFormat.Webp);
+        BlobManagementTestFiles.Measure(stored).ShouldBe((32, 24));
+        descriptor.BlobName.ShouldEndWith(".webp");
+        descriptor.Name.ShouldBe("holiday.webp");
+        descriptor.Size.ShouldBe(stored.Length);
+    }
+
+    /// <summary>An upload makes what the container keeps smaller, never larger: each side is the smaller of the two.</summary>
+    [Fact]
+    public async Task An_Upload_Box_Should_Not_Enlarge_The_Containers()
+    {
+        var descriptor = await CreateFileAsync(
+            BlobManagementTestContainers.UserImages, "holiday.jpg", BlobManagementTestFiles.Jpeg(128, 96, seed: 62),
+            new CreateFileArgs { ImageMaxWidth = 1000, ImageMaxHeight = 1000 });
+
+        BlobManagementTestFiles.Measure(await ReadStoredAsync(descriptor)).ShouldBe((BlobManagementTestContainers.ImagesMaxWidth, 48));
+    }
+
+    /// <summary>A box with one side constrains that side, and the picture keeps its aspect ratio.</summary>
+    [Fact]
+    public async Task An_Upload_Box_With_One_Side_Should_Constrain_That_Side()
+    {
+        var descriptor = await CreateFileAsync(
+            BlobManagementTestContainers.UserImages, "holiday.jpg", BlobManagementTestFiles.Jpeg(128, 96, seed: 63),
+            new CreateFileArgs { ImageMaxHeight = 12 });
+
+        BlobManagementTestFiles.Measure(await ReadStoredAsync(descriptor)).ShouldBe((16, 12));
+    }
+
+    /// <summary>
+    /// A container that resizes nothing resizes an upload that asks for a box: a larger picture is scaled down and stays
+    /// a PNG, one that fits is stored byte for byte, and what is not a picture passes through.
+    /// </summary>
+    [Fact]
+    public async Task A_Container_That_Does_Not_Resize_Should_Fit_An_Upload_Into_Its_Box()
+    {
+        var box = new CreateFileArgs { ImageMaxWidth = 64, ImageMaxHeight = 64 };
+
+        var wide = await CreateFileAsync(BlobManagementTestContainers.Files, "wide.png", BlobManagementTestFiles.Png(256, 128, seed: 64), box);
+        var stored = await ReadStoredAsync(wide);
+        BlobManagementTestFiles.Format(stored).ShouldBe(SkiaSharp.SKEncodedImageFormat.Png);
+        BlobManagementTestFiles.Measure(stored).ShouldBe((64, 32));
+        wide.Size.ShouldBe(stored.Length);
+
+        var small = BlobManagementTestFiles.Png(20, 10, seed: 65);
+        (await ReadStoredAsync(await CreateFileAsync(BlobManagementTestContainers.Files, "small.png", small, box))).ShouldBe(small);
+
+        var pdf = BlobManagementTestFiles.Pdf("not a picture " + System.Guid.NewGuid());
+        (await ReadStoredAsync(await CreateFileAsync(BlobManagementTestContainers.Files, "notes.pdf", pdf, box))).ShouldBe(pdf);
+    }
+
+    /// <summary>
+    /// A container that stores its content compressed still fits a picture into the upload's box: the resize runs on
+    /// the picture, before the compression.
+    /// </summary>
+    [Fact]
+    public async Task A_Container_That_Compresses_Should_Fit_An_Upload_Into_Its_Box_First()
+    {
+        var descriptor = await CreateFileAsync(
+            BlobManagementTestContainers.Zipped, "wide.png", BlobManagementTestFiles.Png(256, 128, seed: 66),
+            new CreateFileArgs { ImageMaxWidth = 64, ImageMaxHeight = 64 });
+
+        BlobManagementTestFiles.Measure(await ReadStoredAsync(descriptor)).ShouldBe((64, 32));
+    }
+
+    /// <summary>
+    /// A container that crops, stretches or pads its pictures has no box an upload could narrow without changing what
+    /// the container makes of them: an upload that asks for one is refused, and nothing is stored.
+    /// </summary>
+    [Fact]
+    public async Task A_Container_That_Does_Not_Fit_Its_Pictures_Should_Refuse_An_Upload_Box()
+    {
+        (await Should.ThrowAsync<BusinessException>(() => CreateFileAsync(
+                BlobManagementTestContainers.Cropped, "wide.png", BlobManagementTestFiles.Png(256, 128, seed: 67),
+                new CreateFileArgs { ImageMaxWidth = 32 })))
+            .Code.ShouldBe(BlobManagementErrorCodes.ImageSizeNotSupported);
+
+        // Without a box the container crops as it is configured to.
+        var cropped = await CreateFileAsync(
+            BlobManagementTestContainers.Cropped, "wide.png", BlobManagementTestFiles.Png(256, 128, seed: 68));
+        BlobManagementTestFiles.Measure(await ReadStoredAsync(cropped))
+            .ShouldBe((BlobManagementTestContainers.ImagesMaxWidth, BlobManagementTestContainers.ImagesMaxWidth));
+    }
+
+    [Fact]
+    public void An_Upload_Box_That_Is_Not_Positive_Should_Be_Refused()
+    {
+        Should.Throw<System.ArgumentException>(() =>
+            _fileDescriptorManager.GetSaveConfiguration(BlobManagementTestContainers.Files, 0, null));
+        Should.Throw<System.ArgumentException>(() =>
+            _fileDescriptorManager.GetSaveConfiguration(BlobManagementTestContainers.Files, null, -1));
+    }
+
+    /// <summary>Without a box, a save runs with the container's own configuration.</summary>
+    [Fact]
+    public void A_Save_Without_A_Box_Should_Use_The_Containers_Configuration()
+    {
+        _fileDescriptorManager.GetSaveConfiguration(BlobManagementTestContainers.UserImages, null, null)
+            .ShouldBeSameAs(GetRequiredService<IBlobContainerConfigurationProvider>().Get(BlobManagementTestContainers.UserImages));
+    }
+
+    private Task<FileDescriptor> CreateFileAsync(string containerName, string name, byte[] content, CreateFileArgs? args = null)
     {
         return WithUnitOfWorkAsync(async () =>
         {
             using var stream = new MemoryStream(content);
-            return await _fileDescriptorManager.CreateFileAsync(containerName, name, stream);
+            return await _fileDescriptorManager.CreateFileAsync(containerName, name, stream, args);
         });
     }
 

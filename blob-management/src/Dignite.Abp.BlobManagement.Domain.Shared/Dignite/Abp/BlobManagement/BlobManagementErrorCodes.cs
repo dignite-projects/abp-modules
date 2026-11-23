@@ -88,4 +88,10 @@ public static class BlobManagementErrorCodes
 
     /// <summary>A read link that is expired, altered, or was not issued by this Blob Management.</summary>
     public const string ReadLinkInvalid = Namespace + ":ReadLinkInvalid";
+
+    /// <summary>
+    /// An upload asked for a size for its pictures in a container that crops, stretches or pads them: only a container
+    /// that scales its pictures to fit, or resizes none, takes one.
+    /// </summary>
+    public const string ImageSizeNotSupported = Namespace + ":ImageSizeNotSupported";
 }

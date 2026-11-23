@@ -128,13 +128,20 @@ public class BlobManagementFileIntegrationService : BlobManagementFileServiceBas
         return new ListResultDto<BlobManagementReadLinkDto>(links);
     }
 
-    public virtual async Task DeleteAsync(Guid id)
+    public virtual async Task DeleteAsync(Guid id, bool permanently = false)
     {
-        var file = await FindFileForClientAsync(id);
+        var file = await FindFileForClientAsync(id, includeDeleted: permanently);
         if (file != null)
         {
-            await FileDescriptorManager.DeleteAsync(file);
+            await FileDescriptorManager.DeleteAsync(file, permanently);
         }
+    }
+
+    public virtual async Task<BlobManagementFileDto> RestoreAsync(Guid id)
+    {
+        var file = await FindFileForClientAsync(id, includeDeleted: true)
+                   ?? throw new EntityNotFoundException(typeof(FileDescriptor), id);
+        return Map(await FileDescriptorManager.RestoreAsync(file));
     }
 
     public virtual async Task<IRemoteStreamContent> GetContentAsync(Guid id)
@@ -149,12 +156,13 @@ public class BlobManagementFileIntegrationService : BlobManagementFileServiceBas
 
     /// <summary>
     /// The file, for the calling client; <c>null</c> when there is none or the client is not granted its container. A
-    /// caller that is no client is refused before anything is looked for.
+    /// caller that is no client is refused before anything is looked for. With <paramref name="includeDeleted"/> a
+    /// soft-deleted file is found too.
     /// </summary>
-    protected virtual async Task<FileDescriptor?> FindFileForClientAsync(Guid id)
+    protected virtual async Task<FileDescriptor?> FindFileForClientAsync(Guid id, bool includeDeleted = false)
     {
         ClientChecker.CheckIsClient();
-        var file = await FindManagedFileAsync(id);
+        var file = await FindManagedFileAsync(id, includeDeleted);
         return file != null && await ClientChecker.IsAllowedAsync(file.ContainerName) ? file : null;
     }
 }

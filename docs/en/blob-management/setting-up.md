@@ -130,7 +130,7 @@ How much a tenant may store is an ABP [feature](https://abp.io/docs/latest/frame
 | `BlobManagement.Enable` | `true` | Whether the tenant may store files. Turning it off stops storing, and closes the file, directory, container and usage services; it does not close reading what is already public, or a read link already handed out. |
 | `BlobManagement.StorageSize` | `0` | The most the tenant may store, in megabytes. `0` is no limit. |
 
-Usage is counted from the file descriptors: the size of every file, across every managed container - each file has a BLOB of its own, so the same bytes in two files count twice; deleted files do not count, and files uploaded with a ticket and not confirmed yet do. Bytes beyond the allocation are refused with `BlobManagement:StorageQuotaExceeded`. The check reads the usage and then stores, so two uploads at the same moment can both pass it: it is a soft limit, exceeded by at most an upload each. The allocation is the tenant's only: there is none for a container or a user. What is used is shown on the [Usage](usage.md) page.
+Usage is counted from the file descriptors: the size of every file, across every managed container - each file has a BLOB of its own, so the same bytes in two files count twice; soft-deleted files count until their business system deletes them for good - their bytes are stored - and so do files uploaded with a ticket and not confirmed yet. Bytes beyond the allocation are refused with `BlobManagement:StorageQuotaExceeded`. The check reads the usage and then stores, so two uploads at the same moment can both pass it: it is a soft limit, exceeded by at most an upload each. The allocation is the tenant's only: there is none for a container or a user. What is used is shown on the [Usage](usage.md) page.
 
 ## Errors
 
@@ -146,6 +146,7 @@ Usage is counted from the file descriptors: the size of every file, across every
 | `BlobManagement:UploadTicketUsed` | The ticket's file was stored already: a ticket stores one file (HTTP 409). |
 | `BlobManagement:FilePending` | The file was uploaded with a ticket and is not confirmed yet, so it gets no read link (HTTP 409). |
 | `BlobManagement:ReadLinkInvalid` | A read link that is expired, altered or not this Blob Management's (HTTP 403). |
+| `BlobManagement:ImageSizeNotSupported` | An upload asked for a [picture size](files.md#picture-sizes) in a container that crops, stretches or pads its pictures (HTTP 400). |
 | `BlobManagement:DirectoriesNotAllowed` and the other directory errors | See [Directories](directories.md#errors). |
 
 The container's contributors add their own, which Blob Management's HTTP API answers with the status of what is wrong with the content:

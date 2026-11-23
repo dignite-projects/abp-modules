@@ -36,6 +36,12 @@ public class BlobManagementUploadTicket
     /// <summary>The content types it takes (<c>image/png</c>, <c>image/*</c>); empty takes any.</summary>
     public List<string> AllowedContentTypes { get; set; } = new();
 
+    /// <summary>The largest width a picture is stored at, in pixels; <c>null</c> leaves it to the container.</summary>
+    public int? ImageMaxWidth { get; set; }
+
+    /// <summary>The largest height a picture is stored at, in pixels; <c>null</c> leaves it to the container.</summary>
+    public int? ImageMaxHeight { get; set; }
+
     /// <summary>Whether <paramref name="contentType"/>, detected from the bytes, is one the ticket takes.</summary>
     public virtual bool Allows(string contentType)
     {

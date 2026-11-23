@@ -2215,11 +2215,45 @@
                       "summary": null,
                       "description": null,
                       "displayName": null
+                    },
+                    {
+                      "name": "permanently",
+                      "typeAsString": "System.Boolean, System.Private.CoreLib",
+                      "type": "System.Boolean",
+                      "typeSimple": "boolean",
+                      "isOptional": true,
+                      "defaultValue": false,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
                     }
                   ],
                   "returnValue": {
                     "type": "System.Void",
                     "typeSimple": "System.Void",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "RestoreAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                    "typeSimple": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
                     "summary": null,
                     "contentTypes": null,
                     "isRemoteStream": false
@@ -2541,11 +2575,45 @@
                       "summary": null,
                       "description": null,
                       "displayName": null
+                    },
+                    {
+                      "name": "permanently",
+                      "typeAsString": "System.Boolean, System.Private.CoreLib",
+                      "type": "System.Boolean",
+                      "typeSimple": "boolean",
+                      "isOptional": true,
+                      "defaultValue": false,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
                     }
                   ],
                   "returnValue": {
                     "type": "System.Void",
                     "typeSimple": "System.Void",
+                    "summary": null,
+                    "contentTypes": null,
+                    "isRemoteStream": false
+                  }
+                },
+                {
+                  "name": "RestoreAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "summary": null,
+                      "description": null,
+                      "displayName": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                    "typeSimple": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
                     "summary": null,
                     "contentTypes": null,
                     "isRemoteStream": false
@@ -2864,6 +2932,36 @@
                   "jsonName": null,
                   "type": "System.String",
                   "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Form",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "ImageMaxWidth",
+                  "jsonName": null,
+                  "type": "System.Int32?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Form",
+                  "descriptorName": "input",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "ImageMaxHeight",
+                  "jsonName": null,
+                  "type": "System.Int32?",
+                  "typeSimple": "number?",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
@@ -3397,11 +3495,88 @@
               "description": null,
               "displayName": null
             },
-            "DeleteAsyncById": {
-              "uniqueName": "DeleteAsyncById",
+            "DeleteAsyncByIdAndPermanently": {
+              "uniqueName": "DeleteAsyncByIdAndPermanently",
               "name": "DeleteAsync",
               "httpMethod": "DELETE",
               "url": "integration-api/blob-management/files/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "name": "permanently",
+                  "typeAsString": "System.Boolean, System.Private.CoreLib",
+                  "type": "System.Boolean",
+                  "typeSimple": "boolean",
+                  "isOptional": true,
+                  "defaultValue": false,
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                },
+                {
+                  "nameOnMethod": "permanently",
+                  "name": "permanently",
+                  "jsonName": null,
+                  "type": "System.Boolean",
+                  "typeSimple": "boolean",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Query",
+                  "descriptorName": "",
+                  "summary": null,
+                  "description": null,
+                  "displayName": null
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void",
+                "summary": null,
+                "contentTypes": null,
+                "isRemoteStream": false
+              },
+              "allowAnonymous": null,
+              "authorizeDatas": [],
+              "implementFrom": "Dignite.Abp.BlobManagement.Files.IBlobManagementFileService",
+              "summary": null,
+              "remarks": null,
+              "description": null,
+              "displayName": null
+            },
+            "RestoreAsyncById": {
+              "uniqueName": "RestoreAsyncById",
+              "name": "RestoreAsync",
+              "httpMethod": "POST",
+              "url": "integration-api/blob-management/files/{id}/restore",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -3434,10 +3609,14 @@
                 }
               ],
               "returnValue": {
-                "type": "System.Void",
-                "typeSimple": "System.Void",
+                "type": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
+                "typeSimple": "Dignite.Abp.BlobManagement.Files.BlobManagementFileDto",
                 "summary": null,
-                "contentTypes": null,
+                "contentTypes": [
+                  "text/plain",
+                  "application/json",
+                  "text/json"
+                ],
                 "isRemoteStream": false
               },
               "allowAnonymous": null,

@@ -91,7 +91,7 @@ public class BlobManagementDirectoryApi_Tests : AbpWebApplicationFactoryIntegrat
 
         using (TestCaller.As(BlobManagementHttpApiTestModule.AllowedClient))
         {
-            await _files.DeleteAsync(file.Id);
+            await _files.DeleteAsync(file.Id, permanently: false);
         }
 
         using (TestCaller.As(UiClient, _user))
@@ -111,7 +111,7 @@ public class BlobManagementDirectoryApi_Tests : AbpWebApplicationFactoryIntegrat
             var folder = await _directories.CreateAsync(new CreateBlobManagementDirectoryInput { ContainerName = Container, Name = "Folder" });
 
             await ShouldFailAsync(HttpStatusCode.Conflict,
-                () => _directories.CreateAsync(new CreateBlobManagementDirectoryInput { ContainerName = Container, Name = "FOLDER" }),
+                () => _directories.CreateAsync(new CreateBlobManagementDirectoryInput { ContainerName = Container, Name = "Folder" }),
                 BlobManagementErrorCodes.DirectoryNameAlreadyExists);
             await ShouldFailAsync(HttpStatusCode.BadRequest,
                 () => _directories.MoveAsync(folder.Id, new MoveBlobManagementDirectoryInput { ParentId = folder.Id }),
