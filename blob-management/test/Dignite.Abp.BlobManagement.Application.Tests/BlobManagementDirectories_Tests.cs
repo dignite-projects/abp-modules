@@ -104,10 +104,13 @@ public abstract class BlobManagementDirectories_Tests<TStartupModule> : BlobMana
             // A directory of another container is not found: as a parent, or as where a moved directory lands.
             var elsewhere = await _directories.CreateAsync(
                 new CreateBlobManagementDirectoryInput { ContainerName = BlobManagementTestContainers.Archive, Name = "Elsewhere" });
-            await Should.ThrowAsync<EntityNotFoundException>(() => CreateAsync("Folder", elsewhere.Id));
-            await Should.ThrowAsync<EntityNotFoundException>(() => ListAsync(elsewhere.Id));
-            await Should.ThrowAsync<EntityNotFoundException>(() =>
-                _directories.MoveAsync(docs.Id, new MoveBlobManagementDirectoryInput { ParentId = elsewhere.Id }));
+            (await Should.ThrowAsync<BusinessException>(() => CreateAsync("Folder", elsewhere.Id)))
+                .Code.ShouldBe(BlobManagementErrorCodes.DirectoryNotFound);
+            (await Should.ThrowAsync<BusinessException>(() => ListAsync(elsewhere.Id)))
+                .Code.ShouldBe(BlobManagementErrorCodes.DirectoryNotFound);
+            (await Should.ThrowAsync<BusinessException>(() =>
+                    _directories.MoveAsync(docs.Id, new MoveBlobManagementDirectoryInput { ParentId = elsewhere.Id })))
+                .Code.ShouldBe(BlobManagementErrorCodes.DirectoryNotFound);
         }
     }
 

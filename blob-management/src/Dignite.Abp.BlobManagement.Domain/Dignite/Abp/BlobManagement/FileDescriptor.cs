@@ -202,6 +202,11 @@ public class FileDescriptor : AggregateRoot<Guid>, ICreationAuditedObject, IModi
     /// Confirms a pending file. <see cref="FileDescriptorManager.ConfirmAsync"/> saves it; a confirmed file is not
     /// pending again.
     /// </summary>
+    public virtual void Confirm()
+    {
+        IsPending = false;
+    }
+
     /// <summary>
     /// Takes a soft-deleted file back: listed, readable and public again as it was. Where it is filed is
     /// <see cref="FileDescriptorManager.RestoreAsync"/>'s to check; never call this to bypass it.
@@ -213,20 +218,16 @@ public class FileDescriptor : AggregateRoot<Guid>, ICreationAuditedObject, IModi
         DeletionTime = null;
     }
 
-    public virtual void Confirm()
-    {
-        IsPending = false;
-    }
-
     /// <summary>
     /// Replaces what the file holds, when its application saves under its name again: the new BLOB with its type, size
     /// and verified hash, the client that wrote it, the public mark - which each save sets anew - and when and for
     /// whom the bytes were stored. The id, the container, the name and its key stay: it is the same file at the same
     /// address. <see cref="FileDescriptorManager.SaveBlobAsync"/> calls it, and deletes the BLOB the file had; never
     /// call it otherwise.
+    /// <para>
+    /// <see cref="CreationTime"/> is cleared for ABP's auditing to set, as on an insert: the bytes are stored now.
+    /// </para>
     /// </summary>
-    /// <param name="creationTime">When the new bytes were stored; <c>default</c> leaves it to ABP's auditing, as on an
-    /// insert.</param>
     /// <param name="creatorId">The user the file is now counted for; <c>null</c> leaves it to ABP's auditing.</param>
     public virtual void ReplaceContent(
         string blobName,
@@ -235,7 +236,6 @@ public class FileDescriptor : AggregateRoot<Guid>, ICreationAuditedObject, IModi
         string? hash,
         string? clientId,
         bool isPublic,
-        DateTime creationTime,
         Guid? creatorId)
     {
         BlobName = Check.NotNullOrWhiteSpace(blobName, nameof(blobName), FileDescriptorConsts.MaxBlobNameLength);
@@ -244,7 +244,7 @@ public class FileDescriptor : AggregateRoot<Guid>, ICreationAuditedObject, IModi
         Hash = Check.Length(hash, nameof(hash), FileDescriptorConsts.MaxHashLength);
         ClientId = Check.Length(clientId, nameof(clientId), FileDescriptorConsts.MaxClientIdLength);
         IsPublic = isPublic;
-        CreationTime = creationTime;
+        CreationTime = default;
         CreatorId = creatorId;
     }
 

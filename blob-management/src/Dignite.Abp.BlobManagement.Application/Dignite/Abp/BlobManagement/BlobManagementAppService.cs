@@ -1,14 +1,15 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobManagement.Authorization;
 using Dignite.Abp.BlobManagement.Files;
+using Dignite.Abp.BlobManagement.Public;
 using Dignite.Abp.BlobManagement.Localization;
 using Microsoft.Extensions.Localization;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Authorization;
 using Volo.Abp.BlobStoring;
-using Volo.Abp.Domain.Entities;
 using Volo.Abp.Validation;
 using Volo.Abp.Validation.Localization;
 
@@ -17,7 +18,7 @@ namespace Dignite.Abp.BlobManagement;
 /// <summary>
 /// The base of Blob Management's application services, with what they share: the caller's user id, the managed
 /// containers, authorization of users through <see cref="BlobManagementAccessService"/> and the mapping of a descriptor
-/// to its DTO.
+/// to its DTOs.
 /// </summary>
 public abstract class BlobManagementAppService : ApplicationService
 {
@@ -31,9 +32,6 @@ public abstract class BlobManagementAppService : ApplicationService
 
     protected BlobManagementAccessService AccessService =>
         LazyServiceProvider.LazyGetRequiredService<BlobManagementAccessService>();
-
-    protected IDirectoryDescriptorRepository DirectoryRepository =>
-        LazyServiceProvider.LazyGetRequiredService<IDirectoryDescriptorRepository>();
 
     /// <summary>
     /// The caller's user id, for the services that serve users - containers, directories, usage: a token without one -
@@ -54,24 +52,6 @@ public abstract class BlobManagementAppService : ApplicationService
     protected virtual bool IsManagedContainer(string containerName)
     {
         return ContainerConfigurationProvider.IsManagedContainer(containerName);
-    }
-
-    /// <summary>
-    /// The directory <paramref name="id"/> of <paramref name="containerName"/>, which must allow directories; any other
-    /// is not found, so nothing is told about directories elsewhere.
-    /// </summary>
-    protected virtual async Task<DirectoryDescriptor> GetDirectoryAsync(Guid id, string containerName)
-    {
-        var directory = await DirectoryRepository.FindAsync(id);
-        if (directory == null ||
-            directory.ContainerName != containerName ||
-            !IsManagedContainer(containerName) ||
-            !GetContainer(containerName).AllowDirectories)
-        {
-            throw new EntityNotFoundException(typeof(DirectoryDescriptor), id);
-        }
-
-        return directory;
     }
 
     /// <summary>
@@ -123,5 +103,32 @@ public abstract class BlobManagementAppService : ApplicationService
                     file.ContainerName, file.IsAddressedByName ? file.Name : file.BlobName, file.TenantId)
                 : null
         };
+    }
+
+    /// <summary>
+    /// What a read of <paramref name="file"/> - public, or with a link - answers about it, under <paramref name="name"/>,
+    /// the name the address answers with. The entity tag is the physical BLOB, which an overwrite changes, plus
+    /// <paramref name="entityTagSuffix"/> for a rendition.
+    /// </summary>
+    protected virtual BlobManagementPublicFileDto MapReadFile(FileDescriptor file, string name, string entityTagSuffix = "")
+    {
+        return new BlobManagementPublicFileDto
+        {
+            Name = name,
+            MimeType = file.MimeType,
+            Size = file.Size,
+            ContentId = file.BlobName,
+            LastModified = file.CreationTime,
+            EntityTag = file.BlobName + entityTagSuffix
+        };
+    }
+
+    /// <summary>
+    /// Weak comparison, as <c>If-None-Match</c> uses: <c>*</c> matches any file, and a tag matches when its opaque value
+    /// is the same (the caller has already dropped a <c>W/</c> prefix).
+    /// </summary>
+    protected virtual bool IsNotModified(string entityTag, BlobManagementPublicReadRequest request)
+    {
+        return request.IfNoneMatchAny || request.IfNoneMatch.Any(tag => string.Equals(tag, entityTag, StringComparison.Ordinal));
     }
 }

@@ -114,6 +114,13 @@ so it stays clear which part of the repository actually moved.
   `eBlobManagementPolicyNames` from `@dignite/ng.blob-management/config`; the proxies of the BLOB API and of the file
   API's writes are gone, since a browser cannot call them; and the menu text of the files page is the `Files` key of
   the `BlobManagement` resource (it was `Menu:Files`).
+- **blob-management (pre-releases only): an upload ticket's size and types narrow the container's rules.** The upload
+  runs the container's own contributors with the ticket's smaller size and the types both allow, instead of a check of
+  its own beside them. A ticket whose types the container takes none of is refused when it is asked for
+  (`Dignite.Abp.BlobStoring:ContentTypeNotAllowed`, 415), not at each upload; a type that is not `type/subtype` or
+  `type/*` is a validation error (400). A directory that is not the container's - as the parent of a directory, the
+  place of a listing or of a ticket - answers `BlobManagement:DirectoryNotFound` (404), as storing a file there already
+  did, where it was ABP's not found.
 
 #### blob-storing
 

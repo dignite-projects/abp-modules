@@ -35,9 +35,6 @@ public interface IDirectoryDescriptorRepository : IBasicRepository<DirectoryDesc
         Guid? parentId,
         CancellationToken cancellationToken = default);
 
-    /// <summary>The directories of <paramref name="ids"/> that exist, in no particular order.</summary>
-    Task<List<DirectoryDescriptor>> GetListByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
-
     /// <summary>
     /// Every directory below the one whose <see cref="DirectoryDescriptor.Path"/> is <paramref name="path"/>, at any
     /// depth, not the directory itself. Live ones, like every query here.

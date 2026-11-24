@@ -35,6 +35,27 @@ public static class BlobManagementContainerConfigurationExtensions
         return configuration;
     }
 
+    /// <summary>
+    /// The names of the containers the Blob Management host declared, in ordinal order. ABP enumerates its configured
+    /// containers through <see cref="BlobContainerConfigurations.ConfigureAll"/>; nothing is changed here.
+    /// </summary>
+    public static List<string> GetManagedContainerNames(this BlobContainerConfigurations containers)
+    {
+        Check.NotNull(containers, nameof(containers));
+
+        var names = new List<string>();
+        containers.ConfigureAll((name, configuration) =>
+        {
+            if (configuration.GetBlobManagementContainerConfiguration().IsManaged)
+            {
+                names.Add(name);
+            }
+        });
+
+        names.Sort(StringComparer.Ordinal);
+        return names;
+    }
+
     /// <summary>Whether <paramref name="containerName"/> is a container the Blob Management host declared.</summary>
     public static bool IsManagedContainer(
         this IBlobContainerConfigurationProvider configurationProvider,

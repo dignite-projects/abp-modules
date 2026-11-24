@@ -94,15 +94,12 @@ public abstract class BlobManagementFileServiceBase : BlobManagementAppService
 
     /// <summary>
     /// Refuses a place that is not one: a container that is not managed, or a directory that is not one of the
-    /// container. <c>null</c> is the container's top.
+    /// container (<see cref="DirectoryManager.CheckPlaceAsync"/>). <c>null</c> is the container's top.
     /// </summary>
     protected virtual async Task CheckPlaceAsync(string containerName, Guid? directoryId)
     {
         GetContainer(containerName);
-        if (directoryId.HasValue)
-        {
-            await GetDirectoryAsync(directoryId.Value, containerName);
-        }
+        await LazyServiceProvider.LazyGetRequiredService<DirectoryManager>().CheckPlaceAsync(containerName, directoryId);
     }
 
     /// <summary>A file of a managed container; any other is not found.</summary>

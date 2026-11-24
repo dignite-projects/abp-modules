@@ -164,6 +164,7 @@ var ticket = await _files.CreateUploadTicketAsync(new CreateBlobManagementUpload
 ````
 
 * The ticket is signed by Blob Management with ASP.NET Core Data Protection and carries the tenant, the container, the directory, the file's id, the user (`UploaderId`; by default the current user, which the remote service sends), the client, the size, the types and the box for pictures ([Picture Sizes](#picture-sizes)). The browser can change none of it.
+* The size and the types narrow the container's own rules, never widen them: the upload runs the container's contributors with the smaller size and the types both allow (`image/*` on the ticket and `image/png`, `image/jpeg` on the container take the two). A ticket whose types the container takes none of is refused when it is asked for (`Dignite.Abp.BlobStoring:ContentTypeNotAllowed`, HTTP 415); one that is not `type/subtype` or `type/*` is a validation error (HTTP 400).
 * Its lifetime is `LifetimeInSeconds`, else `BlobManagementUploadOptions.TicketLifetime` (5 minutes), and never more than `MaxTicketLifetime` (1 hour).
 * The browser posts the file to `UploadUrl` - relative to Blob Management's address - as the multipart field `file` (or the raw body, with `?name=`). The request is anonymous: no token, cookie, antiforgery token or tenant header is needed or used. The body is limited to the ticket's size.
 

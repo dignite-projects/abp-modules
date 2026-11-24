@@ -96,6 +96,9 @@ public class FileDescriptorManager : DomainService
 
     protected IAuditPropertySetter AuditPropertySetter { get; }
 
+    /// <summary>Where a file may be filed is the directory tree's rule, kept by <see cref="BlobManagement.DirectoryManager"/>.</summary>
+    protected DirectoryManager DirectoryManager => LazyServiceProvider.LazyGetRequiredService<DirectoryManager>();
+
     public FileDescriptorManager(
         IFileDescriptorRepository fileDescriptorRepository,
         IDirectoryDescriptorRepository directoryRepository,
@@ -218,7 +221,8 @@ public class FileDescriptorManager : DomainService
     /// <see cref="StoreBlobAsync"/>). One difference: when the container stores the upload in another format (a JPEG as
     /// WebP), the name takes that format's extension (<see cref="GetNameForStoredType"/>). Another: the upload may ask for
     /// a smaller box for its pictures (<see cref="CreateFileArgs.ImageMaxWidth"/>, <see cref="CreateFileArgs.ImageMaxHeight"/>),
-    /// which the save applies with the container's (<see cref="GetSaveConfiguration"/>).
+    /// a smaller size or fewer types (<see cref="CreateFileArgs.MaxSize"/>, <see cref="CreateFileArgs.AllowedContentTypes"/>,
+    /// an upload ticket's), which the save applies with the container's (<see cref="GetSaveConfiguration"/>).
     /// <para>
     /// The directory must be one of the container, which must allow directories
     /// (<see cref="BlobManagementErrorCodes.DirectoryNotFound"/>, <see cref="BlobManagementErrorCodes.DirectoriesNotAllowed"/>).
@@ -240,8 +244,9 @@ public class FileDescriptorManager : DomainService
         Check.NotNullOrWhiteSpace(name, nameof(name), FileDescriptorConsts.MaxNameLength);
         Check.NotNull(stream, nameof(stream));
         await UsageManager.CheckEnabledAsync();
-        await CheckDirectoryAsync(containerName, args.DirectoryId, cancellationToken);
-        var configuration = GetSaveConfiguration(containerName, args.ImageMaxWidth, args.ImageMaxHeight);
+        await DirectoryManager.CheckPlaceAsync(containerName, args.DirectoryId, cancellationToken);
+        var configuration = GetSaveConfiguration(
+            containerName, args.ImageMaxWidth, args.ImageMaxHeight, args.MaxSize, args.AllowedContentTypes);
 
         var stored = await StoreBlobAsync(
             containerName, configuration, name, stream, args.ExpectedSha256, releasedBytes: 0, cancellationToken);
@@ -345,7 +350,7 @@ public class FileDescriptorManager : DomainService
     {
         Check.NotNull(file, nameof(file));
         CheckNotAddressedByName(file);
-        await CheckDirectoryAsync(file.ContainerName, directoryId, cancellationToken);
+        await DirectoryManager.CheckPlaceAsync(file.ContainerName, directoryId, cancellationToken);
 
         if (file.DirectoryId == directoryId)
         {
@@ -504,11 +509,14 @@ public class FileDescriptorManager : DomainService
 
     /// <summary>
     /// The configuration a file is stored into <paramref name="containerName"/> with: the container's own, or - when the
-    /// upload asks for a smaller box for its pictures - one for this save that falls back to it, as ABP's named
-    /// containers fall back to the default one, with the box narrowed. Each side is the smaller of the container's and
-    /// the upload's, a side one of them leaves unconstrained being the other's: an upload can make what the container
-    /// keeps smaller, never larger.
+    /// upload narrows it - one for this save that falls back to it, as ABP's named containers fall back to the default
+    /// one. An upload can make what the container takes smaller, never larger: a smaller size
+    /// (<see cref="MaxSizeContributor"/>), fewer types (<see cref="AllowedContentTypesContributor"/>: those both allow), a
+    /// smaller box for its pictures. The size and type checks run first, as blob-storing asks of them, before anything
+    /// transforms the content.
     /// <para>
+    /// Each side of the box is the smaller of the container's and the upload's, a side one of them leaves unconstrained
+    /// being the other's.
     /// The box is the one of <see cref="ImageResizeContributor"/>, which the WebP contributors fit a converted picture
     /// into in the same decode and the declaration of the stored type measures by; they read it from the configuration
     /// of the save, so the picture is encoded once and its BLOB named for what is stored. The picture is scaled down to
@@ -528,14 +536,17 @@ public class FileDescriptorManager : DomainService
     /// <param name="containerName">The managed container the file is stored in.</param>
     /// <param name="imageMaxWidth">The largest width, in pixels; <c>null</c> leaves it to the container.</param>
     /// <param name="imageMaxHeight">The largest height, in pixels; <c>null</c> leaves it to the container.</param>
-    public virtual BlobContainerConfiguration GetSaveConfiguration(string containerName, int? imageMaxWidth, int? imageMaxHeight)
+    /// <param name="maxSize">The largest upload, in bytes; <c>null</c> leaves it to the container.</param>
+    /// <param name="allowedContentTypes">The types the upload may be (<c>image/png</c>, <c>image/*</c>); <c>null</c> or
+    /// empty leaves them to the container. None the container takes as well fails with
+    /// <c>Dignite.Abp.BlobStoring:ContentTypeNotAllowed</c>.</param>
+    public virtual BlobContainerConfiguration GetSaveConfiguration(
+        string containerName,
+        int? imageMaxWidth,
+        int? imageMaxHeight,
+        long? maxSize = null,
+        IReadOnlyCollection<string>? allowedContentTypes = null)
     {
-        var configuration = BlobContainerConfigurationProvider.Get(containerName);
-        if (imageMaxWidth == null && imageMaxHeight == null)
-        {
-            return configuration;
-        }
-
         if (imageMaxWidth.HasValue)
         {
             Check.Positive(imageMaxWidth.Value, nameof(imageMaxWidth));
@@ -546,26 +557,51 @@ public class FileDescriptorManager : DomainService
             Check.Positive(imageMaxHeight.Value, nameof(imageMaxHeight));
         }
 
+        if (maxSize.HasValue)
+        {
+            Check.Positive(maxSize.Value, nameof(maxSize));
+        }
+
+        var configuration = BlobContainerConfigurationProvider.Get(containerName);
+        var box = imageMaxWidth.HasValue || imageMaxHeight.HasValue;
+        var size = maxSize < BlobStreamBuffering.GetMaxBufferedBytes(configuration);
+        var types = allowedContentTypes is { Count: > 0 };
+        if (!box && !size && !types)
+        {
+            return configuration;
+        }
+
         var contributors = configuration.GetEffectivePipelineContributors().ToList();
         var resizes = contributors.Contains(typeof(ImageResizeContributor));
-        if (resizes && configuration.GetImageResizeContributorConfiguration().Mode != ImageResizeMode.Max)
+        if (box && resizes && configuration.GetImageResizeContributorConfiguration().Mode != ImageResizeMode.Max)
         {
             throw new BusinessException(BlobManagementErrorCodes.ImageSizeNotSupported)
                 .WithData("ContainerName", containerName);
         }
 
         // The container's contributors copied, not inherited: blob-storing tells whether a container resizes from its own
-        // list (the WebP contributors' box), and one added to an inheriting configuration would not be in it.
+        // list (the WebP contributors' box), and one added to an inheriting configuration would not be in it. The checks
+        // first, then the rest in the container's order.
         var narrowed = new BlobContainerConfiguration(configuration)
         {
             IsMultiTenant = configuration.IsMultiTenant,
             InheritPipelineContributors = false
         };
-        foreach (var contributor in contributors)
+        if (size || contributors.Contains(typeof(MaxSizeContributor)))
+        {
+            narrowed.PipelineContributors.Add<MaxSizeContributor>();
+        }
+
+        if (types || contributors.Contains(typeof(AllowedContentTypesContributor)))
+        {
+            narrowed.PipelineContributors.Add<AllowedContentTypesContributor>();
+        }
+
+        foreach (var contributor in contributors.Where(c => !narrowed.PipelineContributors.Contains(c)))
         {
             // A container that does not resize gets the resize before its compression: after it, the content is no
             // picture. Without one, the resize is added last, below.
-            if (!resizes && contributor == typeof(GZipContributor))
+            if (box && !resizes && contributor == typeof(GZipContributor))
             {
                 narrowed.PipelineContributors.TryAdd<ImageResizeContributor>();
             }
@@ -573,11 +609,73 @@ public class FileDescriptorManager : DomainService
             narrowed.PipelineContributors.Add(contributor);
         }
 
+        // Each sets its value on this configuration only; the contributor keeps the place it has.
+        if (size)
+        {
+            narrowed.AddMaxSizeContributor(c => c.MaxSizeInBytes = maxSize!.Value);
+        }
+
+        if (types)
+        {
+            var allowed = NarrowContentTypes(
+                contributors.Contains(typeof(AllowedContentTypesContributor))
+                    ? configuration.GetAllowedContentTypesContributorConfiguration().AllowedContentTypes
+                    : null,
+                allowedContentTypes!);
+            if (allowed.Length == 0)
+            {
+                throw new BusinessException(BlobStoringPipelineErrorCodes.ContentTypeNotAllowed)
+                    .WithData("ContentType", string.Join(", ", allowedContentTypes!));
+            }
+
+            narrowed.AddAllowedContentTypesContributor(c =>
+            {
+                c.AllowedContentTypes = allowed;
+                c.AllowUnidentified = false;
+            });
+        }
+
+        if (box)
+        {
+            NarrowImageBox(narrowed, resizes, imageMaxWidth, imageMaxHeight);
+        }
+
+        return narrowed;
+    }
+
+    /// <summary>
+    /// The types both lists allow: those of <paramref name="container"/> an entry of <paramref name="upload"/> takes, and
+    /// those of <paramref name="upload"/> an entry of <paramref name="container"/> takes - <c>image/*</c> and
+    /// <c>image/png</c> leave <c>image/png</c>. <paramref name="container"/> <c>null</c>: the container takes any type.
+    /// </summary>
+    protected virtual string[] NarrowContentTypes(IReadOnlyCollection<string>? container, IReadOnlyCollection<string> upload)
+    {
+        if (container == null)
+        {
+            return upload.ToArray();
+        }
+
+        return container.Where(type => Takes(upload, type))
+            .Concat(upload.Where(type => Takes(container, type)))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        static bool Takes(IEnumerable<string> allowed, string type) => allowed.Any(entry =>
+            entry.EndsWith("/*", StringComparison.Ordinal)
+                ? type.StartsWith(entry[..^1], StringComparison.OrdinalIgnoreCase)
+                : string.Equals(entry, type, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Sets the box of <paramref name="narrowed"/>'s <see cref="ImageResizeContributor"/>: each side the smaller of the
+    /// container's (when it <paramref name="resizes"/>) and the upload's, scaled down to fit.
+    /// </summary>
+    protected virtual void NarrowImageBox(BlobContainerConfiguration narrowed, bool resizes, int? imageMaxWidth, int? imageMaxHeight)
+    {
         var resize = narrowed.GetImageResizeContributorConfiguration();
         var width = Narrow(resizes ? resize.MaxWidth : 0, imageMaxWidth ?? 0);
         var height = Narrow(resizes ? resize.MaxHeight : 0, imageMaxHeight ?? 0);
 
-        // Sets the box on this configuration only; the contributor keeps the place it has.
         narrowed.AddImageResizeContributor(c =>
         {
             c.MaxWidth = width;
@@ -585,37 +683,8 @@ public class FileDescriptorManager : DomainService
             c.Mode = ImageResizeMode.Max;
         });
 
-        return narrowed;
-
         static int Narrow(int container, int upload) =>
             container == 0 ? upload : upload == 0 ? container : Math.Min(container, upload);
-    }
-
-    /// <summary>
-    /// Whether <paramref name="directoryId"/> may hold a file of <paramref name="containerName"/>: it is a directory of
-    /// that container, which allows directories. <c>null</c>, the top of the container, always may.
-    /// </summary>
-    protected virtual async Task CheckDirectoryAsync(
-        string containerName,
-        Guid? directoryId,
-        CancellationToken cancellationToken)
-    {
-        if (!directoryId.HasValue)
-        {
-            return;
-        }
-
-        if (!GetBlobManagementContainerConfiguration(containerName).AllowDirectories)
-        {
-            throw new BusinessException(BlobManagementErrorCodes.DirectoriesNotAllowed)
-                .WithData("ContainerName", containerName);
-        }
-
-        var directory = await DirectoryRepository.FindAsync(directoryId.Value, false, cancellationToken);
-        if (directory == null || directory.ContainerName != containerName)
-        {
-            throw new BusinessException(BlobManagementErrorCodes.DirectoryNotFound);
-        }
     }
 
     protected virtual void CheckNotAddressedByName(FileDescriptor file)
@@ -724,25 +793,14 @@ public class FileDescriptorManager : DomainService
         try
         {
             await container.SaveAsync(blobName, content, overrideExisting: false, cancellationToken);
-        }
-        catch (Exception exception) when (exception is not BlobAlreadyExistsException and not BusinessException)
-        {
-            // The provider failed after it may have written bytes. A rejection by a contributor (a BusinessException)
-            // happens before the provider writes anything, and a name collision means the BLOB belongs to another
-            // descriptor - neither is compensated.
-            await TryDeleteBlobAsync(containerName, blobName);
-            throw;
-        }
-
-        try
-        {
             var (size, storedType) = await GetStoredSizeAndTypeAsync(
                 container, blobName, storedMimeType, uploadLength, cancellationToken);
             return new StoredBlob(blobName, storedType, size, hash, mimeType);
         }
         catch
         {
-            await TryDeleteBlobAsync(containerName, blobName);
+            // The name is new, so whatever is under it is this save's; when a contributor refused the upload, nothing is.
+            await DeleteBlobAsync(CurrentTenant.Id, containerName, blobName);
             throw;
         }
     }
@@ -765,7 +823,7 @@ public class FileDescriptorManager : DomainService
         }
         catch
         {
-            await TryDeleteBlobAsync(containerName, stored.BlobName);
+            await DeleteBlobAsync(CurrentTenant.Id, containerName, stored.BlobName);
             throw;
         }
 
@@ -779,10 +837,6 @@ public class FileDescriptorManager : DomainService
     /// committed, as <see cref="DeleteAsync"/> deletes one. The file is then counted for whoever saved it now, from
     /// now: <see cref="FileDescriptor.CreationTime"/> and <see cref="FileDescriptor.CreatorId"/> are set as ABP's
     /// auditing sets them on an insert, unless the caller named the user.
-    /// <para>
-    /// When the update fails, the descriptor is given back what it held, in memory as well: a unit of work that goes
-    /// on after the failure must not write the new BLOB's name with a later save, since that BLOB is deleted.
-    /// </para>
     /// </summary>
     protected virtual async Task<FileDescriptor> ReplaceContentAsync(
         FileDescriptor existing,
@@ -791,27 +845,12 @@ public class FileDescriptorManager : DomainService
         CancellationToken cancellationToken)
     {
         var replacedBlobName = existing.BlobName;
-        var previous = (
-            existing.BlobName, existing.MimeType, existing.Size, existing.Hash, existing.ClientId, existing.IsPublic,
-            existing.CreationTime, existing.CreatorId);
-
-        var file = await RecordAsync(existing.ContainerName, stored, async () =>
+        var file = await RecordAsync(existing.ContainerName, stored, () =>
         {
-            try
-            {
-                existing.ReplaceContent(
-                    stored.BlobName, stored.MimeType, stored.Size, stored.Hash, args.ClientId, args.IsPublic,
-                    creationTime: default, args.CreatorId);
-                AuditPropertySetter.SetCreationProperties(existing);
-                return await FileDescriptorRepository.UpdateAsync(existing, autoSave: true, cancellationToken);
-            }
-            catch
-            {
-                existing.ReplaceContent(
-                    previous.BlobName, previous.MimeType, previous.Size, previous.Hash, previous.ClientId,
-                    previous.IsPublic, previous.CreationTime, previous.CreatorId);
-                throw;
-            }
+            existing.ReplaceContent(
+                stored.BlobName, stored.MimeType, stored.Size, stored.Hash, args.ClientId, args.IsPublic, args.CreatorId);
+            AuditPropertySetter.SetCreationProperties(existing);
+            return FileDescriptorRepository.UpdateAsync(existing, autoSave: true, cancellationToken);
         });
 
         await DeleteBlobAfterCommitAsync(file.TenantId, file.ContainerName, replacedBlobName);
@@ -991,25 +1030,9 @@ public class FileDescriptorManager : DomainService
     }
 
     /// <summary>
-    /// Deletes a BLOB whose descriptor was not written, in the current tenant, on a bounded token of its own.
-    /// Best-effort: the compensation must not hide the exception that asked for it.
-    /// </summary>
-    protected virtual async Task TryDeleteBlobAsync(string containerName, string blobName)
-    {
-        using var compensation = new CancellationTokenSource(CompensationTimeout);
-        try
-        {
-            await BlobContainerFactory.Create(containerName).DeleteAsync(blobName, compensation.Token);
-        }
-        catch
-        {
-            // Best-effort compensation must not hide the original exception.
-        }
-    }
-
-    /// <summary>
-    /// Deletes a BLOB that no descriptor names any more, in its tenant, on a bounded token of its own - the request's
-    /// may be cancelled, or gone, by now. Best-effort: a failure is logged and leaves the bytes in storage.
+    /// Deletes a BLOB that no descriptor names - any more, or because its descriptor was never written - in its tenant,
+    /// on a bounded token of its own: the request's may be cancelled, or gone, by now. Best-effort: a failure is logged
+    /// and leaves the bytes in storage, and never hides the exception a compensation runs for.
     /// </summary>
     protected virtual async Task DeleteBlobAsync(Guid? tenantId, string containerName, string blobName)
     {

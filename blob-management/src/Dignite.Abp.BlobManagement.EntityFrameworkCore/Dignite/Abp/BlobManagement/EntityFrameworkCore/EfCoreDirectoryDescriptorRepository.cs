@@ -50,16 +50,6 @@ public class EfCoreDirectoryDescriptorRepository
             .MaxAsync(d => (int?)d.Order, GetCancellationToken(cancellationToken)) ?? 0;
     }
 
-    public virtual async Task<List<DirectoryDescriptor>> GetListByIdsAsync(
-        IEnumerable<Guid> ids,
-        CancellationToken cancellationToken = default)
-    {
-        var idList = ids.Distinct().ToList();
-        return await (await GetDbSetAsync())
-            .Where(d => idList.Contains(d.Id))
-            .ToListAsync(GetCancellationToken(cancellationToken));
-    }
-
     public virtual async Task<List<DirectoryDescriptor>> GetDescendantsAsync(
         string path,
         CancellationToken cancellationToken = default)

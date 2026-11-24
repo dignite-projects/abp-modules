@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 
 namespace Dignite.Abp.BlobManagement.Files;
 
@@ -8,7 +9,7 @@ namespace Dignite.Abp.BlobManagement.Files;
 /// What an upload ticket lets a browser store: one file, in one place of a container, for one user. Everything here is
 /// written into the ticket; the browser that holds it can change none of it.
 /// </summary>
-public class CreateBlobManagementUploadTicketInput
+public class CreateBlobManagementUploadTicketInput : IValidatableObject
 {
     [Required]
     public string ContainerName { get; set; } = default!;
@@ -33,9 +34,27 @@ public class CreateBlobManagementUploadTicketInput
 
     /// <summary>
     /// The content types the ticket takes, detected from the bytes (<c>image/png</c>, or <c>image/*</c> for a kind);
-    /// empty takes whatever the container takes. The container's own rules apply as well.
+    /// empty takes whatever the container takes. The container's own rules apply as well: the ticket takes what both
+    /// allow, and one that would take nothing is refused.
     /// </summary>
     public List<string> AllowedContentTypes { get; set; } = new();
+
+    /// <summary>A <c>type/subtype</c> or <c>type/*</c>, in RFC 9110's token characters - what a container's list takes.</summary>
+    private static readonly Regex ContentTypePattern =
+        new(@"^[!#$%&'+.^_`|~0-9A-Za-z-]+/(\*|[!#$%&'+.^_`|~0-9A-Za-z-]+)$", RegexOptions.CultureInvariant);
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        foreach (var type in AllowedContentTypes ?? new List<string>())
+        {
+            if (!type.IsNullOrWhiteSpace() && !ContentTypePattern.IsMatch(type.Trim()))
+            {
+                yield return new ValidationResult(
+                    $"'{type}' is not a content type: type/subtype or type/*.",
+                    new[] { nameof(AllowedContentTypes) });
+            }
+        }
+    }
 
     /// <summary>
     /// The largest width a picture uploaded with the ticket is stored at, in pixels; <c>null</c> leaves it to the

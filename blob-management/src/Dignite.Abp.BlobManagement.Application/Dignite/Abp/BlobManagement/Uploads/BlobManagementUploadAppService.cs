@@ -3,7 +3,6 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Dignite.Abp.BlobManagement.Files;
 using Dignite.Abp.BlobManagement.Tickets;
-using Dignite.Abp.BlobStoring.Pipeline;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
 using Volo.Abp.Content;
@@ -20,7 +19,8 @@ namespace Dignite.Abp.BlobManagement.Uploads;
 /// anonymous principal, in the ticket's tenant).
 /// <para>
 /// The file is stored as any file kept by id is (<see cref="FileDescriptorManager.CreateFileAsync"/>): the container's
-/// pipeline contributors run, the tenant's allocation is checked. It is pending until its
+/// pipeline contributors run, with the ticket's size and types narrowing the container's, and the tenant's allocation
+/// is checked. It is pending until its
 /// business system confirms it. A ticket stores one file: its file's id is given, and a second upload collides with the
 /// first one's row - a soft-deleted one included - and is refused before anything is stored; two at the same moment
 /// are settled by the primary key, and the loser's bytes are removed again. Once that file is deleted for good - by its
@@ -39,21 +39,17 @@ public class BlobManagementUploadAppService : BlobManagementAppService, IBlobMan
 
     protected IFileDescriptorRepository FileRepository { get; }
 
-    protected IMimeTypeDetector MimeTypeDetector { get; }
-
     protected ICurrentPrincipalAccessor PrincipalAccessor { get; }
 
     public BlobManagementUploadAppService(
         BlobManagementTicketProtector ticketProtector,
         FileDescriptorManager fileDescriptorManager,
         IFileDescriptorRepository fileRepository,
-        IMimeTypeDetector mimeTypeDetector,
         ICurrentPrincipalAccessor principalAccessor)
     {
         TicketProtector = ticketProtector;
         FileDescriptorManager = fileDescriptorManager;
         FileRepository = fileRepository;
-        MimeTypeDetector = mimeTypeDetector;
         PrincipalAccessor = principalAccessor;
     }
 
@@ -86,22 +82,11 @@ public class BlobManagementUploadAppService : BlobManagementAppService, IBlobMan
             var name = !content.FileName.IsNullOrWhiteSpace() ? content.FileName!.Trim() : "file";
             CheckNameLength(name, nameof(IRemoteStreamContent.FileName));
 
-            // Capped at the ticket's size whatever the request said its length was. A form file ASP.NET Core buffered is
-            // seekable already and used as it is; a raw body is copied once, and the copy is this method's to dispose.
-            var body = content.GetStream();
-            var buffer = await BlobStreamBuffering.EnsureSeekableAsync(body, upload.MaxSize, default);
-            await using var ownedCopy = ReferenceEquals(buffer, body) ? null : buffer;
-            var contentType = await MimeTypeDetector.DetectAsync(buffer, name);
-            if (!upload.Allows(contentType))
-            {
-                throw new BusinessException(BlobStoringPipelineErrorCodes.ContentTypeNotAllowed)
-                    .WithData("ContentType", contentType);
-            }
-
+            // Held to the ticket's size and types by the save itself, whatever the request said its length was.
             var stored = await FileDescriptorManager.CreateFileAsync(
                 upload.ContainerName,
                 name,
-                buffer,
+                content.GetStream(),
                 new CreateFileArgs
                 {
                     Id = upload.FileId,
@@ -111,7 +96,9 @@ public class BlobManagementUploadAppService : BlobManagementAppService, IBlobMan
                     ClientId = upload.ClientId,
                     ExpectedSha256 = sha256,
                     ImageMaxWidth = upload.ImageMaxWidth,
-                    ImageMaxHeight = upload.ImageMaxHeight
+                    ImageMaxHeight = upload.ImageMaxHeight,
+                    MaxSize = upload.MaxSize,
+                    AllowedContentTypes = upload.AllowedContentTypes
                 });
 
             await unitOfWork.CompleteAsync();

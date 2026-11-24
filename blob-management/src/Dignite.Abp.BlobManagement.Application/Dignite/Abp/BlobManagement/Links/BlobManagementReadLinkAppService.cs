@@ -64,24 +64,14 @@ public class BlobManagementReadLinkAppService : BlobManagementAppService, IBlobM
             var result = new BlobManagementReadLinkResult
             {
                 ExpirationTime = expiration.UtcDateTime,
-                File = new BlobManagementPublicFileDto
-                {
-                    Name = file.Name,
-                    MimeType = file.MimeType,
-                    Size = file.Size,
-                    ContentId = file.BlobName,
-                    LastModified = file.CreationTime,
-                    EntityTag = file.BlobName.Replace("\"", string.Empty).Replace("\\", string.Empty)
-                }
+                File = MapReadFile(file, file.Name)
             };
 
-            if (request != null &&
-                (request.IfNoneMatchAny ||
-                 request.IfNoneMatch.Any(tag => string.Equals(tag, result.File.EntityTag, StringComparison.Ordinal))))
+            if (IsNotModified(result.File.EntityTag, request))
             {
                 result.NotModified = true;
             }
-            else if (request?.HeadersOnly != true)
+            else if (!request.HeadersOnly)
             {
                 var stream = await FileDescriptorManager.GetStreamOrNullAsync(file)
                              ?? throw new EntityNotFoundException(typeof(FileDescriptor), file.Id);

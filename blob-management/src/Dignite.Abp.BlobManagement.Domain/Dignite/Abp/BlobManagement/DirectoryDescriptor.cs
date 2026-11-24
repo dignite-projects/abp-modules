@@ -56,9 +56,9 @@ public class DirectoryDescriptor : FullAuditedAggregateRoot<Guid>, IMultiTenant
 
     /// <summary>
     /// The ids from the top of the tree down to and including this directory, each as <c>Guid.ToString("N")</c>, joined
-    /// by <see cref="DirectoryDescriptorConsts.PathSeparator"/>. A check that a permission on a directory reaches below it
-    /// takes the ancestors from here instead of reading them one level at a time, and a subtree is the directories whose
-    /// path starts with this one's plus the separator.
+    /// by <see cref="DirectoryDescriptorConsts.PathSeparator"/>. A subtree is the directories whose path starts with this
+    /// one's plus the separator: a move rewrites it in one pass, and a check against moving a directory into itself and
+    /// the depth limit read it without walking the tree.
     /// <para>
     /// Ids, not per-level counters like ABP's <c>OrganizationUnit.Code</c>: a counter is assigned check-then-act, so two
     /// simultaneous creates can get the same one. An id path is unique by construction.
@@ -119,19 +119,6 @@ public class DirectoryDescriptor : FullAuditedAggregateRoot<Guid>, IMultiTenant
     public virtual int GetDepth()
     {
         return GetDepth(Path);
-    }
-
-    /// <summary>The ids of the directories above this one, nearest first (the parent, then its parent, up to the top).</summary>
-    public virtual List<Guid> GetAncestorIds()
-    {
-        var segments = Path.Split(DirectoryDescriptorConsts.PathSeparator);
-        var ids = new List<Guid>(segments.Length - 1);
-        for (var i = segments.Length - 2; i >= 0; i--)
-        {
-            ids.Add(Guid.ParseExact(segments[i], "N"));
-        }
-
-        return ids;
     }
 
     /// <summary>Whether this directory is <paramref name="directory"/> or somewhere below it.</summary>

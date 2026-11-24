@@ -94,18 +94,7 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
         BlobManagementPublicReadInput input,
         BlobManagementPublicReadRequest request)
     {
-        var result = new BlobManagementPublicReadResult
-        {
-            File = new BlobManagementPublicFileDto
-            {
-                Name = name,
-                MimeType = file.MimeType,
-                Size = file.Size,
-                ContentId = file.BlobName,
-                LastModified = file.CreationTime,
-                EntityTag = CreateEntityTag(file, input)
-            }
-        };
+        var result = new BlobManagementPublicReadResult { File = MapReadFile(file, name, GetEntityTagSuffix(input)) };
 
         if (IsNotModified(result.File.EntityTag, request))
         {
@@ -114,7 +103,7 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
             return result;
         }
 
-        if (request?.HeadersOnly == true)
+        if (request.HeadersOnly)
         {
             // The information without the bytes: nothing is read from storage, nothing is rendered.
             return result;
@@ -124,35 +113,14 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
         return result.Content == null ? null : result;
     }
 
-    /// <summary>
-    /// The opaque value of the entity tag of <paramref name="file"/> read at <paramref name="input"/>'s size: the
-    /// physical BLOB name, which an overwrite changes, plus <c>-{W}x{H}</c> when a size is asked. Quoted-string
-    /// content may not contain <c>"</c> or <c>\</c>; a BLOB name is generated, but they are removed anyway.
-    /// </summary>
-    protected virtual string CreateEntityTag(FileDescriptor file, BlobManagementPublicReadInput? input)
+    /// <summary>What a rendition adds to the entity tag of the file: <c>-{W}x{H}</c> when a size is asked.</summary>
+    protected virtual string GetEntityTagSuffix(BlobManagementPublicReadInput input)
     {
-        var width = input?.Width ?? 0;
-        var height = input?.Height ?? 0;
-        var size = width > 0 || height > 0
+        var width = input.Width ?? 0;
+        var height = input.Height ?? 0;
+        return width > 0 || height > 0
             ? "-" + width.ToString(CultureInfo.InvariantCulture) + "x" + height.ToString(CultureInfo.InvariantCulture)
             : string.Empty;
-
-        return (file.BlobName + size).Replace("\"", string.Empty).Replace("\\", string.Empty);
-    }
-
-    /// <summary>
-    /// Weak comparison, as <c>If-None-Match</c> uses: <c>*</c> matches any file, and a tag matches when its opaque
-    /// value is the same (the caller has already dropped a <c>W/</c> prefix).
-    /// </summary>
-    protected virtual bool IsNotModified(string entityTag, BlobManagementPublicReadRequest? request)
-    {
-        if (request == null)
-        {
-            return false;
-        }
-
-        return request.IfNoneMatchAny ||
-               (request.IfNoneMatch?.Any(tag => string.Equals(tag, entityTag, StringComparison.Ordinal)) ?? false);
     }
 
     /// <summary>
@@ -182,31 +150,31 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
             }
 
             var content = await TryResizeAsync(bytes, file.MimeType, width, height) ?? bytes;
-            return new RemoteStreamContent(new MemoryStream(content, writable: false), FileName(name), file.MimeType, content.LongLength);
+            return new RemoteStreamContent(new MemoryStream(content, writable: false), name, file.MimeType, content.LongLength);
         }
 
-        return new RemoteStreamContent(stream, FileName(name), file.MimeType, file.Size);
+        return new RemoteStreamContent(stream, name, file.MimeType, file.Size);
     }
 
     /// <summary>
     /// A width or height asked for (above 0) must be one of the container's public sizes and no larger
     /// than <see cref="BlobManagementPublicUrl.MaxDimension"/>; no size asked is always fine.
     /// </summary>
-    protected virtual void CheckSize(string containerName, BlobManagementPublicReadInput? input)
+    protected virtual void CheckSize(string containerName, BlobManagementPublicReadInput input)
     {
-        if (!(input?.Width > 0) && !(input?.Height > 0))
+        if (!(input.Width > 0) && !(input.Height > 0))
         {
             return;
         }
 
         var allowed = GetAllowedSizes(containerName);
         var errors = new List<ValidationResult>();
-        if (input?.Width > 0 && !IsAllowedSize(allowed, input.Width.Value))
+        if (input.Width > 0 && !IsAllowedSize(allowed, input.Width.Value))
         {
             errors.Add(new ValidationResult(SizeMessage(allowed, nameof(input.Width)), new[] { nameof(input.Width) }));
         }
 
-        if (input?.Height > 0 && !IsAllowedSize(allowed, input.Height.Value))
+        if (input.Height > 0 && !IsAllowedSize(allowed, input.Height.Value))
         {
             errors.Add(new ValidationResult(SizeMessage(allowed, nameof(input.Height)), new[] { nameof(input.Height) }));
         }
@@ -246,7 +214,9 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
     /// </summary>
     protected virtual async Task<(FileDescriptor File, string Name)> GetPublicFileAsync(string containerName, string blobName)
     {
-        try
+        // A container Blob Management does not manage is as not found as a missing file: the endpoint tells nothing
+        // about the host.
+        if (IsManagedContainer(containerName))
         {
             var saved = await FileDescriptorManager.FindBlobAsync(containerName, blobName);
             if (saved is { IsPublic: true })
@@ -259,10 +229,6 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
             {
                 return (kept, kept.Name);
             }
-        }
-        catch (BusinessException exception) when (exception.Code == BlobManagementErrorCodes.ContainerNotFound)
-        {
-            // Not a Blob Management container: as not found as a missing file, so the endpoint tells nothing about the host.
         }
 
         throw new EntityNotFoundException(typeof(FileDescriptor), $"{containerName}/{blobName}");
@@ -319,11 +285,5 @@ public class BlobManagementPublicAppService : BlobManagementAppService, IBlobMan
             mimeType);
 
         return result.State == ImageProcessState.Done ? result.Result : null;
-    }
-
-    protected virtual string FileName(string name)
-    {
-        var slash = name.LastIndexOf('/');
-        return slash < 0 ? name : name.Substring(slash + 1);
     }
 }

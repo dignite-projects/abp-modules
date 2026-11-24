@@ -24,9 +24,12 @@ public class BlobManagementDirectoryAppService : BlobManagementAppService, IBlob
 {
     protected DirectoryManager DirectoryManager { get; }
 
-    public BlobManagementDirectoryAppService(DirectoryManager directoryManager)
+    protected IDirectoryDescriptorRepository DirectoryRepository { get; }
+
+    public BlobManagementDirectoryAppService(DirectoryManager directoryManager, IDirectoryDescriptorRepository directoryRepository)
     {
         DirectoryManager = directoryManager;
+        DirectoryRepository = directoryRepository;
     }
 
     public virtual async Task<BlobManagementDirectoryDto> GetAsync(Guid id)
@@ -46,7 +49,7 @@ public class BlobManagementDirectoryAppService : BlobManagementAppService, IBlob
 
         if (input.ParentId.HasValue)
         {
-            await GetDirectoryAsync(input.ParentId.Value, input.ContainerName);
+            await DirectoryManager.GetInContainerAsync(input.ParentId.Value, input.ContainerName);
         }
 
         var children = await DirectoryRepository.GetChildrenAsync(input.ContainerName, input.ParentId);
@@ -64,11 +67,6 @@ public class BlobManagementDirectoryAppService : BlobManagementAppService, IBlob
         GetUserId();
         DirectoryManager.CheckDirectoriesAllowed(input.ContainerName);
         Authorize((await GetAccessAsync(input.ContainerName)).CreateDirectories);
-
-        if (input.ParentId.HasValue)
-        {
-            await GetDirectoryAsync(input.ParentId.Value, input.ContainerName);
-        }
 
         var directory = await DirectoryManager.CreateAsync(input.ContainerName, input.Name.Trim(), input.ParentId);
         return Map(directory, hasChildren: false);
@@ -90,11 +88,6 @@ public class BlobManagementDirectoryAppService : BlobManagementAppService, IBlob
         var directory = await GetDirectoryAsync(id);
         Authorize((await GetAccessAsync(directory.ContainerName)).UpdateDirectories);
 
-        if (input.ParentId.HasValue && input.ParentId != directory.ParentId)
-        {
-            await GetDirectoryAsync(input.ParentId.Value, directory.ContainerName);
-        }
-
         await DirectoryManager.MoveAsync(directory, input.ParentId, input.Order);
         return Map(directory, await DirectoryRepository.HasChildrenAsync(directory.Id));
     }
@@ -112,11 +105,21 @@ public class BlobManagementDirectoryAppService : BlobManagementAppService, IBlob
         await DirectoryManager.DeleteAsync(directory);
     }
 
-    /// <summary>A directory of a managed container that allows directories; any other is not found.</summary>
+    /// <summary>
+    /// A directory of a managed container that allows directories; any other is not found, so nothing is told about
+    /// directories elsewhere.
+    /// </summary>
     protected virtual async Task<DirectoryDescriptor> GetDirectoryAsync(Guid id)
     {
-        var directory = await DirectoryRepository.FindAsync(id) ?? throw new EntityNotFoundException(typeof(DirectoryDescriptor), id);
-        return await GetDirectoryAsync(id, directory.ContainerName);
+        var directory = await DirectoryRepository.FindAsync(id);
+        if (directory == null ||
+            !IsManagedContainer(directory.ContainerName) ||
+            !GetContainer(directory.ContainerName).AllowDirectories)
+        {
+            throw new EntityNotFoundException(typeof(DirectoryDescriptor), id);
+        }
+
+        return directory;
     }
 
     /// <summary>What the caller may do with the directories of <paramref name="containerName"/>.</summary>

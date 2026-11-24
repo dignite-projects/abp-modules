@@ -41,19 +41,9 @@ public class BlobManagementContainerAppService : BlobManagementAppService, IBlob
     {
         GetUserId();
 
-        // ConfigureAll is how ABP enumerates the configured containers; nothing is changed here.
-        var names = new List<string>();
-        BlobStoringOptions.Containers.ConfigureAll((name, configuration) =>
-        {
-            if (configuration.GetBlobManagementContainerConfiguration().IsManaged)
-            {
-                names.Add(name);
-            }
-        });
-
         var context = await AccessService.BeginAsync();
         var containers = new List<BlobManagementContainerDto>();
-        foreach (var name in names.OrderBy(name => name, StringComparer.Ordinal))
+        foreach (var name in BlobStoringOptions.Containers.GetManagedContainerNames())
         {
             if (await AccessService.HasContainerAsync(context, name))
             {
@@ -66,7 +56,6 @@ public class BlobManagementContainerAppService : BlobManagementAppService, IBlob
 
     public virtual async Task<BlobManagementContainerDto> GetAsync(string name)
     {
-        GetContainer(name);
         return await MapAsync(await AccessService.BeginAsync(), name);
     }
 

@@ -184,12 +184,13 @@ public abstract class BlobManagementUploadTickets_Tests<TStartupModule> : BlobMa
     {
         await Should.ThrowAsync<BusinessException>(() =>
             _files.CreateUploadTicketAsync(new CreateBlobManagementUploadTicketInput { ContainerName = BlobManagementTestContainers.NotManaged }));
-        await Should.ThrowAsync<EntityNotFoundException>(() =>
-            _files.CreateUploadTicketAsync(new CreateBlobManagementUploadTicketInput
-            {
-                ContainerName = BlobManagementTestContainers.Documents,
-                DirectoryId = Guid.NewGuid()
-            }));
+        (await Should.ThrowAsync<BusinessException>(() =>
+                _files.CreateUploadTicketAsync(new CreateBlobManagementUploadTicketInput
+                {
+                    ContainerName = BlobManagementTestContainers.Documents,
+                    DirectoryId = Guid.NewGuid()
+                })))
+            .Code.ShouldBe(BlobManagementErrorCodes.DirectoryNotFound);
     }
 
     [Fact]

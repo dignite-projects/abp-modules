@@ -56,17 +56,6 @@ public class MongoDirectoryDescriptorRepository
         return orders.Count == 0 ? 0 : orders[0];
     }
 
-    public virtual async Task<List<DirectoryDescriptor>> GetListByIdsAsync(
-        IEnumerable<Guid> ids,
-        CancellationToken cancellationToken = default)
-    {
-        var token = GetCancellationToken(cancellationToken);
-        var idList = ids.Distinct().ToList();
-        return await (await GetQueryableAsync(token))
-            .Where(d => idList.Contains(d.Id))
-            .ToListAsync(token);
-    }
-
     public virtual async Task<List<DirectoryDescriptor>> GetDescendantsAsync(
         string path,
         CancellationToken cancellationToken = default)
