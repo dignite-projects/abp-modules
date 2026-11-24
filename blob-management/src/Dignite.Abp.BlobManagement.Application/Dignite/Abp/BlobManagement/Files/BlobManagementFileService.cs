@@ -8,6 +8,7 @@ using Dignite.Abp.BlobManagement.Uploads;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Content;
+using Volo.Abp.Domain.Entities;
 using Volo.Abp.Features;
 
 namespace Dignite.Abp.BlobManagement.Files;
@@ -89,7 +90,7 @@ public class BlobManagementFileService : BlobManagementFileServiceBase, IBlobMan
 
     public virtual async Task<BlobManagementReadLinkDto> CreateReadLinkAsync(Guid id, CreateBlobManagementReadLinkInput input)
     {
-        return await ReadLinkIssuer.IssueAsync(await GetManagedFileAsync(id), input?.LifetimeInSeconds);
+        return await ReadLinkIssuer.IssueAsync(await GetManagedFileAsync(id), input.LifetimeInSeconds);
     }
 
     public virtual async Task<ListResultDto<BlobManagementReadLinkDto>> CreateReadLinksAsync(CreateBlobManagementReadLinksInput input)
@@ -119,7 +120,7 @@ public class BlobManagementFileService : BlobManagementFileServiceBase, IBlobMan
     public virtual async Task<BlobManagementFileDto> RestoreAsync(Guid id)
     {
         var file = await FindManagedFileAsync(id, includeDeleted: true)
-                   ?? throw new Volo.Abp.Domain.Entities.EntityNotFoundException(typeof(FileDescriptor), id);
+                   ?? throw new EntityNotFoundException(typeof(FileDescriptor), id);
         return Map(await FileDescriptorManager.RestoreAsync(file));
     }
 

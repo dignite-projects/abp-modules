@@ -41,7 +41,7 @@ public abstract class BlobManagementFileReadController : BlobManagementControlle
     {
         var info = result.File;
         var entityTag = new EntityTagHeaderValue("\"" + info.EntityTag + "\"");
-        var lastModified = GetLastModified(info);
+        var lastModified = new DateTimeOffset(info.LastModified);
 
         var headers = Response.GetTypedHeaders();
         headers.ETag = entityTag;
@@ -68,13 +68,7 @@ public abstract class BlobManagementFileReadController : BlobManagementControlle
             return new EmptyResult();
         }
 
-        if (result.Content == null)
-        {
-            // Not what the service promises for a GET that is not 304; no body is better than a wrong one.
-            return NotFound();
-        }
-
-        return new FileStreamResult(result.Content.GetStream(), info.MimeType)
+        return new FileStreamResult(result.Content!.GetStream(), info.MimeType)
         {
             EntityTag = entityTag,
             LastModified = lastModified,
@@ -114,15 +108,6 @@ public abstract class BlobManagementFileReadController : BlobManagementControlle
         }
 
         return request;
-    }
-
-    /// <summary>
-    /// When the bytes were stored, for <c>Last-Modified</c>; <c>null</c> when the read does not say. A date without a
-    /// kind is taken as local time, as ABP's clock writes it by default.
-    /// </summary>
-    protected virtual DateTimeOffset? GetLastModified(BlobManagementPublicFileDto info)
-    {
-        return info.LastModified == default ? null : new DateTimeOffset(info.LastModified);
     }
 
     protected virtual void SetContentDisposition(string mimeType, string? fileName)

@@ -4,7 +4,6 @@ using Dignite.Abp.BlobManagement.Files;
 using Dignite.Abp.BlobManagement.Tickets;
 using Dignite.Abp.BlobStoring.Pipeline;
 using Microsoft.Extensions.Options;
-using Volo.Abp.BlobStoring;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Guids;
 using Volo.Abp.MultiTenancy;
@@ -22,8 +21,6 @@ public class BlobManagementUploadTicketIssuer : ITransientDependency
 {
     protected BlobManagementTicketProtector TicketProtector { get; }
 
-    protected IBlobContainerConfigurationProvider ContainerConfigurationProvider { get; }
-
     protected BlobManagementUploadOptions Options { get; }
 
     protected IGuidGenerator GuidGenerator { get; }
@@ -36,7 +33,6 @@ public class BlobManagementUploadTicketIssuer : ITransientDependency
 
     public BlobManagementUploadTicketIssuer(
         BlobManagementTicketProtector ticketProtector,
-        IBlobContainerConfigurationProvider containerConfigurationProvider,
         IOptions<BlobManagementUploadOptions> options,
         IGuidGenerator guidGenerator,
         ICurrentTenant currentTenant,
@@ -44,7 +40,6 @@ public class BlobManagementUploadTicketIssuer : ITransientDependency
         FileDescriptorManager fileDescriptorManager)
     {
         TicketProtector = ticketProtector;
-        ContainerConfigurationProvider = containerConfigurationProvider;
         Options = options.Value;
         GuidGenerator = guidGenerator;
         CurrentTenant = currentTenant;
@@ -55,16 +50,21 @@ public class BlobManagementUploadTicketIssuer : ITransientDependency
     /// <summary>
     /// The ticket for one file in the place <paramref name="input"/> names, in the current tenant, recording
     /// <paramref name="clientId"/> as the writer of the file it brings in when a remote client asked for it. Its size
-    /// is the input's, never more than the container takes; its lifetime the input's, never more than
-    /// <see cref="BlobManagementUploadOptions.MaxTicketLifetime"/>; its user the input's, else the current one. A box
-    /// for its pictures is checked now, as the upload will apply it (<see cref="FileDescriptorManager.GetSaveConfiguration"/>):
-    /// one the container cannot take is refused before a ticket is signed, not when the browser brings the file.
+    /// is the input's, never more than the container takes; its types those both allow; its lifetime the input's, never
+    /// more than <see cref="BlobManagementUploadOptions.MaxTicketLifetime"/>; its user the input's, else the current one.
+    /// The limits are worked out now as the upload will apply them (<see cref="FileDescriptorManager.GetSaveConfiguration"/>):
+    /// a box or types the container cannot take are refused before a ticket is signed, not when the browser brings the file.
     /// </summary>
     public virtual BlobManagementUploadTicketDto Issue(CreateBlobManagementUploadTicketInput input, string? clientId)
     {
-        FileDescriptorManager.GetSaveConfiguration(input.ContainerName, input.ImageMaxWidth, input.ImageMaxHeight);
+        var allowedContentTypes = (input.AllowedContentTypes ?? new())
+            .Where(type => !type.IsNullOrWhiteSpace())
+            .Select(type => type.Trim().ToLowerInvariant())
+            .Distinct()
+            .ToList();
+        var configuration = FileDescriptorManager.GetSaveConfiguration(
+            input.ContainerName, input.ImageMaxWidth, input.ImageMaxHeight, input.MaxSize, allowedContentTypes);
 
-        var containerMax = BlobStreamBuffering.GetMaxBufferedBytes(ContainerConfigurationProvider.Get(input.ContainerName));
         var lifetime = input.LifetimeInSeconds is > 0
             ? TimeSpan.FromSeconds(input.LifetimeInSeconds.Value)
             : Options.TicketLifetime;
@@ -81,12 +81,8 @@ public class BlobManagementUploadTicketIssuer : ITransientDependency
             FileId = GuidGenerator.Create(),
             UploaderId = input.UploaderId ?? CurrentUser.Id,
             ClientId = clientId,
-            MaxSize = input.MaxSize is > 0 ? Math.Min(input.MaxSize.Value, containerMax) : containerMax,
-            AllowedContentTypes = (input.AllowedContentTypes ?? new())
-                .Where(type => !type.IsNullOrWhiteSpace())
-                .Select(type => type.Trim().ToLowerInvariant())
-                .Distinct()
-                .ToList(),
+            MaxSize = BlobStreamBuffering.GetMaxBufferedBytes(configuration),
+            AllowedContentTypes = allowedContentTypes,
             ImageMaxWidth = input.ImageMaxWidth,
             ImageMaxHeight = input.ImageMaxHeight
         };

@@ -14,8 +14,8 @@ namespace Dignite.Abp.BlobManagement.Imports;
 /// Whoever stored the files wrote the path - an application that migrates a file library of its own in - and the
 /// operator names the property: Blob Management knows nothing of the writer.
 /// <para>
-/// Repeatable: a directory is looked up by its name key before it is created (so an existing one is used, whatever its
-/// case, and a second run creates nothing the first created), and only files at the top of the container are read, so a
+/// Repeatable: a directory is looked up by its name, as written, under its parent before it is created (so an existing
+/// one is used, and a second run creates nothing the first created), and only files at the top of the container are read, so a
 /// file filed before - by an import or by its business system - is left where it is. A dry run reports what an import would do
 /// and writes nothing; it is the default.
 /// </para>
@@ -142,8 +142,8 @@ public class DirectoryPathImporter : DomainService
         string description,
         CancellationToken cancellationToken)
     {
-        var nameKey = (parentId?.ToString("N") ?? "-") + ":" + name;
-        if (directories.TryGetValue(nameKey, out var known))
+        var key = (parentId?.ToString("N") ?? "-") + ":" + name;
+        if (directories.TryGetValue(key, out var known))
         {
             return known;
         }
@@ -167,7 +167,7 @@ public class DirectoryPathImporter : DomainService
             report.DirectoriesCreated.Add(description);
         }
 
-        directories[nameKey] = id;
+        directories[key] = id;
         return id;
     }
 

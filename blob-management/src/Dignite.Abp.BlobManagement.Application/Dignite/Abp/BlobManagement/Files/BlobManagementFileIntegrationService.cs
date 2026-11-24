@@ -107,7 +107,7 @@ public class BlobManagementFileIntegrationService : BlobManagementFileServiceBas
 
     public virtual async Task<BlobManagementReadLinkDto> CreateReadLinkAsync(Guid id, CreateBlobManagementReadLinkInput input)
     {
-        return await ReadLinkIssuer.IssueAsync(await GetFileForClientAsync(id), input?.LifetimeInSeconds);
+        return await ReadLinkIssuer.IssueAsync(await GetFileForClientAsync(id), input.LifetimeInSeconds);
     }
 
     public virtual async Task<ListResultDto<BlobManagementReadLinkDto>> CreateReadLinksAsync(CreateBlobManagementReadLinksInput input)

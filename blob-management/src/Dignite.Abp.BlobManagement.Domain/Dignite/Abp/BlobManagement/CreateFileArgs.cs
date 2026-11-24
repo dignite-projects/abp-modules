@@ -54,6 +54,18 @@ public class CreateFileArgs
     public int? ImageMaxHeight { get; set; }
 
     /// <summary>
+    /// The largest upload, in bytes - an upload ticket's; <c>null</c> leaves it to the container, and more than the
+    /// container takes changes nothing.
+    /// </summary>
+    public long? MaxSize { get; set; }
+
+    /// <summary>
+    /// The types the upload may be (<c>image/png</c>, <c>image/*</c>) - an upload ticket's; empty leaves them to the
+    /// container, whose own still apply: the save takes what both allow.
+    /// </summary>
+    public List<string> AllowedContentTypes { get; set; } = new();
+
+    /// <summary>
     /// Fields of its own the application keeps on the file - the descriptor's extra properties - written with the row,
     /// so it is inserted once: the path a file had in the library an application migrates in, for one, which
     /// <c>DirectoryPathImporter</c> files it by. Blob Management reads none of them itself.

@@ -95,10 +95,9 @@ public class BlobManagementBlobProvider : BlobProviderBase, ITransientDependency
         }
     }
 
+    /// <summary>The managed container the bytes go to, which <c>UseBlobManagement</c> required.</summary>
     protected virtual string GetBlobManagementContainer(BlobProviderArgs args)
     {
-        var configuration = args.Configuration.GetBlobManagementConfiguration();
-        configuration.Validate();
-        return configuration.BlobManagementContainer;
+        return args.Configuration.GetBlobManagementConfiguration().BlobManagementContainer;
     }
 }

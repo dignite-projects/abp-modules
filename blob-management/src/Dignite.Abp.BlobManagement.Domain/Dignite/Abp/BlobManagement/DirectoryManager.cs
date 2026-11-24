@@ -182,23 +182,23 @@ public class DirectoryManager : DomainService
     }
 
     /// <summary>
-    /// The directories above <paramref name="directory"/>, nearest first, ending at the top of its tree. They are the
-    /// ids in its <see cref="DirectoryDescriptor.Path"/>, read in one query; one that does not exist is simply absent.
+    /// Fails unless <paramref name="directoryId"/> may hold a file of <paramref name="containerName"/> - or be the parent
+    /// of a directory there: a directory of that container, which allows directories
+    /// (<see cref="CheckDirectoriesAllowed"/>, <see cref="GetInContainerAsync"/>). <c>null</c>, the top of the container,
+    /// always may.
     /// </summary>
-    public virtual async Task<List<DirectoryDescriptor>> GetAncestorsAsync(
-        DirectoryDescriptor directory,
+    public virtual async Task CheckPlaceAsync(
+        string containerName,
+        Guid? directoryId,
         CancellationToken cancellationToken = default)
     {
-        Check.NotNull(directory, nameof(directory));
-
-        var ancestorIds = directory.GetAncestorIds();
-        if (ancestorIds.Count == 0)
+        if (!directoryId.HasValue)
         {
-            return new List<DirectoryDescriptor>();
+            return;
         }
 
-        var ancestors = (await DirectoryRepository.GetListByIdsAsync(ancestorIds, cancellationToken)).ToDictionary(d => d.Id);
-        return ancestorIds.Where(ancestors.ContainsKey).Select(id => ancestors[id]).ToList();
+        CheckDirectoriesAllowed(containerName);
+        await GetInContainerAsync(directoryId.Value, containerName, cancellationToken);
     }
 
     /// <summary>

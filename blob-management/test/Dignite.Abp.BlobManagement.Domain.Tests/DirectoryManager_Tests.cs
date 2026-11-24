@@ -41,7 +41,6 @@ public abstract class DirectoryManager_Tests<TStartupModule> : BlobManagementDom
         docs.ParentId.ShouldBeNull();
         docs.GetDepth().ShouldBe(1);
         year.Path.ShouldBe(docs.Id.ToString("N") + "/" + year.Id.ToString("N"));
-        year.GetAncestorIds().ShouldBe(new[] { docs.Id });
         year.IsAtOrBelow(docs).ShouldBeTrue();
         other.Order.ShouldBeGreaterThan(docs.Order);
 
@@ -53,8 +52,6 @@ public abstract class DirectoryManager_Tests<TStartupModule> : BlobManagementDom
                 .Select(d => d.Id).ShouldBe(new[] { year.Id });
             (await _directoryRepository.GetIdsWithChildrenAsync(new[] { docs.Id, other.Id })).ShouldBe(new[] { docs.Id });
             (await _directoryRepository.HasChildrenAsync(other.Id)).ShouldBeFalse();
-            (await _directoryManager.GetAncestorsAsync(await _directoryRepository.GetAsync(year.Id)))
-                .Select(d => d.Id).ShouldBe(new[] { docs.Id });
 
             // The same names live in another container, apart from these.
             (await _directoryRepository.GetChildrenAsync(BlobManagementTestContainers.Archive, null)).ShouldBeEmpty();

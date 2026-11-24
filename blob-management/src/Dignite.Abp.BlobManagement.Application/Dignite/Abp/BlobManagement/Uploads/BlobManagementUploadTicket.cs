@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Dignite.Abp.BlobManagement.Uploads;
 
@@ -33,7 +32,7 @@ public class BlobManagementUploadTicket
     /// <summary>The largest file the ticket takes, in bytes.</summary>
     public long MaxSize { get; set; }
 
-    /// <summary>The content types it takes (<c>image/png</c>, <c>image/*</c>); empty takes any.</summary>
+    /// <summary>The content types it takes (<c>image/png</c>, <c>image/*</c>); empty takes what the container takes.</summary>
     public List<string> AllowedContentTypes { get; set; } = new();
 
     /// <summary>The largest width a picture is stored at, in pixels; <c>null</c> leaves it to the container.</summary>
@@ -41,18 +40,4 @@ public class BlobManagementUploadTicket
 
     /// <summary>The largest height a picture is stored at, in pixels; <c>null</c> leaves it to the container.</summary>
     public int? ImageMaxHeight { get; set; }
-
-    /// <summary>Whether <paramref name="contentType"/>, detected from the bytes, is one the ticket takes.</summary>
-    public virtual bool Allows(string contentType)
-    {
-        if (AllowedContentTypes.Count == 0)
-        {
-            return true;
-        }
-
-        return AllowedContentTypes.Any(allowed =>
-            allowed.EndsWith("/*", StringComparison.Ordinal)
-                ? contentType.StartsWith(allowed[..^1], StringComparison.OrdinalIgnoreCase)
-                : string.Equals(allowed, contentType, StringComparison.OrdinalIgnoreCase));
-    }
 }

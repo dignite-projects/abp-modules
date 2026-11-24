@@ -7,7 +7,9 @@ using Volo.Abp.Domain.Repositories;
 namespace Dignite.Abp.BlobManagement;
 
 /// <summary>
-/// The descriptors of the current tenant. A deleted descriptor is gone: there is no deleted row for a query to skip.
+/// The descriptors of the current tenant. Every query sees what ABP's filters let through: a file soft-deleted is left out
+/// unless the caller disables the filter - as <see cref="BlobManagementUsageManager"/> does for every usage query, since a
+/// soft-deleted file keeps its bytes.
 /// </summary>
 public interface IFileDescriptorRepository : IBasicRepository<FileDescriptor, Guid>
 {
