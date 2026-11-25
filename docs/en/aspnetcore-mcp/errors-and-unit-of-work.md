@@ -26,11 +26,42 @@ Any exception a tool throws becomes a `CallToolResult` with `isError: true` and 
 
 | Kind | Exception | Meaning |
 |---|---|---|
-| `validation` | `AbpValidationException` | The arguments are not valid; fix them and call again. |
+| `validation` | `AbpValidationException`, or arguments that do not fit the tool's parameters (see below) | The arguments are not valid; fix them and call again. |
 | `notFound` | `EntityNotFoundException` | The entity does not exist. |
 | `conflict` | A business exception (`IBusinessException`) | A business rule refused the call. |
 | `forbidden` | `AbpAuthorizationException` | The user lacks a permission; do not retry. |
 | `unknown` | Anything else | An internal error. |
+
+### Arguments That Do Not Fit the Tool
+
+A call whose arguments cannot be bound to the tool method's parameters (a required argument is missing, a value has the wrong type) is a `validation` error too, and `validationErrors` names the arguments. The [MCP specification](https://modelcontextprotocol.io/specification/2026-07-28/server/tools#error-handling) (since `2025-11-25`) makes input validation errors tool execution errors, so that the model sees them and calls again, and keeps protocol errors for requests that are malformed as a whole. The SDK itself answers a failed binding with "An error occurred invoking '*tool*'.", which names nothing.
+
+````json
+{
+  "error": {
+    "kind": "validation",
+    "message": "Your request is not valid!",
+    "validationErrors": [
+      { "message": "The 'templateName' argument is required.", "fields": [ "templateName" ] },
+      { "message": "The 'template' argument is not a parameter of this tool.", "fields": [ "template" ] }
+    ]
+  }
+}
+````
+
+The request is compared with the tool's input schema, and what is found is named in `fields` (a member of an argument by its path, such as `booking.guests[1].age`):
+
+| Problem | Message |
+|---|---|
+| A required argument is absent | The 'x' argument is required. |
+| An argument is not a parameter of the tool | The 'x' argument is not a parameter of this tool. |
+| A value has the wrong JSON type | The 'x' argument must be an integer. |
+| A value is outside the enum | The 'x' argument must be one of: Draft, Published. |
+| A string is not in the declared format (`uuid`, `date-time`, `date`, `time`, `duration`, `uri`) | The 'x' argument must be a GUID. |
+
+At most ten are named. Neither the value that was sent nor the text of the exception is repeated, since the former may be large or private and the latter carries .NET type names. When the comparison finds nothing to name (a constraint the schema check does not model), the call is still a `validation` error, with no field and the message "The arguments do not match the tool's input schema.".
+
+The comparison runs only after the binder has failed, and is never stricter than the binder: a number written as a string is accepted for a number, as the SDK's serializer options accept it, so such a call runs. The failure is recognized as the binder's by the exception (`JsonException`, or an `ArgumentException` with the parameter name `arguments`) and by where it was thrown, `Microsoft.Extensions.AI`, not by the type alone: a tool that throws either exception itself, such as one that reads a response that is not JSON, has a bug of its own and stays `unknown`.
 
 An exception whose type would be classified wrongly, typically a `UserFriendlyException` that means "not found", implements `IHasMcpToolErrorKind` to say which kind it is. The kinds are constants of the `McpToolErrorKinds` class.
 

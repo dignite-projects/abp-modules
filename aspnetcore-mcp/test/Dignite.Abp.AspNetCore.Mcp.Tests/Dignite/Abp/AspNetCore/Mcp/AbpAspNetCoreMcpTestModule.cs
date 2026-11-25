@@ -61,6 +61,7 @@ public class AbpAspNetCoreMcpTestModule : AbpModule
             .AddTools<TestTools>()
             .AddTools<TestUnitOfWorkTools>()
             .AddTools<TestJsonTools>()
+            .AddTools<TestArgumentTools>()
             .AddResources<TestResources>()
             .AddPrompts<TestPrompts>()
             .AddResourceListContributor<TestResourceListContributor>()

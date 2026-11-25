@@ -57,14 +57,20 @@ public static class McpToolErrorFilter
             // - OperationCanceledException: reporting a disconnected client as a "successful" response
             //   would return cleanly to the unit-of-work middleware, which then tries to complete on an
             //   already-cancelled token.
-            // - McpProtocolException: a protocol-level failure (an unknown tool, malformed arguments) that
-            //   the client's transport is meant to see as a JSON-RPC error, not a tool outcome.
+            // - McpProtocolException: a protocol-level failure (an unknown tool, a request that is malformed as
+            //   a whole) that the client's transport is meant to see as a JSON-RPC error, not a tool outcome.
+            //   Arguments that do not fit the tool are not that: the specification makes them a tool
+            //   execution error, which is what the catch below turns them into.
             // - InputRequiredException: not a failure at all - it is how a tool asks the client for more
             //   input mid-call (MRTR), and converting it would break that flow.
             catch (Exception exception) when (exception is not (OperationCanceledException or McpProtocolException or InputRequiredException))
             {
-                await LogAsync(exception, request.Services);
-                return Create(exception, request.Services);
+                // The binder's failure to match the arguments to the tool's parameters is the caller's
+                // mistake, not an internal error: it is reported as the validation error it is, naming the
+                // argument - see McpToolArgumentBindingFailure. The original stays as its inner exception.
+                var reported = McpToolArgumentBindingFailure.TryTranslate(exception, request) ?? exception;
+                await LogAsync(reported, request.Services);
+                return Create(reported, request.Services);
             }
         };
     }
