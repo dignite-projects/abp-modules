@@ -148,6 +148,30 @@ so it stays clear which part of the repository actually moved.
   GitHub Packages cannot overwrite a published version, so `preview.4` stays as it was published. The stable `@dignite/*`
   packages on npmjs are not rewritten and were not affected.
 
+#### aspnetcore-mcp
+
+- **A tool call whose arguments do not fit the tool is a `validation` error that names the argument, not "An internal
+  error occurred during your request!".** Calling `campus_issue_document` with `template` for `templateName` came back as
+  one sentence with no hint of what was missing; a client that adds the tool's schema to such an error (Claude Code does)
+  could recover, one that does not (ChatGPT, claude.ai) had nothing to correct the call with. `Microsoft.Extensions.AI` binds
+  and invokes a tool method in one call and throws an `ArgumentException` (parameter name `arguments`) for a missing
+  required argument and a `JsonException` for a value that cannot be read as its parameter's type; the SDK (2.3.0 and
+  `main`) answers either with "An error occurred invoking '*tool*'." and the error filter classified it `unknown`. The MCP
+  specification (`2025-11-25`, `2026-07-28`; SEP-1303) makes input validation errors tool execution errors (`isError: true`,
+  for the model to read) and keeps JSON-RPC protocol errors for requests malformed as a whole, so the filter now reports
+  the binder's exception as an `AbpValidationException`: `kind: "validation"`, ABP's "Your request is not valid!", and one
+  `validationErrors` entry per problem found by comparing the request with the tool's input schema, with the argument in
+  `fields` (`templateName` is required, `template` is not a parameter of the tool, `left` must be an integer, `id` must be a
+  GUID, `status` must be one of: Draft, Published, `booking.guests[1].age` must be an integer). The value that was sent and the
+  exception text are not repeated, and the call is logged as a warning, as an invalid request is over HTTP. The comparison
+  runs only after the binder has failed and is never stricter than the binder (a number written as a string still binds), so it
+  cannot refuse a call that would have run; when it finds nothing to name, the call is still a `validation` error saying only
+  that the arguments do not match the tool's input schema. The binder's exception is recognized by its type and by where it
+  was thrown (the first frame outside the platform's own assemblies is `Microsoft.Extensions.AI.Abstractions`): an
+  `ArgumentException` or a `JsonException` that a tool throws itself, whatever its parameter name, stays `unknown`. Resources
+  and prompts are not covered: the error filter wraps tool calls only. See
+  [Arguments That Do Not Fit the Tool](docs/en/aspnetcore-mcp/errors-and-unit-of-work.md#arguments-that-do-not-fit-the-tool).
+
 #### blob-storing
 
 - **The image resize contributor measures a photo as it is displayed.** It compared the box and the minimum with the
