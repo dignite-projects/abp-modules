@@ -32,7 +32,12 @@ public class TestUnitOfWorkTools : ITransientDependency
     {
         var unitOfWork = _unitOfWorkManager.Current ?? throw new InvalidOperationException("No unit of work.");
         _probe.Get(marker).IsTransactional = unitOfWork.Options.IsTransactional;
+        _probe.Get(marker).InsideAReservedUnitOfWork = HasReservedOuter(unitOfWork);
         unitOfWork.AddDatabaseApi("test-write-" + marker, new TestDatabaseApi(_probe.Get(marker), failOnSave));
+        if (unitOfWork.Options.IsTransactional)
+        {
+            unitOfWork.AddTransactionApi("test-transaction-" + marker, new TestTransactionApi(_probe.Get(marker)));
+        }
 
         if (failInTool)
         {
@@ -46,6 +51,20 @@ public class TestUnitOfWorkTools : ITransientDependency
     public virtual string FailUnexpected(string marker)
     {
         throw new InvalidOperationException("Unexpected failure " + marker);
+    }
+
+    private static bool HasReservedOuter(IUnitOfWork unitOfWork)
+    {
+        for (var outer = unitOfWork.Outer; outer != null; outer = outer.Outer)
+        {
+            // Still named after the reservation once begun (TryBeginReserved clears IsReserved, not the name).
+            if (outer.ReservationName == UnitOfWork.UnitOfWorkReservationName)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 
@@ -62,6 +81,60 @@ public class TestUnitOfWorkProbe : ISingletonDependency
         public bool Saved { get; set; }
 
         public bool RolledBack { get; set; }
+
+        public bool Committed { get; set; }
+
+        /// <summary>Whether the call's unit of work sits inside one the unit-of-work middleware reserved.</summary>
+        public bool InsideAReservedUnitOfWork { get; set; }
+    }
+}
+
+/// <summary>
+/// Lets a test hold a request open after its MCP response has been written - see the middleware in
+/// <see cref="AbpAspNetCoreMcpTestModule"/> - and release it once the client has read the result.
+/// </summary>
+public class TestResponseHold : ISingletonDependency
+{
+    public const string Header = "X-Test-Hold";
+
+    private readonly ConcurrentDictionary<string, TaskCompletionSource> _holds = new();
+
+    public Task WaitAsync(string key) => Get(key).Task.WaitAsync(TimeSpan.FromSeconds(10));
+
+    public void Release(string key) => Get(key).TrySetResult();
+
+    private TaskCompletionSource Get(string key) =>
+        _holds.GetOrAdd(key, _ => new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously));
+}
+
+/// <summary>
+/// Stands in for a database transaction: commits only with a live token, as a real one fails when the
+/// request it runs for has been aborted.
+/// </summary>
+public class TestTransactionApi : ITransactionApi, ISupportsRollback
+{
+    private readonly TestUnitOfWorkProbe.Record _record;
+
+    public TestTransactionApi(TestUnitOfWorkProbe.Record record)
+    {
+        _record = record;
+    }
+
+    public Task CommitAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        _record.Committed = true;
+        return Task.CompletedTask;
+    }
+
+    public Task RollbackAsync(CancellationToken cancellationToken = default)
+    {
+        _record.RolledBack = true;
+        return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
     }
 }
 

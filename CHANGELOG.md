@@ -171,6 +171,22 @@ so it stays clear which part of the repository actually moved.
   `ArgumentException` or a `JsonException` that a tool throws itself, whatever its parameter name, stays `unknown`. Resources
   and prompts are not covered: the error filter wraps tool calls only. See
   [Arguments That Do Not Fit the Tool](docs/en/aspnetcore-mcp/errors-and-unit-of-work.md#arguments-that-do-not-fit-the-tool).
+- **A tool call's changes are committed before its result is sent, so a client that leaves at once no longer loses
+  them.** The call took over the unit of work `AbpUnitOfWorkMiddleware` reserved for the request and only saved, as an MVC
+  action's `AbpUowActionFilter` does, leaving the commit to the middleware at the end of the request. The result is one
+  event of a Streamable HTTP response, and a client may close the stream as soon as it has read it: Codex CLI (0.160) does.
+  The request was then aborted, the middleware's commit was cancelled with it (`An error occurred using a transaction`,
+  then `An exception occurred, but response has already started!` in the log) and the transaction rolled back - after the
+  client had been told the call succeeded. On a Campus host, a document Codex had just issued was missing, and its link
+  answered 404; Claude Code, which reads the response to its end, never met it. Each tool call, resource read and prompt
+  now begins a unit of work of its own (`requiresNew`) and completes it - saved and committed - before its result is
+  written, the way a SignalR hub method has to, since ABP's middleware reserves no unit of work for a hub request either.
+  A call the client cancels before its result is written is still rolled back. The middleware itself is now kept off
+  the MCP endpoints (each endpoint's route is added to `AbpAspNetCoreUnitOfWorkOptions.IgnoredUrls`, up to its first
+  route parameter), as it keeps itself off a hub request: the unit of work it reserved was begun anyway by the first
+  repository call of the request - the permission check before the tool - with a transaction, and its commit still
+  failed and was logged as an error each time a client left early. See
+  [Unit of Work](docs/en/aspnetcore-mcp/errors-and-unit-of-work.md#unit-of-work).
 
 #### blob-storing
 

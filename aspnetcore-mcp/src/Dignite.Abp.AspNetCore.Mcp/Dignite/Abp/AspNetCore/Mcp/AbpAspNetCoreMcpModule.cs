@@ -10,6 +10,7 @@ using ModelContextProtocol.AspNetCore;
 using ModelContextProtocol.Server;
 using Volo.Abp;
 using Volo.Abp.AspNetCore;
+using Volo.Abp.AspNetCore.Uow;
 using Volo.Abp.Modularity;
 
 namespace Dignite.Abp.AspNetCore.Mcp;
@@ -30,8 +31,9 @@ namespace Dignite.Abp.AspNetCore.Mcp;
 /// <para>
 /// <b>The transport is stateless Streamable HTTP</b> (the SDK default as of the <c>2026-07-28</c>
 /// protocol revision), so every MCP request is an ordinary HTTP request through the host's ordinary
-/// pipeline: authentication and tenant resolution have happened, and a unit of work has been reserved,
-/// before a tool runs.
+/// pipeline: authentication and tenant resolution have happened before a tool runs. ABP's unit-of-work
+/// middleware is kept off the MCP endpoints, and each call commits in a unit of work of its own - see
+/// <see cref="AbpMcpUnitOfWorkFilter"/>.
 /// </para>
 /// </summary>
 [DependsOn(typeof(AbpAspNetCoreModule))]
@@ -57,8 +59,8 @@ public class AbpAspNetCoreMcpModule : AbpModule
                 // One place turns an exception into a result a model can act on - see McpToolErrorFilter.
                 // Added first, so it is the outer of the two and also sees a failed save below.
                 .AddCallToolFilter(McpToolErrorFilter.CallToolFilter)
-                // Saves each call's changes before its result is written, as AbpUowActionFilter does for
-                // an MVC action - see AbpMcpUnitOfWorkFilter.
+                // Commits each call's changes before its result is written, in a unit of work of its own -
+                // see AbpMcpUnitOfWorkFilter.
                 .AddCallToolFilter(AbpMcpUnitOfWorkFilter.CallToolFilter)
                 .AddReadResourceFilter(AbpMcpUnitOfWorkFilter.ReadResourceFilter)
                 .AddGetPromptFilter(AbpMcpUnitOfWorkFilter.GetPromptFilter));
@@ -68,6 +70,10 @@ public class AbpAspNetCoreMcpModule : AbpModule
         // the SDK applies it to a fresh McpServerOptions on every stateless request, and what it copies is
         // fixed after startup, so it is computed once.
         context.Services.AddSingleton<IConfigureOptions<McpServerOptions>, AbpMcpServerOptionsSetup>();
+
+        // No unit of work reserved for an MCP request: each call commits its own - see AbpMcpUnitOfWorkOptionsSetup.
+        context.Services.TryAddEnumerable(
+            ServiceDescriptor.Singleton<IPostConfigureOptions<AbpAspNetCoreUnitOfWorkOptions>, AbpMcpUnitOfWorkOptionsSetup>());
 
         // When the server is split across endpoints (AbpMcpServerOptions.Endpoints), narrows each request's server to
         // the endpoint it reached. Does nothing for a server with one endpoint.

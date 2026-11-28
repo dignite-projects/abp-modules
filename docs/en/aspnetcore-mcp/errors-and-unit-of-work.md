@@ -71,14 +71,18 @@ Every exception reported this way is also logged, and passed to `IExceptionNotif
 
 ## Unit of Work
 
-Each tool call, resource read and prompt runs in the [unit of work](https://abp.io/docs/latest/framework/architecture/domain-driven-design/unit-of-work) an MVC action would get: it takes over the unit of work reserved for the request (or begins its own, in an application without that middleware), saves the changes **before the result is returned**, and rolls back if the call fails.
+Each tool call, resource read and prompt runs in a [unit of work](https://abp.io/docs/latest/framework/architecture/domain-driven-design/unit-of-work) of its own, completed - the changes saved and the transaction committed - **before the result is returned**, and rolled back if the call fails.
 
 Without it, the changes would only be saved once the whole pipeline had returned, after the SDK had already written the result, so a save that fails on a unique index or a concurrency conflict would cut off the client's connection instead of coming back as the call's error.
+
+The commit is not left to ABP's unit-of-work middleware at the end of the request, as it is for an MVC action. The result is one event of a Streamable HTTP response, and a client may close the stream as soon as it has read it; the request is then aborted, and a commit still to come would be cancelled and the changes rolled back after the client was told the call succeeded. A call the client cancels before its result is written is rolled back.
+
+For the same reason the middleware is kept off the MCP endpoints, as it keeps itself off a SignalR hub request: the module adds each endpoint's route to `AbpAspNetCoreUnitOfWorkOptions.IgnoredUrls`. That list matches by prefix, so a route is added up to its first parameter (`/t/{tenant}/mcp` adds `/t`), and a route that starts with a parameter is not added; calls at such a route still commit before their result is written, but the middleware's own unit of work - begun by the first repository call of the request, such as the permission check - fails to commit when the client leaves early, and logs an error.
 
 * Tool calls are **transactional** by default, as a POST is.
 * Resource reads and prompts are not, as a GET is not.
 
-`AbpUnitOfWorkDefaultOptions` decides either way. As for an MVC action, committing the transaction itself stays with the middleware at the end of the request.
+`AbpUnitOfWorkDefaultOptions` decides either way.
 
 ## See Also
 

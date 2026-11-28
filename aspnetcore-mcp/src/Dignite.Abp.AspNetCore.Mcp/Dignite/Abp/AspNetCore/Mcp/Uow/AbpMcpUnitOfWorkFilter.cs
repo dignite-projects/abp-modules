@@ -10,24 +10,33 @@ using Volo.Abp.Uow;
 namespace Dignite.Abp.AspNetCore.Mcp.Uow;
 
 /// <summary>
-/// Gives every tool call, resource read and prompt the unit-of-work handling an MVC action gets from ABP's
-/// <c>AbpUowActionFilter</c>: the changes are saved before the result is returned, and rolled back if the
-/// call fails.
+/// Runs every tool call, resource read and prompt in a unit of work of its own, completed - saved and
+/// committed - before the result is returned, and rolled back if the call fails.
 /// <para>
 /// <b>Why it is needed.</b> Without it the only unit of work an MCP request has is the one
 /// <c>AbpUnitOfWorkMiddleware</c> completes once the whole pipeline has returned - by which time the SDK
 /// has already written the tool's result to the response stream. A save that then fails (a unique index,
 /// a concurrency conflict) can no longer become an error result: the middleware throws into a response
-/// that has started, and the client's connection is cut off. Saving here, inside the call, surfaces such a
-/// failure while it can still be reported - <see cref="Errors.McpToolErrorFilter"/>, which wraps this
+/// that has started, and the client's connection is cut off. Completing here, inside the call, surfaces such
+/// a failure while it can still be reported - <see cref="Errors.McpToolErrorFilter"/>, which wraps this
 /// filter, turns it into an error result like any other exception.
 /// </para>
 /// <para>
-/// <b>What it shares with MVC.</b> Like <c>AbpUowActionFilter</c> it takes over the unit of work the
-/// middleware reserved, and only saves changes: committing the transaction stays with the middleware, at
-/// the end of the request. Tool calls are transactional by default, as a POST to an MVC action would be;
-/// resource reads and prompts are not, as a GET would not be. <see cref="AbpUnitOfWorkDefaultOptions"/>
-/// decides either way.
+/// <b>Why it commits, not only saves.</b> An MVC action's filter (<c>AbpUowActionFilter</c>) takes over the
+/// unit of work the middleware reserved and only saves, leaving the commit to the middleware; an HTTP client
+/// waits for the end of the response, so the commit comes before it has the result. An MCP client does not:
+/// the result is one event of a stream, and a client may close the stream the moment it has read it (Codex
+/// does). The request is then aborted, the middleware's commit is cancelled with it and the transaction rolls
+/// back - after the client was told the call succeeded. This is the case ABP itself meets with SignalR: its
+/// middleware reserves no unit of work for a hub request, because one could not be completed when the client
+/// disconnects, and a hub method's changes are completed by the unit of work the method begins. So the call
+/// begins its own and commits it before its result is written, and <see cref="AbpMcpUnitOfWorkOptionsSetup"/>
+/// keeps the middleware from reserving one for an MCP request at all. <c>requiresNew</c>: where a reservation
+/// is made anyway (a route that cannot be ignored by prefix), the call still never joins it.
+/// </para>
+/// <para>
+/// Tool calls are transactional by default, as a POST to an MVC action would be; resource reads and prompts
+/// are not, as a GET would not be. <see cref="AbpUnitOfWorkDefaultOptions"/> decides either way.
 /// </para>
 /// </summary>
 public static class AbpMcpUnitOfWorkFilter
@@ -72,8 +81,10 @@ public static class AbpMcpUnitOfWorkFilter
                 .CalculateIsTransactional(autoValue: isWrite)
         };
 
-        // The unit of work AbpUnitOfWorkMiddleware reserved for this request, if the host runs it.
-        if (unitOfWorkManager.TryBeginReserved(UnitOfWork.UnitOfWorkReservationName, options))
+        // Its own unit of work, even inside the one AbpUnitOfWorkMiddleware reserved for the request: see the
+        // class remarks. Completed with the call's token, so a call the client cancels before its result is
+        // written is rolled back rather than committed unseen.
+        using (var unitOfWork = unitOfWorkManager.Begin(options, requiresNew: true))
         {
             TResult result;
             try
@@ -82,49 +93,21 @@ public static class AbpMcpUnitOfWorkFilter
             }
             catch
             {
-                await RollbackAsync(unitOfWorkManager);
+                await RollbackAsync(unitOfWork);
                 throw;
             }
 
-            await SaveChangesAsync(unitOfWorkManager, cancellationToken);
-            return result;
-        }
-
-        // No middleware, or the reservation was already taken: the call gets a unit of work of its own.
-        using (var unitOfWork = unitOfWorkManager.Begin(options))
-        {
-            TResult result;
             try
             {
-                result = await next();
+                await unitOfWork.CompleteAsync(cancellationToken);
             }
             catch
             {
-                await unitOfWork.RollbackAsync(CancellationToken.None);
+                await RollbackAsync(unitOfWork);
                 throw;
             }
 
-            await unitOfWork.CompleteAsync(cancellationToken);
             return result;
-        }
-    }
-
-    private static async Task SaveChangesAsync(IUnitOfWorkManager unitOfWorkManager, CancellationToken cancellationToken)
-    {
-        var unitOfWork = unitOfWorkManager.Current;
-        if (unitOfWork == null)
-        {
-            return;
-        }
-
-        try
-        {
-            await unitOfWork.SaveChangesAsync(cancellationToken);
-        }
-        catch
-        {
-            await unitOfWork.RollbackAsync(CancellationToken.None);
-            throw;
         }
     }
 
@@ -132,12 +115,8 @@ public static class AbpMcpUnitOfWorkFilter
     /// Rolled back without the request's token: a call that failed because the client went away must still
     /// discard what it changed, and a cancelled token would abort the rollback itself.
     /// </summary>
-    private static async Task RollbackAsync(IUnitOfWorkManager unitOfWorkManager)
+    private static Task RollbackAsync(IUnitOfWork unitOfWork)
     {
-        var unitOfWork = unitOfWorkManager.Current;
-        if (unitOfWork != null)
-        {
-            await unitOfWork.RollbackAsync(CancellationToken.None);
-        }
+        return unitOfWork.RollbackAsync(CancellationToken.None);
     }
 }
