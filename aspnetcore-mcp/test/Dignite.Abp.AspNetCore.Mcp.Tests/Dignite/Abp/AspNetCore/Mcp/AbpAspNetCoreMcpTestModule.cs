@@ -76,8 +76,23 @@ public class AbpAspNetCoreMcpTestModule : AbpModule
         app.UseAuthentication();
 
         // As every ABP host does: reserves the request's unit of work, completed once the pipeline returns -
-        // after the MCP response has been written, which is what the unit-of-work filter has to work around.
+        // after the MCP response has been written. The MCP module keeps it off /mcp (IgnoredUrls), and each
+        // call commits in a unit of work of its own.
         app.UseUnitOfWork();
+
+        // Holds the end of a request that asks for it until the test lets it go: the time between the result
+        // reaching the client and the middleware above completing its unit of work, which a real server has and
+        // the in-memory test server all but closes. See TestResponseHold.
+        app.Use(async (httpContext, next) =>
+        {
+            await next(httpContext);
+
+            var hold = httpContext.Request.Headers[TestResponseHold.Header].ToString();
+            if (!hold.IsNullOrEmpty())
+            {
+                await httpContext.RequestServices.GetRequiredService<TestResponseHold>().WaitAsync(hold);
+            }
+        });
 
         // Stands in for ABP's UseDynamicClaims(): after authentication, refresh the principal with claims
         // the token itself does not carry. If the MCP endpoint re-authenticated through a named scheme,
